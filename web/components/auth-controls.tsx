@@ -25,6 +25,32 @@ export function AuthControls({
   const [status, setStatus] = useState(initialMessage ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function buildRedirectTo() {
+    const appUrl = getPublicAppUrl() ?? window.location.origin;
+    const redirectTo = new URL("/auth/callback", appUrl);
+    redirectTo.searchParams.set("next", "/");
+    return redirectTo.toString();
+  }
+
+  async function handleGoogleSignIn() {
+    setIsSubmitting(true);
+    setStatus("");
+
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: buildRedirectTo(),
+      },
+    });
+
+    if (error) {
+      setIsSubmitting(false);
+      setStatus(error.message);
+      return;
+    }
+  }
+
   async function handleMagicLinkSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -32,14 +58,11 @@ export function AuthControls({
     setStatus("");
 
     const supabase = createSupabaseBrowserClient();
-    const appUrl = getPublicAppUrl() ?? window.location.origin;
-    const redirectTo = new URL("/auth/callback", appUrl);
-    redirectTo.searchParams.set("next", "/");
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: redirectTo.toString(),
+        emailRedirectTo: buildRedirectTo(),
       },
     });
 
@@ -108,28 +131,44 @@ export function AuthControls({
   }
 
   return (
-    <form className="auth-card" onSubmit={handleMagicLinkSignIn}>
+    <div className="auth-card">
       <div className="auth-card__meta">
-        <label className="auth-card__label" htmlFor="email">
-          Email magic link
-        </label>
-        <input
-          id="email"
-          className="input"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@d20.build"
-          required
-        />
+        <span className="auth-card__label">Google OAuth</span>
+        <p className="auth-card__status">
+          Recommended for development. It avoids Supabase&apos;s built-in magic-link
+          email limits.
+        </p>
       </div>
-      <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending link..." : "Send sign-in link"}
+      <button className="button" type="button" disabled={isSubmitting} onClick={handleGoogleSignIn}>
+        {isSubmitting ? "Redirecting..." : "Continue with Google"}
       </button>
+      <div className="auth-card__divider" aria-hidden="true">
+        <span>or</span>
+      </div>
+      <form className="auth-card__email" onSubmit={handleMagicLinkSignIn}>
+        <div className="auth-card__meta">
+          <label className="auth-card__label" htmlFor="email">
+            Email magic link
+          </label>
+          <input
+            id="email"
+            className="input"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@d20.build"
+            required
+          />
+        </div>
+        <button className="button button--secondary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Sending link..." : "Use email instead"}
+        </button>
+      </form>
       <p className="auth-card__status">
-        {status || "Authentication stays intentionally minimal in M0: sign in, detect session, sign out."}
+        {status ||
+          "Authentication stays intentionally minimal in M0: sign in, detect session, sign out."}
       </p>
-    </form>
+    </div>
   );
 }
