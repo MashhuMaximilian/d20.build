@@ -104,24 +104,30 @@ export async function POST(_: NextRequest, context: RouteContext) {
         const elements = parseAuroraElements(fileUrl, xml);
 
         if (elements.length) {
-          const rows = elements.map((element) => ({
-            user_id: user.id,
-            source_id: source.id,
-            element_id: element.elementId,
-            element_type: element.elementType,
-            name: element.name,
-            source_name: element.sourceName,
-            source_url: element.sourceUrl,
-            supports: element.supports,
-            setters: element.setters,
-            rules: element.rules,
-            description_html: element.descriptionHtml,
-            description_text: element.descriptionText,
-            multiclass: element.multiclass,
-            spellcasting: element.spellcasting,
-            raw_element: element.rawElement,
-            updated_at: timestamp,
-          }));
+          const dedupedRows = new Map<string, Record<string, unknown>>();
+
+          elements.forEach((element) => {
+            dedupedRows.set(element.elementId, {
+              user_id: user.id,
+              source_id: source.id,
+              element_id: element.elementId,
+              element_type: element.elementType,
+              name: element.name,
+              source_name: element.sourceName,
+              source_url: element.sourceUrl,
+              supports: element.supports,
+              setters: element.setters,
+              rules: element.rules,
+              description_html: element.descriptionHtml,
+              description_text: element.descriptionText,
+              multiclass: element.multiclass,
+              spellcasting: element.spellcasting,
+              raw_element: element.rawElement,
+              updated_at: timestamp,
+            });
+          });
+
+          const rows = [...dedupedRows.values()];
 
           const { error: elementError } = await supabase
             .from("imported_elements")

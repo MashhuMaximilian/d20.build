@@ -254,7 +254,11 @@ export async function queueContentSourceSync(source: ContentSource) {
     | { error: string };
 
   if (!response.ok || !("ok" in payload)) {
-    return { ok: false as const, error: "error" in payload ? payload.error : "Sync failed." };
+    return {
+      ok: false as const,
+      error: "error" in payload ? payload.error : "Sync failed.",
+      status: response.status,
+    };
   }
 
   let cacheResult = {

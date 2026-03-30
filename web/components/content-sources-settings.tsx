@@ -34,8 +34,8 @@ export function ContentSourcesSettings({
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [syncingSourceId, setSyncingSourceId] = useState("");
-  const [cachingSourceId, setCachingSourceId] = useState("");
+  const [syncingSourceIds, setSyncingSourceIds] = useState<string[]>([]);
+  const [cachingSourceIds, setCachingSourceIds] = useState<string[]>([]);
 
   function isIndexUrl(value: string) {
     try {
@@ -115,11 +115,16 @@ export function ContentSourcesSettings({
 
     setStatus("");
     setStatusTone("success");
-    setSyncingSourceId(source.id);
+    setSyncingSourceIds((current) =>
+      current.includes(source.id) ? current : [...current, source.id],
+    );
     const result = await queueContentSourceSync(source);
-    setSyncingSourceId("");
+    setSyncingSourceIds((current) => current.filter((entry) => entry !== source.id));
 
     if (!result.ok) {
+      if ("status" in result && result.status === 409) {
+        await refresh();
+      }
       setStatusTone("error");
       setStatus(result.error);
       return;
@@ -136,7 +141,9 @@ export function ContentSourcesSettings({
   async function handleCacheOnDevice(source: ContentSource) {
     setStatus("");
     setStatusTone("success");
-    setCachingSourceId(source.id);
+    setCachingSourceIds((current) =>
+      current.includes(source.id) ? current : [...current, source.id],
+    );
 
     try {
       const result = await hydrateSourceCacheFromRemote(source);
@@ -148,7 +155,7 @@ export function ContentSourcesSettings({
       setStatusTone("error");
       setStatus(error instanceof Error ? error.message : "Could not cache source on this device.");
     } finally {
-      setCachingSourceId("");
+      setCachingSourceIds((current) => current.filter((entry) => entry !== source.id));
     }
   }
 
@@ -275,13 +282,13 @@ export function ContentSourcesSettings({
                     type="button"
                     disabled={
                       !source.enabled ||
-                      syncingSourceId === source.id ||
+                      syncingSourceIds.includes(source.id) ||
                       source.sync_status === "queued" ||
                       source.sync_status === "syncing"
                     }
                     onClick={() => handleQueueSync(source)}
                   >
-                    {syncingSourceId === source.id ||
+                    {syncingSourceIds.includes(source.id) ||
                     source.sync_status === "queued" ||
                     source.sync_status === "syncing"
                       ? "Syncing..."
@@ -290,10 +297,10 @@ export function ContentSourcesSettings({
                   <button
                     className="button button--secondary button--compact"
                     type="button"
-                    disabled={cachingSourceId === source.id}
+                    disabled={cachingSourceIds.includes(source.id)}
                     onClick={() => handleCacheOnDevice(source)}
                   >
-                    {cachingSourceId === source.id ? "Caching..." : "Cache on this device"}
+                    {cachingSourceIds.includes(source.id) ? "Caching..." : "Cache on this device"}
                   </button>
                   <button
                     className="button button--secondary button--compact"
