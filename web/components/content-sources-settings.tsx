@@ -28,7 +28,18 @@ export function ContentSourcesSettings({
   const [name, setName] = useState("");
   const [indexUrl, setIndexUrl] = useState("");
   const [status, setStatus] = useState("");
+  const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [syncingSourceId, setSyncingSourceId] = useState("");
+
+  function isIndexUrl(value: string) {
+    try {
+      const url = new URL(value.trim());
+      return url.pathname.endsWith(".index");
+    } catch {
+      return false;
+    }
+  }
 
   async function refresh() {
     const [nextSources, nextRuns] = await Promise.all([
@@ -51,6 +62,14 @@ export function ContentSourcesSettings({
     event.preventDefault();
     setIsSubmitting(true);
     setStatus("");
+    setStatusTone("success");
+
+    if (!isIndexUrl(indexUrl)) {
+      setIsSubmitting(false);
+      setStatusTone("error");
+      setStatus("Content sources must point to an Aurora-compatible .index URL.");
+      return;
+    }
 
     const result = await createContentSource({
       name: name.trim() || "Aurora Source",
@@ -60,26 +79,46 @@ export function ContentSourcesSettings({
     setIsSubmitting(false);
 
     if (!result.ok) {
+      setStatusTone("error");
       setStatus(result.error);
       return;
     }
 
     setName("");
     setIndexUrl("");
+    setStatusTone("success");
     setStatus("Source added.");
     await refresh();
   }
 
   async function handleQueueSync(source: ContentSource) {
+    if (!source.enabled) {
+      setStatusTone("error");
+      setStatus(`Enable ${source.name} before syncing it.`);
+      return;
+    }
+
+    if (source.sync_status === "queued" || source.sync_status === "syncing") {
+      setStatusTone("error");
+      setStatus(`${source.name} already has an active sync.`);
+      return;
+    }
+
     setStatus("");
+    setStatusTone("success");
+    setSyncingSourceId(source.id);
     const result = await queueContentSourceSync(source);
+    setSyncingSourceId("");
 
     if (!result.ok) {
+      setStatusTone("error");
       setStatus(result.error);
       return;
     }
 
-    setStatus(`Queued sync for ${source.name}.`);
+    setStatus(
+      `Synced ${source.name}: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported.`,
+    );
     await refresh();
   }
 
@@ -136,7 +175,15 @@ export function ContentSourcesSettings({
             </button>
           </div>
         </form>
-        {status ? <p className="auth-card__status">{status}</p> : null}
+        {status ? (
+          <p
+            className={`auth-card__status${
+              statusTone === "error" ? " auth-card__status--error" : " auth-card__status--success"
+            }`}
+          >
+            {status}
+          </p>
+        ) : null}
       </section>
 
       <section className="builder-panel">
@@ -188,9 +235,19 @@ export function ContentSourcesSettings({
                   <button
                     className="button button--secondary button--compact"
                     type="button"
+                    disabled={
+                      !source.enabled ||
+                      syncingSourceId === source.id ||
+                      source.sync_status === "queued" ||
+                      source.sync_status === "syncing"
+                    }
                     onClick={() => handleQueueSync(source)}
                   >
-                    Sync now
+                    {syncingSourceId === source.id ||
+                    source.sync_status === "queued" ||
+                    source.sync_status === "syncing"
+                      ? "Syncing..."
+                      : "Sync now"}
                   </button>
                   <button
                     className="button button--secondary button--compact"
@@ -217,7 +274,8 @@ export function ContentSourcesSettings({
         <span className="builder-panel__label">Recent sync activity</span>
         {!syncRuns.length ? (
           <p className="route-shell__copy">
-            No sync runs yet. The first M2 slice only queues sync intent and records status.
+            No sync runs yet. Once a source sync starts, you will see discovered files, parsed files,
+            and imported element counts here.
           </p>
         ) : (
           <div className="draft-list">
@@ -244,6 +302,7 @@ export function ContentSourcesSettings({
           <li>Built-in SRD content ships with the app.</li>
           <li>Imported Aurora-compatible sources remain private to your account by default.</li>
           <li>Non-SRD imported content is not intended to become a public shared library by default.</li>
+          <li>Adding third-party or non-SRD sources is your choice and should respect the rights of their original publishers.</li>
         </ul>
       </section>
     </div>

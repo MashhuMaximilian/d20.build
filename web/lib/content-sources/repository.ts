@@ -70,17 +70,23 @@ export async function createContentSource(input: {
     return { ok: false as const, error: "You must be signed in to add a source." };
   }
 
+  const normalizedIndexUrl = input.indexUrl.trim();
+
   const { supabase, userId } = auth;
   const { error } = await supabase.from("content_sources").insert({
     user_id: userId,
     name: input.name,
-    index_url: input.indexUrl,
+    index_url: normalizedIndexUrl,
     source_kind: "aurora-index",
     enabled: true,
     sync_status: "idle",
   });
 
   if (error) {
+    if (error.code === "23505") {
+      return { ok: false as const, error: "That source URL is already in your library." };
+    }
+
     return { ok: false as const, error: error.message };
   }
 
@@ -126,32 +132,25 @@ export async function queueContentSourceSync(source: ContentSource) {
     return { ok: false as const, error: "You must be signed in to sync sources." };
   }
 
-  const { supabase, userId } = auth;
-  const now = new Date().toISOString();
-
-  const { error: sourceError } = await supabase
-    .from("content_sources")
-    .update({
-      sync_status: "queued",
-      last_sync_error: null,
-      updated_at: now,
-    })
-    .eq("id", source.id);
-
-  if (sourceError) {
-    return { ok: false as const, error: sourceError.message };
+  if (!source.enabled) {
+    return { ok: false as const, error: "Enable the source before syncing it." };
   }
 
-  const { error: runError } = await supabase.from("source_sync_runs").insert({
-    user_id: userId,
-    source_id: source.id,
-    status: "queued",
-    started_at: now,
+  if (source.sync_status === "queued" || source.sync_status === "syncing") {
+    return { ok: false as const, error: "That source is already syncing." };
+  }
+
+  const response = await fetch(`/api/content-sources/${source.id}/sync`, {
+    method: "POST",
   });
 
-  if (runError) {
-    return { ok: false as const, error: runError.message };
+  const payload = (await response.json()) as
+    | { ok: true; discoveredFileCount: number; parsedFileCount: number; upsertedElementCount: number }
+    | { error: string };
+
+  if (!response.ok || !("ok" in payload)) {
+    return { ok: false as const, error: "error" in payload ? payload.error : "Sync failed." };
   }
 
-  return { ok: true as const };
+  return payload;
 }

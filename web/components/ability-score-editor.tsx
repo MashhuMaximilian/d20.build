@@ -6,6 +6,7 @@ import {
   createRolledAbilities,
   formatAbilityModifier,
   getPointBuyTotal,
+  POINT_BUY_COST,
   STANDARD_ARRAY,
   type AbilityKey,
   type AbilityMode,
@@ -18,6 +19,7 @@ type AbilityScoreEditorProps = {
   onAbilitiesChange: (abilities: CharacterAbilities) => void;
   onModeChange: (mode: AbilityMode, abilities: CharacterAbilities) => void;
   racialBonuses: Record<string, number>;
+  validationMessage?: string;
 };
 
 function readNumericValue(value: string, fallback: number) {
@@ -27,6 +29,12 @@ function readNumericValue(value: string, fallback: number) {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function clampAbilityValue(mode: AbilityMode, value: number) {
+  const min = mode === "point-buy" ? 8 : 3;
+  const max = mode === "point-buy" ? 15 : 20;
+  return Math.min(max, Math.max(min, value));
 }
 
 function nextAbilities(
@@ -40,12 +48,52 @@ function nextAbilities(
   };
 }
 
+function clampPointBuyValue(
+  abilities: CharacterAbilities,
+  ability: AbilityKey,
+  value: number,
+) {
+  const clamped = clampAbilityValue("point-buy", value);
+  const budgetWithoutCurrent = ABILITY_KEYS.reduce((sum, key) => {
+    if (key === ability) {
+      return sum;
+    }
+
+    return sum + (POINT_BUY_COST[abilities[key]] ?? 0);
+  }, 0);
+
+  const remainingBudget = Math.max(0, 27 - budgetWithoutCurrent);
+  const allowedScores = Object.entries(POINT_BUY_COST)
+    .map(([score, cost]) => ({ score: Number(score), cost }))
+    .filter((entry) => entry.cost <= remainingBudget)
+    .map((entry) => entry.score);
+
+  const maxAllowed = allowedScores.length ? Math.max(...allowedScores) : 8;
+  return Math.min(clamped, maxAllowed);
+}
+
+function getNextAbilityValue(
+  abilities: CharacterAbilities,
+  ability: AbilityKey,
+  mode: AbilityMode,
+  rawValue: string,
+) {
+  const requestedValue = readNumericValue(rawValue, abilities[ability]);
+
+  if (mode === "point-buy") {
+    return clampPointBuyValue(abilities, ability, requestedValue);
+  }
+
+  return clampAbilityValue(mode, requestedValue);
+}
+
 export function AbilityScoreEditor({
   abilities,
   mode,
   onAbilitiesChange,
   onModeChange,
   racialBonuses,
+  validationMessage,
 }: AbilityScoreEditorProps) {
   const pointBuySpent = getPointBuyTotal(abilities);
   const assignedArray = Object.values(abilities);
@@ -112,6 +160,9 @@ export function AbilityScoreEditor({
           `Spend up to 27 points. Current total: ${pointBuySpent}/27.`}
         {mode === "rolled" && "These scores were rolled. You can reroll or tweak them if needed."}
       </p>
+      {validationMessage ? (
+        <p className="auth-card__status auth-card__status--error">{validationMessage}</p>
+      ) : null}
 
       <div className="ability-grid">
         {ABILITY_KEYS.map((ability) => {
@@ -157,7 +208,12 @@ export function AbilityScoreEditor({
                       nextAbilities(
                         abilities,
                         ability,
-                        readNumericValue(event.currentTarget.value, baseScore),
+                        getNextAbilityValue(
+                          abilities,
+                          ability,
+                          mode,
+                          event.currentTarget.value,
+                        ),
                       ),
                     )
                   }
@@ -166,7 +222,12 @@ export function AbilityScoreEditor({
                       nextAbilities(
                         abilities,
                         ability,
-                        readNumericValue(event.target.value, baseScore),
+                        getNextAbilityValue(
+                          abilities,
+                          ability,
+                          mode,
+                          event.target.value,
+                        ),
                       ),
                     )
                   }

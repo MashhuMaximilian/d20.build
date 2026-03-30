@@ -339,6 +339,14 @@ a {
   line-height: 1.5;
 }
 
+.auth-card__status--error {
+  color: var(--accent-strong);
+}
+
+.auth-card__status--success {
+  color: var(--success);
+}
+
 .input {
   width: 100%;
   padding: 12px 14px;

@@ -14,6 +14,8 @@ import { saveRemoteCharacterDraft } from "@/lib/characters/repository";
 import {
   ABILITY_KEYS,
   createEmptyCharacterDraft,
+  getPointBuyTotal,
+  STANDARD_ARRAY,
   type AbilityKey,
   type CharacterDraft,
 } from "@/lib/characters/types";
@@ -34,6 +36,43 @@ function getStatBonuses(values: string[]) {
   }, {});
 }
 
+function isStandardArrayValid(draft: CharacterDraft) {
+  const assigned = Object.values(draft.abilities).sort((a, b) => a - b);
+  const standard = [...STANDARD_ARRAY].sort((a, b) => a - b);
+
+  return assigned.every((value, index) => value === standard[index]);
+}
+
+function getAbilityValidationMessage(draft: CharacterDraft) {
+  if (ABILITY_KEYS.some((ability) => !Number.isFinite(draft.abilities[ability]))) {
+    return "Ability scores must all be valid numbers before you save.";
+  }
+
+  if (draft.abilityMode === "point-buy") {
+    if (ABILITY_KEYS.some((ability) => draft.abilities[ability] < 8 || draft.abilities[ability] > 15)) {
+      return "Point buy scores must stay between 8 and 15.";
+    }
+
+    const total = getPointBuyTotal(draft.abilities);
+    if (total > 27) {
+      return `Point buy is over budget at ${total}/27. Lower one or more scores before saving.`;
+    }
+  }
+
+  if (draft.abilityMode === "standard-array" && !isStandardArrayValid(draft)) {
+    return "Standard array must use exactly 15, 14, 13, 12, 10, and 8.";
+  }
+
+  if (
+    draft.abilityMode !== "point-buy" &&
+    ABILITY_KEYS.some((ability) => draft.abilities[ability] < 3 || draft.abilities[ability] > 20)
+  ) {
+    return "Ability scores must stay between 3 and 20 in this mode.";
+  }
+
+  return "";
+}
+
 export function BuilderEditor({
   backgrounds,
   classes,
@@ -43,6 +82,7 @@ export function BuilderEditor({
   const router = useRouter();
   const [draft, setDraft] = useState<CharacterDraft>(initialDraft ?? createEmptyCharacterDraft());
   const [status, setStatus] = useState("");
+  const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
 
   const selectedRace = useMemo(
@@ -91,11 +131,29 @@ export function BuilderEditor({
     return subracePending + backgroundPending + classPending;
   }, [draft.subraceId, selectedBackground, selectedClass, selectedRace]);
 
+  const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
+  const selectionValidationMessage =
+    selectedRace?.subraces.length && !draft.subraceId
+      ? "Choose a subrace before saving this draft."
+      : "";
+  const saveValidationMessage = abilityValidationMessage || selectionValidationMessage;
+
   function updateDraft(patch: Partial<CharacterDraft>) {
+    if (status) {
+      setStatus("");
+    }
+    setStatusTone("success");
+
     setDraft((current) => ({ ...current, ...patch }));
   }
 
   async function handleSave() {
+    if (saveValidationMessage) {
+      setStatusTone("error");
+      setStatus(saveValidationMessage);
+      return;
+    }
+
     const name = draft.name.trim() || "Untitled Adventurer";
     const nextDraft = {
       ...draft,
@@ -108,13 +166,16 @@ export function BuilderEditor({
     saveCharacterDraft(nextDraft);
     const savedRemote = await saveRemoteCharacterDraft(nextDraft);
     setDraft(nextDraft);
+    setStatusTone("success");
     setStatus(savedRemote ? "Draft saved locally and to your account." : "Draft saved locally.");
     setIsSaving(false);
     router.push(`/builder/${nextDraft.id}`);
     router.refresh();
   }
 
-  const canSave = Boolean(draft.raceId && draft.classId && draft.backgroundId);
+  const canSave = Boolean(
+    draft.raceId && draft.classId && draft.backgroundId && !saveValidationMessage,
+  );
 
   return (
     <div className="builder-shell">
@@ -139,6 +200,9 @@ export function BuilderEditor({
           <p className="builder-summary__meta">
             Pending builder choices: {pendingChoices}
           </p>
+          {saveValidationMessage ? (
+            <p className="auth-card__status auth-card__status--error">{saveValidationMessage}</p>
+          ) : null}
           <div className="builder-summary__actions">
             <button
               className="button"
@@ -152,7 +216,15 @@ export function BuilderEditor({
               View saved drafts
             </Link>
           </div>
-          {status ? <p className="auth-card__status">{status}</p> : null}
+          {status ? (
+            <p
+              className={`auth-card__status${
+                statusTone === "error" ? " auth-card__status--error" : " auth-card__status--success"
+              }`}
+            >
+              {status}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -255,6 +327,7 @@ export function BuilderEditor({
           onAbilitiesChange={(abilities) => updateDraft({ abilities })}
           onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
           racialBonuses={racialBonuses}
+          validationMessage={abilityValidationMessage}
         />
       </div>
     </div>
