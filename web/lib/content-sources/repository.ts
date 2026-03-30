@@ -145,7 +145,14 @@ export async function queueContentSourceSync(source: ContentSource) {
   });
 
   const payload = (await response.json()) as
-    | { ok: true; discoveredFileCount: number; parsedFileCount: number; upsertedElementCount: number }
+    | {
+        ok: true;
+        discoveredFileCount: number;
+        parsedFileCount: number;
+        upsertedElementCount: number;
+        warningCount?: number;
+        warningSummary?: string | null;
+      }
     | { error: string };
 
   if (!response.ok || !("ok" in payload)) {

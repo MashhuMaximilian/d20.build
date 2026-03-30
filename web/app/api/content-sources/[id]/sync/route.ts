@@ -81,69 +81,81 @@ export async function POST(_: NextRequest, context: RouteContext) {
     const fileUrls = await discoverAuroraFileUrls(source.index_url);
     let parsedFileCount = 0;
     let upsertedElementCount = 0;
+    const fileErrors: string[] = [];
 
     for (const fileUrl of fileUrls) {
-      const { xml, etag, contentHash } = await fetchAuroraXmlFile(fileUrl);
+      try {
+        const { xml, etag, contentHash } = await fetchAuroraXmlFile(fileUrl);
+        const timestamp = new Date().toISOString();
 
-      await supabase.from("imported_source_files").upsert(
-        {
-          user_id: user.id,
-          source_id: source.id,
-          file_url: fileUrl,
-          etag,
-          content_hash: contentHash,
-          last_seen_at: new Date().toISOString(),
-          last_parsed_at: new Date().toISOString(),
-        },
-        { onConflict: "source_id,file_url" },
-      );
+        await supabase.from("imported_source_files").upsert(
+          {
+            user_id: user.id,
+            source_id: source.id,
+            file_url: fileUrl,
+            etag,
+            content_hash: contentHash,
+            last_seen_at: timestamp,
+            last_parsed_at: timestamp,
+          },
+          { onConflict: "source_id,file_url" },
+        );
 
-      const elements = parseAuroraElements(fileUrl, xml);
+        const elements = parseAuroraElements(fileUrl, xml);
 
-      if (elements.length) {
-        const rows = elements.map((element) => ({
-          user_id: user.id,
-          source_id: source.id,
-          element_id: element.elementId,
-          element_type: element.elementType,
-          name: element.name,
-          source_name: element.sourceName,
-          source_url: element.sourceUrl,
-          supports: element.supports,
-          setters: element.setters,
-          rules: element.rules,
-          description_html: element.descriptionHtml,
-          description_text: element.descriptionText,
-          multiclass: element.multiclass,
-          spellcasting: element.spellcasting,
-          raw_element: element.rawElement,
-          updated_at: new Date().toISOString(),
-        }));
+        if (elements.length) {
+          const rows = elements.map((element) => ({
+            user_id: user.id,
+            source_id: source.id,
+            element_id: element.elementId,
+            element_type: element.elementType,
+            name: element.name,
+            source_name: element.sourceName,
+            source_url: element.sourceUrl,
+            supports: element.supports,
+            setters: element.setters,
+            rules: element.rules,
+            description_html: element.descriptionHtml,
+            description_text: element.descriptionText,
+            multiclass: element.multiclass,
+            spellcasting: element.spellcasting,
+            raw_element: element.rawElement,
+            updated_at: timestamp,
+          }));
 
-        const { error: elementError } = await supabase
-          .from("imported_elements")
-          .upsert(rows, { onConflict: "user_id,source_id,element_id" });
+          const { error: elementError } = await supabase
+            .from("imported_elements")
+            .upsert(rows, { onConflict: "user_id,source_id,element_id" });
 
-        if (elementError) {
-          throw new Error(elementError.message);
+          if (elementError) {
+            throw new Error(elementError.message);
+          }
+
+          upsertedElementCount += rows.length;
         }
 
-        upsertedElementCount += rows.length;
+        parsedFileCount += 1;
+      } catch (fileError) {
+        const message =
+          fileError instanceof Error ? fileError.message : "Unknown file sync error";
+        fileErrors.push(`${fileUrl}: ${message}`);
       }
-
-      parsedFileCount += 1;
     }
 
     const finishedAt = new Date().toISOString();
+    const warningSummary = fileErrors.length
+      ? `Skipped ${fileErrors.length} file(s). ${fileErrors.slice(0, 3).join(" | ")}`
+      : null;
 
     await supabase
       .from("source_sync_runs")
       .update({
-        status: "completed",
+        status: fileErrors.length ? "completed_with_errors" : "completed",
         discovered_file_count: fileUrls.length,
         parsed_file_count: parsedFileCount,
         upserted_element_count: upsertedElementCount,
         finished_at: finishedAt,
+        error_text: warningSummary,
       })
       .eq("id", syncRun.id);
 
@@ -152,7 +164,7 @@ export async function POST(_: NextRequest, context: RouteContext) {
       .update({
         sync_status: "idle",
         last_synced_at: finishedAt,
-        last_sync_error: null,
+        last_sync_error: warningSummary,
         updated_at: finishedAt,
       })
       .eq("id", source.id);
@@ -162,6 +174,8 @@ export async function POST(_: NextRequest, context: RouteContext) {
       discoveredFileCount: fileUrls.length,
       parsedFileCount,
       upsertedElementCount,
+      warningCount: fileErrors.length,
+      warningSummary,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown sync error";

@@ -117,7 +117,9 @@ export function ContentSourcesSettings({
     }
 
     setStatus(
-      `Synced ${source.name}: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported.`,
+      result.warningCount
+        ? `Synced ${source.name} with warnings: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported. ${result.warningSummary ?? ""}`.trim()
+        : `Synced ${source.name}: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported.`,
     );
     await refresh();
   }

@@ -73,6 +73,10 @@ function decodeXml(value: string) {
     .replace(/&gt;/g, ">");
 }
 
+function stripXmlComments(value: string) {
+  return value.replace(/<!--[\s\S]*?-->/g, "");
+}
+
 function stripTags(value: string) {
   return decodeXml(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
 }
@@ -245,7 +249,8 @@ function parseSpellcasting(elementBlock: string) {
 }
 
 export function parseIndexUrls(indexUrl: string, xml: string) {
-  const files = [...xml.matchAll(/<(?:file|obsolete)\s+([^>]*)\/>/g)].map((match) =>
+  const sanitizedXml = stripXmlComments(xml);
+  const files = [...sanitizedXml.matchAll(/<(?:file|obsolete)\s+([^>]*)\/>/g)].map((match) =>
     parseAttributes(match[1]),
   );
 
