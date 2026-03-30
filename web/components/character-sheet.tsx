@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getBuiltInSrdBackgrounds } from "@/lib/builtins/backgrounds";
 import { getBuiltInSrdClasses } from "@/lib/builtins/classes";
 import { getBuiltInSrdRaces } from "@/lib/builtins/races";
+import { getRemoteCharacterDraft } from "@/lib/characters/repository";
 import { getCharacterDraft } from "@/lib/characters/storage";
 import {
   ABILITY_KEYS,
@@ -23,7 +24,30 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
   const [draft, setDraft] = useState<CharacterDraft | null>(null);
 
   useEffect(() => {
-    setDraft(getCharacterDraft(draftId));
+    let cancelled = false;
+
+    async function loadDraft() {
+      const localDraft = getCharacterDraft(draftId);
+
+      if (localDraft) {
+        if (!cancelled) {
+          setDraft(localDraft);
+        }
+        return;
+      }
+
+      const remoteDraft = await getRemoteCharacterDraft(draftId);
+
+      if (!cancelled) {
+        setDraft(remoteDraft);
+      }
+    }
+
+    void loadDraft();
+
+    return () => {
+      cancelled = true;
+    };
   }, [draftId]);
 
   const races = useMemo(() => getBuiltInSrdRaces(), []);
@@ -35,7 +59,7 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
       <section className="builder-panel">
         <span className="builder-panel__label">Draft not found</span>
         <p className="route-shell__copy">
-          This local draft does not exist yet on this browser.
+          This draft was not found locally or in your signed-in account.
         </p>
         <Link className="button" href="/builder/new">
           Start a new draft

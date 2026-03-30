@@ -58,3 +58,20 @@ export function deleteCharacterDraft(id: string) {
   const drafts = listCharacterDrafts().filter((draft) => draft.id !== id);
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(drafts));
 }
+
+export function mergeCharacterDrafts(
+  localDrafts: CharacterDraft[],
+  remoteDrafts: CharacterDraft[],
+) {
+  const merged = new Map<string, CharacterDraft>();
+
+  [...localDrafts, ...remoteDrafts].forEach((draft) => {
+    const existing = merged.get(draft.id);
+
+    if (!existing || draft.updatedAt > existing.updatedAt) {
+      merged.set(draft.id, draft);
+    }
+  });
+
+  return [...merged.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}

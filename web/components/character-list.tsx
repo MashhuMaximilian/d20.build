@@ -3,19 +3,37 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { deleteRemoteCharacterDraft, listRemoteCharacterDrafts } from "@/lib/characters/repository";
 import { deleteCharacterDraft, listCharacterDrafts } from "@/lib/characters/storage";
 import type { CharacterDraft } from "@/lib/characters/types";
+import { mergeCharacterDrafts } from "@/lib/characters/storage";
 
 export function CharacterList() {
   const [drafts, setDrafts] = useState<CharacterDraft[]>([]);
 
   useEffect(() => {
-    setDrafts(listCharacterDrafts());
+    let cancelled = false;
+
+    async function loadDrafts() {
+      const localDrafts = listCharacterDrafts();
+      const remoteDrafts = await listRemoteCharacterDrafts();
+
+      if (!cancelled) {
+        setDrafts(mergeCharacterDrafts(localDrafts, remoteDrafts));
+      }
+    }
+
+    void loadDrafts();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     deleteCharacterDraft(id);
-    setDrafts(listCharacterDrafts());
+    await deleteRemoteCharacterDraft(id);
+    setDrafts(mergeCharacterDrafts(listCharacterDrafts(), await listRemoteCharacterDrafts()));
   }
 
   if (!drafts.length) {
@@ -23,8 +41,8 @@ export function CharacterList() {
       <section className="builder-panel">
         <span className="builder-panel__label">Saved drafts</span>
         <p className="route-shell__copy">
-          No saved local characters yet. Start a character in the builder and save the
-          draft to see it here.
+          No saved characters yet. Start a character in the builder and save the draft
+          to see it here.
         </p>
         <Link className="button" href="/builder/new">
           Start a character

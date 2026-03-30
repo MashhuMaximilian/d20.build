@@ -4,15 +4,16 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { AbilityScoreEditor } from "@/components/ability-score-editor";
+import { CatalogSelector } from "@/components/catalog-selector";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
 import type { BuiltInRule } from "@/lib/builtins/types";
+import { saveRemoteCharacterDraft } from "@/lib/characters/repository";
 import {
   ABILITY_KEYS,
-  ABILITY_LABELS,
   createEmptyCharacterDraft,
-  formatAbilityModifier,
   type AbilityKey,
   type CharacterDraft,
 } from "@/lib/characters/types";
@@ -42,6 +43,7 @@ export function BuilderEditor({
   const router = useRouter();
   const [draft, setDraft] = useState<CharacterDraft>(initialDraft ?? createEmptyCharacterDraft());
   const [status, setStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const selectedRace = useMemo(
     () => races.find((entry) => entry.race.id === draft.raceId) ?? null,
@@ -93,27 +95,21 @@ export function BuilderEditor({
     setDraft((current) => ({ ...current, ...patch }));
   }
 
-  function updateAbility(key: AbilityKey, value: number) {
-    setDraft((current) => ({
-      ...current,
-      abilities: {
-        ...current.abilities,
-        [key]: value,
-      },
-    }));
-  }
-
-  function handleSave() {
+  async function handleSave() {
     const name = draft.name.trim() || "Untitled Adventurer";
     const nextDraft = {
       ...draft,
       name,
       subraceId: selectedRace?.subraces.length ? draft.subraceId : "",
+      updatedAt: new Date().toISOString(),
     };
 
+    setIsSaving(true);
     saveCharacterDraft(nextDraft);
+    const savedRemote = await saveRemoteCharacterDraft(nextDraft);
     setDraft(nextDraft);
-    setStatus("Draft saved locally.");
+    setStatus(savedRemote ? "Draft saved locally and to your account." : "Draft saved locally.");
+    setIsSaving(false);
     router.push(`/builder/${nextDraft.id}`);
     router.refresh();
   }
@@ -127,8 +123,8 @@ export function BuilderEditor({
           <span className="route-shell__tag">Character Builder</span>
           <h2 className="route-shell__title">Start a real draft</h2>
           <p className="route-shell__copy">
-            Pick an SRD race, class, and background, set ability scores, and save a
-            local draft you can reopen from the builder or character list.
+            Pick an SRD race, class, and background, choose an ability-score mode,
+            and save a draft you can reopen from the builder or character list.
           </p>
         </div>
         <div className="builder-summary">
@@ -144,8 +140,13 @@ export function BuilderEditor({
             Pending builder choices: {pendingChoices}
           </p>
           <div className="builder-summary__actions">
-            <button className="button" type="button" disabled={!canSave} onClick={handleSave}>
-              Save draft
+            <button
+              className="button"
+              type="button"
+              disabled={!canSave || isSaving}
+              onClick={handleSave}
+            >
+              {isSaving ? "Saving..." : "Save draft"}
             </button>
             <Link className="button button--secondary" href="/characters">
               View saved drafts
@@ -182,41 +183,35 @@ export function BuilderEditor({
 
         <section className="builder-panel">
           <span className="builder-panel__label">Race</span>
-          <div className="choice-grid">
-            {races.map((entry) => {
-              const active = draft.raceId === entry.race.id;
-              return (
-                <button
-                  key={entry.race.id}
-                  className={`choice-card${active ? " choice-card--active" : ""}`}
-                  type="button"
-                  onClick={() =>
-                    updateDraft({
-                      raceId: entry.race.id,
-                      subraceId:
-                        entry.subraces.length === 1 ? entry.subraces[0].id : "",
-                    })
-                  }
-                >
-                  <strong>{entry.race.name}</strong>
-                  <span>{entry.race.description}</span>
-                </button>
-              );
-            })}
-          </div>
+          <CatalogSelector
+            items={races.map((entry) => ({
+              id: entry.race.id,
+              name: entry.race.name,
+              description: entry.race.description,
+              meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
+            }))}
+            label="Race"
+            onSelect={(id) => {
+              const nextRace = races.find((entry) => entry.race.id === id);
+              updateDraft({
+                raceId: id,
+                subraceId: nextRace?.subraces.length === 1 ? nextRace.subraces[0].id : "",
+              });
+            }}
+            selectedId={draft.raceId}
+          />
           {selectedRace?.subraces.length ? (
             <div className="builder-subsection">
               <span className="builder-subsection__label">Subrace</span>
-              <div className="choice-grid">
+              <div className="chip-grid">
                 {selectedRace.subraces.map((subrace) => (
                   <button
                     key={subrace.id}
-                    className={`choice-card${draft.subraceId === subrace.id ? " choice-card--active" : ""}`}
+                    className={`choice-chip${draft.subraceId === subrace.id ? " choice-chip--active" : ""}`}
                     type="button"
                     onClick={() => updateDraft({ subraceId: subrace.id })}
                   >
-                    <strong>{subrace.name}</strong>
-                    <span>{subrace.description}</span>
+                    {subrace.name}
                   </button>
                 ))}
               </div>
@@ -226,65 +221,41 @@ export function BuilderEditor({
 
         <section className="builder-panel">
           <span className="builder-panel__label">Class</span>
-          <div className="choice-grid">
-            {classes.map((entry) => (
-              <button
-                key={entry.class.id}
-                className={`choice-card${draft.classId === entry.class.id ? " choice-card--active" : ""}`}
-                type="button"
-                onClick={() => updateDraft({ classId: entry.class.id })}
-              >
-                <strong>{entry.class.name}</strong>
-                <span>{entry.class.description}</span>
-              </button>
-            ))}
-          </div>
+          <CatalogSelector
+            items={classes.map((entry) => ({
+              id: entry.class.id,
+              name: entry.class.name,
+              description: entry.class.description,
+              meta: `${entry.features.length} class features`,
+            }))}
+            label="Class"
+            onSelect={(id) => updateDraft({ classId: id })}
+            selectedId={draft.classId}
+          />
         </section>
 
         <section className="builder-panel">
           <span className="builder-panel__label">Background</span>
-          <div className="choice-grid">
-            {backgrounds.map((entry) => (
-              <button
-                key={entry.background.id}
-                className={`choice-card${draft.backgroundId === entry.background.id ? " choice-card--active" : ""}`}
-                type="button"
-                onClick={() => updateDraft({ backgroundId: entry.background.id })}
-              >
-                <strong>{entry.background.name}</strong>
-                <span>{entry.background.description}</span>
-              </button>
-            ))}
-          </div>
+          <CatalogSelector
+            items={backgrounds.map((entry) => ({
+              id: entry.background.id,
+              name: entry.background.name,
+              description: entry.background.description,
+              meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
+            }))}
+            label="Background"
+            onSelect={(id) => updateDraft({ backgroundId: id })}
+            selectedId={draft.backgroundId}
+          />
         </section>
 
-        <section className="builder-panel">
-          <span className="builder-panel__label">Ability scores</span>
-          <div className="ability-grid">
-            {ABILITY_KEYS.map((ability) => {
-              const baseScore = draft.abilities[ability];
-              const bonus = racialBonuses[ability] ?? 0;
-              const total = baseScore + bonus;
-
-              return (
-                <label className="ability-card" key={ability}>
-                  <span className="ability-card__label">{ABILITY_LABELS[ability]}</span>
-                  <input
-                    className="input"
-                    type="number"
-                    min={3}
-                    max={20}
-                    value={baseScore}
-                    onChange={(event) => updateAbility(ability, Number(event.target.value))}
-                  />
-                  <span className="ability-card__meta">
-                    Total {total} ({formatAbilityModifier(total)})
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </section>
+        <AbilityScoreEditor
+          abilities={draft.abilities}
+          mode={draft.abilityMode}
+          onAbilitiesChange={(abilities) => updateDraft({ abilities })}
+          onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
+          racialBonuses={racialBonuses}
+        />
       </div>
     </div>
   );

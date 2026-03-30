@@ -6,6 +6,7 @@ import { BuilderEditor } from "@/components/builder-editor";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
+import { getRemoteCharacterDraft } from "@/lib/characters/repository";
 import { getCharacterDraft } from "@/lib/characters/storage";
 import type { CharacterDraft } from "@/lib/characters/types";
 
@@ -25,7 +26,30 @@ export function BuilderResume({
   const [draft, setDraft] = useState<CharacterDraft | null | undefined>(undefined);
 
   useEffect(() => {
-    setDraft(getCharacterDraft(draftId));
+    let cancelled = false;
+
+    async function loadDraft() {
+      const localDraft = getCharacterDraft(draftId);
+
+      if (localDraft) {
+        if (!cancelled) {
+          setDraft(localDraft);
+        }
+        return;
+      }
+
+      const remoteDraft = await getRemoteCharacterDraft(draftId);
+
+      if (!cancelled) {
+        setDraft(remoteDraft);
+      }
+    }
+
+    void loadDraft();
+
+    return () => {
+      cancelled = true;
+    };
   }, [draftId]);
 
   if (draft === undefined) {
