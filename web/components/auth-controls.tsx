@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { getPublicAppUrl } from "@/lib/env";
@@ -10,12 +11,14 @@ type AuthControlsProps = {
   isAuthenticated: boolean;
   userEmail?: string;
   initialMessage?: string;
+  variant?: "card" | "inline";
 };
 
 export function AuthControls({
   isAuthenticated,
   userEmail,
   initialMessage,
+  variant = "card",
 }: AuthControlsProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -70,13 +73,15 @@ export function AuthControls({
 
   if (isAuthenticated) {
     return (
-      <div className="auth-card">
+      <div className={variant === "inline" ? "auth-inline" : "auth-card"}>
         <div className="auth-card__meta">
-          <span className="auth-card__label">Signed in</span>
+          <span className="auth-card__label">
+            {variant === "inline" ? "Account" : "Signed in"}
+          </span>
           <strong>{userEmail ?? "Supabase user"}</strong>
         </div>
         <button
-          className="button button--secondary"
+          className={variant === "inline" ? "button button--secondary button--compact" : "button button--secondary"}
           onClick={handleSignOut}
           type="button"
           disabled={isSubmitting}
@@ -84,6 +89,20 @@ export function AuthControls({
           {isSubmitting ? "Signing out..." : "Sign out"}
         </button>
         {status ? <p className="auth-card__status">{status}</p> : null}
+      </div>
+    );
+  }
+
+  if (variant === "inline") {
+    return (
+      <div className="auth-inline auth-inline--anonymous">
+        <div className="auth-card__meta">
+          <span className="auth-card__label">Account</span>
+          <strong>Anonymous</strong>
+        </div>
+        <Link className="button button--compact" href="/#sign-in">
+          Sign in
+        </Link>
       </div>
     );
   }
@@ -101,7 +120,7 @@ export function AuthControls({
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="party@arcanum.app"
+          placeholder="you@d20.build"
           required
         />
       </div>
