@@ -726,6 +726,10 @@ a {
   gap: 10px;
 }
 
+.draft-card__actions > * {
+  flex-shrink: 0;
+}
+
 .auth-card__divider {
   position: relative;
   text-align: center;

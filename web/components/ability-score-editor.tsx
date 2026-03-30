@@ -20,6 +20,15 @@ type AbilityScoreEditorProps = {
   racialBonuses: Record<string, number>;
 };
 
+function readNumericValue(value: string, fallback: number) {
+  if (value.trim() === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function nextAbilities(
   abilities: CharacterAbilities,
   ability: AbilityKey,
@@ -143,9 +152,22 @@ export function AbilityScoreEditor({
                   min={mode === "point-buy" ? 8 : 3}
                   max={mode === "point-buy" ? 15 : 20}
                   value={baseScore}
+                  onInput={(event) =>
+                    onAbilitiesChange(
+                      nextAbilities(
+                        abilities,
+                        ability,
+                        readNumericValue(event.currentTarget.value, baseScore),
+                      ),
+                    )
+                  }
                   onChange={(event) =>
                     onAbilitiesChange(
-                      nextAbilities(abilities, ability, Number(event.target.value)),
+                      nextAbilities(
+                        abilities,
+                        ability,
+                        readNumericValue(event.target.value, baseScore),
+                      ),
                     )
                   }
                 />
