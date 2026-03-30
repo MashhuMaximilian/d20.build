@@ -1,4 +1,8 @@
 export type BuiltInElementType =
+  | "Class"
+  | "Class Feature"
+  | "Archetype"
+  | "Archetype Feature"
   | "Race"
   | "Sub Race"
   | "Racial Trait"
