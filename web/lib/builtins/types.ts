@@ -1,4 +1,7 @@
 export type BuiltInElementType =
+  | "Background"
+  | "Background Feature"
+  | "Background Variant"
   | "Class"
   | "Class Feature"
   | "Archetype"
@@ -7,6 +10,11 @@ export type BuiltInElementType =
   | "Sub Race"
   | "Racial Trait"
   | "Race Variant";
+
+export type BuiltInSelectChoice = {
+  id: string;
+  value: string;
+};
 
 export type BuiltInRule =
   | {
@@ -24,6 +32,7 @@ export type BuiltInRule =
       type: string;
       name: string;
       supports?: string;
+      choices?: BuiltInSelectChoice[];
       requirements?: string;
       number?: number;
       optional?: boolean;
