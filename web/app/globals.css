@@ -1,0 +1,254 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f1e5;
+  --card: rgba(255, 251, 245, 0.82);
+  --card-border: rgba(66, 49, 35, 0.16);
+  --foreground: #2d2218;
+  --muted: #6e5845;
+  --accent: #b35c2e;
+  --accent-strong: #7f2d17;
+  --surface: #efe4d1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at top, rgba(179, 92, 46, 0.18), transparent 28%),
+    linear-gradient(180deg, #f8f2e8 0%, #efe2cb 100%);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--foreground);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-shell {
+  min-height: 100vh;
+  padding: 32px 20px 56px;
+}
+
+.site-shell__inner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.site-shell__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.site-shell__brand {
+  display: grid;
+  gap: 6px;
+}
+
+.site-shell__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--accent-strong);
+}
+
+.site-shell__title {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.6rem);
+}
+
+.site-shell__subtitle {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.site-shell__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.site-shell__actions {
+  display: grid;
+  justify-items: end;
+  gap: 14px;
+}
+
+.site-shell__navLink {
+  padding: 10px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.route-shell {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 50px rgba(76, 50, 22, 0.08);
+}
+
+.route-shell__tag {
+  justify-self: start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(179, 92, 46, 0.12);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-shell__title {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+}
+
+.route-shell__copy {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.route-shell__list {
+  display: grid;
+  gap: 12px;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.route-shell__list li {
+  line-height: 1.55;
+}
+
+.stack {
+  display: grid;
+  gap: 18px;
+}
+
+.landing-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  background: rgba(255, 249, 242, 0.78);
+  box-shadow: 0 12px 40px rgba(76, 50, 22, 0.06);
+}
+
+.landing-panel__copy {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.landing-panel__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+}
+
+.landing-panel__text {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.auth-card {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+  min-width: min(100%, 320px);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.auth-card__meta {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-card__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.auth-card__status {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(66, 49, 35, 0.2);
+  border-radius: 12px;
+  font: inherit;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.button {
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  color: #fff8f1;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.button--secondary {
+  color: var(--foreground);
+  background: rgba(66, 49, 35, 0.08);
+ }
+
+@media (max-width: 640px) {
+  .site-shell {
+    padding: 24px 16px 40px;
+  }
+
+  .site-shell__actions {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .route-shell {
+    padding: 22px 18px;
+  }
+
+  .landing-panel {
+    grid-template-columns: 1fr;
+    padding: 20px 18px;
+  }
+}

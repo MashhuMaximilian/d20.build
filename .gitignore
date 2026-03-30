@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Local research / source material not intended for the app repo
+Aurora Character Builder/
+aurora-elements/
+outputs/
+planning/
+
+# Web app local artifacts
+web/.env
+web/.env.local
+web/.env*.local
+web/.next/
+web/node_modules/
+web/coverage/
+web/dist/
+web/*.log
+web/tsconfig.tsbuildinfo
+
