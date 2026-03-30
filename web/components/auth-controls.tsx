@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { getPublicAppUrl } from "@/lib/env";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthControlsProps = {
@@ -28,7 +29,8 @@ export function AuthControls({
     setStatus("");
 
     const supabase = createSupabaseBrowserClient();
-    const redirectTo = new URL("/auth/callback", window.location.origin);
+    const appUrl = getPublicAppUrl() ?? window.location.origin;
+    const redirectTo = new URL("/auth/callback", appUrl);
     redirectTo.searchParams.set("next", "/");
 
     const { error } = await supabase.auth.signInWithOtp({

@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { AuthControls } from "@/components/auth-controls";
 import { RouteShell } from "@/components/route-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -5,11 +7,23 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 type HomePageProps = {
   searchParams?: Promise<{
     auth_message?: string;
+    code?: string;
+    next?: string;
   }>;
 };
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = searchParams ? await searchParams : undefined;
+
+  if (params?.code) {
+    const callbackParams = new URLSearchParams({
+      code: params.code,
+      next: params.next || "/",
+    });
+
+    redirect(`/auth/callback?${callbackParams.toString()}`);
+  }
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

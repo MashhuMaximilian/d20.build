@@ -1,7 +1,12 @@
 const publicEnv = {
+  appUrl: process.env.NEXT_PUBLIC_APP_URL?.trim() || undefined,
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
 };
+
+export function getPublicAppUrl() {
+  return publicEnv.appUrl?.replace(/\/+$/, "");
+}
 
 export function getSupabasePublicEnv() {
   if (!publicEnv.supabaseUrl || !publicEnv.supabaseAnonKey) {
