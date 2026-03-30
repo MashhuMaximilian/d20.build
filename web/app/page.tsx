@@ -64,19 +64,27 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <div className="auth-panel__copy">
             <span className="route-shell__tag">Account</span>
             <h3 className="landing-panel__title">
-              {isAuthenticated ? "You are signed in" : "Sign in to save characters"}
+              {isAuthenticated ? "Account ready" : "Sign in when you want cloud save"}
             </h3>
             <p className="landing-panel__text">
               {isAuthenticated
-                ? `Signed in as ${user?.email ?? "a Supabase user"}. Cloud saves and character persistence can now layer onto this session path.`
-                : "Use a magic link to authenticate. The link should return to the deployed d20.build app, not localhost."}
+                ? `Signed in as ${user?.email ?? "a Supabase user"}. You can keep building now; auth no longer dominates the homepage.`
+                : "You can already build local drafts. Sign in only when you want account-backed persistence."}
             </p>
           </div>
-          <AuthControls
-            isAuthenticated={isAuthenticated}
-            userEmail={user?.email}
-            initialMessage={params?.auth_message}
-          />
+          <div className="auth-panel__actions">
+            <Link className="button" href="/builder/new">
+              Start building
+            </Link>
+            {!isAuthenticated ? (
+              <AuthControls
+                isAuthenticated={isAuthenticated}
+                userEmail={user?.email}
+                initialMessage={params?.auth_message}
+                variant="inline"
+              />
+            ) : null}
+          </div>
         </section>
       </section>
 

@@ -1,0 +1,54 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { BuilderEditor } from "@/components/builder-editor";
+import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
+import type { BuiltInClassRecord } from "@/lib/builtins/classes";
+import type { BuiltInRaceRecord } from "@/lib/builtins/races";
+import { getCharacterDraft } from "@/lib/characters/storage";
+import type { CharacterDraft } from "@/lib/characters/types";
+
+type BuilderResumeProps = {
+  backgrounds: BuiltInBackgroundRecord[];
+  classes: BuiltInClassRecord[];
+  draftId: string;
+  races: BuiltInRaceRecord[];
+};
+
+export function BuilderResume({
+  backgrounds,
+  classes,
+  draftId,
+  races,
+}: BuilderResumeProps) {
+  const [draft, setDraft] = useState<CharacterDraft | null | undefined>(undefined);
+
+  useEffect(() => {
+    setDraft(getCharacterDraft(draftId));
+  }, [draftId]);
+
+  if (draft === undefined) {
+    return null;
+  }
+
+  if (draft === null) {
+    return (
+      <section className="builder-panel">
+        <span className="builder-panel__label">Draft not found</span>
+        <p className="route-shell__copy">
+          This builder draft only exists in the browser where it was created.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <BuilderEditor
+      backgrounds={backgrounds}
+      classes={classes}
+      initialDraft={draft}
+      races={races}
+    />
+  );
+}
