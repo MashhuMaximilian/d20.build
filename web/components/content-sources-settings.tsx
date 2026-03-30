@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import {
   createContentSource,
   deleteContentSource,
+  hydrateSourceCacheFromRemote,
+  listDeviceCachedSources,
   listContentSources,
   listSourceSyncRuns,
   queueContentSourceSync,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/content-sources/repository";
 import {
   SUGGESTED_SOURCE_INDEXES,
+  type CachedSourceSummary,
   type ContentSource,
   type SourceSyncRun,
 } from "@/lib/content-sources/types";
@@ -24,6 +27,7 @@ export function ContentSourcesSettings({
   isAuthenticated,
 }: ContentSourcesSettingsProps) {
   const [sources, setSources] = useState<ContentSource[]>([]);
+  const [cachedSources, setCachedSources] = useState<Record<string, CachedSourceSummary>>({});
   const [syncRuns, setSyncRuns] = useState<SourceSyncRun[]>([]);
   const [name, setName] = useState("");
   const [indexUrl, setIndexUrl] = useState("");
@@ -31,6 +35,7 @@ export function ContentSourcesSettings({
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [syncingSourceId, setSyncingSourceId] = useState("");
+  const [cachingSourceId, setCachingSourceId] = useState("");
 
   function isIndexUrl(value: string) {
     try {
@@ -42,12 +47,16 @@ export function ContentSourcesSettings({
   }
 
   async function refresh() {
-    const [nextSources, nextRuns] = await Promise.all([
+    const [nextSources, nextRuns, localCache] = await Promise.all([
       listContentSources(),
       listSourceSyncRuns(),
+      listDeviceCachedSources(),
     ]);
     setSources(nextSources);
     setSyncRuns(nextRuns);
+    setCachedSources(
+      Object.fromEntries(localCache.map((entry) => [entry.sourceId, entry])),
+    );
   }
 
   useEffect(() => {
@@ -118,10 +127,29 @@ export function ContentSourcesSettings({
 
     setStatus(
       result.warningCount
-        ? `Synced ${source.name} with warnings: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported. ${result.warningSummary ?? ""}`.trim()
-        : `Synced ${source.name}: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported.`,
+        ? `Synced ${source.name} with warnings: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported, ${result.cachedElementCount} cached on this device. ${result.warningSummary ?? ""}`.trim()
+        : `Synced ${source.name}: ${result.discoveredFileCount} files discovered, ${result.parsedFileCount} parsed, ${result.upsertedElementCount} elements imported, ${result.cachedElementCount} cached on this device.`,
     );
     await refresh();
+  }
+
+  async function handleCacheOnDevice(source: ContentSource) {
+    setStatus("");
+    setStatusTone("success");
+    setCachingSourceId(source.id);
+
+    try {
+      const result = await hydrateSourceCacheFromRemote(source);
+      setStatus(
+        `Cached ${source.name} on this device: ${result.fileCount} files and ${result.elementCount} elements.`,
+      );
+      await refresh();
+    } catch (error) {
+      setStatusTone("error");
+      setStatus(error instanceof Error ? error.message : "Could not cache source on this device.");
+    } finally {
+      setCachingSourceId("");
+    }
   }
 
   async function handleToggle(source: ContentSource) {
@@ -223,6 +251,14 @@ export function ContentSourcesSettings({
             {sources.map((source) => (
               <article className="draft-card" key={source.id}>
                 <div className="draft-card__meta">
+                  {cachedSources[source.id] ? (
+                    <span>
+                      Cached on this device · {cachedSources[source.id].elementCount} elements ·{" "}
+                      {new Date(cachedSources[source.id].cachedAt).toLocaleString()}
+                    </span>
+                  ) : (
+                    <span>Not cached on this device</span>
+                  )}
                   <strong>{source.name}</strong>
                   <span>{source.index_url}</span>
                   <span>
@@ -250,6 +286,14 @@ export function ContentSourcesSettings({
                     source.sync_status === "syncing"
                       ? "Syncing..."
                       : "Sync now"}
+                  </button>
+                  <button
+                    className="button button--secondary button--compact"
+                    type="button"
+                    disabled={cachingSourceId === source.id}
+                    onClick={() => handleCacheOnDevice(source)}
+                  >
+                    {cachingSourceId === source.id ? "Caching..." : "Cache on this device"}
                   </button>
                   <button
                     className="button button--secondary button--compact"

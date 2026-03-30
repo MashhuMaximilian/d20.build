@@ -1,7 +1,7 @@
 "use client";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { CharacterDraft } from "@/lib/characters/types";
+import { normalizeCharacterDraft, type CharacterDraft } from "@/lib/characters/types";
 
 type CharacterRecord = {
   id: string;
@@ -45,7 +45,7 @@ export async function listRemoteCharacterDrafts(): Promise<CharacterDraft[]> {
   }
 
   return (data as CharacterRecord[]).map((row) => ({
-    ...row.payload,
+    ...normalizeCharacterDraft(row.payload),
     id: row.id,
     name: row.name,
     updatedAt: row.updated_at,
@@ -73,7 +73,7 @@ export async function getRemoteCharacterDraft(id: string): Promise<CharacterDraf
 
   const row = data as CharacterRecord;
   return {
-    ...row.payload,
+    ...normalizeCharacterDraft(row.payload),
     id: row.id,
     name: row.name,
     updatedAt: row.updated_at,
@@ -94,7 +94,7 @@ export async function saveRemoteCharacterDraft(draft: CharacterDraft) {
       id: draft.id,
       user_id: userId,
       name: draft.name,
-      payload: draft,
+      payload: normalizeCharacterDraft(draft),
       updated_at: draft.updatedAt,
     },
     { onConflict: "id" },

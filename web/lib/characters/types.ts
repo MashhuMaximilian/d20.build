@@ -9,6 +9,16 @@ export type AbilityKey =
 export type CharacterAbilities = Record<AbilityKey, number>;
 export type AbilityMode = "manual" | "standard-array" | "point-buy" | "rolled";
 
+export type CharacterSourceManifestEntry = {
+  sourceId: string;
+  sourceName: string;
+  indexUrl: string;
+  sourceKind: string;
+  requiredElementIds: string[];
+  fingerprint: string | null;
+  status: "built-in" | "cached-on-device" | "rehydrate-required";
+};
+
 export type CharacterDraft = {
   id: string;
   createdAt: string;
@@ -21,6 +31,7 @@ export type CharacterDraft = {
   backgroundId: string;
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
+  sourceManifest: CharacterSourceManifestEntry[];
 };
 
 export const ABILITY_KEYS: AbilityKey[] = [
@@ -63,7 +74,22 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       wisdom: 10,
       charisma: 10,
     },
+    sourceManifest: [],
   };
+}
+
+export function normalizeCharacterDraft(draft: CharacterDraft | (Partial<CharacterDraft> & { id: string })) {
+  const empty = createEmptyCharacterDraft();
+
+  return {
+    ...empty,
+    ...draft,
+    abilities: {
+      ...empty.abilities,
+      ...(draft.abilities ?? {}),
+    },
+    sourceManifest: draft.sourceManifest ?? [],
+  } satisfies CharacterDraft;
 }
 
 export function formatAbilityModifier(score: number) {

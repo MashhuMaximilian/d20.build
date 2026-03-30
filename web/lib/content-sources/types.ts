@@ -11,6 +11,49 @@ export type ContentSource = {
   updated_at: string;
 };
 
+export type ImportedSourceFile = {
+  id: string;
+  source_id: string;
+  file_url: string;
+  etag: string | null;
+  content_hash: string | null;
+  last_seen_at: string;
+  last_parsed_at: string | null;
+  created_at: string;
+};
+
+export type ImportedElement = {
+  id: string;
+  source_id: string;
+  element_id: string;
+  element_type: string;
+  name: string;
+  source_name: string | null;
+  source_url: string;
+  supports: unknown[];
+  setters: unknown[];
+  rules: unknown[];
+  description_html: string | null;
+  description_text: string | null;
+  multiclass: Record<string, unknown> | null;
+  spellcasting: Record<string, unknown> | null;
+  raw_element: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CachedSourceSummary = {
+  sourceId: string;
+  sourceName: string;
+  indexUrl: string;
+  sourceKind: string;
+  cachedAt: string;
+  sourceUpdatedAt: string;
+  remoteLastSyncedAt: string | null;
+  fileCount: number;
+  elementCount: number;
+};
+
 export type SourceSyncRun = {
   id: string;
   source_id: string;
