@@ -14,6 +14,13 @@ export type CatalogItem = {
   detailTags?: string[];
   summaryLines?: string[];
   impactLines?: string[];
+  mechanicsLines?: string[];
+  featureDetails?: {
+    name: string;
+    description: string;
+    detailHtml?: string;
+    source?: string;
+  }[];
 };
 
 type CatalogSelectorProps = {
@@ -161,7 +168,7 @@ export function CatalogSelector({
   const [sourceFilter, setSourceFilter] = useState<"all" | "srd" | "imported">("all");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
-  const [detailView, setDetailView] = useState<"overview" | "mechanics" | "reference">("overview");
+  const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -395,9 +402,7 @@ export function CatalogSelector({
                   >
                     <div className="catalog-selector__rowHeader">
                       <strong>{item.name}</strong>
-                      {isSelected ? (
-                        <span className="catalog-selector__selectedBadge">Selected</span>
-                      ) : null}
+                      {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
                     </div>
                     {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
                     {item.summaryLines?.length ? (
@@ -452,14 +457,20 @@ export function CatalogSelector({
               ) : null}
 
               <div className="catalog-selector__detailTabs">
-                {(["overview", "mechanics", "reference"] as const).map((view) => (
+                {(["overview", "mechanics", "features", "reference"] as const).map((view) => (
                   <button
                     key={view}
                     className={`choice-chip${detailView === view ? " choice-chip--active" : ""}`}
                     type="button"
                     onClick={() => setDetailView(view)}
                   >
-                    {view === "overview" ? "Overview" : view === "mechanics" ? "Mechanics" : "Reference"}
+                    {view === "overview"
+                      ? "Overview"
+                      : view === "mechanics"
+                        ? "Mechanics"
+                        : view === "features"
+                          ? "Features"
+                          : "Reference"}
                   </button>
                 ))}
               </div>
@@ -489,16 +500,52 @@ export function CatalogSelector({
                       <p className="catalog-selector__detailMeta">{previewItem.meta}</p>
                     </>
                   ) : null}
-                  {previewItem.impactLines?.length ? (
+                  {(previewItem.mechanicsLines?.length || previewItem.impactLines?.length) ? (
                     <>
-                      <span className="catalog-selector__sectionLabel">Build impact</span>
+                      <span className="catalog-selector__sectionLabel">Mechanical breakdown</span>
                       <ul className="catalog-selector__impactList">
-                        {previewItem.impactLines.map((line) => (
+                        {(previewItem.mechanicsLines ?? previewItem.impactLines ?? []).map((line) => (
                           <li key={line}>{line}</li>
                         ))}
                       </ul>
                     </>
                   ) : null}
+                </div>
+              ) : null}
+
+              {detailView === "features" ? (
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">Feature details</span>
+                  {previewItem.featureDetails?.length ? (
+                    <div className="catalog-selector__featureList">
+                      {previewItem.featureDetails.map((feature) => {
+                        const featureMarkup = feature.detailHtml?.trim()
+                          ? sanitizeRichHtml(feature.detailHtml)
+                          : formatPlainTextAsHtml(feature.description);
+
+                        return (
+                          <article className="catalog-selector__featureCard" key={feature.name}>
+                            <div className="catalog-selector__featureHeader">
+                              <strong className="catalog-selector__featureTitle">{feature.name}</strong>
+                              {feature.source ? (
+                                <span className="catalog-selector__featureSource">{feature.source}</span>
+                              ) : null}
+                            </div>
+                            {featureMarkup ? (
+                              <div
+                                className="catalog-selector__featureBody catalog-selector__richText"
+                                dangerouslySetInnerHTML={{ __html: featureMarkup }}
+                              />
+                            ) : (
+                              <p className="catalog-selector__detailMeta">No feature details available yet.</p>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="catalog-selector__detailMeta">No feature details available yet.</p>
+                  )}
                 </div>
               ) : null}
 
