@@ -17,7 +17,6 @@ export type CatalogItem = {
 };
 
 type CatalogSelectorProps = {
-  actionLabel?: string;
   emptyMessage?: string;
   items: CatalogItem[];
   label: string;
@@ -152,7 +151,6 @@ function getPreviewText(text: string) {
 }
 
 export function CatalogSelector({
-  actionLabel,
   emptyMessage = "No matching entries.",
   items,
   label,
@@ -390,7 +388,10 @@ export function CatalogSelector({
                       isPreview ? " catalog-selector__row--preview" : ""
                     }${isSelected ? " catalog-selector__row--selected" : ""}`}
                     type="button"
-                    onClick={() => setPreviewId(item.id)}
+                    onClick={() => {
+                      setPreviewId(item.id);
+                      onSelect(item.id);
+                    }}
                   >
                     <div className="catalog-selector__rowHeader">
                       <strong>{item.name}</strong>
@@ -511,17 +512,6 @@ export function CatalogSelector({
                   )}
                 </div>
               ) : null}
-
-              <button
-                className="button catalog-selector__selectButton"
-                type="button"
-                disabled={previewItem.id === selectedId}
-                onClick={() => onSelect(previewItem.id)}
-              >
-                {previewItem.id === selectedId
-                  ? `${previewItem.name} selected`
-                  : actionLabel ?? `Choose ${previewItem.name}`}
-              </button>
             </>
           ) : (
             <p className="catalog-selector__detailMeta">{emptyMessage}</p>

@@ -638,7 +638,6 @@ export function BuilderEditor({
               </p>
             </div>
             <CatalogSelector
-              actionLabel="Choose race"
               items={raceItems}
               label="Race"
               onSelect={(id) => {
@@ -664,7 +663,6 @@ export function BuilderEditor({
             </div>
             {selectedRace ? (
               <CatalogSelector
-                actionLabel="Choose subrace"
                 items={subraceItems}
                 label="Subrace"
                 onSelect={(id) => updateDraft({ subraceId: id })}
@@ -686,7 +684,6 @@ export function BuilderEditor({
               </p>
             </div>
             <CatalogSelector
-              actionLabel="Choose class"
               items={classItems}
               label="Class"
               onSelect={(id) => updateDraft({ classId: id, subclassId: "" })}
@@ -710,7 +707,6 @@ export function BuilderEditor({
             {selectedClass && activeSubclassStep ? (
               activeSubclassStep.options.length ? (
                 <CatalogSelector
-                  actionLabel="Choose subclass"
                   items={subclassItems}
                   label="Subclass"
                   onSelect={(id) => updateDraft({ subclassId: id })}
@@ -742,7 +738,6 @@ export function BuilderEditor({
               </p>
             </div>
             <CatalogSelector
-              actionLabel="Choose background"
               items={backgroundItems}
               label="Background"
               onSelect={(id) => updateDraft({ backgroundId: id })}
@@ -930,8 +925,10 @@ export function BuilderEditor({
       <section className="builder-navigation">
         <div className="builder-navigation__meta">
           <span className="builder-panel__label">Current step</span>
-          <strong>{activeStep.label}</strong>
-          <p>{activeStep.description}</p>
+          <div className="builder-navigation__summary">
+            <strong>{activeStep.label}</strong>
+            <p>{activeStep.description}</p>
+          </div>
         </div>
         <div className="builder-navigation__actions">
           {previousStep ? (
