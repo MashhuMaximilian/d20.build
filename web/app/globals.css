@@ -948,6 +948,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
 .catalog-selector__detailTab {
@@ -956,15 +957,19 @@ a {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  min-height: 44px;
-  height: 44px;
-  padding: 0 18px;
+  width: fit-content;
+  min-width: 118px;
+  min-height: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0 16px;
   border: 1px solid rgba(146, 38, 16, 0.14);
   border-radius: 999px;
   background: rgba(255, 252, 246, 0.96);
   color: var(--foreground);
   cursor: pointer;
-  font-size: 0.96rem;
+  font-family: inherit;
+  font-size: 0.92rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
