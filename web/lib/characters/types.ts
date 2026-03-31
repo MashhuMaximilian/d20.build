@@ -32,6 +32,7 @@ export type CharacterDraft = {
   backgroundId: string;
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
+  equipmentSelections: Record<string, string>;
   sourceManifest: CharacterSourceManifestEntry[];
 };
 
@@ -76,6 +77,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       wisdom: 10,
       charisma: 10,
     },
+    equipmentSelections: {},
     sourceManifest: [],
   };
 }
@@ -90,6 +92,7 @@ export function normalizeCharacterDraft(draft: CharacterDraft | (Partial<Charact
       ...empty.abilities,
       ...(draft.abilities ?? {}),
     },
+    equipmentSelections: draft.equipmentSelections ?? {},
     sourceManifest: draft.sourceManifest ?? [],
   } satisfies CharacterDraft;
 }

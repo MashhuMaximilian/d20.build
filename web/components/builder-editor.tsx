@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
+import { EquipmentStep } from "@/components/equipment-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type {
   BuiltInClassRecord,
@@ -23,6 +24,11 @@ import {
   type CharacterDraft,
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
+import {
+  getMissingEquipmentChoiceCount,
+  getStartingEquipmentPlan,
+  resolveStartingEquipmentItems,
+} from "@/lib/equipment/starting-equipment";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
@@ -39,6 +45,7 @@ type BuilderStepId =
   | "subclass"
   | "background"
   | "abilities"
+  | "equipment"
   | "review";
 
 function getStatBonuses(values: string[]) {
@@ -328,6 +335,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
   needsSubrace: boolean;
   needsSubclass: boolean;
   abilityValidationMessage: string;
+  missingEquipmentChoices: number;
 }) {
   return [
     { label: "Name draft", done: Boolean(draft.name.trim()) },
@@ -337,6 +345,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Choose subclass", done: !flags.needsSubclass || Boolean(draft.subclassId) },
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
+    { label: "Choose starting equipment", done: flags.missingEquipmentChoices === 0 },
   ];
 }
 
@@ -406,6 +415,18 @@ export function BuilderEditor({
     () => backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null,
     [backgrounds, draft.backgroundId],
   );
+  const equipmentPlan = useMemo(
+    () => getStartingEquipmentPlan({ classId: draft.classId, backgroundId: draft.backgroundId }),
+    [draft.backgroundId, draft.classId],
+  );
+  const selectedEquipmentItems = useMemo(
+    () => resolveStartingEquipmentItems(equipmentPlan, draft.equipmentSelections),
+    [draft.equipmentSelections, equipmentPlan],
+  );
+  const missingEquipmentChoices = useMemo(
+    () => getMissingEquipmentChoiceCount(equipmentPlan, draft.equipmentSelections),
+    [draft.equipmentSelections, equipmentPlan],
+  );
 
   const racialBonuses = useMemo(() => {
     const statRules = [
@@ -449,8 +470,16 @@ export function BuilderEditor({
         )
       : 0;
 
-    return subracePending + subclassPending + backgroundPending + classPending;
-  }, [activeSubclassStep, draft.subclassId, draft.subraceId, selectedBackground, selectedClass, selectedRace]);
+    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices;
+  }, [
+    activeSubclassStep,
+    draft.subclassId,
+    draft.subraceId,
+    missingEquipmentChoices,
+    selectedBackground,
+    selectedClass,
+    selectedRace,
+  ]);
 
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
   const selectionValidationMessage =
@@ -458,6 +487,8 @@ export function BuilderEditor({
       ? "Choose a subrace before saving this draft."
       : activeSubclassStep?.options.length && !draft.subclassId
         ? `Choose a subclass before saving this draft.`
+        : missingEquipmentChoices
+          ? `Finish the remaining starting equipment choices before saving this draft.`
       : "";
   const saveValidationMessage = abilityValidationMessage || selectionValidationMessage;
 
@@ -472,8 +503,9 @@ export function BuilderEditor({
         needsSubrace: Boolean(selectedRace?.subraces.length),
         needsSubclass: Boolean(activeSubclassStep?.options.length),
         abilityValidationMessage,
+        missingEquipmentChoices,
       }),
-    [activeSubclassStep, abilityValidationMessage, draft, selectedRace],
+    [activeSubclassStep, abilityValidationMessage, draft, missingEquipmentChoices, selectedRace],
   );
 
   const steps = useMemo(() => {
@@ -522,6 +554,11 @@ export function BuilderEditor({
         id: "abilities",
         label: "Abilities",
         description: "Set base ability scores and see racial bonuses update in real time.",
+      },
+      {
+        id: "equipment",
+        label: "Equipment",
+        description: "Choose starting gear packages and auto-add the fixed gear from class and background.",
       },
       {
         id: "review",
@@ -601,6 +638,8 @@ export function BuilderEditor({
         return Boolean(draft.backgroundId);
       case "abilities":
         return !abilityValidationMessage;
+      case "equipment":
+        return missingEquipmentChoices === 0;
       case "review":
         return canSave;
       default:
@@ -624,6 +663,8 @@ export function BuilderEditor({
         return Boolean(draft.backgroundId);
       case "abilities":
         return !abilityValidationMessage;
+      case "equipment":
+        return missingEquipmentChoices === 0;
       case "review":
         return canSave;
       default:
@@ -737,7 +778,7 @@ export function BuilderEditor({
             <CatalogSelector
               items={classItems}
               label="Class"
-              onSelect={(id) => updateDraft({ classId: id, subclassId: "" })}
+              onSelect={(id) => updateDraft({ classId: id, subclassId: "", equipmentSelections: {} })}
               selectedId={draft.classId}
             />
           </section>
@@ -791,7 +832,7 @@ export function BuilderEditor({
             <CatalogSelector
               items={backgroundItems}
               label="Background"
-              onSelect={(id) => updateDraft({ backgroundId: id })}
+              onSelect={(id) => updateDraft({ backgroundId: id, equipmentSelections: {} })}
               selectedId={draft.backgroundId}
             />
           </section>
@@ -815,6 +856,30 @@ export function BuilderEditor({
               validationMessage={abilityValidationMessage}
             />
           </div>
+        );
+      case "equipment":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Equipment</span>
+              <h2 className="route-shell__title">Choose the starting gear package</h2>
+              <p className="route-shell__copy">
+                This first pass focuses on guided starting equipment: fixed items are auto-added, and package choices are kept explicit
+                so the build stays readable.
+              </p>
+            </div>
+            <EquipmentStep
+              plan={equipmentPlan}
+              selections={draft.equipmentSelections}
+              onSelect={(groupId, optionId) =>
+                updateDraft({
+                  equipmentSelections: {
+                    ...draft.equipmentSelections,
+                    [groupId]: optionId,
+                  },
+                })}
+            />
+          </section>
         );
       case "review":
         return (
@@ -868,6 +933,9 @@ export function BuilderEditor({
                         : "No class yet"}
                   </p>
                   <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
+                  <p className="builder-summary__meta">
+                    Equipment: {selectedEquipmentItems.length ? `${selectedEquipmentItems.length} starting items selected` : "Missing"}
+                  </p>
                 </article>
               </div>
 
@@ -887,7 +955,23 @@ export function BuilderEditor({
                 <p className="builder-summary__meta">
                   Subclass timing: {activeSubclassStep?.timingLabel ?? "No subclass step available"}
                 </p>
+                <p className="builder-summary__meta">
+                  Equipment choices remaining: {missingEquipmentChoices}
+                </p>
                 <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
+              </article>
+
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Starting gear</span>
+                {selectedEquipmentItems.length ? (
+                  <ul className="equipment-step__itemList">
+                    {selectedEquipmentItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="builder-summary__meta">No starting gear selected yet.</p>
+                )}
               </article>
             </div>
           </section>
