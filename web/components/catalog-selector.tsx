@@ -409,7 +409,7 @@ export function CatalogSelector({
                     ) : null}
                     {item.impactLines?.length ? (
                       <div className="catalog-selector__rowImpact">
-                        {item.impactLines.slice(0, 3).map((line) => (
+                        {item.impactLines.slice(0, 2).map((line) => (
                           <span className="catalog-selector__impactChip" key={line}>
                             {line}
                           </span>
@@ -439,12 +439,15 @@ export function CatalogSelector({
               </div>
 
               {previewItem.detailTags?.length ? (
-                <div className="catalog-selector__tagList">
-                  {previewItem.detailTags.slice(0, 10).map((tag) => (
-                    <span className="catalog-selector__tag" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">Key traits</span>
+                  <div className="catalog-selector__tagList">
+                    {previewItem.detailTags.slice(0, 8).map((tag) => (
+                      <span className="catalog-selector__tag" key={tag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : null}
 

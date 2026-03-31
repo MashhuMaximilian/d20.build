@@ -135,9 +135,11 @@ function getAbilityValidationMessage(draft: CharacterDraft) {
 function buildRaceCatalogItems(races: BuiltInRaceRecord[]): CatalogItem[] {
   return races.map((entry) => {
     const bonusSummary = getAbilityBonusSummary(entry.race.rules);
+    const traitSummary = entry.traits.slice(0, 2).map((trait) => trait.name).join(" • ");
     const impactLines = normalizeSummaryLines([
-      bonusSummary.length ? `Ability bonuses: ${bonusSummary.join(", ")}` : "",
-      entry.subraces.length ? `Adds ${entry.subraces.length} subrace options` : "No subrace choice required",
+      entry.subraces.length
+        ? `${entry.subraces.length} subrace option${entry.subraces.length === 1 ? "" : "s"}`
+        : "No subrace branch",
       entry.traits.length ? `Grants ${entry.traits.length} racial traits` : "",
       countSelectRules(entry.race.rules) ? `Introduces ${countSelectRules(entry.race.rules)} choice nodes` : "",
     ]);
@@ -152,7 +154,7 @@ function buildRaceCatalogItems(races: BuiltInRaceRecord[]): CatalogItem[] {
       meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
       summaryLines: normalizeSummaryLines([
         bonusSummary.join(", "),
-        entry.traits.slice(0, 2).map((trait) => trait.name).join(" • "),
+        traitSummary,
       ]),
       impactLines,
       filterTags: [
@@ -161,7 +163,7 @@ function buildRaceCatalogItems(races: BuiltInRaceRecord[]): CatalogItem[] {
         ...entry.traits.slice(0, 6).map((trait) => trait.name),
       ],
       detailTags: [
-        ...entry.subraces.slice(0, 6).map((subrace) => subrace.name),
+        ...bonusSummary,
         ...entry.traits.slice(0, 6).map((trait) => trait.name),
       ],
     };
@@ -177,6 +179,7 @@ function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[]
     const bonusSummary = getAbilityBonusSummary(subrace.rules);
     const grantedTraitIds = new Set(collectGrantedIds(subrace.rules, "Racial Trait"));
     const grantedTraits = race.traits.filter((trait) => grantedTraitIds.has(trait.id));
+    const traitSummary = grantedTraits.slice(0, 2).map((trait) => trait.name).join(" • ");
 
     return {
       id: subrace.id,
@@ -188,10 +191,9 @@ function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[]
       meta: `${grantedTraits.length} granted traits`,
       summaryLines: normalizeSummaryLines([
         bonusSummary.join(", "),
-        grantedTraits.slice(0, 2).map((trait) => trait.name).join(" • "),
+        traitSummary,
       ]),
       impactLines: normalizeSummaryLines([
-        bonusSummary.length ? `Ability bonuses: ${bonusSummary.join(", ")}` : "",
         grantedTraits.length ? `Grants ${grantedTraits.length} subrace traits` : "",
         countSelectRules(subrace.rules) ? `Introduces ${countSelectRules(subrace.rules)} choice nodes` : "",
       ]),
@@ -199,7 +201,7 @@ function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[]
         ...bonusSummary,
         ...grantedTraits.slice(0, 6).map((trait) => trait.name),
       ],
-      detailTags: grantedTraits.slice(0, 8).map((trait) => trait.name),
+      detailTags: [...bonusSummary, ...grantedTraits.slice(0, 8).map((trait) => trait.name)],
     };
   });
 }
@@ -217,6 +219,7 @@ function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
       : entry.spellcastingFeatures.length
         ? `Spellcasting features: ${entry.spellcastingFeatures.length}`
         : "";
+    const featureSummary = entry.features.slice(0, 2).map((feature) => feature.name).join(" • ");
 
     return {
       id: entry.class.id,
@@ -228,12 +231,10 @@ function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
       meta: `${entry.features.length} class features`,
       summaryLines: normalizeSummaryLines([
         spellcastingLine,
-        subclassSummary,
-        entry.features.slice(0, 2).map((feature) => feature.name).join(" • "),
+        featureSummary,
       ]),
       impactLines: normalizeSummaryLines([
         `Grants ${entry.features.length} class features`,
-        spellcastingLine,
         subclassSummary,
         pendingChoices ? `Adds ${pendingChoices} builder choices` : "",
         ...grantSummary,
@@ -243,7 +244,10 @@ function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
         ...(spellcastingLine ? ["Spellcasting"] : []),
         ...(subclassSummary ? ["Subclass step"] : []),
       ],
-      detailTags: entry.features.slice(0, 8).map((feature) => feature.name),
+      detailTags: [
+        ...(spellcastingLine ? [spellcastingLine.replace("Spellcasting: ", "")] : []),
+        ...entry.features.slice(0, 6).map((feature) => feature.name),
+      ],
     };
   });
 }
@@ -262,19 +266,20 @@ function buildSubclassCatalogItems(step: BuiltInSubclassStep | null): CatalogIte
     source: option.archetype.source,
     meta: `${option.features.length} subclass features · ${step.timingLabel}`,
     summaryLines: normalizeSummaryLines([
-      step.label,
       option.features.slice(0, 2).map((feature) => feature.name).join(" • "),
     ]),
     impactLines: normalizeSummaryLines([
       `Adds ${option.features.length} subclass features`,
       step.timingLabel,
-      option.features.length ? `Highlights: ${option.features.slice(0, 3).map((feature) => feature.name).join(", ")}` : "",
+      countSelectRules(option.archetype.rules)
+        ? `Introduces ${countSelectRules(option.archetype.rules)} subclass choices`
+        : "",
     ]),
     filterTags: [
       step.label,
       ...option.features.slice(0, 8).map((feature) => feature.name),
     ],
-    detailTags: option.features.slice(0, 8).map((feature) => feature.name),
+    detailTags: option.features.slice(0, 6).map((feature) => feature.name),
   }));
 }
 
@@ -305,7 +310,7 @@ function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): Ca
     meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
     summaryLines: normalizeSummaryLines([
       entry.features.slice(0, 2).map((feature) => feature.name).join(" • "),
-      entry.choiceCount ? `${entry.choiceCount} guided choices` : "No extra choice nodes",
+      getFirstLevelGrantSummary(entry.background.rules).slice(0, 2).join(" • "),
     ]),
     impactLines: normalizeSummaryLines([
       `Grants ${entry.features.length} background feature${entry.features.length === 1 ? "" : "s"}`,
@@ -313,7 +318,7 @@ function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): Ca
       ...getFirstLevelGrantSummary(entry.background.rules),
     ]),
     filterTags: entry.features.slice(0, 8).map((feature) => feature.name),
-    detailTags: entry.features.slice(0, 8).map((feature) => `Feature: ${feature.name}`),
+    detailTags: entry.features.slice(0, 6).map((feature) => feature.name),
   }));
 }
 
