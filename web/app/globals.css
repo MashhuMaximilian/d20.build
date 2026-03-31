@@ -951,14 +951,24 @@ a {
 }
 
 .catalog-selector__detailTab {
-  padding: 8px 16px;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 18px;
   border: 1px solid rgba(146, 38, 16, 0.14);
   border-radius: 999px;
   background: rgba(255, 252, 246, 0.96);
   color: var(--foreground);
   cursor: pointer;
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
   transition:
     border-color 120ms ease,
     background-color 120ms ease,
