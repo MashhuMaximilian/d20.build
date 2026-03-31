@@ -183,17 +183,50 @@ function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
 function buildClassRecords(elements: BuiltInElement[]): BuiltInClassRecord[] {
   const elementsById = new Map(elements.map((element) => [element.id, element]));
   const classes = elements.filter((element) => element.type === "Class");
+  const archetypes = elements.filter((element) => element.type === "Archetype");
 
   return classes.map((characterClass) => {
     const featureIds = new Set(collectGrantedIds(characterClass.rules, "Class Feature"));
     const features = [...featureIds]
       .map((id) => elementsById.get(id))
       .filter((element): element is BuiltInElement => Boolean(element));
+    const subclassSteps = features.flatMap((feature) =>
+      feature.rules
+        .filter(
+          (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
+            rule.kind === "select" && rule.type === "Archetype",
+        )
+        .map((rule) => {
+          const options = archetypes
+            .filter((archetype) => (rule.supports ? archetype.supports.includes(rule.supports) : true))
+            .map((archetype) => {
+              const archetypeFeatureIds = collectGrantedIds(archetype.rules, "Archetype Feature");
+              const archetypeFeatures = archetypeFeatureIds
+                .map((id) => elementsById.get(id))
+                .filter((element): element is BuiltInElement => Boolean(element));
+
+              return {
+                archetype,
+                features: archetypeFeatures,
+              };
+            });
+
+          return {
+            feature,
+            label: rule.name,
+            level: rule.level,
+            timingLabel: rule.level ? `Subclass choice at level ${rule.level}` : "Subclass choice",
+            supportsKey: rule.supports,
+            options,
+          };
+        }),
+    );
 
     return {
       class: characterClass,
       features,
       spellcastingFeatures: features.filter((feature) => Boolean(feature.spellcasting)),
+      subclassSteps,
     };
   });
 }

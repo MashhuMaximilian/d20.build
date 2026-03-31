@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
-import type { BuiltInClassRecord } from "@/lib/builtins/classes";
+import type {
+  BuiltInClassRecord,
+  BuiltInSubclassStep,
+} from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
 import type { BuiltInRule } from "@/lib/builtins/types";
 import { saveRemoteCharacterDraft } from "@/lib/characters/repository";
@@ -33,6 +36,7 @@ type BuilderStepId =
   | "race"
   | "subrace"
   | "class"
+  | "subclass"
   | "background"
   | "abilities"
   | "review";
@@ -207,6 +211,7 @@ function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
       entry.features.reduce((count, feature) => count + countSelectRules(feature.rules), 0);
 
     const grantSummary = getFirstLevelGrantSummary(entry.class.rules);
+    const subclassSummary = entry.subclassSteps[0]?.timingLabel ?? "";
     const spellcastingLine = entry.class.spellcasting
       ? `Spellcasting: ${entry.class.spellcasting.name ?? entry.class.spellcasting.ability ?? "Yes"}`
       : entry.spellcastingFeatures.length
@@ -223,21 +228,70 @@ function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
       meta: `${entry.features.length} class features`,
       summaryLines: normalizeSummaryLines([
         spellcastingLine,
+        subclassSummary,
         entry.features.slice(0, 2).map((feature) => feature.name).join(" • "),
       ]),
       impactLines: normalizeSummaryLines([
         `Grants ${entry.features.length} class features`,
         spellcastingLine,
+        subclassSummary,
         pendingChoices ? `Adds ${pendingChoices} builder choices` : "",
         ...grantSummary,
       ]),
       filterTags: [
         ...entry.features.slice(0, 8).map((feature) => feature.name),
         ...(spellcastingLine ? ["Spellcasting"] : []),
+        ...(subclassSummary ? ["Subclass step"] : []),
       ],
       detailTags: entry.features.slice(0, 8).map((feature) => feature.name),
     };
   });
+}
+
+function buildSubclassCatalogItems(step: BuiltInSubclassStep | null): CatalogItem[] {
+  if (!step) {
+    return [];
+  }
+
+  return step.options.map((option) => ({
+    id: option.archetype.id,
+    name: option.archetype.name,
+    description: option.archetype.description,
+    detailHtml: option.archetype.descriptionHtml,
+    origin: option.archetype.catalogOrigin,
+    source: option.archetype.source,
+    meta: `${option.features.length} subclass features · ${step.timingLabel}`,
+    summaryLines: normalizeSummaryLines([
+      step.label,
+      option.features.slice(0, 2).map((feature) => feature.name).join(" • "),
+    ]),
+    impactLines: normalizeSummaryLines([
+      `Adds ${option.features.length} subclass features`,
+      step.timingLabel,
+      option.features.length ? `Highlights: ${option.features.slice(0, 3).map((feature) => feature.name).join(", ")}` : "",
+    ]),
+    filterTags: [
+      step.label,
+      ...option.features.slice(0, 8).map((feature) => feature.name),
+    ],
+    detailTags: option.features.slice(0, 8).map((feature) => feature.name),
+  }));
+}
+
+function buildCompletionChecklist(draft: CharacterDraft, flags: {
+  needsSubrace: boolean;
+  needsSubclass: boolean;
+  abilityValidationMessage: string;
+}) {
+  return [
+    { label: "Name draft", done: Boolean(draft.name.trim()) },
+    { label: "Choose race", done: Boolean(draft.raceId) },
+    { label: "Choose subrace", done: !flags.needsSubrace || Boolean(draft.subraceId) },
+    { label: "Choose class", done: Boolean(draft.classId) },
+    { label: "Choose subclass", done: !flags.needsSubclass || Boolean(draft.subclassId) },
+    { label: "Choose background", done: Boolean(draft.backgroundId) },
+    { label: "Finalize abilities", done: !flags.abilityValidationMessage },
+  ];
 }
 
 function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): CatalogItem[] {
@@ -288,6 +342,15 @@ export function BuilderEditor({
     () => classes.find((entry) => entry.class.id === draft.classId) ?? null,
     [classes, draft.classId],
   );
+  const activeSubclassStep = useMemo(
+    () => selectedClass?.subclassSteps[0] ?? null,
+    [selectedClass],
+  );
+  const selectedSubclass = useMemo(
+    () =>
+      activeSubclassStep?.options.find((entry) => entry.archetype.id === draft.subclassId) ?? null,
+    [activeSubclassStep, draft.subclassId],
+  );
   const selectedBackground = useMemo(
     () => backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null,
     [backgrounds, draft.backgroundId],
@@ -324,6 +387,7 @@ export function BuilderEditor({
 
   const pendingChoices = useMemo(() => {
     const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
+    const subclassPending = activeSubclassStep && activeSubclassStep.options.length > 0 && !draft.subclassId ? 1 : 0;
     const backgroundPending =
       selectedBackground?.background.rules.filter((rule) => rule.kind === "select").length ?? 0;
     const classPending = selectedClass
@@ -334,20 +398,32 @@ export function BuilderEditor({
         )
       : 0;
 
-    return subracePending + backgroundPending + classPending;
-  }, [draft.subraceId, selectedBackground, selectedClass, selectedRace]);
+    return subracePending + subclassPending + backgroundPending + classPending;
+  }, [activeSubclassStep, draft.subclassId, draft.subraceId, selectedBackground, selectedClass, selectedRace]);
 
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
   const selectionValidationMessage =
     selectedRace?.subraces.length && !draft.subraceId
       ? "Choose a subrace before saving this draft."
+      : activeSubclassStep?.options.length && !draft.subclassId
+        ? `Choose a subclass before saving this draft.`
       : "";
   const saveValidationMessage = abilityValidationMessage || selectionValidationMessage;
 
   const raceItems = useMemo(() => buildRaceCatalogItems(races), [races]);
   const subraceItems = useMemo(() => buildSubraceCatalogItems(selectedRace), [selectedRace]);
   const classItems = useMemo(() => buildClassCatalogItems(classes), [classes]);
+  const subclassItems = useMemo(() => buildSubclassCatalogItems(activeSubclassStep), [activeSubclassStep]);
   const backgroundItems = useMemo(() => buildBackgroundCatalogItems(backgrounds), [backgrounds]);
+  const completionChecklist = useMemo(
+    () =>
+      buildCompletionChecklist(draft, {
+        needsSubrace: Boolean(selectedRace?.subraces.length),
+        needsSubclass: Boolean(activeSubclassStep?.options.length),
+        abilityValidationMessage,
+      }),
+    [activeSubclassStep, abilityValidationMessage, draft, selectedRace],
+  );
 
   const steps = useMemo(() => {
     const base: { id: BuilderStepId; label: string; description: string }[] = [
@@ -377,6 +453,15 @@ export function BuilderEditor({
         label: "Class",
         description: "Compare class features, spellcasting, and future choice complexity.",
       },
+      ...(activeSubclassStep?.options.length
+        ? [
+            {
+              id: "subclass" as const,
+              label: "Subclass",
+              description: activeSubclassStep.timingLabel,
+            },
+          ]
+        : []),
       {
         id: "background",
         label: "Background",
@@ -395,7 +480,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [selectedRace]);
+  }, [activeSubclassStep, selectedRace]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -404,6 +489,12 @@ export function BuilderEditor({
   const activeStep = steps[currentStepIndex] ?? steps[0];
   const previousStep = currentStepIndex > 0 ? steps[currentStepIndex - 1] : null;
   const nextStep = currentStepIndex < steps.length - 1 ? steps[currentStepIndex + 1] : null;
+
+  useEffect(() => {
+    if (!steps.some((step) => step.id === currentStep)) {
+      setCurrentStep(steps[0]?.id ?? "identity");
+    }
+  }, [currentStep, steps]);
 
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
@@ -426,6 +517,7 @@ export function BuilderEditor({
       ...draft,
       name,
       subraceId: selectedRace?.subraces.length ? draft.subraceId : "",
+      subclassId: activeSubclassStep?.options.length ? draft.subclassId : "",
       updatedAt: new Date().toISOString(),
     };
 
@@ -464,6 +556,40 @@ export function BuilderEditor({
         return true;
     }
   })();
+
+  function isStepComplete(stepId: BuilderStepId) {
+    switch (stepId) {
+      case "identity":
+        return Boolean(draft.name.trim() || draft.playerName.trim());
+      case "race":
+        return Boolean(draft.raceId);
+      case "subrace":
+        return !selectedRace?.subraces.length || Boolean(draft.subraceId);
+      case "class":
+        return Boolean(draft.classId);
+      case "subclass":
+        return !activeSubclassStep?.options.length || Boolean(draft.subclassId);
+      case "background":
+        return Boolean(draft.backgroundId);
+      case "abilities":
+        return !abilityValidationMessage;
+      case "review":
+        return canSave;
+      default:
+        return false;
+    }
+  }
+
+  const firstBlockedIndex = steps.findIndex((step) => !isStepComplete(step.id));
+  const furthestUnlockedIndex =
+    firstBlockedIndex === -1 ? steps.length - 1 : Math.min(firstBlockedIndex + 1, steps.length - 1);
+
+  useEffect(() => {
+    const activeIndex = steps.findIndex((step) => step.id === currentStep);
+    if (activeIndex > furthestUnlockedIndex) {
+      setCurrentStep(steps[furthestUnlockedIndex]?.id ?? "identity");
+    }
+  }, [currentStep, furthestUnlockedIndex, steps]);
 
   function renderStepBody() {
     switch (activeStep.id) {
@@ -563,9 +689,46 @@ export function BuilderEditor({
               actionLabel="Choose class"
               items={classItems}
               label="Class"
-              onSelect={(id) => updateDraft({ classId: id })}
+              onSelect={(id) => updateDraft({ classId: id, subclassId: "" })}
               selectedId={draft.classId}
             />
+          </section>
+        );
+      case "subclass":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Subclass</span>
+              <h2 className="route-shell__title">
+                {activeSubclassStep?.label ?? "Pick the subclass that shapes the class identity"}
+              </h2>
+              <p className="route-shell__copy">
+                This step appears only when the selected class opens a supported subclass choice. The workbench shows the timing, features,
+                and identity of each available archetype.
+              </p>
+            </div>
+            {selectedClass && activeSubclassStep ? (
+              activeSubclassStep.options.length ? (
+                <CatalogSelector
+                  actionLabel="Choose subclass"
+                  items={subclassItems}
+                  label="Subclass"
+                  onSelect={(id) => updateDraft({ subclassId: id })}
+                  selectedId={draft.subclassId}
+                />
+              ) : (
+                <div className="builder-review__card">
+                  <span className="builder-panel__label">Subclass timing</span>
+                  <strong className="builder-summary__name">{activeSubclassStep.label}</strong>
+                  <p className="builder-summary__meta">{activeSubclassStep.timingLabel}</p>
+                  <p className="builder-summary__meta">
+                    This class has a subclass choice node, but no subclass options are currently available from built-in or imported content.
+                  </p>
+                </div>
+              )
+            ) : (
+              <p className="route-shell__copy">Choose a class first to unlock subclass planning.</p>
+            )}
           </section>
         );
       case "background":
@@ -612,25 +775,56 @@ export function BuilderEditor({
           <section className="builder-stepPanel builder-review">
             <div className="builder-stepPanel__intro">
               <span className="route-shell__tag">Review</span>
-              <h2 className="route-shell__title">Check the build summary before you save</h2>
+              <h2 className="route-shell__title">Finalize the draft with a real readiness check</h2>
               <p className="route-shell__copy">
-                This is the current build snapshot. The unresolved choice count is still shown so later rule-engine work can plug in without changing the shell.
+                Review should feel like the finish surface, not a blank summary. This pass checks what is complete, what still needs attention,
+                and whether the draft is ready to save.
               </p>
             </div>
 
-            <div className="builder-review__grid">
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Identity</span>
-                <strong className="builder-summary__name">{draft.name || "Untitled Adventurer"}</strong>
-                <p className="builder-summary__meta">Player: {draft.playerName || "Unassigned"}</p>
+            <div className="builder-review__layout">
+              <article className="builder-review__card builder-review__card--summary">
+                <span className="builder-panel__label">Readiness</span>
+                <strong className="builder-summary__name">{canSave ? "Ready to save" : "Needs attention"}</strong>
+                <p className="builder-summary__meta">
+                  {canSave
+                    ? "All required guided selections are in place for this draft shell."
+                    : saveValidationMessage || "Complete the missing steps below before saving."}
+                </p>
+                <ul className="builder-review__checklist">
+                  {completionChecklist.map((item) => (
+                    <li className={item.done ? "is-complete" : "is-pending"} key={item.label}>
+                      <span>{item.done ? "Done" : "Pending"}</span>
+                      <strong>{item.label}</strong>
+                    </li>
+                  ))}
+                </ul>
               </article>
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Selections</span>
-                <p className="builder-summary__meta">Race: {selectedRace?.race.name ?? "Missing"}</p>
-                <p className="builder-summary__meta">Subrace: {selectedSubrace?.name ?? "None"}</p>
-                <p className="builder-summary__meta">Class: {selectedClass?.class.name ?? "Missing"}</p>
-                <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
-              </article>
+
+              <div className="builder-review__stack">
+                <article className="builder-review__card">
+                  <span className="builder-panel__label">Identity</span>
+                  <strong className="builder-summary__name">{draft.name || "Untitled Adventurer"}</strong>
+                  <p className="builder-summary__meta">Player: {draft.playerName || "Unassigned"}</p>
+                </article>
+
+                <article className="builder-review__card">
+                  <span className="builder-panel__label">Selections</span>
+                  <p className="builder-summary__meta">Race: {selectedRace?.race.name ?? "Missing"}</p>
+                  <p className="builder-summary__meta">Subrace: {selectedSubrace?.name ?? (selectedRace?.subraces.length ? "Missing" : "Not required")}</p>
+                  <p className="builder-summary__meta">Class: {selectedClass?.class.name ?? "Missing"}</p>
+                  <p className="builder-summary__meta">
+                    Subclass:{" "}
+                    {activeSubclassStep?.options.length
+                      ? selectedSubclass?.archetype.name ?? "Missing"
+                      : selectedClass
+                        ? "Not available"
+                        : "No class yet"}
+                  </p>
+                  <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
+                </article>
+              </div>
+
               <article className="builder-review__card">
                 <span className="builder-panel__label">Build impact</span>
                 <p className="builder-summary__meta">
@@ -643,6 +837,9 @@ export function BuilderEditor({
                 </p>
                 <p className="builder-summary__meta">
                   Traits: {selectedRacialTraitNames.length ? selectedRacialTraitNames.join(", ") : "None yet"}
+                </p>
+                <p className="builder-summary__meta">
+                  Subclass timing: {activeSubclassStep?.timingLabel ?? "No subclass step available"}
                 </p>
                 <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
               </article>
@@ -699,18 +896,23 @@ export function BuilderEditor({
 
       <section className="builder-stepper">
         {steps.map((step, index) => {
+          const isComplete = isStepComplete(step.id);
+          const isLocked = index > furthestUnlockedIndex;
           const state =
             step.id === activeStep.id
               ? "active"
-              : index < currentStepIndex
-                ? "complete"
-                : "upcoming";
+              : isLocked
+                ? "locked"
+                : isComplete
+                  ? "complete"
+                  : "available";
 
           return (
             <button
               key={step.id}
               className={`builder-stepper__item builder-stepper__item--${state}`}
               type="button"
+              disabled={isLocked}
               onClick={() => setCurrentStep(step.id)}
             >
               <span className="builder-stepper__index">{index + 1}</span>

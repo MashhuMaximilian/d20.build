@@ -28,6 +28,7 @@ export type CharacterDraft = {
   raceId: string;
   subraceId: string;
   classId: string;
+  subclassId: string;
   backgroundId: string;
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
@@ -64,6 +65,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     raceId: "",
     subraceId: "",
     classId: "",
+    subclassId: "",
     backgroundId: "",
     abilityMode: "manual",
     abilities: {

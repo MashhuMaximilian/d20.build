@@ -136,6 +136,21 @@ function getDetailMarkup(item: CatalogItem | null) {
   return formatPlainTextAsHtml(item.description);
 }
 
+function getPreviewText(text: string) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+
+  if (normalized.length <= 320) {
+    return normalized;
+  }
+
+  const sentenceBreak = normalized.slice(0, 320).lastIndexOf(". ");
+  if (sentenceBreak > 80) {
+    return `${normalized.slice(0, sentenceBreak + 1)}…`;
+  }
+
+  return `${normalized.slice(0, 300).trimEnd()}…`;
+}
+
 export function CatalogSelector({
   actionLabel,
   emptyMessage = "No matching entries.",
@@ -148,6 +163,7 @@ export function CatalogSelector({
   const [sourceFilter, setSourceFilter] = useState<"all" | "srd" | "imported">("all");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
+  const [detailView, setDetailView] = useState<"overview" | "mechanics" | "reference">("overview");
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -237,6 +253,11 @@ export function CatalogSelector({
   }, [filteredItems, items, previewId, previewItem, selectedId]);
 
   const detailMarkup = useMemo(() => getDetailMarkup(previewItem), [previewItem]);
+  const activeFilters = [
+    sourceFilter !== "all" ? (sourceFilter === "srd" ? "SRD" : "Imported") : "",
+    tagFilter ?? "",
+    query ? `Search: ${query}` : "",
+  ].filter(Boolean);
 
   return (
     <div className="catalog-selector">
@@ -332,16 +353,30 @@ export function CatalogSelector({
               <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
               <h3 className="catalog-selector__optionsTitle">{label} library</h3>
             </div>
-            {tagFilter ? (
+            {activeFilters.length ? (
               <button
                 className="button button--secondary button--compact"
                 type="button"
-                onClick={() => setTagFilter(null)}
+                onClick={() => {
+                  setTagFilter(null);
+                  setSourceFilter("all");
+                  setQuery("");
+                }}
               >
-                Clear tag filter
+                Clear filters
               </button>
             ) : null}
           </div>
+
+          {activeFilters.length ? (
+            <div className="catalog-selector__appliedFilters">
+              {activeFilters.map((filter) => (
+                <span className="catalog-selector__appliedFilter" key={filter}>
+                  {filter}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div className="catalog-selector__list" role="listbox" aria-label={label}>
             {filteredItems.length ? (
@@ -412,35 +447,70 @@ export function CatalogSelector({
                 </div>
               ) : null}
 
-              {previewItem.impactLines?.length ? (
-                <div className="catalog-selector__detailSection">
-                  <span className="catalog-selector__sectionLabel">This changes your build</span>
-                  <ul className="catalog-selector__impactList">
-                    {previewItem.impactLines.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              {previewItem.meta ? (
-                <div className="catalog-selector__detailSection">
-                  <span className="catalog-selector__sectionLabel">Selection summary</span>
-                  <p className="catalog-selector__detailMeta">{previewItem.meta}</p>
-                </div>
-              ) : null}
-
-              <div className="catalog-selector__detailSection">
-                <span className="catalog-selector__sectionLabel">Reference</span>
-                {detailMarkup ? (
-                  <div
-                    className="catalog-selector__richText"
-                    dangerouslySetInnerHTML={{ __html: detailMarkup }}
-                  />
-                ) : (
-                  <p className="catalog-selector__detailMeta">{emptyMessage}</p>
-                )}
+              <div className="catalog-selector__detailTabs">
+                {(["overview", "mechanics", "reference"] as const).map((view) => (
+                  <button
+                    key={view}
+                    className={`choice-chip${detailView === view ? " choice-chip--active" : ""}`}
+                    type="button"
+                    onClick={() => setDetailView(view)}
+                  >
+                    {view === "overview" ? "Overview" : view === "mechanics" ? "Mechanics" : "Reference"}
+                  </button>
+                ))}
               </div>
+
+              {detailView === "overview" ? (
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">What this is</span>
+                  <p className="catalog-selector__detailCopy">{getPreviewText(previewItem.description)}</p>
+                  {previewItem.impactLines?.length ? (
+                    <>
+                      <span className="catalog-selector__sectionLabel">This changes your build</span>
+                      <ul className="catalog-selector__impactList">
+                        {previewItem.impactLines.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {detailView === "mechanics" ? (
+                <div className="catalog-selector__detailSection">
+                  {previewItem.meta ? (
+                    <>
+                      <span className="catalog-selector__sectionLabel">Selection summary</span>
+                      <p className="catalog-selector__detailMeta">{previewItem.meta}</p>
+                    </>
+                  ) : null}
+                  {previewItem.impactLines?.length ? (
+                    <>
+                      <span className="catalog-selector__sectionLabel">Build impact</span>
+                      <ul className="catalog-selector__impactList">
+                        {previewItem.impactLines.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {detailView === "reference" ? (
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">Reference</span>
+                  {detailMarkup ? (
+                    <div
+                      className="catalog-selector__richText"
+                      dangerouslySetInnerHTML={{ __html: detailMarkup }}
+                    />
+                  ) : (
+                    <p className="catalog-selector__detailMeta">{emptyMessage}</p>
+                  )}
+                </div>
+              ) : null}
 
               <button
                 className="button catalog-selector__selectButton"

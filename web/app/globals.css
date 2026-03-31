@@ -502,8 +502,12 @@ a {
 }
 
 .builder-stepper {
+  position: sticky;
+  top: 16px;
+  z-index: 12;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
+  backdrop-filter: blur(10px);
 }
 
 .builder-stepper__item {
@@ -526,6 +530,11 @@ a {
 
 .builder-stepper__item--complete {
   border-color: rgba(146, 38, 16, 0.22);
+}
+
+.builder-stepper__item--locked {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .builder-stepper__index {
@@ -570,6 +579,10 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 18px;
+  position: sticky;
+  bottom: 16px;
+  z-index: 11;
+  backdrop-filter: blur(10px);
 }
 
 .builder-navigation__meta {
@@ -597,6 +610,17 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.builder-review__layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(280px, 0.95fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+.builder-review__stack {
+  display: grid;
+  gap: 16px;
+}
+
 .builder-review__card {
   display: grid;
   gap: 8px;
@@ -606,11 +630,53 @@ a {
   background: rgba(255, 252, 246, 0.95);
 }
 
+.builder-review__card--summary {
+  align-content: start;
+}
+
+.builder-review__checklist {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builder-review__checklist li {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 14px;
+  background: rgba(146, 38, 16, 0.04);
+}
+
+.builder-review__checklist li span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.builder-review__checklist li strong {
+  color: var(--accent-strong);
+}
+
+.builder-review__checklist li.is-complete span {
+  color: var(--success);
+}
+
+.builder-review__checklist li.is-pending span {
+  color: var(--accent);
+}
+
 .catalog-selector__workbench {
   display: grid;
   grid-template-columns: 260px minmax(340px, 0.85fr) minmax(420px, 1.15fr);
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
+  height: min(76vh, 920px);
+  min-height: 680px;
 }
 
 .catalog-selector__filtersPanel,
@@ -618,17 +684,16 @@ a {
 .catalog-selector__detailPanel {
   display: grid;
   gap: 14px;
-  min-height: 620px;
+  min-height: 0;
   padding: 18px;
   border: 1px solid rgba(146, 38, 16, 0.16);
   border-radius: 20px;
   background: rgba(255, 252, 246, 0.95);
+  overflow: auto;
 }
 
-.catalog-selector__filtersPanel,
-.catalog-selector__detailPanel {
-  position: sticky;
-  top: 16px;
+.catalog-selector__optionsPanel {
+  overflow: hidden;
 }
 
 .catalog-selector__panelHeader,
@@ -647,6 +712,23 @@ a {
 .catalog-selector__optionsHeader {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
+}
+
+.catalog-selector__appliedFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.catalog-selector__appliedFilter {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  background: rgba(146, 38, 16, 0.06);
+  color: var(--accent-strong);
+  font-size: 0.82rem;
 }
 
 .catalog-selector__sectionLabel {
@@ -693,7 +775,7 @@ a {
 .catalog-selector__list {
   display: grid;
   gap: 10px;
-  max-height: 720px;
+  min-height: 0;
   overflow: auto;
   padding-right: 4px;
 }
@@ -817,6 +899,12 @@ a {
 .catalog-selector__detailSection {
   display: grid;
   gap: 10px;
+}
+
+.catalog-selector__detailTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .catalog-selector__impactList {
@@ -1094,22 +1182,30 @@ a {
   }
 
   .builder-stepper {
+    position: static;
     grid-template-columns: 1fr;
   }
 
   .builder-navigation {
+    position: static;
+    grid-template-columns: 1fr;
+  }
+
+  .builder-review__layout {
     grid-template-columns: 1fr;
   }
 
   .catalog-selector__workbench {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
   }
 
   .catalog-selector__filtersPanel,
   .catalog-selector__optionsPanel,
   .catalog-selector__detailPanel {
     min-height: 0;
-    position: static;
+    overflow: visible;
   }
 
   .catalog-selector__optionsHeader {
