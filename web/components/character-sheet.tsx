@@ -12,6 +12,7 @@ import {
   ABILITY_KEYS,
   ABILITY_LABELS,
   formatAbilityModifier,
+  getPrimaryClassEntry,
   type CharacterDraft,
 } from "@/lib/characters/types";
 
@@ -70,7 +71,8 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
 
   const race = races.find((entry) => entry.race.id === draft.raceId) ?? null;
   const subrace = race?.subraces.find((entry) => entry.id === draft.subraceId) ?? null;
-  const selectedClass = classes.find((entry) => entry.class.id === draft.classId) ?? null;
+  const primaryClassEntry = getPrimaryClassEntry(draft);
+  const selectedClass = classes.find((entry) => entry.class.id === primaryClassEntry?.classId) ?? null;
   const background =
     backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null;
 
@@ -83,7 +85,7 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
           <p className="route-shell__copy">
             {draft.playerName || "Unknown player"} · {race?.race.name ?? "No race"}{" "}
             {subrace ? `(${subrace.name})` : ""} · {selectedClass?.class.name ?? "No class"} ·{" "}
-            {background?.background.name ?? "No background"}
+            {background?.background.name ?? "No background"} · Level {draft.level}
           </p>
         </div>
         <div className="builder-summary">
@@ -122,7 +124,14 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
           <ul className="route-shell__list">
             <li>Race: {race?.race.name ?? "Not chosen"}</li>
             <li>Subrace: {subrace?.name ?? "Not chosen"}</li>
-            <li>Class: {selectedClass?.class.name ?? "Not chosen"}</li>
+            <li>Class split: {draft.classEntries.length
+              ? draft.classEntries
+                  .map((entry) => {
+                    const classRecord = classes.find((candidate) => candidate.class.id === entry.classId);
+                    return `${classRecord?.class.name ?? entry.classId} ${entry.level}`;
+                  })
+                  .join(" / ")
+              : "Not chosen"}</li>
             <li>Background: {background?.background.name ?? "Not chosen"}</li>
           </ul>
         </section>

@@ -745,6 +745,58 @@ a {
   gap: 8px;
 }
 
+.leveling-step {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+}
+
+.leveling-step__summary,
+.leveling-step__entries {
+  display: grid;
+  gap: 16px;
+}
+
+.leveling-step__totalControl {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 180px) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.leveling-step__entryList {
+  display: grid;
+  gap: 14px;
+}
+
+.leveling-step__entryCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid rgba(146, 38, 16, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 252, 246, 0.95);
+}
+
+.leveling-step__entryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.leveling-step__entryControls {
+  display: grid;
+  grid-template-columns: minmax(140px, 180px);
+}
+
+.leveling-step__addClass {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(146, 38, 16, 0.1);
+}
+
 .catalog-selector__workbench {
   display: grid;
   grid-template-columns: 260px minmax(340px, 0.85fr) minmax(420px, 1.15fr);
@@ -1399,6 +1451,18 @@ a {
 
   .equipment-step__layout {
     grid-template-columns: 1fr;
+  }
+
+  .leveling-step {
+    grid-template-columns: 1fr;
+  }
+
+  .leveling-step__totalControl {
+    grid-template-columns: 1fr;
+  }
+
+  .leveling-step__entryHeader {
+    flex-direction: column;
   }
 
   .catalog-selector__workbench {
