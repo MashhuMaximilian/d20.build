@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { BuilderEditor } from "@/components/builder-editor";
+import { BuilderCatalogShell } from "@/components/builder-catalog-shell";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
@@ -68,11 +68,11 @@ export function BuilderResume({
   }
 
   return (
-    <BuilderEditor
-      backgrounds={backgrounds}
-      classes={classes}
+    <BuilderCatalogShell
+      initialBackgrounds={backgrounds}
+      initialClasses={classes}
       initialDraft={draft}
-      races={races}
+      initialRaces={races}
     />
   );
 }

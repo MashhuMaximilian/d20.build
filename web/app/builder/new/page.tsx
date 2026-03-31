@@ -1,4 +1,4 @@
-import { BuilderEditor } from "@/components/builder-editor";
+import { BuilderCatalogShell } from "@/components/builder-catalog-shell";
 import { getBuiltInSrdBackgrounds } from "@/lib/builtins/backgrounds";
 import { getBuiltInSrdClasses } from "@/lib/builtins/classes";
 import { getBuiltInSrdRaces } from "@/lib/builtins/races";
@@ -8,5 +8,11 @@ export default function BuilderNewPage() {
   const races = getBuiltInSrdRaces();
   const classes = getBuiltInSrdClasses();
 
-  return <BuilderEditor backgrounds={backgrounds} classes={classes} races={races} />;
+  return (
+    <BuilderCatalogShell
+      initialBackgrounds={backgrounds}
+      initialClasses={classes}
+      initialRaces={races}
+    />
+  );
 }

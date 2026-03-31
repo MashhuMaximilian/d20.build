@@ -157,6 +157,15 @@ export async function listCachedSourceSummaries() {
   return summaries;
 }
 
+export async function listCachedElements() {
+  const database = await openCacheDatabase();
+  const transaction = database.transaction([SOURCE_ELEMENT_STORE], "readonly");
+  const store = transaction.objectStore(SOURCE_ELEMENT_STORE);
+  const elements = await requestToPromise<CachedSourceElementRecord[]>(store.getAll());
+  database.close();
+  return elements;
+}
+
 export async function removeCachedSourceData(sourceId: string) {
   const database = await openCacheDatabase();
   const transaction = database.transaction(

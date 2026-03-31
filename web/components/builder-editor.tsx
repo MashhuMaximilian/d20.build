@@ -260,7 +260,9 @@ export function BuilderEditor({
               id: entry.race.id,
               name: entry.race.name,
               description: entry.race.description,
+              source: entry.race.source,
               meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
+              tags: entry.subraces.map((subrace) => subrace.name),
             }))}
             label="Race"
             onSelect={(id) => {
@@ -298,7 +300,9 @@ export function BuilderEditor({
               id: entry.class.id,
               name: entry.class.name,
               description: entry.class.description,
+              source: entry.class.source,
               meta: `${entry.features.length} class features`,
+              tags: entry.features.map((feature) => feature.name),
             }))}
             label="Class"
             onSelect={(id) => updateDraft({ classId: id })}
@@ -313,7 +317,9 @@ export function BuilderEditor({
               id: entry.background.id,
               name: entry.background.name,
               description: entry.background.description,
+              source: entry.background.source,
               meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
+              tags: entry.features.map((feature) => feature.name),
             }))}
             label="Background"
             onSelect={(id) => updateDraft({ backgroundId: id })}

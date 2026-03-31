@@ -1,0 +1,258 @@
+"use client";
+
+import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
+import type { BuiltInClassRecord } from "@/lib/builtins/classes";
+import type { BuiltInRaceRecord } from "@/lib/builtins/races";
+import type {
+  BuiltInElement,
+  BuiltInElementType,
+  BuiltInRule,
+  BuiltInSetter,
+} from "@/lib/builtins/types";
+import {
+  getBuiltInSrdBackgrounds,
+  getBuiltInSrdBackgroundElements,
+} from "@/lib/builtins/backgrounds";
+import {
+  getBuiltInSrdClasses,
+  getBuiltInSrdClassElements,
+} from "@/lib/builtins/classes";
+import {
+  getBuiltInSrdRaces,
+  getBuiltInSrdRaceElements,
+} from "@/lib/builtins/races";
+import { listCachedElements } from "@/lib/content-sources/cache";
+import type { ImportedElement } from "@/lib/content-sources/types";
+
+const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
+  "Background",
+  "Background Feature",
+  "Background Variant",
+  "Class",
+  "Class Feature",
+  "Archetype",
+  "Archetype Feature",
+  "Race",
+  "Sub Race",
+  "Racial Trait",
+  "Race Variant",
+]);
+
+function toBuiltInRule(rule: unknown): BuiltInRule | null {
+  if (!rule || typeof rule !== "object" || !("kind" in rule)) {
+    return null;
+  }
+
+  const candidate = rule as Record<string, unknown>;
+
+  if (candidate.kind === "grant" && typeof candidate.type === "string" && typeof candidate.id === "string") {
+    return {
+      kind: "grant",
+      type: candidate.type,
+      id: candidate.id,
+      requirements: typeof candidate.requirements === "string" ? candidate.requirements : undefined,
+      level: typeof candidate.level === "number" ? candidate.level : undefined,
+      prepared: candidate.prepared === true,
+      equipped: candidate.equipped === true,
+      alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+    };
+  }
+
+  if (candidate.kind === "select" && typeof candidate.type === "string" && typeof candidate.name === "string") {
+    return {
+      kind: "select",
+      type: candidate.type,
+      name: candidate.name,
+      supports: typeof candidate.supports === "string" ? candidate.supports : undefined,
+      choices: Array.isArray(candidate.choices)
+        ? candidate.choices
+            .filter(
+              (choice): choice is { id: string; value: string } =>
+                Boolean(choice) &&
+                typeof choice === "object" &&
+                "id" in choice &&
+                "value" in choice &&
+                typeof choice.id === "string" &&
+                typeof choice.value === "string",
+            )
+            .map((choice) => ({ id: choice.id, value: choice.value }))
+        : undefined,
+      requirements: typeof candidate.requirements === "string" ? candidate.requirements : undefined,
+      number: typeof candidate.number === "number" ? candidate.number : undefined,
+      optional: candidate.optional === true,
+      level: typeof candidate.level === "number" ? candidate.level : undefined,
+      prepared: candidate.prepared === true,
+      equipped: candidate.equipped === true,
+      alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+    };
+  }
+
+  if (candidate.kind === "stat" && typeof candidate.name === "string" && typeof candidate.value === "string") {
+    return {
+      kind: "stat",
+      name: candidate.name,
+      value: candidate.value,
+      bonus: typeof candidate.bonus === "string" ? candidate.bonus : undefined,
+      requirements: typeof candidate.requirements === "string" ? candidate.requirements : undefined,
+      level: typeof candidate.level === "number" ? candidate.level : undefined,
+      alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+    };
+  }
+
+  return null;
+}
+
+function toBuiltInSetter(setter: unknown): BuiltInSetter | null {
+  if (!setter || typeof setter !== "object") {
+    return null;
+  }
+
+  const candidate = setter as Record<string, unknown>;
+
+  if (typeof candidate.name !== "string" || typeof candidate.value !== "string") {
+    return null;
+  }
+
+  return {
+    name: candidate.name,
+    value: candidate.value,
+    type: typeof candidate.type === "string" ? candidate.type : undefined,
+    modifier: typeof candidate.modifier === "string" ? candidate.modifier : undefined,
+    alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+  };
+}
+
+function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
+  if (!SUPPORTED_ELEMENT_TYPES.has(element.element_type as BuiltInElementType)) {
+    return null;
+  }
+
+  return {
+    id: element.element_id,
+    type: element.element_type as BuiltInElementType,
+    name: element.name,
+    source: element.source_name ?? "Imported Source",
+    source_url: element.source_url,
+    supports: Array.isArray(element.supports)
+      ? element.supports.filter((entry): entry is string => typeof entry === "string")
+      : [],
+    description: element.description_text ?? "",
+    rules: Array.isArray(element.rules)
+      ? element.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
+      : [],
+    setters: Array.isArray(element.setters)
+      ? element.setters
+          .map((setter) => toBuiltInSetter(setter))
+          .filter((setter): setter is BuiltInSetter => Boolean(setter))
+      : [],
+  };
+}
+
+function collectGrantedIds(rules: BuiltInRule[], grantType: string) {
+  return rules.flatMap((rule) =>
+    rule.kind === "grant" && rule.type === grantType ? [rule.id] : [],
+  );
+}
+
+function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
+  const elementsById = new Map(elements.map((element) => [element.id, element]));
+  const races = elements.filter((element) => element.type === "Race");
+
+  return races.map((race) => {
+    const subraces = elements.filter(
+      (element) => element.type === "Sub Race" && element.supports.includes(race.name),
+    );
+
+    const traitIds = new Set([
+      ...collectGrantedIds(race.rules, "Racial Trait"),
+      ...subraces.flatMap((subrace) => collectGrantedIds(subrace.rules, "Racial Trait")),
+    ]);
+
+    return {
+      race,
+      subraces,
+      traits: [...traitIds]
+        .map((id) => elementsById.get(id))
+        .filter((element): element is BuiltInElement => Boolean(element)),
+    };
+  });
+}
+
+function buildClassRecords(elements: BuiltInElement[]): BuiltInClassRecord[] {
+  const elementsById = new Map(elements.map((element) => [element.id, element]));
+  const classes = elements.filter((element) => element.type === "Class");
+
+  return classes.map((characterClass) => {
+    const featureIds = new Set(collectGrantedIds(characterClass.rules, "Class Feature"));
+    const features = [...featureIds]
+      .map((id) => elementsById.get(id))
+      .filter((element): element is BuiltInElement => Boolean(element));
+
+    return {
+      class: characterClass,
+      features,
+      spellcastingFeatures: features.filter((feature) => Boolean(feature.spellcasting)),
+    };
+  });
+}
+
+function buildBackgroundRecords(elements: BuiltInElement[]): BuiltInBackgroundRecord[] {
+  const elementsById = new Map(elements.map((element) => [element.id, element]));
+  const backgrounds = elements.filter((element) => element.type === "Background");
+
+  return backgrounds.map((background) => {
+    const featureIds = new Set(collectGrantedIds(background.rules, "Background Feature"));
+    const features = [...featureIds]
+      .map((id) => elementsById.get(id))
+      .filter((element): element is BuiltInElement => Boolean(element));
+
+    return {
+      background,
+      features,
+      choiceCount: background.rules.filter((rule) => rule.kind === "select").length,
+    };
+  });
+}
+
+function dedupeElements(elements: BuiltInElement[]) {
+  const byId = new Map<string, BuiltInElement>();
+  elements.forEach((element) => {
+    byId.set(element.id, element);
+  });
+  return [...byId.values()];
+}
+
+export async function resolveBuilderCatalogs() {
+  const builtInRaceElements = [...getBuiltInSrdRaceElements()];
+  const builtInClassElements = [...getBuiltInSrdClassElements()];
+  const builtInBackgroundElements = [...getBuiltInSrdBackgroundElements()];
+  const cachedImported = await listCachedElements();
+  const importedElements = cachedImported
+    .map((element) => toBuiltInElement(element))
+    .filter((element): element is BuiltInElement => Boolean(element));
+
+  const raceElements = dedupeElements([
+    ...builtInRaceElements,
+    ...importedElements.filter((element) =>
+      ["Race", "Sub Race", "Racial Trait", "Race Variant"].includes(element.type),
+    ),
+  ]);
+  const classElements = dedupeElements([
+    ...builtInClassElements,
+    ...importedElements.filter((element) =>
+      ["Class", "Class Feature", "Archetype", "Archetype Feature"].includes(element.type),
+    ),
+  ]);
+  const backgroundElements = dedupeElements([
+    ...builtInBackgroundElements,
+    ...importedElements.filter((element) =>
+      ["Background", "Background Feature", "Background Variant"].includes(element.type),
+    ),
+  ]);
+
+  return {
+    races: buildRaceRecords(raceElements),
+    classes: buildClassRecords(classElements),
+    backgrounds: buildBackgroundRecords(backgroundElements),
+  };
+}
