@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
-import { CatalogSelector } from "@/components/catalog-selector";
+import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
@@ -28,6 +28,15 @@ type BuilderEditorProps = {
   races: BuiltInRaceRecord[];
 };
 
+type BuilderStepId =
+  | "identity"
+  | "race"
+  | "subrace"
+  | "class"
+  | "background"
+  | "abilities"
+  | "review";
+
 function getStatBonuses(values: string[]) {
   return values.reduce<Record<string, number>>((accumulator, value) => {
     const [name, amount] = value.split(":");
@@ -40,6 +49,46 @@ function collectGrantedIds(rules: BuiltInRule[], type: string) {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === type ? [rule.id] : [],
   );
+}
+
+function countSelectRules(rules: BuiltInRule[]) {
+  return rules.filter((rule) => rule.kind === "select").length;
+}
+
+function getAbilityBonusSummary(rules: BuiltInRule[]) {
+  const totals = new Map<string, number>();
+
+  rules.forEach((rule) => {
+    if (
+      rule.kind === "stat" &&
+      ABILITY_KEYS.includes(rule.name as AbilityKey) &&
+      Number.isFinite(Number(rule.value))
+    ) {
+      totals.set(rule.name, (totals.get(rule.name) ?? 0) + Number(rule.value));
+    }
+  });
+
+  return [...totals.entries()]
+    .sort((left, right) => ABILITY_KEYS.indexOf(left[0] as AbilityKey) - ABILITY_KEYS.indexOf(right[0] as AbilityKey))
+    .map(([ability, amount]) => `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`);
+}
+
+function getFirstLevelGrantSummary(rules: BuiltInRule[]) {
+  const counts = new Map<string, number>();
+
+  rules.forEach((rule) => {
+    if (rule.kind === "grant" && (!rule.level || rule.level <= 1)) {
+      counts.set(rule.type, (counts.get(rule.type) ?? 0) + 1);
+    }
+  });
+
+  return [...counts.entries()]
+    .map(([type, count]) => `${count} ${type.toLowerCase()}${count === 1 ? "" : "s"}`)
+    .slice(0, 4);
+}
+
+function normalizeSummaryLines(lines: string[]) {
+  return lines.filter(Boolean).slice(0, 4);
 }
 
 function isStandardArrayValid(draft: CharacterDraft) {
@@ -79,6 +128,141 @@ function getAbilityValidationMessage(draft: CharacterDraft) {
   return "";
 }
 
+function buildRaceCatalogItems(races: BuiltInRaceRecord[]): CatalogItem[] {
+  return races.map((entry) => {
+    const bonusSummary = getAbilityBonusSummary(entry.race.rules);
+    const impactLines = normalizeSummaryLines([
+      bonusSummary.length ? `Ability bonuses: ${bonusSummary.join(", ")}` : "",
+      entry.subraces.length ? `Adds ${entry.subraces.length} subrace options` : "No subrace choice required",
+      entry.traits.length ? `Grants ${entry.traits.length} racial traits` : "",
+      countSelectRules(entry.race.rules) ? `Introduces ${countSelectRules(entry.race.rules)} choice nodes` : "",
+    ]);
+
+    return {
+      id: entry.race.id,
+      name: entry.race.name,
+      description: entry.race.description,
+      detailHtml: entry.race.descriptionHtml,
+      origin: entry.race.catalogOrigin,
+      source: entry.race.source,
+      meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
+      summaryLines: normalizeSummaryLines([
+        bonusSummary.join(", "),
+        entry.traits.slice(0, 2).map((trait) => trait.name).join(" • "),
+      ]),
+      impactLines,
+      filterTags: [
+        ...bonusSummary,
+        ...entry.subraces.slice(0, 6).map((subrace) => subrace.name),
+        ...entry.traits.slice(0, 6).map((trait) => trait.name),
+      ],
+      detailTags: [
+        ...entry.subraces.slice(0, 6).map((subrace) => subrace.name),
+        ...entry.traits.slice(0, 6).map((trait) => trait.name),
+      ],
+    };
+  });
+}
+
+function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[] {
+  if (!race) {
+    return [];
+  }
+
+  return race.subraces.map((subrace) => {
+    const bonusSummary = getAbilityBonusSummary(subrace.rules);
+    const grantedTraitIds = new Set(collectGrantedIds(subrace.rules, "Racial Trait"));
+    const grantedTraits = race.traits.filter((trait) => grantedTraitIds.has(trait.id));
+
+    return {
+      id: subrace.id,
+      name: subrace.name,
+      description: subrace.description,
+      detailHtml: subrace.descriptionHtml,
+      origin: subrace.catalogOrigin,
+      source: subrace.source,
+      meta: `${grantedTraits.length} granted traits`,
+      summaryLines: normalizeSummaryLines([
+        bonusSummary.join(", "),
+        grantedTraits.slice(0, 2).map((trait) => trait.name).join(" • "),
+      ]),
+      impactLines: normalizeSummaryLines([
+        bonusSummary.length ? `Ability bonuses: ${bonusSummary.join(", ")}` : "",
+        grantedTraits.length ? `Grants ${grantedTraits.length} subrace traits` : "",
+        countSelectRules(subrace.rules) ? `Introduces ${countSelectRules(subrace.rules)} choice nodes` : "",
+      ]),
+      filterTags: [
+        ...bonusSummary,
+        ...grantedTraits.slice(0, 6).map((trait) => trait.name),
+      ],
+      detailTags: grantedTraits.slice(0, 8).map((trait) => trait.name),
+    };
+  });
+}
+
+function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
+  return classes.map((entry) => {
+    const pendingChoices =
+      countSelectRules(entry.class.rules) +
+      entry.features.reduce((count, feature) => count + countSelectRules(feature.rules), 0);
+
+    const grantSummary = getFirstLevelGrantSummary(entry.class.rules);
+    const spellcastingLine = entry.class.spellcasting
+      ? `Spellcasting: ${entry.class.spellcasting.name ?? entry.class.spellcasting.ability ?? "Yes"}`
+      : entry.spellcastingFeatures.length
+        ? `Spellcasting features: ${entry.spellcastingFeatures.length}`
+        : "";
+
+    return {
+      id: entry.class.id,
+      name: entry.class.name,
+      description: entry.class.description,
+      detailHtml: entry.class.descriptionHtml,
+      origin: entry.class.catalogOrigin,
+      source: entry.class.source,
+      meta: `${entry.features.length} class features`,
+      summaryLines: normalizeSummaryLines([
+        spellcastingLine,
+        entry.features.slice(0, 2).map((feature) => feature.name).join(" • "),
+      ]),
+      impactLines: normalizeSummaryLines([
+        `Grants ${entry.features.length} class features`,
+        spellcastingLine,
+        pendingChoices ? `Adds ${pendingChoices} builder choices` : "",
+        ...grantSummary,
+      ]),
+      filterTags: [
+        ...entry.features.slice(0, 8).map((feature) => feature.name),
+        ...(spellcastingLine ? ["Spellcasting"] : []),
+      ],
+      detailTags: entry.features.slice(0, 8).map((feature) => feature.name),
+    };
+  });
+}
+
+function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): CatalogItem[] {
+  return backgrounds.map((entry) => ({
+    id: entry.background.id,
+    name: entry.background.name,
+    description: entry.background.description,
+    detailHtml: entry.background.descriptionHtml,
+    origin: entry.background.catalogOrigin,
+    source: entry.background.source,
+    meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
+    summaryLines: normalizeSummaryLines([
+      entry.features.slice(0, 2).map((feature) => feature.name).join(" • "),
+      entry.choiceCount ? `${entry.choiceCount} guided choices` : "No extra choice nodes",
+    ]),
+    impactLines: normalizeSummaryLines([
+      `Grants ${entry.features.length} background feature${entry.features.length === 1 ? "" : "s"}`,
+      entry.choiceCount ? `Adds ${entry.choiceCount} background choices` : "",
+      ...getFirstLevelGrantSummary(entry.background.rules),
+    ]),
+    filterTags: entry.features.slice(0, 8).map((feature) => feature.name),
+    detailTags: entry.features.slice(0, 8).map((feature) => `Feature: ${feature.name}`),
+  }));
+}
+
 export function BuilderEditor({
   backgrounds,
   classes,
@@ -90,6 +274,7 @@ export function BuilderEditor({
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState<BuilderStepId>("identity");
 
   const selectedRace = useMemo(
     () => races.find((entry) => entry.race.id === draft.raceId) ?? null,
@@ -159,6 +344,67 @@ export function BuilderEditor({
       : "";
   const saveValidationMessage = abilityValidationMessage || selectionValidationMessage;
 
+  const raceItems = useMemo(() => buildRaceCatalogItems(races), [races]);
+  const subraceItems = useMemo(() => buildSubraceCatalogItems(selectedRace), [selectedRace]);
+  const classItems = useMemo(() => buildClassCatalogItems(classes), [classes]);
+  const backgroundItems = useMemo(() => buildBackgroundCatalogItems(backgrounds), [backgrounds]);
+
+  const steps = useMemo(() => {
+    const base: { id: BuilderStepId; label: string; description: string }[] = [
+      {
+        id: "identity",
+        label: "Identity",
+        description: "Set the character and player names before rules choices start stacking.",
+      },
+      {
+        id: "race",
+        label: "Race",
+        description: "Choose ancestry, compare traits, and see the immediate build impact.",
+      },
+    ];
+
+    if (selectedRace?.subraces.length) {
+      base.push({
+        id: "subrace",
+        label: "Subrace",
+        description: "Refine the race choice with its branching traits and bonus changes.",
+      });
+    }
+
+    base.push(
+      {
+        id: "class",
+        label: "Class",
+        description: "Compare class features, spellcasting, and future choice complexity.",
+      },
+      {
+        id: "background",
+        label: "Background",
+        description: "Choose the story scaffold that grants proficiencies, features, and choices.",
+      },
+      {
+        id: "abilities",
+        label: "Abilities",
+        description: "Set base ability scores and see racial bonuses update in real time.",
+      },
+      {
+        id: "review",
+        label: "Review",
+        description: "Confirm the build summary and save the draft once everything looks right.",
+      },
+    );
+
+    return base;
+  }, [selectedRace]);
+
+  const currentStepIndex = Math.max(
+    steps.findIndex((step) => step.id === currentStep),
+    0,
+  );
+  const activeStep = steps[currentStepIndex] ?? steps[0];
+  const previousStep = currentStepIndex > 0 ? steps[currentStepIndex - 1] : null;
+  const nextStep = currentStepIndex < steps.length - 1 ? steps[currentStepIndex + 1] : null;
+
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
       setStatus("");
@@ -198,32 +444,234 @@ export function BuilderEditor({
     draft.raceId && draft.classId && draft.backgroundId && !saveValidationMessage,
   );
 
+  const canAdvance = (() => {
+    switch (activeStep.id) {
+      case "identity":
+        return true;
+      case "race":
+        return Boolean(draft.raceId);
+      case "subrace":
+        return selectedRace?.subraces.length ? Boolean(draft.subraceId) : true;
+      case "class":
+        return Boolean(draft.classId);
+      case "background":
+        return Boolean(draft.backgroundId);
+      case "abilities":
+        return !abilityValidationMessage;
+      case "review":
+        return canSave;
+      default:
+        return true;
+    }
+  })();
+
+  function renderStepBody() {
+    switch (activeStep.id) {
+      case "identity":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Identity</span>
+              <h2 className="route-shell__title">Name the character before the rules stack up</h2>
+              <p className="route-shell__copy">
+                Give the draft a character name and player name now so every later choice has a clear anchor.
+              </p>
+            </div>
+
+            <div className="builder-panel__fields">
+              <label className="builder-field">
+                <span>Name</span>
+                <input
+                  className="input"
+                  value={draft.name}
+                  onChange={(event) => updateDraft({ name: event.target.value })}
+                  placeholder="Alyra Dawnshield"
+                />
+              </label>
+              <label className="builder-field">
+                <span>Player</span>
+                <input
+                  className="input"
+                  value={draft.playerName}
+                  onChange={(event) => updateDraft({ playerName: event.target.value })}
+                  placeholder="Max"
+                />
+              </label>
+            </div>
+          </section>
+        );
+      case "race":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Step 1</span>
+              <h2 className="route-shell__title">Pick a race with the consequences visible</h2>
+              <p className="route-shell__copy">
+                Use the filters to narrow the library, scan fast in the center list, and use the right panel to see the traits,
+                bonuses, and future subrace consequences before committing.
+              </p>
+            </div>
+            <CatalogSelector
+              actionLabel="Choose race"
+              items={raceItems}
+              label="Race"
+              onSelect={(id) => {
+                const nextRace = races.find((entry) => entry.race.id === id);
+                updateDraft({
+                  raceId: id,
+                  subraceId: nextRace?.subraces.length === 1 ? nextRace.subraces[0].id : "",
+                });
+              }}
+              selectedId={draft.raceId}
+            />
+          </section>
+        );
+      case "subrace":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Step 2</span>
+              <h2 className="route-shell__title">Refine the race choice with a subrace</h2>
+              <p className="route-shell__copy">
+                The subrace workbench shows exactly which extra traits and bonus changes the branch adds to the selected race.
+              </p>
+            </div>
+            {selectedRace ? (
+              <CatalogSelector
+                actionLabel="Choose subrace"
+                items={subraceItems}
+                label="Subrace"
+                onSelect={(id) => updateDraft({ subraceId: id })}
+                selectedId={draft.subraceId}
+              />
+            ) : (
+              <p className="route-shell__copy">Choose a race first to unlock subrace options.</p>
+            )}
+          </section>
+        );
+      case "class":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Step {selectedRace?.subraces.length ? "3" : "2"}</span>
+              <h2 className="route-shell__title">Compare classes by impact, not by walls of text</h2>
+              <p className="route-shell__copy">
+                The class browser focuses on feature count, spellcasting presence, and future choice complexity so the tradeoffs are visible.
+              </p>
+            </div>
+            <CatalogSelector
+              actionLabel="Choose class"
+              items={classItems}
+              label="Class"
+              onSelect={(id) => updateDraft({ classId: id })}
+              selectedId={draft.classId}
+            />
+          </section>
+        );
+      case "background":
+        return (
+          <section className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Background</span>
+              <h2 className="route-shell__title">Pick the background that shapes proficiencies and flavor</h2>
+              <p className="route-shell__copy">
+                The workbench highlights feature grants and pending choice nodes so you can see the practical effect before saving the step.
+              </p>
+            </div>
+            <CatalogSelector
+              actionLabel="Choose background"
+              items={backgroundItems}
+              label="Background"
+              onSelect={(id) => updateDraft({ backgroundId: id })}
+              selectedId={draft.backgroundId}
+            />
+          </section>
+        );
+      case "abilities":
+        return (
+          <div className="builder-stepPanel">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Abilities</span>
+              <h2 className="route-shell__title">Set the base scores with the bonuses visible</h2>
+              <p className="route-shell__copy">
+                Ability-score mode is still part of the guided flow, but it updates immediately using the race and subrace bonuses you already picked.
+              </p>
+            </div>
+            <AbilityScoreEditor
+              abilities={draft.abilities}
+              mode={draft.abilityMode}
+              onAbilitiesChange={(abilities) => updateDraft({ abilities })}
+              onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
+              racialBonuses={racialBonuses}
+              validationMessage={abilityValidationMessage}
+            />
+          </div>
+        );
+      case "review":
+        return (
+          <section className="builder-stepPanel builder-review">
+            <div className="builder-stepPanel__intro">
+              <span className="route-shell__tag">Review</span>
+              <h2 className="route-shell__title">Check the build summary before you save</h2>
+              <p className="route-shell__copy">
+                This is the current build snapshot. The unresolved choice count is still shown so later rule-engine work can plug in without changing the shell.
+              </p>
+            </div>
+
+            <div className="builder-review__grid">
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Identity</span>
+                <strong className="builder-summary__name">{draft.name || "Untitled Adventurer"}</strong>
+                <p className="builder-summary__meta">Player: {draft.playerName || "Unassigned"}</p>
+              </article>
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Selections</span>
+                <p className="builder-summary__meta">Race: {selectedRace?.race.name ?? "Missing"}</p>
+                <p className="builder-summary__meta">Subrace: {selectedSubrace?.name ?? "None"}</p>
+                <p className="builder-summary__meta">Class: {selectedClass?.class.name ?? "Missing"}</p>
+                <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
+              </article>
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Build impact</span>
+                <p className="builder-summary__meta">
+                  Racial bonuses:{" "}
+                  {Object.entries(racialBonuses).length
+                    ? Object.entries(racialBonuses)
+                        .map(([ability, amount]) => `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`)
+                        .join(", ")
+                    : "None yet"}
+                </p>
+                <p className="builder-summary__meta">
+                  Traits: {selectedRacialTraitNames.length ? selectedRacialTraitNames.join(", ") : "None yet"}
+                </p>
+                <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
+              </article>
+            </div>
+          </section>
+        );
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="builder-shell">
       <section className="builder-hero">
         <div className="builder-hero__copy">
           <span className="route-shell__tag">Character Builder</span>
-          <h2 className="route-shell__title">Start a real draft</h2>
+          <h2 className="route-shell__title">Build the character in guided steps</h2>
           <p className="route-shell__copy">
-            Pick an SRD race, class, and background, choose an ability-score mode,
-            and save a draft you can reopen from the builder or character list.
+            This builder now uses a guided workbench: wizard progression on the outside, structured comparison on the inside.
           </p>
         </div>
         <div className="builder-summary">
           <span className="builder-summary__label">Current draft</span>
-          <strong className="builder-summary__name">
-            {draft.name || "Untitled Adventurer"}
-          </strong>
+          <strong className="builder-summary__name">{draft.name || "Untitled Adventurer"}</strong>
           <p className="builder-summary__meta">
             {selectedRace?.race.name ?? "No race"} / {selectedClass?.class.name ?? "No class"} /{" "}
             {selectedBackground?.background.name ?? "No background"}
           </p>
-          <p className="builder-summary__meta">
-            Pending builder choices: {pendingChoices}
-          </p>
-          {saveValidationMessage ? (
-            <p className="auth-card__status auth-card__status--error">{saveValidationMessage}</p>
-          ) : null}
+          <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
           <div className="builder-summary__actions">
             <button
               className="button"
@@ -249,140 +697,71 @@ export function BuilderEditor({
         </div>
       </section>
 
-      <div className="builder-grid">
-        <section className="builder-panel">
-          <span className="builder-panel__label">Identity</span>
-          <div className="builder-panel__fields">
-            <label className="builder-field">
-              <span>Name</span>
-              <input
-                className="input"
-                value={draft.name}
-                onChange={(event) => updateDraft({ name: event.target.value })}
-                placeholder="Alyra Dawnshield"
-              />
-            </label>
-            <label className="builder-field">
-              <span>Player</span>
-              <input
-                className="input"
-                value={draft.playerName}
-                onChange={(event) => updateDraft({ playerName: event.target.value })}
-                placeholder="Max"
-              />
-            </label>
-          </div>
-        </section>
+      <section className="builder-stepper">
+        {steps.map((step, index) => {
+          const state =
+            step.id === activeStep.id
+              ? "active"
+              : index < currentStepIndex
+                ? "complete"
+                : "upcoming";
 
-        <section className="builder-panel">
-          <span className="builder-panel__label">Race</span>
-          <CatalogSelector
-            items={races.map((entry) => ({
-              id: entry.race.id,
-              name: entry.race.name,
-              description: entry.race.description,
-              origin: entry.race.catalogOrigin,
-              source: entry.race.source,
-              meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
-              tags: [
-                ...entry.subraces.slice(0, 4).map((subrace) => subrace.name),
-                ...entry.traits.slice(0, 4).map((trait) => trait.name),
-              ],
-            }))}
-            label="Race"
-            onSelect={(id) => {
-              const nextRace = races.find((entry) => entry.race.id === id);
-              updateDraft({
-                raceId: id,
-                subraceId: nextRace?.subraces.length === 1 ? nextRace.subraces[0].id : "",
-              });
-            }}
-            selectedId={draft.raceId}
-          />
-          {selectedRace?.subraces.length ? (
-            <div className="builder-subsection">
-              <span className="builder-subsection__label">Subrace</span>
-              <div className="chip-grid">
-                {selectedRace.subraces.map((subrace) => (
-                  <button
-                    key={subrace.id}
-                    className={`choice-chip${draft.subraceId === subrace.id ? " choice-chip--active" : ""}`}
-                    type="button"
-                    onClick={() => updateDraft({ subraceId: subrace.id })}
-                  >
-                    {subrace.name}
-                  </button>
-                ))}
-              </div>
-              {selectedSubrace ? (
-                <div className="catalog-selector__detail catalog-selector__detail--inline">
-                  <span className="catalog-selector__detailLabel">Selected subrace</span>
-                  <h3 className="catalog-selector__detailTitle">{selectedSubrace.name}</h3>
-                  <p className="catalog-selector__detailCopy">{selectedSubrace.description}</p>
-                  {selectedRacialTraitNames.length ? (
-                    <div className="catalog-selector__tagList">
-                      {selectedRacialTraitNames.map((traitName) => (
-                        <span className="catalog-selector__tag" key={traitName}>
-                          {traitName}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="route-shell__copy">
-                  Choosing a subrace changes your granted traits and ability bonuses.
-                </p>
-              )}
-            </div>
+          return (
+            <button
+              key={step.id}
+              className={`builder-stepper__item builder-stepper__item--${state}`}
+              type="button"
+              onClick={() => setCurrentStep(step.id)}
+            >
+              <span className="builder-stepper__index">{index + 1}</span>
+              <span className="builder-stepper__text">
+                <strong>{step.label}</strong>
+                <span>{step.description}</span>
+              </span>
+            </button>
+          );
+        })}
+      </section>
+
+      {renderStepBody()}
+
+      <section className="builder-navigation">
+        <div className="builder-navigation__meta">
+          <span className="builder-panel__label">Current step</span>
+          <strong>{activeStep.label}</strong>
+          <p>{activeStep.description}</p>
+        </div>
+        <div className="builder-navigation__actions">
+          {previousStep ? (
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={() => setCurrentStep(previousStep.id)}
+            >
+              Back to {previousStep.label}
+            </button>
           ) : null}
-        </section>
-
-        <section className="builder-panel">
-          <span className="builder-panel__label">Class</span>
-          <CatalogSelector
-            items={classes.map((entry) => ({
-              id: entry.class.id,
-              name: entry.class.name,
-              description: entry.class.description,
-              origin: entry.class.catalogOrigin,
-              source: entry.class.source,
-              meta: `${entry.features.length} class features`,
-              tags: entry.features.slice(0, 6).map((feature) => feature.name),
-            }))}
-            label="Class"
-            onSelect={(id) => updateDraft({ classId: id })}
-            selectedId={draft.classId}
-          />
-        </section>
-
-        <section className="builder-panel">
-          <span className="builder-panel__label">Background</span>
-          <CatalogSelector
-            items={backgrounds.map((entry) => ({
-              id: entry.background.id,
-              name: entry.background.name,
-              description: entry.background.description,
-              origin: entry.background.catalogOrigin,
-              source: entry.background.source,
-              meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
-              tags: entry.features.slice(0, 6).map((feature) => feature.name),
-            }))}
-            label="Background"
-            onSelect={(id) => updateDraft({ backgroundId: id })}
-            selectedId={draft.backgroundId}
-          />
-        </section>
-
-        <AbilityScoreEditor
-          abilities={draft.abilities}
-          mode={draft.abilityMode}
-          onAbilitiesChange={(abilities) => updateDraft({ abilities })}
-          onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
-          racialBonuses={racialBonuses}
-          validationMessage={abilityValidationMessage}
-        />
-      </div>
+          {nextStep ? (
+            <button
+              className="button"
+              type="button"
+              disabled={!canAdvance}
+              onClick={() => setCurrentStep(nextStep.id)}
+            >
+              Continue to {nextStep.label}
+            </button>
+          ) : (
+            <button
+              className="button"
+              type="button"
+              disabled={!canSave || isSaving}
+              onClick={handleSave}
+            >
+              {isSaving ? "Saving..." : "Save draft"}
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

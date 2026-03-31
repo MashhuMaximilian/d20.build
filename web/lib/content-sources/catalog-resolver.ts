@@ -138,6 +138,7 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
       ? element.supports.filter((entry): entry is string => typeof entry === "string")
       : [],
     description: element.description_text ?? "",
+    descriptionHtml: element.description_html ?? undefined,
     rules: Array.isArray(element.rules)
       ? element.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
       : [],

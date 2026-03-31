@@ -1,18 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type CatalogItem = {
+export type CatalogItem = {
   id: string;
   name: string;
   description: string;
+  detailHtml?: string;
   meta?: string;
   origin?: "built-in" | "imported";
   source?: string;
-  tags?: string[];
+  filterTags?: string[];
+  detailTags?: string[];
+  summaryLines?: string[];
+  impactLines?: string[];
 };
 
 type CatalogSelectorProps = {
+  actionLabel?: string;
   emptyMessage?: string;
   items: CatalogItem[];
   label: string;
@@ -20,7 +25,119 @@ type CatalogSelectorProps = {
   selectedId: string;
 };
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function sanitizeRichHtml(markup: string) {
+  const withoutDangerousBlocks = markup
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/\son[a-z-]+="[^"]*"/gi, "")
+    .replace(/\son[a-z-]+='[^']*'/gi, "")
+    .replace(/\sstyle="[^"]*"/gi, "")
+    .replace(/\sstyle='[^']*'/gi, "")
+    .replace(/\sclass="[^"]*"/gi, "")
+    .replace(/\sclass='[^']*'/gi, "");
+
+  return withoutDangerousBlocks.replace(
+    /<\/?([a-z0-9-]+)(?:\s[^>]*?)?>/gi,
+    (match, rawTag: string) => {
+      const tag = rawTag.toLowerCase();
+      const allowedTags = new Set([
+        "p",
+        "br",
+        "ul",
+        "ol",
+        "li",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+      ]);
+
+      return allowedTags.has(tag) ? match : "";
+    },
+  );
+}
+
+function formatPlainTextAsHtml(text: string) {
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const blocks = normalized.split(/\n\s*\n/);
+
+  return blocks
+    .map((block) => {
+      const lines = block
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      if (!lines.length) {
+        return "";
+      }
+
+      const bulletLines = lines.filter((line) => /^[-*•]\s+/.test(line));
+      if (bulletLines.length === lines.length) {
+        const items = bulletLines
+          .map((line) => `<li>${escapeHtml(line.replace(/^[-*•]\s+/, ""))}</li>`)
+          .join("");
+        return `<ul>${items}</ul>`;
+      }
+
+      const headingLine = lines[0];
+      const headingMatch = headingLine.match(/^([A-Z][A-Z0-9' /-]{3,}|[A-Z][^:]{2,40}):$/);
+      if (headingMatch) {
+        const remainder = lines.slice(1).join(" ");
+        return `<h4>${escapeHtml(headingLine.replace(/:$/, ""))}</h4>${
+          remainder ? `<p>${escapeHtml(remainder)}</p>` : ""
+        }`;
+      }
+
+      return `<p>${escapeHtml(lines.join(" "))}</p>`;
+    })
+    .join("");
+}
+
+function getDetailMarkup(item: CatalogItem | null) {
+  if (!item) {
+    return "";
+  }
+
+  if (item.detailHtml?.trim()) {
+    return sanitizeRichHtml(item.detailHtml);
+  }
+
+  return formatPlainTextAsHtml(item.description);
+}
+
 export function CatalogSelector({
+  actionLabel,
   emptyMessage = "No matching entries.",
   items,
   label,
@@ -29,38 +146,23 @@ export function CatalogSelector({
 }: CatalogSelectorProps) {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "srd" | "imported">("all");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState(selectedId);
 
-  function getPreviewText(text: string) {
-    const normalized = text.replace(/\s+/g, " ").trim();
-    if (normalized.length <= 260) {
-      return normalized;
-    }
+  const tagOptions = useMemo(() => {
+    const counts = new Map<string, number>();
 
-    const sentenceBreak = normalized.slice(0, 260).lastIndexOf(". ");
-    if (sentenceBreak > 80) {
-      return `${normalized.slice(0, sentenceBreak + 1)}…`;
-    }
+    items.forEach((item) => {
+      item.filterTags?.forEach((tag) => {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      });
+    });
 
-    return `${normalized.slice(0, 240).trimEnd()}…`;
-  }
-
-  function getParagraphs(text: string) {
-    const normalized = text.replace(/\s+/g, " ").trim();
-
-    if (!normalized) {
-      return [];
-    }
-
-    const sentences = normalized.split(/(?<=[.!?])\s+/);
-    const paragraphs: string[] = [];
-
-    for (let index = 0; index < sentences.length; index += 3) {
-      paragraphs.push(sentences.slice(index, index + 3).join(" "));
-    }
-
-    return paragraphs;
-  }
+    return [...counts.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 8)
+      .map(([tag]) => tag);
+  }, [items]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -74,152 +176,288 @@ export function CatalogSelector({
         return false;
       }
 
+      if (tagFilter && !(item.filterTags ?? []).includes(tagFilter)) {
+        return false;
+      }
+
       if (!normalized) {
         return true;
       }
 
-      const haystack = `${item.name} ${item.description} ${item.meta ?? ""} ${item.source ?? ""} ${(item.tags ?? []).join(" ")}`.toLowerCase();
+      const haystack = [
+        item.name,
+        item.description,
+        item.meta ?? "",
+        item.source ?? "",
+        ...(item.summaryLines ?? []),
+        ...(item.impactLines ?? []),
+        ...((item.filterTags ?? []).concat(item.detailTags ?? [])),
+      ]
+        .join(" ")
+        .toLowerCase();
+
       return haystack.includes(normalized);
     });
-  }, [items, query, sourceFilter]);
+  }, [items, query, sourceFilter, tagFilter]);
 
-  const selectedItem =
-    filteredItems.find((item) => item.id === selectedId) ??
+  useEffect(() => {
+    if (!tagFilter) {
+      return;
+    }
+
+    if (!tagOptions.includes(tagFilter)) {
+      setTagFilter(null);
+    }
+  }, [tagFilter, tagOptions]);
+
+  const committedSelection =
+    items.find((item) => item.id === selectedId) ?? null;
+
+  const previewItem =
+    filteredItems.find((item) => item.id === previewId) ??
+    items.find((item) => item.id === previewId) ??
     filteredItems[0] ??
-    items.find((item) => item.id === selectedId) ??
+    committedSelection ??
     items[0] ??
     null;
 
-  const renderContent = (mode: "inline" | "modal") => (
-    <>
-      <div className="catalog-selector__toolbar">
-        <span className="builder-panel__label">{label}</span>
-        <div className="catalog-selector__toolbarActions">
-          <div className="catalog-selector__filters">
-            <button
-              className={`choice-chip${sourceFilter === "all" ? " choice-chip--active" : ""}`}
-              type="button"
-              onClick={() => setSourceFilter("all")}
-            >
-              All
-            </button>
-            <button
-              className={`choice-chip${sourceFilter === "srd" ? " choice-chip--active" : ""}`}
-              type="button"
-              onClick={() => setSourceFilter("srd")}
-            >
-              SRD
-            </button>
-            <button
-              className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
-              type="button"
-              onClick={() => setSourceFilter("imported")}
-            >
-              Imported
-            </button>
+  useEffect(() => {
+    if (!items.length) {
+      return;
+    }
+
+    if (selectedId && selectedId !== previewId) {
+      setPreviewId(selectedId);
+      return;
+    }
+
+    if (!previewItem && filteredItems[0]) {
+      setPreviewId(filteredItems[0].id);
+    }
+  }, [filteredItems, items, previewId, previewItem, selectedId]);
+
+  const detailMarkup = useMemo(() => getDetailMarkup(previewItem), [previewItem]);
+
+  return (
+    <div className="catalog-selector">
+      <div className="catalog-selector__workbench">
+        <aside className="catalog-selector__filtersPanel">
+          <div className="catalog-selector__panelHeader">
+            <span className="builder-panel__label">{label}</span>
+            <strong className="catalog-selector__count">
+              {filteredItems.length} {filteredItems.length === 1 ? "entry" : "entries"}
+            </strong>
           </div>
-          <input
-            className="input catalog-selector__search"
-            placeholder={`Search ${label.toLowerCase()}`}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          {mode === "inline" ? (
-            <button
-              className="button button--secondary button--compact"
-              type="button"
-              onClick={() => setIsExpanded(true)}
-            >
-              Browse library
-            </button>
+
+          <label className="catalog-selector__searchField">
+            <span className="catalog-selector__sectionLabel">Search</span>
+            <input
+              className="input catalog-selector__search"
+              placeholder={`Search ${label.toLowerCase()}`}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+
+          <div className="catalog-selector__filterGroup">
+            <span className="catalog-selector__sectionLabel">Source</span>
+            <div className="catalog-selector__filters">
+              <button
+                className={`choice-chip${sourceFilter === "all" ? " choice-chip--active" : ""}`}
+                type="button"
+                onClick={() => setSourceFilter("all")}
+              >
+                All
+              </button>
+              <button
+                className={`choice-chip${sourceFilter === "srd" ? " choice-chip--active" : ""}`}
+                type="button"
+                onClick={() => setSourceFilter("srd")}
+              >
+                SRD
+              </button>
+              <button
+                className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
+                type="button"
+                onClick={() => setSourceFilter("imported")}
+              >
+                Imported
+              </button>
+            </div>
+          </div>
+
+          {tagOptions.length ? (
+            <div className="catalog-selector__filterGroup">
+              <span className="catalog-selector__sectionLabel">Filter by tags</span>
+              <div className="catalog-selector__filterTags">
+                {tagOptions.map((tag) => (
+                  <button
+                    key={tag}
+                    className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
+                    type="button"
+                    onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
-        </div>
-      </div>
 
-      <div className="catalog-selector__layout">
-        <div className="catalog-selector__list" role="listbox" aria-label={label}>
-          {filteredItems.length ? (
-            filteredItems.map((item) => {
-              const active = item.id === selectedId;
-              return (
-                <button
-                  key={item.id}
-                  className={`catalog-selector__row${active ? " catalog-selector__row--active" : ""}`}
-                  type="button"
-                  onClick={() => onSelect(item.id)}
-                >
-                  <strong>{item.name}</strong>
-                  {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
-                  {item.meta ? <span>{item.meta}</span> : null}
-                </button>
-              );
-            })
-          ) : (
-            <div className="catalog-selector__empty">{emptyMessage}</div>
-          )}
+          {previewItem ? (
+            <div className="catalog-selector__selectionSnapshot">
+              <span className="catalog-selector__sectionLabel">Build impact</span>
+              <strong className="catalog-selector__snapshotTitle">{previewItem.name}</strong>
+              <p className="catalog-selector__snapshotMeta">
+                {previewItem.source ?? "Unknown source"}
+              </p>
+              {previewItem.impactLines?.length ? (
+                <ul className="catalog-selector__impactList">
+                  {previewItem.impactLines.slice(0, 4).map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="catalog-selector__snapshotEmpty">
+                  Select an option to inspect what it changes in your build.
+                </p>
+              )}
+            </div>
+          ) : null}
+        </aside>
+
+        <div className="catalog-selector__optionsPanel">
+          <div className="catalog-selector__optionsHeader">
+            <div>
+              <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
+              <h3 className="catalog-selector__optionsTitle">{label} library</h3>
+            </div>
+            {tagFilter ? (
+              <button
+                className="button button--secondary button--compact"
+                type="button"
+                onClick={() => setTagFilter(null)}
+              >
+                Clear tag filter
+              </button>
+            ) : null}
+          </div>
+
+          <div className="catalog-selector__list" role="listbox" aria-label={label}>
+            {filteredItems.length ? (
+              filteredItems.map((item) => {
+                const isPreview = item.id === previewItem?.id;
+                const isSelected = item.id === selectedId;
+                return (
+                  <button
+                    key={item.id}
+                    className={`catalog-selector__row${
+                      isPreview ? " catalog-selector__row--preview" : ""
+                    }${isSelected ? " catalog-selector__row--selected" : ""}`}
+                    type="button"
+                    onClick={() => setPreviewId(item.id)}
+                  >
+                    <div className="catalog-selector__rowHeader">
+                      <strong>{item.name}</strong>
+                      {isSelected ? (
+                        <span className="catalog-selector__selectedBadge">Selected</span>
+                      ) : null}
+                    </div>
+                    {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
+                    {item.summaryLines?.length ? (
+                      <div className="catalog-selector__summaryList">
+                        {item.summaryLines.slice(0, 3).map((line) => (
+                          <span key={line}>{line}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {item.impactLines?.length ? (
+                      <div className="catalog-selector__rowImpact">
+                        {item.impactLines.slice(0, 3).map((line) => (
+                          <span className="catalog-selector__impactChip" key={line}>
+                            {line}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="catalog-selector__empty">{emptyMessage}</div>
+            )}
+          </div>
         </div>
 
-        <div className={`catalog-selector__detail catalog-selector__detail--${mode}`}>
-          {selectedItem ? (
+        <div className="catalog-selector__detailPanel">
+          {previewItem ? (
             <>
-              <span className="catalog-selector__detailLabel">Selected</span>
-              <h3 className="catalog-selector__detailTitle">{selectedItem.name}</h3>
-              {selectedItem.source ? (
-                <p className="catalog-selector__detailMeta">Source: {selectedItem.source}</p>
-              ) : null}
-              {selectedItem.tags?.length ? (
+              <div className="catalog-selector__detailHeader">
+                <span className="catalog-selector__detailLabel">
+                  {previewItem.id === selectedId ? "Selected" : "Preview"}
+                </span>
+                <h3 className="catalog-selector__detailTitle">{previewItem.name}</h3>
+                {previewItem.source ? (
+                  <p className="catalog-selector__detailMeta">Source: {previewItem.source}</p>
+                ) : null}
+              </div>
+
+              {previewItem.detailTags?.length ? (
                 <div className="catalog-selector__tagList">
-                  {selectedItem.tags.slice(0, mode === "modal" ? 10 : 6).map((tag) => (
+                  {previewItem.detailTags.slice(0, 10).map((tag) => (
                     <span className="catalog-selector__tag" key={tag}>
                       {tag}
                     </span>
                   ))}
                 </div>
               ) : null}
-              {(mode === "modal" ? getParagraphs(selectedItem.description) : [getPreviewText(selectedItem.description)]).map(
-                (paragraph, index) => (
-                  <p className="catalog-selector__detailCopy" key={`${selectedItem.id}-${index}`}>
-                    {paragraph}
-                  </p>
-                ),
-              )}
-              {selectedItem.meta ? (
-                <p className="catalog-selector__detailMeta">{selectedItem.meta}</p>
+
+              {previewItem.impactLines?.length ? (
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">This changes your build</span>
+                  <ul className="catalog-selector__impactList">
+                    {previewItem.impactLines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
+
+              {previewItem.meta ? (
+                <div className="catalog-selector__detailSection">
+                  <span className="catalog-selector__sectionLabel">Selection summary</span>
+                  <p className="catalog-selector__detailMeta">{previewItem.meta}</p>
+                </div>
+              ) : null}
+
+              <div className="catalog-selector__detailSection">
+                <span className="catalog-selector__sectionLabel">Reference</span>
+                {detailMarkup ? (
+                  <div
+                    className="catalog-selector__richText"
+                    dangerouslySetInnerHTML={{ __html: detailMarkup }}
+                  />
+                ) : (
+                  <p className="catalog-selector__detailMeta">{emptyMessage}</p>
+                )}
+              </div>
+
+              <button
+                className="button catalog-selector__selectButton"
+                type="button"
+                disabled={previewItem.id === selectedId}
+                onClick={() => onSelect(previewItem.id)}
+              >
+                {previewItem.id === selectedId
+                  ? `${previewItem.name} selected`
+                  : actionLabel ?? `Choose ${previewItem.name}`}
+              </button>
             </>
           ) : (
-            <p className="catalog-selector__detailCopy">{emptyMessage}</p>
+            <p className="catalog-selector__detailMeta">{emptyMessage}</p>
           )}
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <div className="catalog-selector">
-      {renderContent("inline")}
-      {isExpanded ? (
-        <div
-          className="catalog-selector__modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${label} browser`}
-        >
-          <div className="catalog-selector__modalCard">
-            <div className="catalog-selector__modalHeader">
-              <strong>{label} library</strong>
-              <button
-                className="button button--secondary button--compact"
-                type="button"
-                onClick={() => setIsExpanded(false)}
-              >
-                Close
-              </button>
-            </div>
-            {renderContent("modal")}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
