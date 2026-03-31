@@ -7,6 +7,7 @@ type CatalogItem = {
   name: string;
   description: string;
   meta?: string;
+  origin?: "built-in" | "imported";
   source?: string;
   tags?: string[];
 };
@@ -30,15 +31,44 @@ export function CatalogSelector({
   const [sourceFilter, setSourceFilter] = useState<"all" | "srd" | "imported">("all");
   const [isExpanded, setIsExpanded] = useState(false);
 
+  function getPreviewText(text: string) {
+    const normalized = text.replace(/\s+/g, " ").trim();
+    if (normalized.length <= 260) {
+      return normalized;
+    }
+
+    const sentenceBreak = normalized.slice(0, 260).lastIndexOf(". ");
+    if (sentenceBreak > 80) {
+      return `${normalized.slice(0, sentenceBreak + 1)}…`;
+    }
+
+    return `${normalized.slice(0, 240).trimEnd()}…`;
+  }
+
+  function getParagraphs(text: string) {
+    const normalized = text.replace(/\s+/g, " ").trim();
+
+    if (!normalized) {
+      return [];
+    }
+
+    const sentences = normalized.split(/(?<=[.!?])\s+/);
+    const paragraphs: string[] = [];
+
+    for (let index = 0; index < sentences.length; index += 3) {
+      paragraphs.push(sentences.slice(index, index + 3).join(" "));
+    }
+
+    return paragraphs;
+  }
+
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
     return items.filter((item) => {
       const sourceMatches =
         sourceFilter === "all" ||
-        (sourceFilter === "srd"
-          ? (item.source ?? "").toLowerCase().includes("system reference document")
-          : !(item.source ?? "").toLowerCase().includes("system reference document"));
+        item.origin === (sourceFilter === "srd" ? "built-in" : "imported");
 
       if (!sourceMatches) {
         return false;
@@ -54,9 +84,13 @@ export function CatalogSelector({
   }, [items, query, sourceFilter]);
 
   const selectedItem =
-    items.find((item) => item.id === selectedId) ?? filteredItems[0] ?? items[0] ?? null;
+    filteredItems.find((item) => item.id === selectedId) ??
+    filteredItems[0] ??
+    items.find((item) => item.id === selectedId) ??
+    items[0] ??
+    null;
 
-  const content = (
+  const renderContent = (mode: "inline" | "modal") => (
     <>
       <div className="catalog-selector__toolbar">
         <span className="builder-panel__label">{label}</span>
@@ -90,13 +124,15 @@ export function CatalogSelector({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <button
-            className="button button--secondary button--compact"
-            type="button"
-            onClick={() => setIsExpanded(true)}
-          >
-            Expand
-          </button>
+          {mode === "inline" ? (
+            <button
+              className="button button--secondary button--compact"
+              type="button"
+              onClick={() => setIsExpanded(true)}
+            >
+              Browse library
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -123,7 +159,7 @@ export function CatalogSelector({
           )}
         </div>
 
-        <div className="catalog-selector__detail">
+        <div className={`catalog-selector__detail catalog-selector__detail--${mode}`}>
           {selectedItem ? (
             <>
               <span className="catalog-selector__detailLabel">Selected</span>
@@ -131,7 +167,22 @@ export function CatalogSelector({
               {selectedItem.source ? (
                 <p className="catalog-selector__detailMeta">Source: {selectedItem.source}</p>
               ) : null}
-              <p className="catalog-selector__detailCopy">{selectedItem.description}</p>
+              {selectedItem.tags?.length ? (
+                <div className="catalog-selector__tagList">
+                  {selectedItem.tags.slice(0, mode === "modal" ? 10 : 6).map((tag) => (
+                    <span className="catalog-selector__tag" key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {(mode === "modal" ? getParagraphs(selectedItem.description) : [getPreviewText(selectedItem.description)]).map(
+                (paragraph, index) => (
+                  <p className="catalog-selector__detailCopy" key={`${selectedItem.id}-${index}`}>
+                    {paragraph}
+                  </p>
+                ),
+              )}
               {selectedItem.meta ? (
                 <p className="catalog-selector__detailMeta">{selectedItem.meta}</p>
               ) : null}
@@ -146,7 +197,7 @@ export function CatalogSelector({
 
   return (
     <div className="catalog-selector">
-      {content}
+      {renderContent("inline")}
       {isExpanded ? (
         <div
           className="catalog-selector__modal"
@@ -165,7 +216,7 @@ export function CatalogSelector({
                 Close
               </button>
             </div>
-            {content}
+            {renderContent("modal")}
           </div>
         </div>
       ) : null}

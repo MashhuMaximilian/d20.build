@@ -133,6 +133,7 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
     name: element.name,
     source: element.source_name ?? "Imported Source",
     source_url: element.source_url,
+    catalogOrigin: "imported",
     supports: Array.isArray(element.supports)
       ? element.supports.filter((entry): entry is string => typeof entry === "string")
       : [],

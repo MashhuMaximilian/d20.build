@@ -7,6 +7,13 @@ export type BuiltInClassRecord = {
   spellcastingFeatures: BuiltInElement[];
 };
 
+function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
+  return elements.map((element): BuiltInElement => ({
+    ...element,
+    catalogOrigin: "built-in" as const,
+  }));
+}
+
 function collectGrantedIds(rules: BuiltInRule[]): string[] {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === "Class Feature" ? [rule.id] : [],
@@ -14,14 +21,15 @@ function collectGrantedIds(rules: BuiltInRule[]): string[] {
 }
 
 export function getBuiltInSrdClassElements(): readonly BuiltInElement[] {
-  return BUILT_IN_SRD_CLASS_ELEMENTS;
+  return markBuiltIn(BUILT_IN_SRD_CLASS_ELEMENTS);
 }
 
 export function getBuiltInSrdClasses(): BuiltInClassRecord[] {
+  const elements = markBuiltIn(BUILT_IN_SRD_CLASS_ELEMENTS);
   const elementsById = new Map(
-    BUILT_IN_SRD_CLASS_ELEMENTS.map((element) => [element.id, element]),
+    elements.map((element) => [element.id, element]),
   );
-  const classes = BUILT_IN_SRD_CLASS_ELEMENTS.filter(
+  const classes = elements.filter(
     (element) => element.type === "Class",
   );
 

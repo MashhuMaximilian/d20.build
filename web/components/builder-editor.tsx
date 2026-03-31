@@ -36,6 +36,12 @@ function getStatBonuses(values: string[]) {
   }, {});
 }
 
+function collectGrantedIds(rules: BuiltInRule[], type: string) {
+  return rules.flatMap((rule) =>
+    rule.kind === "grant" && rule.type === type ? [rule.id] : [],
+  );
+}
+
 function isStandardArrayValid(draft: CharacterDraft) {
   const assigned = Object.values(draft.abilities).sort((a, b) => a - b);
   const standard = [...STANDARD_ARRAY].sort((a, b) => a - b);
@@ -114,6 +120,21 @@ export function BuilderEditor({
     return getStatBonuses(
       statRules.map((rule) => `${rule.name}:${rule.value}`),
     );
+  }, [selectedRace, selectedSubrace]);
+
+  const selectedRacialTraitNames = useMemo(() => {
+    if (!selectedRace) {
+      return [];
+    }
+
+    const traitIds = new Set([
+      ...collectGrantedIds(selectedRace.race.rules, "Racial Trait"),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Racial Trait") : []),
+    ]);
+
+    return selectedRace.traits
+      .filter((trait) => traitIds.has(trait.id))
+      .map((trait) => trait.name);
   }, [selectedRace, selectedSubrace]);
 
   const pendingChoices = useMemo(() => {
@@ -260,9 +281,13 @@ export function BuilderEditor({
               id: entry.race.id,
               name: entry.race.name,
               description: entry.race.description,
+              origin: entry.race.catalogOrigin,
               source: entry.race.source,
               meta: `${entry.subraces.length} subraces · ${entry.traits.length} related traits`,
-              tags: entry.subraces.map((subrace) => subrace.name),
+              tags: [
+                ...entry.subraces.slice(0, 4).map((subrace) => subrace.name),
+                ...entry.traits.slice(0, 4).map((trait) => trait.name),
+              ],
             }))}
             label="Race"
             onSelect={(id) => {
@@ -289,6 +314,26 @@ export function BuilderEditor({
                   </button>
                 ))}
               </div>
+              {selectedSubrace ? (
+                <div className="catalog-selector__detail catalog-selector__detail--inline">
+                  <span className="catalog-selector__detailLabel">Selected subrace</span>
+                  <h3 className="catalog-selector__detailTitle">{selectedSubrace.name}</h3>
+                  <p className="catalog-selector__detailCopy">{selectedSubrace.description}</p>
+                  {selectedRacialTraitNames.length ? (
+                    <div className="catalog-selector__tagList">
+                      {selectedRacialTraitNames.map((traitName) => (
+                        <span className="catalog-selector__tag" key={traitName}>
+                          {traitName}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="route-shell__copy">
+                  Choosing a subrace changes your granted traits and ability bonuses.
+                </p>
+              )}
             </div>
           ) : null}
         </section>
@@ -300,9 +345,10 @@ export function BuilderEditor({
               id: entry.class.id,
               name: entry.class.name,
               description: entry.class.description,
+              origin: entry.class.catalogOrigin,
               source: entry.class.source,
               meta: `${entry.features.length} class features`,
-              tags: entry.features.map((feature) => feature.name),
+              tags: entry.features.slice(0, 6).map((feature) => feature.name),
             }))}
             label="Class"
             onSelect={(id) => updateDraft({ classId: id })}
@@ -317,9 +363,10 @@ export function BuilderEditor({
               id: entry.background.id,
               name: entry.background.name,
               description: entry.background.description,
+              origin: entry.background.catalogOrigin,
               source: entry.background.source,
               meta: `${entry.features.length} background feature · ${entry.choiceCount} choice nodes`,
-              tags: entry.features.map((feature) => feature.name),
+              tags: entry.features.slice(0, 6).map((feature) => feature.name),
             }))}
             label="Background"
             onSelect={(id) => updateDraft({ backgroundId: id })}

@@ -7,6 +7,13 @@ export type BuiltInRaceRecord = {
   traits: BuiltInElement[];
 };
 
+function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
+  return elements.map((element): BuiltInElement => ({
+    ...element,
+    catalogOrigin: "built-in" as const,
+  }));
+}
+
 function collectGrantedIds(rules: BuiltInRule[]): string[] {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === "Racial Trait" ? [rule.id] : [],
@@ -14,19 +21,20 @@ function collectGrantedIds(rules: BuiltInRule[]): string[] {
 }
 
 export function getBuiltInSrdRaceElements(): readonly BuiltInElement[] {
-  return BUILT_IN_SRD_RACE_ELEMENTS;
+  return markBuiltIn(BUILT_IN_SRD_RACE_ELEMENTS);
 }
 
 export function getBuiltInSrdRaces(): BuiltInRaceRecord[] {
+  const elements = markBuiltIn(BUILT_IN_SRD_RACE_ELEMENTS);
   const elementsById = new Map(
-    BUILT_IN_SRD_RACE_ELEMENTS.map((element) => [element.id, element]),
+    elements.map((element) => [element.id, element]),
   );
-  const races = BUILT_IN_SRD_RACE_ELEMENTS.filter(
+  const races = elements.filter(
     (element) => element.type === "Race",
   );
 
   return races.map((race) => {
-    const subraces = BUILT_IN_SRD_RACE_ELEMENTS.filter(
+    const subraces = elements.filter(
       (element) =>
         element.type === "Sub Race" && element.supports.includes(race.name),
     );

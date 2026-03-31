@@ -7,6 +7,13 @@ export type BuiltInBackgroundRecord = {
   choiceCount: number;
 };
 
+function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
+  return elements.map((element): BuiltInElement => ({
+    ...element,
+    catalogOrigin: "built-in" as const,
+  }));
+}
+
 function collectGrantedIds(rules: BuiltInRule[]): string[] {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === "Background Feature" ? [rule.id] : [],
@@ -14,14 +21,15 @@ function collectGrantedIds(rules: BuiltInRule[]): string[] {
 }
 
 export function getBuiltInSrdBackgroundElements(): readonly BuiltInElement[] {
-  return BUILT_IN_SRD_BACKGROUND_ELEMENTS;
+  return markBuiltIn(BUILT_IN_SRD_BACKGROUND_ELEMENTS);
 }
 
 export function getBuiltInSrdBackgrounds(): BuiltInBackgroundRecord[] {
+  const elements = markBuiltIn(BUILT_IN_SRD_BACKGROUND_ELEMENTS);
   const elementsById = new Map(
-    BUILT_IN_SRD_BACKGROUND_ELEMENTS.map((element) => [element.id, element]),
+    elements.map((element) => [element.id, element]),
   );
-  const backgrounds = BUILT_IN_SRD_BACKGROUND_ELEMENTS.filter(
+  const backgrounds = elements.filter(
     (element) => element.type === "Background",
   );
 

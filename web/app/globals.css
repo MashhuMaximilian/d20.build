@@ -52,7 +52,7 @@ a {
 }
 
 .site-shell__inner {
-  max-width: 1120px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
@@ -510,7 +510,7 @@ a {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
-  width: min(100%, 720px);
+  width: min(100%, 840px);
 }
 
 .catalog-selector__filters {
@@ -525,14 +525,15 @@ a {
 
 .catalog-selector__layout {
   display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
-  gap: 14px;
+  grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .catalog-selector__list {
   display: grid;
   gap: 8px;
-  max-height: 280px;
+  max-height: 420px;
   overflow: auto;
   padding-right: 4px;
 }
@@ -576,6 +577,18 @@ a {
   border: 1px solid rgba(146, 38, 16, 0.16);
   border-radius: 18px;
   background: rgba(255, 252, 246, 0.95);
+  align-self: start;
+}
+
+.catalog-selector__detail--inline {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.catalog-selector__detail--modal {
+  min-height: 72vh;
+  max-height: 72vh;
+  overflow: auto;
 }
 
 .catalog-selector__modal {
@@ -590,7 +603,7 @@ a {
 }
 
 .catalog-selector__modalCard {
-  width: min(1180px, 100%);
+  width: min(1440px, 100%);
   max-height: min(90vh, 960px);
   overflow: auto;
   display: grid;
@@ -607,6 +620,21 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.catalog-selector__tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.catalog-selector__tag {
+  padding: 6px 10px;
+  border: 1px solid rgba(146, 38, 16, 0.16);
+  border-radius: 999px;
+  background: rgba(146, 38, 16, 0.06);
+  color: var(--accent-strong);
+  font-size: 0.88rem;
 }
 
 .catalog-selector__detailLabel {
@@ -847,7 +875,7 @@ a {
 
   .catalog-selector__toolbarActions {
     width: 100%;
-    justify-content: stretch;
+    justify-content: flex-start;
   }
 
   .catalog-selector__search {
@@ -863,6 +891,12 @@ a {
     height: 100vh;
     max-height: none;
     border-radius: 0;
+  }
+
+  .catalog-selector__detail--inline,
+  .catalog-selector__detail--modal {
+    max-height: none;
+    min-height: 0;
   }
 
   .hero__title {

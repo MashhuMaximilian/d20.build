@@ -79,6 +79,7 @@ export type BuiltInElement = {
   name: string;
   source: string;
   source_url: string;
+  catalogOrigin?: "built-in" | "imported";
   supports: string[];
   description: string;
   rules: BuiltInRule[];
