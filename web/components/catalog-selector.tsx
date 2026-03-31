@@ -460,7 +460,9 @@ export function CatalogSelector({
                 {(["overview", "mechanics", "features", "reference"] as const).map((view) => (
                   <button
                     key={view}
-                    className={`choice-chip${detailView === view ? " choice-chip--active" : ""}`}
+                    className={`catalog-selector__detailTab${
+                      detailView === view ? " catalog-selector__detailTab--active" : ""
+                    }`}
                     type="button"
                     onClick={() => setDetailView(view)}
                   >

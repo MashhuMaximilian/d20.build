@@ -888,8 +888,10 @@ a {
 
 .catalog-selector__selectedBadge {
   background: var(--accent);
-  color: #fff;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   font-weight: 700;
+  border: 1px solid rgba(122, 32, 13, 0.1);
 }
 
 .catalog-selector__row--preview,
@@ -915,7 +917,7 @@ a {
   padding: 4px 10px;
   border: 1px solid rgba(146, 38, 16, 0.12);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 252, 246, 0.98), rgba(246, 238, 228, 0.96));
+  background: rgba(146, 38, 16, 0.04);
   color: rgba(111, 48, 29, 0.9);
   font-size: 0.8rem;
   font-weight: 600;
@@ -946,6 +948,34 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.catalog-selector__detailTab {
+  padding: 8px 16px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.96);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 0.98rem;
+  font-weight: 600;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.catalog-selector__detailTab:hover {
+  border-color: rgba(146, 38, 16, 0.24);
+}
+
+.catalog-selector__detailTab--active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(122, 32, 13, 0.08);
 }
 
 .catalog-selector__featureList {
