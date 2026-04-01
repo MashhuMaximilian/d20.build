@@ -620,6 +620,18 @@ a {
   text-overflow: ellipsis;
 }
 
+.builder-navigation__summary--warning {
+  display: grid;
+  align-items: start;
+  gap: 4px;
+}
+
+.builder-navigation__summary--warning p {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .builder-navigation__actions {
   display: flex;
   flex-wrap: wrap;
@@ -788,6 +800,25 @@ a {
 .leveling-step__entryControls {
   display: grid;
   grid-template-columns: minmax(140px, 180px);
+}
+
+.leveling-step__entryCard--derived {
+  background: rgba(146, 38, 16, 0.04);
+}
+
+.leveling-step__derivedValue {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.leveling-step__derivedValue span {
+  color: var(--muted);
+}
+
+.leveling-step__derivedValue strong {
+  color: var(--accent-strong);
+  font-size: 1.25rem;
 }
 
 .leveling-step__addClass {

@@ -58,6 +58,32 @@ type BuilderStep = {
   classEntryIndex?: number;
 };
 
+function rebalanceClassEntries(totalLevel: number, entries: CharacterDraft["classEntries"]) {
+  const safeTotal = Math.max(1, Math.min(20, Math.floor(totalLevel || 1)));
+  const normalizedEntries = entries.length
+    ? entries.map((entry) => ({
+        classId: entry.classId ?? "",
+        subclassId: entry.subclassId ?? "",
+        level: Math.max(1, Math.floor(entry.level || 1)),
+      }))
+    : [{ classId: "", subclassId: "", level: safeTotal }];
+
+  const extraEntries = normalizedEntries.slice(1).map((entry) => ({
+    ...entry,
+    level: Math.max(1, Math.floor(entry.level || 1)),
+  }));
+  const extraLevelTotal = extraEntries.reduce((sum, entry) => sum + entry.level, 0);
+  const primaryLevel = Math.max(1, safeTotal - extraLevelTotal);
+
+  return [
+    {
+      ...normalizedEntries[0],
+      level: primaryLevel,
+    },
+    ...extraEntries,
+  ];
+}
+
 function getStatBonuses(values: string[]) {
   return values.reduce<Record<string, number>>((accumulator, value) => {
     const [name, amount] = value.split(":");
@@ -419,7 +445,13 @@ export function BuilderEditor({
   races,
 }: BuilderEditorProps) {
   const router = useRouter();
-  const [draft, setDraft] = useState<CharacterDraft>(initialDraft ?? createEmptyCharacterDraft());
+  const [draft, setDraft] = useState<CharacterDraft>(() => {
+    const baseDraft = initialDraft ?? createEmptyCharacterDraft();
+    return {
+      ...baseDraft,
+      classEntries: rebalanceClassEntries(baseDraft.level, baseDraft.classEntries),
+    };
+  });
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
@@ -427,6 +459,7 @@ export function BuilderEditor({
   const [activeClassEntryIndex, setActiveClassEntryIndex] = useState(0);
   const primaryClassEntry = useMemo(() => getPrimaryClassEntry(draft), [draft]);
   const totalCharacterLevel = useMemo(() => getTotalCharacterLevel(draft), [draft]);
+  const primaryClassLevel = primaryClassEntry?.level ?? draft.level;
   const classRecordsByEntry = useMemo(
     () =>
       draft.classEntries.map((entry) => classes.find((candidate) => candidate.class.id === entry.classId) ?? null),
@@ -540,16 +573,20 @@ export function BuilderEditor({
 
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
   const levelingValidationMessage = useMemo(() => {
-    if (draft.classEntries.some((entry) => entry.level < 1)) {
-      return "Every class entry must keep at least one level.";
+    if (draft.classEntries.slice(1).some((entry) => entry.level < 1)) {
+      return "Every multiclass slot must keep at least one level.";
     }
 
-    if (totalCharacterLevel !== draft.level) {
-      return `Assign exactly ${draft.level} total levels across the selected classes.`;
+    const multiclassLevelTotal = draft.classEntries
+      .slice(1)
+      .reduce((sum, entry) => sum + entry.level, 0);
+
+    if (multiclassLevelTotal >= draft.level) {
+      return "Leave at least 1 level for the primary class after multiclass levels are assigned.";
     }
 
     return "";
-  }, [draft.classEntries, draft.level, totalCharacterLevel]);
+  }, [draft.classEntries, draft.level]);
   const multiclassValidationMessages = useMemo(() => {
     return draft.classEntries.flatMap((entry, index) => {
       if (index === 0 || !entry.classId) {
@@ -626,7 +663,7 @@ export function BuilderEditor({
         id: "foundation",
         kind: "foundation",
         label: "Foundation",
-        description: "Set identity, abilities, total level, and the multiclass level plan first.",
+        description: "Set identity, abilities, total level, and only the extra multiclass levels first.",
       },
       {
         id: "race",
@@ -650,7 +687,7 @@ export function BuilderEditor({
         id: "class",
         kind: "class",
         label: "Class",
-        description: "Assign the declared class slots and check multiclass requirements before moving on.",
+        description: "Assign the primary and multiclass tracks, then check multiclass requirements before moving on.",
       },
       ...draft.classEntries.flatMap((entry, index) => {
         const classRecord = classRecordsByEntry[index];
@@ -721,7 +758,18 @@ export function BuilderEditor({
     }
     setStatusTone("success");
 
-    setDraft((current) => ({ ...current, ...patch }));
+    setDraft((current) => {
+      const nextDraft = { ...current, ...patch };
+
+      if (patch.level !== undefined || patch.classEntries !== undefined) {
+        nextDraft.classEntries = rebalanceClassEntries(
+          nextDraft.level,
+          patch.classEntries ?? current.classEntries,
+        );
+      }
+
+      return nextDraft;
+    });
   }
 
   async function handleSave() {
@@ -763,6 +811,60 @@ export function BuilderEditor({
   const canSave = Boolean(
     draft.raceId && primaryClassEntry?.classId && draft.backgroundId && !saveValidationMessage,
   );
+
+  const currentStepWarning = useMemo(() => {
+    switch (activeStep.kind) {
+      case "foundation":
+        return abilityValidationMessage || levelingValidationMessage;
+      case "race":
+        return "";
+      case "subrace":
+        return selectedRace?.subraces.length && !draft.subraceId
+          ? "Choose a subrace to continue."
+          : "";
+      case "class":
+        return (
+          multiclassValidationMessages[0] ||
+          (draft.classEntries.some((entry) => !entry.classId)
+            ? "Choose a class for every declared class track before continuing."
+            : "")
+        );
+      case "subclass": {
+        const entry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
+        const classRecord = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
+        const subclassStep = classRecord?.subclassSteps[0] ?? null;
+
+        if (!entry || !subclassStep) {
+          return "";
+        }
+
+        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
+        return unlocked && !entry.subclassId ? "Choose a subclass to continue." : "";
+      }
+      case "background":
+        return draft.backgroundId ? "" : "Choose a background to continue.";
+      case "equipment":
+        return missingEquipmentChoices
+          ? `Finish the remaining ${missingEquipmentChoices} starting equipment choice${missingEquipmentChoices === 1 ? "" : "s"} before continuing.`
+          : "";
+      case "review":
+        return saveValidationMessage;
+      default:
+        return "";
+    }
+  }, [
+    abilityValidationMessage,
+    activeStep,
+    classRecordsByEntry,
+    draft.backgroundId,
+    draft.classEntries,
+    draft.subraceId,
+    levelingValidationMessage,
+    missingEquipmentChoices,
+    multiclassValidationMessages,
+    saveValidationMessage,
+    selectedRace,
+  ]);
 
   const canAdvance = (() => {
     switch (activeStep.kind) {
@@ -846,7 +948,7 @@ export function BuilderEditor({
               <span className="route-shell__tag">Step 1</span>
               <h2 className="route-shell__title">Frame the character before the rules branch</h2>
               <p className="route-shell__copy">
-                Set identity, ability scores, total level, and multiclass level allocation first. Later steps then validate race, class, subclass, and equipment against this foundation.
+                Set identity, ability scores, total level, and optional multiclass slots first. The primary class automatically receives the remaining levels after those extra tracks are allocated.
               </p>
             </div>
 
@@ -881,15 +983,17 @@ export function BuilderEditor({
             <LevelingStep
               entries={draft.classEntries}
               totalLevel={draft.level}
+              primaryLevel={primaryClassLevel}
               onTotalLevelChange={(level) => {
                 const nextLevel = Math.max(1, Math.min(20, Math.floor(level || 1)));
-                let nextEntries = [...draft.classEntries];
-                const assigned = nextEntries.reduce((sum, entry) => sum + entry.level, 0);
+                const nextEntries = [...draft.classEntries];
+                const extraEntries = nextEntries.slice(1);
+                const extraLevelTotal = extraEntries.reduce((sum, entry) => sum + entry.level, 0);
 
-                if (assigned > nextLevel) {
-                  let overflow = assigned - nextLevel;
+                if (extraLevelTotal >= nextLevel) {
+                  let overflow = extraLevelTotal - (nextLevel - 1);
 
-                  for (let index = nextEntries.length - 1; index >= 0 && overflow > 0; index -= 1) {
+                  for (let index = nextEntries.length - 1; index >= 1 && overflow > 0; index -= 1) {
                     const reducible = Math.max(0, nextEntries[index].level - 1);
                     const reduction = Math.min(reducible, overflow);
                     nextEntries[index] = {
@@ -900,10 +1004,7 @@ export function BuilderEditor({
                   }
                 }
 
-                updateDraft({
-                  level: nextLevel,
-                  classEntries: nextEntries,
-                });
+                updateDraft({ level: nextLevel, classEntries: nextEntries });
               }}
               onEntryLevelChange={(index, level) => {
                 const nextEntries = draft.classEntries.map((entry, entryIndex) =>
@@ -915,21 +1016,8 @@ export function BuilderEditor({
                 updateDraft({ classEntries: nextEntries });
               }}
               onAddClassSlot={() => {
-                const donorIndex = draft.classEntries.findIndex((entry) => entry.level > 1);
-                let nextEntries = [...draft.classEntries];
-                let nextLevel = draft.level;
-
-                if (donorIndex >= 0) {
-                  nextEntries[donorIndex] = {
-                    ...nextEntries[donorIndex],
-                    level: nextEntries[donorIndex].level - 1,
-                  };
-                } else {
-                  nextLevel = Math.min(20, draft.level + 1);
-                }
-
+                const nextEntries = [...draft.classEntries];
                 updateDraft({
-                  level: nextLevel,
                   classEntries: [...nextEntries, { classId: "", subclassId: "", level: 1 }],
                 });
               }}
@@ -940,12 +1028,6 @@ export function BuilderEditor({
                 }
 
                 const nextEntries = draft.classEntries.filter((_, entryIndex) => entryIndex !== index);
-                if (nextEntries.length) {
-                  nextEntries[0] = {
-                    ...nextEntries[0],
-                    level: nextEntries[0].level + removed.level,
-                  };
-                }
 
                 updateDraft({
                   classEntries: nextEntries,
@@ -1214,33 +1296,39 @@ export function BuilderEditor({
                   <p className="builder-summary__meta">Character level: {draft.level}</p>
                   <p className="builder-summary__meta">
                     Class split:{" "}
-                    {draft.classEntries.length
+                    {draft.classEntries.some((entry) => entry.classId)
                       ? draft.classEntries
-                          .map((entry) => {
+                          .flatMap((entry) => {
+                            if (!entry.classId) {
+                              return [];
+                            }
                             const classRecord = classes.find((candidate) => candidate.class.id === entry.classId);
-                            return `${classRecord?.class.name ?? entry.classId} ${entry.level}`;
+                            return [`${classRecord?.class.name ?? entry.classId} ${entry.level}`];
                           })
                           .join(" / ")
                       : "Missing"}
                   </p>
                   <p className="builder-summary__meta">
                     Subclasses:{" "}
-                    {draft.classEntries.length
+                    {draft.classEntries.some((entry) => entry.classId)
                       ? draft.classEntries
-                          .map((entry, index) => {
+                          .flatMap((entry, index) => {
+                            if (!entry.classId) {
+                              return [];
+                            }
                             const classRecord = classRecordsByEntry[index];
                             const subclassStep = classRecord?.subclassSteps[0];
                             if (!classRecord) {
-                              return "Missing class";
+                              return ["Missing class"];
                             }
                             if (!subclassStep) {
-                              return `${classRecord.class.name}: none`;
+                              return [`${classRecord.class.name}: none`];
                             }
                             if (subclassStep.level && entry.level < subclassStep.level) {
-                              return `${classRecord.class.name}: unlocks at ${subclassStep.level}`;
+                              return [`${classRecord.class.name}: unlocks at ${subclassStep.level}`];
                             }
                             const selected = subclassStep.options.find((option) => option.archetype.id === entry.subclassId);
-                            return `${classRecord.class.name}: ${selected?.archetype.name ?? "Missing"}`;
+                            return [`${classRecord.class.name}: ${selected?.archetype.name ?? "Missing"}`];
                           })
                           .join(" / ")
                       : "No class yet"}
@@ -1375,9 +1463,12 @@ export function BuilderEditor({
       <section className="builder-navigation">
         <div className="builder-navigation__meta">
           <span className="builder-panel__label">Current step</span>
-          <div className="builder-navigation__summary">
+          <div className={`builder-navigation__summary${currentStepWarning ? " builder-navigation__summary--warning" : ""}`}>
             <strong>{activeStep.label}</strong>
             <p>{activeStep.description}</p>
+            {currentStepWarning ? (
+              <p className="auth-card__status auth-card__status--error">{currentStepWarning}</p>
+            ) : null}
           </div>
         </div>
         <div className="builder-navigation__actions">

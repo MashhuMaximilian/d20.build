@@ -7,6 +7,7 @@ import type { CharacterClassEntry } from "@/lib/characters/types";
 type LevelingStepProps = {
   entries: CharacterClassEntry[];
   totalLevel: number;
+  primaryLevel: number;
   onTotalLevelChange: (level: number) => void;
   onEntryLevelChange: (index: number, level: number) => void;
   onAddClassSlot: () => void;
@@ -29,17 +30,18 @@ function useNumericDraft(value: number) {
 export function LevelingStep({
   entries,
   totalLevel,
+  primaryLevel,
   onTotalLevelChange,
   onEntryLevelChange,
   onAddClassSlot,
   onRemoveClassSlot,
 }: LevelingStepProps) {
-  const assignedLevels = entries.reduce((sum, entry) => sum + entry.level, 0);
-  const remainingLevels = totalLevel - assignedLevels;
+  const extraEntries = entries.slice(1);
+  const assignedExtraLevels = extraEntries.reduce((sum, entry) => sum + entry.level, 0);
   const totalLevelInput = useNumericDraft(totalLevel);
   const entryInputs = useMemo(
-    () => entries.map((entry) => String(entry.level)),
-    [entries],
+    () => extraEntries.map((entry) => String(entry.level)),
+    [extraEntries],
   );
   const [entryDrafts, setEntryDrafts] = useState<string[]>(entryInputs);
 
@@ -53,7 +55,7 @@ export function LevelingStep({
         <span className="builder-panel__label">Level plan</span>
         <strong className="builder-summary__name">Level {totalLevel}</strong>
         <p className="builder-summary__meta">
-          Assigned: {assignedLevels} · Remaining: {remainingLevels}
+          Primary class: {primaryLevel} · Multiclassed levels: {assignedExtraLevels}
         </p>
         <div className="leveling-step__totalControl">
           <button
@@ -92,33 +94,45 @@ export function LevelingStep({
           </button>
         </div>
         <ul className="route-shell__list">
-          <li>Declare the level plan first, then choose the race and class breakdown against it.</li>
-          <li>Each extra class slot becomes a multiclass track later in the wizard.</li>
+          <li>Set the total character level first, then add multiclass slots only if the build actually branches.</li>
+          <li>The primary class automatically receives the remaining levels after multiclass levels are assigned.</li>
           <li>Class prerequisites are checked after class selection and can block saving if unmet.</li>
         </ul>
       </article>
 
       <article className="builder-panel leveling-step__entries">
-        <span className="builder-panel__label">Class slots</span>
+        <span className="builder-panel__label">Multiclass plan</span>
+        <div className="leveling-step__entryCard leveling-step__entryCard--derived">
+          <div className="leveling-step__entryHeader">
+            <div>
+              <strong>Primary class</strong>
+              <p className="builder-summary__meta">
+                This class gets the remaining levels automatically after multiclass levels are assigned.
+              </p>
+            </div>
+          </div>
+          <div className="leveling-step__derivedValue">
+            <span>Derived level</span>
+            <strong>{primaryLevel}</strong>
+          </div>
+        </div>
         <div className="leveling-step__entryList">
-          {entries.map((entry, index) => (
-            <div className="leveling-step__entryCard" key={`class-slot-${index}`}>
+          {extraEntries.map((entry, index) => (
+            <div className="leveling-step__entryCard" key={`class-slot-${index + 1}`}>
               <div className="leveling-step__entryHeader">
                 <div>
-                  <strong>{index === 0 ? "Primary class" : `Multiclass ${index}`}</strong>
+                  <strong>{`Multiclass ${index + 1}`}</strong>
                   <p className="builder-summary__meta">
                     {entry.classId ? "Class chosen later in the class step." : "Unassigned class slot."}
                   </p>
                 </div>
-                {index > 0 ? (
-                  <button
-                    className="button button--secondary button--compact"
-                    type="button"
-                    onClick={() => onRemoveClassSlot(index)}
-                  >
-                    Remove
-                  </button>
-                ) : null}
+                <button
+                  className="button button--secondary button--compact"
+                  type="button"
+                  onClick={() => onRemoveClassSlot(index + 1)}
+                >
+                  Remove
+                </button>
               </div>
               <div className="leveling-step__entryControls">
                 <label className="builder-field">
@@ -138,7 +152,7 @@ export function LevelingStep({
                     }}
                     onBlur={() => {
                       const parsed = Number(entryDrafts[index]);
-                      onEntryLevelChange(index, Number.isFinite(parsed) && parsed > 0 ? parsed : entry.level);
+                      onEntryLevelChange(index + 1, Number.isFinite(parsed) && parsed > 0 ? parsed : entry.level);
                     }}
                   />
                 </label>
@@ -149,10 +163,10 @@ export function LevelingStep({
 
         <div className="leveling-step__addClass">
           <button className="button button--secondary" type="button" onClick={onAddClassSlot}>
-            Add class slot
+            Add multiclass slot
           </button>
           <p className="builder-summary__meta">
-            Add another class slot now if this build is multiclassed. You will assign the actual classes in the class step.
+            Only add extra slots if this build is multiclassed. You will choose the actual classes in the class step.
           </p>
         </div>
       </article>

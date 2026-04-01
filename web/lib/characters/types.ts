@@ -72,7 +72,13 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     raceId: "",
     subraceId: "",
     level: 1,
-    classEntries: [],
+    classEntries: [
+      {
+        classId: "",
+        subclassId: "",
+        level: 1,
+      },
+    ],
     backgroundId: "",
     abilityMode: "manual",
     abilities: {
@@ -96,13 +102,17 @@ type LegacyCharacterDraft = Partial<CharacterDraft> & {
 
 function normalizeClassEntries(draft: LegacyCharacterDraft, fallbackLevel: number): CharacterClassEntry[] {
   if (draft.classEntries?.length) {
-    return draft.classEntries
+    const normalized = draft.classEntries
       .filter((entry) => entry.classId)
       .map((entry) => ({
         classId: entry.classId,
         subclassId: entry.subclassId ?? "",
         level: Math.max(1, Math.floor(entry.level ?? 1)),
       }));
+
+    if (normalized.length) {
+      return normalized;
+    }
   }
 
   if (draft.classId) {
@@ -115,7 +125,13 @@ function normalizeClassEntries(draft: LegacyCharacterDraft, fallbackLevel: numbe
     ];
   }
 
-  return [];
+  return [
+    {
+      classId: "",
+      subclassId: "",
+      level: Math.max(1, Math.floor(draft.level ?? fallbackLevel)),
+    },
+  ];
 }
 
 export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterDraft) {
@@ -144,7 +160,9 @@ export function getPrimaryClassEntry(draft: CharacterDraft) {
 }
 
 export function getTotalCharacterLevel(draft: CharacterDraft) {
-  return draft.classEntries.reduce((sum, entry) => sum + entry.level, 0);
+  return draft.classEntries.length
+    ? draft.classEntries.reduce((sum, entry) => sum + entry.level, 0)
+    : Math.max(1, Math.floor(draft.level || 1));
 }
 
 export function formatAbilityModifier(score: number) {

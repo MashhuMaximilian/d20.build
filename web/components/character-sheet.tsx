@@ -126,11 +126,14 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
             <li>Subrace: {subrace?.name ?? "Not chosen"}</li>
             <li>Class split: {draft.classEntries.length
               ? draft.classEntries
-                  .map((entry) => {
+                  .flatMap((entry) => {
+                    if (!entry.classId) {
+                      return [];
+                    }
                     const classRecord = classes.find((candidate) => candidate.class.id === entry.classId);
-                    return `${classRecord?.class.name ?? entry.classId} ${entry.level}`;
+                    return [`${classRecord?.class.name ?? entry.classId} ${entry.level}`];
                   })
-                  .join(" / ")
+                  .join(" / ") || "Not chosen"
               : "Not chosen"}</li>
             <li>Background: {background?.background.name ?? "Not chosen"}</li>
           </ul>
