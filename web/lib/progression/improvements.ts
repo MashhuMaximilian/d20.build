@@ -22,19 +22,26 @@ export type ImprovementOpportunity = {
   featAllowed: boolean;
   totalPoints: number;
   maxPerAbility: number;
+  selectionPattern?: "flex" | "single-ability";
   allowedAbilities: AbilityKey[];
   notes: string[];
 };
 
 export type FeatPrerequisiteContext = {
   effectiveAbilities: Record<AbilityKey, number>;
+  selectedRaceId?: string;
   selectedRaceName?: string;
+  selectedSubraceId?: string;
   selectedSubraceName?: string;
+  selectedClassIds: string[];
   selectedClassNames: string[];
+  selectedFeatureIds: string[];
   selectedFeatureNames: string[];
+  selectedFeatIds: string[];
   selectedFeatNames: string[];
   hasSpellcasting: boolean;
   totalLevel: number;
+  classLevelsByName: Record<string, number>;
   knownRaceNames: string[];
   knownSubraceNames: string[];
   knownClassNames: string[];
@@ -96,6 +103,10 @@ function uniqueAbilityList(abilities: AbilityKey[]) {
   return [...new Set(abilities)];
 }
 
+function clampPositiveInteger(value: number) {
+  return Math.max(0, Math.floor(value || 0));
+}
+
 function getAbilityChoicesFromElements(elements: BuiltInElement[]) {
   return uniqueAbilityList(
     elements.flatMap((element) =>
@@ -116,6 +127,7 @@ export function deriveImprovementOpportunities(
   classRecords: Array<BuiltInClassRecord | null>,
   race?: BuiltInRaceRecord | null,
   subrace?: BuiltInElement | null,
+  useTashasCustomizedOrigin = false,
 ): ImprovementOpportunity[] {
   const classOpportunities = classEntries.flatMap((entry, classEntryIndex) => {
     const classRecord = classRecords[classEntryIndex];
@@ -146,6 +158,7 @@ export function deriveImprovementOpportunities(
             featAllowed: true,
             totalPoints: 2,
             maxPerAbility: 2,
+            selectionPattern: "flex",
             allowedAbilities: ALL_ABILITIES,
             notes: ["Spend 2 points as an ASI or choose a feat instead."],
           } satisfies ImprovementOpportunity;
@@ -154,7 +167,7 @@ export function deriveImprovementOpportunities(
   });
 
   return [
-    ...deriveAncestryImprovementOpportunities(race ?? null, subrace ?? null),
+    ...deriveAncestryImprovementOpportunities(race ?? null, subrace ?? null, useTashasCustomizedOrigin),
     ...classOpportunities,
   ];
 }
@@ -162,6 +175,7 @@ export function deriveImprovementOpportunities(
 export function deriveAncestryImprovementOpportunities(
   race: BuiltInRaceRecord | null,
   subrace: BuiltInElement | null,
+  useTashasCustomizedOrigin = false,
 ): ImprovementOpportunity[] {
   if (!race) {
     return [];
@@ -193,6 +207,48 @@ export function deriveAncestryImprovementOpportunities(
 
   const opportunities: ImprovementOpportunity[] = [];
 
+  if (useTashasCustomizedOrigin) {
+    const ancestryStatRules = [...race.race.rules, ...(subrace?.rules ?? [])].filter(
+      (rule): rule is Extract<BuiltInRule, { kind: "stat" }> =>
+        rule.kind === "stat" &&
+        ABILITY_NAME_MAP[rule.name.toLowerCase()] !== undefined &&
+        Number(rule.value) > 0,
+    );
+
+    ancestryStatRules.forEach((rule, index) => {
+      const points = clampPositiveInteger(Number(rule.value));
+      if (!points) {
+        return;
+      }
+
+      opportunities.push({
+        id: getOpportunityId(
+          "ancestry",
+          undefined,
+          subrace?.id ?? race.race.id,
+          1,
+          `tashas:${index}:${rule.name}:${points}`,
+        ),
+        sourceType: "ancestry",
+        className: subrace?.name ?? race.race.name,
+        unlockLevel: 1,
+        featureId: subrace?.id ?? race.race.id,
+        featureName: "Customized origin ability score increase",
+        supportsKey: `tashas:${index}:${rule.name}:${points}`,
+        title: `${subrace?.name ?? race.race.name} customized origin`,
+        featAllowed: false,
+        totalPoints: points,
+        maxPerAbility: points,
+        selectionPattern: "single-ability",
+        allowedAbilities: ALL_ABILITIES,
+        notes: [
+          `Assign this +${points} ancestry bonus to one ability score of your choice.`,
+          "Tasha's rule: separate ancestry increases must apply to different abilities.",
+        ],
+      });
+    });
+  }
+
   activeChoices.forEach((choice) => {
       const allowedAbilities = getAbilityChoicesFromElements(choice.options);
       if (!allowedAbilities.length) {
@@ -217,6 +273,7 @@ export function deriveAncestryImprovementOpportunities(
         featAllowed: false,
         totalPoints: choice.number,
         maxPerAbility: 1,
+        selectionPattern: "flex",
         allowedAbilities,
         notes: [
           choice.number === 1
@@ -280,16 +337,214 @@ function normalizeText(value: string) {
 }
 
 function includesNamedToken(text: string, token: string) {
-  const normalizedText = normalizeText(text);
-  const normalizedToken = normalizeText(token);
-  return normalizedText.includes(normalizedToken);
+  const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|\\W)${escaped}(?=\\W|$)`, "i").test(text);
+}
+
+function splitTopLevel(value: string, separator: "," | "||") {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    const next = value[index + 1];
+
+    if (char === "(") {
+      depth += 1;
+      current += char;
+      continue;
+    }
+
+    if (char === ")") {
+      depth = Math.max(0, depth - 1);
+      current += char;
+      continue;
+    }
+
+    if (separator === "," && depth === 0 && char === ",") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      continue;
+    }
+
+    if (separator === "||" && depth === 0 && char === "|" && next === "|") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      index += 1;
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+}
+
+function trimOuterParens(value: string) {
+  let current = value.trim();
+
+  while (current.startsWith("(") && current.endsWith(")")) {
+    const inner = current.slice(1, -1);
+    let depth = 0;
+    let balanced = true;
+
+    for (const char of inner) {
+      if (char === "(") {
+        depth += 1;
+      } else if (char === ")") {
+        depth -= 1;
+        if (depth < 0) {
+          balanced = false;
+          break;
+        }
+      }
+    }
+
+    if (!balanced || depth !== 0) {
+      break;
+    }
+
+    current = inner.trim();
+  }
+
+  return current;
+}
+
+function normalizeKey(value: string) {
+  return normalizeText(value).replace(/[_-]+/g, " ");
+}
+
+function buildSelectedIdSet(context: FeatPrerequisiteContext) {
+  return new Set(
+    [
+      context.selectedRaceId,
+      context.selectedSubraceId,
+      ...context.selectedClassIds,
+      ...context.selectedFeatureIds,
+      ...context.selectedFeatIds,
+    ].filter((value): value is string => Boolean(value)),
+  );
+}
+
+type RequirementEvalResult = true | false | null;
+
+function evaluateRequirementToken(
+  token: string,
+  context: FeatPrerequisiteContext,
+  selectedIds: Set<string>,
+): RequirementEvalResult {
+  const normalized = trimOuterParens(token).trim();
+  if (!normalized) {
+    return null;
+  }
+
+  if (normalized.startsWith("!")) {
+    const result = evaluateRequirementToken(normalized.slice(1), context, selectedIds);
+    return result === null ? null : !result;
+  }
+
+  if (normalized.includes("||")) {
+    const results = splitTopLevel(normalized, "||").map((part) =>
+      evaluateRequirementToken(part, context, selectedIds),
+    );
+
+    if (results.some((result) => result === true)) {
+      return true;
+    }
+
+    if (results.every((result) => result === false)) {
+      return false;
+    }
+
+    return null;
+  }
+
+  const bracketMatch = normalized.match(/^\[([^:\]]+):([^\]]+)\]$/i);
+  if (bracketMatch) {
+    const rawKey = normalizeKey(bracketMatch[1]);
+    const rawValue = bracketMatch[2].trim();
+    const ability = ABILITY_NAME_MAP[rawKey];
+
+    if (ability) {
+      return context.effectiveAbilities[ability] >= Number(rawValue);
+    }
+
+    if (rawKey === "type" && rawValue.toLowerCase() === "spell") {
+      return context.hasSpellcasting;
+    }
+
+    if (rawKey === "level") {
+      return context.totalLevel >= Number(rawValue);
+    }
+
+    const classLevel = context.classLevelsByName[rawKey];
+    if (classLevel !== undefined) {
+      return classLevel >= Number(rawValue);
+    }
+
+    return null;
+  }
+
+  if (/^ID_/i.test(normalized)) {
+    return selectedIds.has(normalized);
+  }
+
+  return null;
+}
+
+function evaluateRequirementExpression(
+  requirements: string,
+  context: FeatPrerequisiteContext,
+) {
+  const selectedIds = buildSelectedIdSet(context);
+  const clauses = splitTopLevel(trimOuterParens(requirements), ",");
+
+  if (!clauses.length) {
+    return null;
+  }
+
+  let sawKnown = false;
+
+  for (const clause of clauses) {
+    const result = evaluateRequirementToken(clause, context, selectedIds);
+    if (result === false) {
+      return false;
+    }
+    if (result === true) {
+      sawKnown = true;
+    }
+  }
+
+  return sawKnown ? true : null;
 }
 
 export function getFeatPrerequisiteFailures(
   feat: BuiltInElement,
   context: FeatPrerequisiteContext,
 ) {
-  const prerequisite = feat.prerequisite?.trim();
+  const prerequisite = feat.prerequisite?.trim() ?? "";
+  const requirements = feat.requirements?.trim() ?? "";
+
+  if (requirements) {
+    const evaluation = evaluateRequirementExpression(requirements, context);
+
+    if (evaluation === false) {
+      return [prerequisite ? `Requires ${prerequisite}.` : "The feat prerequisites are not met."];
+    }
+
+    if (evaluation === true) {
+      return [];
+    }
+  }
 
   if (!prerequisite) {
     return [];

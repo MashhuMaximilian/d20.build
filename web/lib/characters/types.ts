@@ -44,6 +44,7 @@ export type CharacterDraft = {
   level: number;
   classEntries: CharacterClassEntry[];
   backgroundId: string;
+  useTashasCustomizedOrigin: boolean;
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
   improvementSelections: Record<string, CharacterImprovementSelection>;
@@ -90,6 +91,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       },
     ],
     backgroundId: "",
+    useTashasCustomizedOrigin: false,
     abilityMode: "manual",
     abilities: {
       strength: 10,
@@ -162,6 +164,7 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
       ...empty.abilities,
       ...(draft.abilities ?? {}),
     },
+    useTashasCustomizedOrigin: draft.useTashasCustomizedOrigin ?? empty.useTashasCustomizedOrigin,
     improvementSelections: Object.fromEntries(
       Object.entries(draft.improvementSelections ?? {}).map(([key, selection]) => [
         key,

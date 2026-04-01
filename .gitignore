@@ -6,6 +6,7 @@ Aurora Character Builder/
 aurora-elements/
 outputs/
 planning/
+DnD-Books/
 
 # Web app local artifacts
 web/.env

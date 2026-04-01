@@ -55,9 +55,29 @@ function extractPrerequisiteText(element: ImportedElement) {
     return rawPrerequisite.trim();
   }
 
+  if (element.description_html) {
+    const inlineMatch = element.description_html.match(/<i>\s*Prerequisite:\s*([\s\S]*?)<\/i>/i);
+    if (inlineMatch?.[1]) {
+      return inlineMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    }
+  }
+
   const descriptionText = element.description_text ?? "";
-  const match = descriptionText.match(/Prerequisite:\s*([^\n.]+(?:\.[^\n.]+)*)/i);
+  const match = descriptionText.match(
+    /Prerequisite:\s*(.+?)(?=(?:\r?\n)|(?:\s{2,})|(?:\bYou\b)|(?:\bYour\b)|(?:\.))/i,
+  );
   return match?.[1]?.trim() ?? "";
+}
+
+function extractRequirementsText(element: ImportedElement) {
+  const rawRequirements =
+    typeof element.raw_element?.requirements === "string"
+      ? element.raw_element.requirements
+      : typeof (element.raw_element as { requirements?: unknown } | null)?.requirements === "string"
+        ? (element.raw_element as { requirements?: string }).requirements
+        : undefined;
+
+  return rawRequirements?.trim() ?? "";
 }
 
 function toBuiltInRule(rule: unknown): BuiltInRule | null {
@@ -206,6 +226,7 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
     description: element.description_text ?? "",
     descriptionHtml: element.description_html ?? undefined,
     prerequisite: extractPrerequisiteText(element) || undefined,
+    requirements: extractRequirementsText(element) || undefined,
     rules: Array.isArray(element.rules)
       ? element.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
       : [],

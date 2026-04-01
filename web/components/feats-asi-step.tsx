@@ -278,12 +278,20 @@ export function FeatsAsiStep({
                       const remainingPoints = getRemainingAsiPoints(selection, opportunity);
                       const effectiveBeforeThisOpportunity =
                         effectiveAbilitiesBeforeImprovements[ability] - currentBonus;
+                      const otherAssignedAbilities = ABILITY_KEYS.filter(
+                        (key) => key !== ability && getAsiValue(selection, key) > 0,
+                      );
                       const canDecrease = currentBonus > 0;
                       const canIncrease =
                         remainingPoints > 0 &&
                         currentBonus < opportunity.maxPerAbility &&
                         opportunity.allowedAbilities.includes(ability) &&
-                        effectiveBeforeThisOpportunity + currentBonus < 20;
+                        effectiveBeforeThisOpportunity + currentBonus < 20 &&
+                        !(
+                          opportunity.selectionPattern === "single-ability" &&
+                          currentBonus === 0 &&
+                          otherAssignedAbilities.length > 0
+                        );
 
                       return (
                         <div className="ability-card ability-card--compact" key={`${opportunity.id}-${ability}`}>

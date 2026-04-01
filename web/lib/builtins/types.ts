@@ -88,6 +88,7 @@ export type BuiltInElement = {
   description: string;
   descriptionHtml?: string;
   prerequisite?: string;
+  requirements?: string;
   rules: BuiltInRule[];
   setters: BuiltInSetter[];
   multiclass?: BuiltInMulticlass;

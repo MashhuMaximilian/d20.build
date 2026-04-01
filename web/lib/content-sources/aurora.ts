@@ -59,6 +59,8 @@ export type ParsedAuroraElement = {
   rules: ParsedRule[];
   descriptionHtml: string | null;
   descriptionText: string | null;
+  prerequisite: string | null;
+  requirements: string | null;
   multiclass: Record<string, unknown> | null;
   spellcasting: Record<string, unknown> | null;
   rawElement: Record<string, unknown>;
@@ -271,6 +273,8 @@ export function parseAuroraElements(sourceUrl: string, xml: string): ParsedAuror
     const descriptionMatch = body.match(/<description>([\s\S]*?)<\/description>/i);
     const descriptionHtml = descriptionMatch ? descriptionMatch[1].trim() : null;
     const descriptionText = descriptionHtml ? stripTags(descriptionHtml) : null;
+    const prerequisite = stripTags(getTagContent(body, "prerequisite")) || null;
+    const requirements = stripTags(getTagContent(body, "requirements")) || null;
 
     if (!attributes.id || !attributes.type || !attributes.name) {
       continue;
@@ -287,10 +291,14 @@ export function parseAuroraElements(sourceUrl: string, xml: string): ParsedAuror
       rules: parseRules(body),
       descriptionHtml,
       descriptionText,
+      prerequisite,
+      requirements,
       multiclass: parseMulticlass(body),
       spellcasting: parseSpellcasting(body),
       rawElement: {
         attributes,
+        prerequisite,
+        requirements,
         supports: parseSupports(body),
         setters: parseSetters(body),
         rules: parseRules(body),

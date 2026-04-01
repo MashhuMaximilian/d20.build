@@ -170,6 +170,7 @@ export function CatalogSelector({
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -405,19 +406,37 @@ export function CatalogSelector({
               <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
               <h3 className="catalog-selector__optionsTitle">{label} library</h3>
             </div>
-            {activeFilters.length ? (
-              <button
-                className="button button--secondary button--compact"
-                type="button"
-                onClick={() => {
-                  setTagFilter(null);
-                  setSourceFilter("all");
-                  setQuery("");
-                }}
-              >
-                Clear filters
-              </button>
-            ) : null}
+            <div className="catalog-selector__optionsActions">
+              <div className="catalog-selector__viewMode">
+                <button
+                  className={`button button--secondary button--compact${viewMode === "cards" ? " ability-mode__tab--active" : ""}`}
+                  type="button"
+                  onClick={() => setViewMode("cards")}
+                >
+                  Workbench
+                </button>
+                <button
+                  className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                >
+                  Table
+                </button>
+              </div>
+              {activeFilters.length ? (
+                <button
+                  className="button button--secondary button--compact"
+                  type="button"
+                  onClick={() => {
+                    setTagFilter(null);
+                    setSourceFilter("all");
+                    setQuery("");
+                  }}
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {activeFilters.length ? (
@@ -430,52 +449,100 @@ export function CatalogSelector({
             </div>
           ) : null}
 
-          <div className="catalog-selector__list" role="listbox" aria-label={label}>
-            {filteredItems.length ? (
-              filteredItems.map((item) => {
-                const isPreview = item.id === previewItem?.id;
-                const isSelected = item.id === selectedId;
-                return (
-                  <button
-                    key={item.id}
-                    className={`catalog-selector__row${
-                      isPreview ? " catalog-selector__row--preview" : ""
-                    }${isSelected ? " catalog-selector__row--selected" : ""}`}
-                    type="button"
-                    onClick={() => {
-                      setPreviewId(item.id);
-                      onSelect(item.id);
-                      setActivePane("detail");
-                    }}
-                  >
-                    <div className="catalog-selector__rowHeader">
-                      <strong>{item.name}</strong>
-                      {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
-                    </div>
-                    {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
-                    {item.summaryLines?.length ? (
-                      <div className="catalog-selector__summaryList">
-                        {item.summaryLines.slice(0, 3).map((line) => (
-                          <span key={line}>{line}</span>
-                        ))}
+          {viewMode === "cards" ? (
+            <div className="catalog-selector__list" role="listbox" aria-label={label}>
+              {filteredItems.length ? (
+                filteredItems.map((item) => {
+                  const isPreview = item.id === previewItem?.id;
+                  const isSelected = item.id === selectedId;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`catalog-selector__row${
+                        isPreview ? " catalog-selector__row--preview" : ""
+                      }${isSelected ? " catalog-selector__row--selected" : ""}`}
+                      type="button"
+                      onClick={() => {
+                        setPreviewId(item.id);
+                        onSelect(item.id);
+                        setActivePane("detail");
+                      }}
+                    >
+                      <div className="catalog-selector__rowHeader">
+                        <strong>{item.name}</strong>
+                        {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
                       </div>
-                    ) : null}
-                    {item.impactLines?.length ? (
-                      <div className="catalog-selector__rowImpact">
-                        {item.impactLines.slice(0, 2).map((line) => (
-                          <span className="catalog-selector__impactChip" key={line}>
-                            {line}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </button>
-                );
-              })
-            ) : (
-              <div className="catalog-selector__empty">{emptyMessage}</div>
-            )}
-          </div>
+                      {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
+                      {item.summaryLines?.length ? (
+                        <div className="catalog-selector__summaryList">
+                          {item.summaryLines.slice(0, 3).map((line) => (
+                            <span key={line}>{line}</span>
+                          ))}
+                        </div>
+                      ) : null}
+                      {item.impactLines?.length ? (
+                        <div className="catalog-selector__rowImpact">
+                          {item.impactLines.slice(0, 2).map((line) => (
+                            <span className="catalog-selector__impactChip" key={line}>
+                              {line}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="catalog-selector__empty">{emptyMessage}</div>
+              )}
+            </div>
+          ) : (
+            <div className="catalog-selector__tableWrap" role="table" aria-label={`${label} table`}>
+              <div className="catalog-selector__tableHead" role="row">
+                <span role="columnheader">Name</span>
+                <span role="columnheader">Source</span>
+                <span role="columnheader">Summary</span>
+                <span role="columnheader">Impact</span>
+              </div>
+              <div className="catalog-selector__tableBody" role="rowgroup">
+                {filteredItems.length ? (
+                  filteredItems.map((item) => {
+                    const isPreview = item.id === previewItem?.id;
+                    const isSelected = item.id === selectedId;
+
+                    return (
+                      <button
+                        key={item.id}
+                        className={`catalog-selector__tableRow${
+                          isPreview ? " catalog-selector__tableRow--preview" : ""
+                        }${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
+                        type="button"
+                        onClick={() => {
+                          setPreviewId(item.id);
+                          onSelect(item.id);
+                          setActivePane("detail");
+                        }}
+                      >
+                        <span className="catalog-selector__tableCell catalog-selector__tableCell--name">
+                          <strong>{item.name}</strong>
+                          {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
+                        </span>
+                        <span className="catalog-selector__tableCell">{item.source ?? "—"}</span>
+                        <span className="catalog-selector__tableCell">
+                          {(item.summaryLines?.[0] || item.meta || "—").slice(0, 120)}
+                        </span>
+                        <span className="catalog-selector__tableCell">
+                          {(item.impactLines?.[0] || "—").slice(0, 120)}
+                        </span>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="catalog-selector__empty">{emptyMessage}</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={`catalog-selector__detailPanel${activePane === "detail" ? " is-mobileActive" : ""}`}>

@@ -159,58 +159,124 @@ function splitSupportKeys(value: string) {
     .filter(Boolean);
 }
 
+function splitSupportClauses(value: string) {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    const next = value[index + 1];
+
+    if (char === "(") {
+      depth += 1;
+      current += char;
+      continue;
+    }
+
+    if (char === ")") {
+      depth = Math.max(0, depth - 1);
+      current += char;
+      continue;
+    }
+
+    if (depth === 0 && char === ",") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      continue;
+    }
+
+    if (depth === 0 && char === "&" && next === "&") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      index += 1;
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+}
+
+function splitSupportAlternatives(value: string) {
+  const trimmed = value.trim().replace(/^\(|\)$/g, "");
+  if (!trimmed) {
+    return [];
+  }
+
+  return trimmed
+    .split("||")
+    .map((token) => normalizeListKey(token))
+    .filter(Boolean);
+}
+
 function resolveSpellSupport(
   rule: Extract<BuiltInRule, { kind: "select" }>,
   fallbackListKey: string | undefined,
   maxSpellLevel: number,
 ) {
-  const raw = (rule.supports ?? "")
+  const supportsTemplate = rule.supports ?? "";
+  const usesDynamicMaxLevel = /\$\(spellcasting:slots\)/i.test(supportsTemplate);
+  const raw = supportsTemplate
     .replace(/\$\(spellcasting:list\)/gi, fallbackListKey ?? "")
     .replace(/\$\(spellcasting:slots\)/gi, `${maxSpellLevel}`)
     .trim();
 
-  const parts = raw.includes("&&")
-    ? raw.split("&&")
-    : raw.split(",");
-  const listKey = parts[0]?.trim() || fallbackListKey || "";
-  const levelToken = parts[1]?.trim() ?? "";
+  const parts = splitSupportClauses(raw);
+  const numericPart = parts.find((part) => /^\d+$/.test(part));
+  const level = numericPart ? Number(numericPart) : maxSpellLevel;
+  const supportGroups = parts
+    .filter((part) => part !== numericPart)
+    .map((part) => splitSupportAlternatives(part))
+    .filter((group) => group.length);
 
-  if (!listKey) {
+  if (!supportGroups.length && fallbackListKey) {
+    supportGroups.push([normalizeListKey(fallbackListKey)]);
+  }
+
+  if (!supportGroups.length) {
     return null;
   }
 
-  if (levelToken && /^\d+$/.test(levelToken)) {
-    return {
-      listKey,
-      levelMode: "exact" as const,
-      level: Number(levelToken),
-    };
-  }
-
   return {
-    listKey,
-    levelMode: "upto" as const,
-    level: maxSpellLevel,
+    supportGroups,
+    levelMode:
+      numericPart && !usesDynamicMaxLevel ? ("exact" as const) : ("upto" as const),
+    level,
   };
 }
 
-function matchesSpellList(spell: BuiltInElement, listKey: string) {
-  const normalizedList = normalizeListKey(listKey);
-  return spell.supports.some((support) =>
-    splitSupportKeys(support).includes(normalizedList),
+function getSpellSupportTokens(spell: BuiltInElement) {
+  return new Set(
+    spell.supports.flatMap((support) => splitSupportKeys(support)),
   );
+}
+
+function matchesSpellSupport(spell: BuiltInElement, supportGroups: string[][]) {
+  const tokens = getSpellSupportTokens(spell);
+
+  return supportGroups.every((group) => group.some((token) => tokens.has(token)));
 }
 
 function getAvailableSpellIdsForRule(
   spells: BuiltInElement[],
-  support: { listKey: string; levelMode: "exact" | "upto"; level: number } | null,
+  support: { supportGroups: string[][]; levelMode: "exact" | "upto"; level: number } | null,
 ) {
   if (!support) {
     return [];
   }
 
   return spells
-    .filter((spell) => matchesSpellList(spell, support.listKey))
+    .filter((spell) => matchesSpellSupport(spell, support.supportGroups))
     .filter((spell) => {
       const spellLevel = getSpellLevel(spell);
       return support.levelMode === "exact"
@@ -457,7 +523,11 @@ function buildGroupsForSource(
           ? currentSelections[spellbookGroup.id] ?? []
           : []
         : spells
-            .filter((spell) => source.fallbackListKey && matchesSpellList(spell, source.fallbackListKey))
+            .filter(
+              (spell) =>
+                source.fallbackListKey &&
+                matchesSpellSupport(spell, [[normalizeListKey(source.fallbackListKey)]]),
+            )
             .filter((spell) => getSpellLevel(spell) <= maxSpellLevel)
             .map((spell) => spell.id);
 

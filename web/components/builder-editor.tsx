@@ -492,7 +492,7 @@ function getImprovementValidationMessages(
   availableFeatIds: Set<string>,
   featFailuresById: Record<string, string[]>,
 ) {
-  return opportunities.flatMap((opportunity) => {
+  const messages = opportunities.flatMap((opportunity) => {
     const selection = selections[opportunity.id];
     const opportunityLabel =
       opportunity.sourceType === "ancestry"
@@ -534,6 +534,44 @@ function getImprovementValidationMessages(
       (failure) => `${opportunityLabel}: ${failure}`,
     );
   });
+
+  const ancestrySelections = opportunities
+    .filter(
+      (opportunity) =>
+        opportunity.sourceType === "ancestry" && opportunity.selectionPattern === "single-ability",
+    )
+    .map((opportunity) => {
+      const selection = selections[opportunity.id];
+      if (!selection || selection.mode !== "asi") {
+        return null;
+      }
+
+      const chosenAbilities = Object.entries(selection.abilityBonuses ?? {})
+        .filter(([, amount]) => Number(amount) > 0)
+        .map(([ability]) => ability as AbilityKey);
+
+      if (chosenAbilities.length > 1) {
+        messages.push(`${opportunity.title} must assign its bonus to exactly one ability.`);
+        return null;
+      }
+
+      return chosenAbilities[0] ?? null;
+    })
+    .filter((ability): ability is AbilityKey => Boolean(ability));
+
+  const duplicateAbilities = ancestrySelections.filter(
+    (ability, index, values) => values.indexOf(ability) !== index,
+  );
+
+  if (duplicateAbilities.length) {
+    messages.push(
+      `Customized origin increases must apply to different abilities (${[...new Set(duplicateAbilities)]
+        .map((ability) => ability.toUpperCase())
+        .join(", ")} selected more than once).`,
+    );
+  }
+
+  return messages;
 }
 
 export function BuilderEditor({
@@ -614,8 +652,9 @@ export function BuilderEditor({
         classRecordsByEntry,
         selectedRace,
         selectedSubrace,
+        draft.useTashasCustomizedOrigin,
       ),
-    [classRecordsByEntry, draft.classEntries, selectedRace, selectedSubrace],
+    [classRecordsByEntry, draft.classEntries, draft.useTashasCustomizedOrigin, selectedRace, selectedSubrace],
   );
   const equipmentPlan = useMemo(
     () =>
@@ -635,6 +674,17 @@ export function BuilderEditor({
   );
 
   const racialBonuses = useMemo(() => {
+    if (draft.useTashasCustomizedOrigin) {
+      return {
+        strength: 0,
+        dexterity: 0,
+        constitution: 0,
+        intelligence: 0,
+        wisdom: 0,
+        charisma: 0,
+      };
+    }
+
     const statRules = [
       ...(selectedRace?.race.rules ?? []),
       ...(selectedSubrace?.rules ?? []),
@@ -646,7 +696,7 @@ export function BuilderEditor({
     return getStatBonuses(
       statRules.map((rule) => `${rule.name}:${rule.value}`),
     );
-  }, [selectedRace, selectedSubrace]);
+  }, [draft.useTashasCustomizedOrigin, selectedRace, selectedSubrace]);
   const improvementBonuses = useMemo(
     () => getImprovementBonuses(draft.improvementSelections),
     [draft.improvementSelections],
@@ -737,7 +787,11 @@ export function BuilderEditor({
       }
 
       if (ancestryChoiceBonus) {
-        parts.push(`Ancestry choice ${ancestryChoiceBonus >= 0 ? "+" : ""}${ancestryChoiceBonus}`);
+        parts.push(
+          `${draft.useTashasCustomizedOrigin ? "Customized origin" : "Ancestry choice"} ${
+            ancestryChoiceBonus >= 0 ? "+" : ""
+          }${ancestryChoiceBonus}`,
+        );
       }
 
       if (asiBonus) {
@@ -750,7 +804,7 @@ export function BuilderEditor({
     });
 
     return breakdown;
-  }, [ancestryImprovementBonuses, classImprovementBonuses, racialBonuses]);
+  }, [ancestryImprovementBonuses, classImprovementBonuses, draft.useTashasCustomizedOrigin, racialBonuses]);
 
   const selectedRacialTraitNames = useMemo(() => {
     if (!selectedRace) {
@@ -765,6 +819,16 @@ export function BuilderEditor({
     return selectedRace.traits
       .filter((trait) => traitIds.has(trait.id))
       .map((trait) => trait.name);
+  }, [selectedRace, selectedSubrace]);
+  const selectedRacialTraitIds = useMemo(() => {
+    if (!selectedRace) {
+      return [];
+    }
+
+    return [
+      ...collectGrantedIds(selectedRace.race.rules, "Racial Trait"),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Racial Trait") : []),
+    ];
   }, [selectedRace, selectedSubrace]);
   const selectedClassFeatureNames = useMemo(
     () =>
@@ -789,23 +853,64 @@ export function BuilderEditor({
       }),
     [classRecordsByEntry, draft.classEntries],
   );
+  const selectedClassFeatureIds = useMemo(
+    () =>
+      classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        if (!record || !entry?.classId) {
+          return [];
+        }
+
+        const classFeatureIds = collectGrantedIds(record.class.rules, "Class Feature");
+        const subclassFeatureIds =
+          record.subclassSteps
+            .flatMap((step) => step.options)
+            .find((option) => option.archetype.id === entry.subclassId)
+            ?.features.map((feature) => feature.id) ?? [];
+
+        return [...classFeatureIds, ...subclassFeatureIds];
+      }),
+    [classRecordsByEntry, draft.classEntries],
+  );
   const featPrerequisiteFailuresById = useMemo(() => {
     const selectedFeatNames = Object.values(draft.improvementSelections)
       .filter((selection) => selection.mode === "feat" && selection.featName)
       .map((selection) => selection.featName as string);
+    const selectedFeatIds = Object.values(draft.improvementSelections)
+      .filter((selection) => selection.mode === "feat" && selection.featId)
+      .map((selection) => selection.featId);
+    const selectedFeatFeatureIds = selectedFeatIds.flatMap((featId) => {
+      const feat = feats.find((candidate) => candidate.id === featId);
+      return feat ? collectGrantedIds(feat.rules, "Feat Feature") : [];
+    });
+    const classLevelsByName = Object.fromEntries(
+      classRecordsByEntry
+        .flatMap((record, index) => {
+          const entry = draft.classEntries[index];
+          return record && entry?.classId
+            ? [[record.class.name.trim().toLowerCase(), entry.level] as const]
+            : [];
+        }),
+    );
 
     return Object.fromEntries(
       feats.map((feat) => [
         feat.id,
         getFeatPrerequisiteFailures(feat, {
           effectiveAbilities,
+          selectedRaceId: selectedRace?.race.id,
           selectedRaceName: selectedRace?.race.name,
+          selectedSubraceId: selectedSubrace?.id,
           selectedSubraceName: selectedSubrace?.name,
+          selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
           selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
+          selectedFeatureIds: [...selectedRacialTraitIds, ...selectedClassFeatureIds, ...selectedFeatFeatureIds],
           selectedFeatureNames: [...selectedRacialTraitNames, ...selectedClassFeatureNames],
+          selectedFeatIds,
           selectedFeatNames,
           hasSpellcasting: spellGroups.length > 0,
           totalLevel: totalCharacterLevel,
+          classLevelsByName,
           knownRaceNames: races.map((entry) => entry.race.name),
           knownSubraceNames: races.flatMap((entry) => entry.subraces.map((subrace) => subrace.name)),
           knownClassNames: classes.map((entry) => entry.class.name),
@@ -816,11 +921,14 @@ export function BuilderEditor({
     classes,
     classRecordsByEntry,
     draft.improvementSelections,
+    draft.classEntries,
     effectiveAbilities,
     feats,
     races,
-    selectedRace,
+    selectedClassFeatureIds,
+    selectedRacialTraitIds,
     selectedRacialTraitNames,
+    selectedRace,
     selectedSubrace,
     selectedClassFeatureNames,
     spellGroups.length,
@@ -1383,6 +1491,34 @@ export function BuilderEditor({
                 />
               </label>
             </div>
+            <article className="builder-panel builder-panel--compact">
+              <div className="builder-panel__headerRow">
+                <div>
+                  <span className="builder-panel__label">Origin rules</span>
+                  <strong className="builder-summary__name">Ability score customization</strong>
+                </div>
+                <button
+                  className={`button button--secondary button--compact${draft.useTashasCustomizedOrigin ? " ability-mode__tab--active" : ""}`}
+                  type="button"
+                  onClick={() =>
+                    updateDraft({
+                      useTashasCustomizedOrigin: !draft.useTashasCustomizedOrigin,
+                      improvementSelections: Object.fromEntries(
+                        Object.entries(draft.improvementSelections).filter(([id]) => {
+                          const opportunity = improvementOpportunities.find((candidate) => candidate.id === id);
+                          return opportunity?.sourceType !== "ancestry";
+                        }),
+                      ),
+                    })
+                  }
+                >
+                  {draft.useTashasCustomizedOrigin ? "Using Tasha's" : "Legacy ancestry bonuses"}
+                </button>
+              </div>
+              <p className="builder-summary__meta">
+                When enabled, ancestry ability increases are reassigned in Feats / ASI using Tasha&apos;s customized origin rule.
+              </p>
+            </article>
             <AbilityScoreEditor
               abilities={draft.abilities}
               mode={draft.abilityMode}
