@@ -1942,8 +1942,8 @@ a {
 .spellcasting-step__workbench {
   height: min(76vh, 920px);
   min-height: 680px;
-  align-items: start;
-  overflow: visible;
+  align-items: stretch;
+  overflow: hidden;
 }
 
 .spellcasting-step__table {
