@@ -458,6 +458,11 @@ a {
   box-shadow: 0 12px 30px rgba(77, 39, 20, 0.08);
 }
 
+.builder-shell > .builder-panel,
+.builder-shell > .builder-stepPanel {
+  margin-bottom: 8.5rem;
+}
+
 .builder-summary__label,
 .builder-panel__label,
 .builder-subsection__label {
