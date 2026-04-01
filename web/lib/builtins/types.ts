@@ -1,10 +1,12 @@
 export type BuiltInElementType =
+  | "Ability Score Improvement"
   | "Background"
   | "Background Feature"
   | "Background Variant"
   | "Class"
   | "Class Feature"
   | "Feat"
+  | "Feat Feature"
   | "Spell"
   | "Archetype"
   | "Archetype Feature"
@@ -85,6 +87,7 @@ export type BuiltInElement = {
   supports: string[];
   description: string;
   descriptionHtml?: string;
+  prerequisite?: string;
   rules: BuiltInRule[];
   setters: BuiltInSetter[];
   multiclass?: BuiltInMulticlass;

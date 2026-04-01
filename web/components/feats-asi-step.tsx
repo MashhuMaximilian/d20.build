@@ -17,6 +17,7 @@ import {
 
 type FeatsAsiStepProps = {
   effectiveAbilitiesBeforeImprovements: Record<string, number>;
+  featFailuresById: Record<string, string[]>;
   feats: BuiltInElement[];
   opportunities: ImprovementOpportunity[];
   selections: Record<string, CharacterImprovementSelection>;
@@ -150,12 +151,16 @@ function getAsiValue(selection: CharacterImprovementSelection | undefined, abili
   return selection.abilityBonuses[ability] ?? 0;
 }
 
-function getRemainingAsiPoints(selection: CharacterImprovementSelection | undefined) {
-  return Math.max(0, 2 - getImprovementSelectionPoints(selection));
+function getRemainingAsiPoints(
+  selection: CharacterImprovementSelection | undefined,
+  opportunity: ImprovementOpportunity,
+) {
+  return Math.max(0, opportunity.totalPoints - getImprovementSelectionPoints(selection));
 }
 
 export function FeatsAsiStep({
   effectiveAbilitiesBeforeImprovements,
+  featFailuresById,
   feats,
   opportunities,
   selections,
@@ -210,6 +215,8 @@ export function FeatsAsiStep({
             selectedFeat ??
             filteredFeats[0] ??
             null;
+          const previewFailures = previewFeat ? featFailuresById[previewFeat.id] ?? [] : [];
+          const selectedFailures = selectedFeat ? featFailuresById[selectedFeat.id] ?? [] : [];
 
           return (
             <article className="feats-step__card" key={opportunity.id}>
@@ -235,43 +242,47 @@ export function FeatsAsiStep({
                   >
                     ASI
                   </button>
-                  <button
-                    className={`button button--secondary button--compact${!isAsi ? " ability-mode__tab--active" : ""}`}
-                    type="button"
-                    disabled={!featOptions.length}
-                    onClick={() =>
-                      onSelectionChange(opportunity.id, {
-                        mode: "feat",
-                        abilityBonuses: {},
-                        featId: selection.mode === "feat" ? selection.featId : "",
-                        featName: selection.mode === "feat" ? selection.featName : undefined,
-                        featSource: selection.mode === "feat" ? selection.featSource : undefined,
-                      })
-                    }
-                  >
-                    Feat
-                  </button>
+                  {opportunity.featAllowed ? (
+                    <button
+                      className={`button button--secondary button--compact${!isAsi ? " ability-mode__tab--active" : ""}`}
+                      type="button"
+                      disabled={!featOptions.length}
+                      onClick={() =>
+                        onSelectionChange(opportunity.id, {
+                          mode: "feat",
+                          abilityBonuses: {},
+                          featId: selection.mode === "feat" ? selection.featId : "",
+                          featName: selection.mode === "feat" ? selection.featName : undefined,
+                          featSource: selection.mode === "feat" ? selection.featSource : undefined,
+                        })
+                      }
+                    >
+                      Feat
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
               {isAsi ? (
                 <div className="feats-step__asi">
                   <p className="builder-summary__meta">
-                    Spend exactly 2 points. You can raise one score by 2 or two scores by 1, up to a final score of 20.
+                    {opportunity.notes[0] ??
+                      `Spend exactly ${opportunity.totalPoints} points. You can raise one score by 2 or two scores by 1, up to a final score of 20.`}
                   </p>
                   <p className="builder-summary__meta">
-                    Remaining points: {getRemainingAsiPoints(selection)}
+                    Remaining points: {getRemainingAsiPoints(selection, opportunity)}
                   </p>
                   <div className="ability-grid ability-grid--compact">
                     {ABILITY_KEYS.map((ability) => {
                       const currentBonus = getAsiValue(selection, ability);
-                      const remainingPoints = getRemainingAsiPoints(selection);
+                      const remainingPoints = getRemainingAsiPoints(selection, opportunity);
                       const effectiveBeforeThisOpportunity =
                         effectiveAbilitiesBeforeImprovements[ability] - currentBonus;
                       const canDecrease = currentBonus > 0;
                       const canIncrease =
                         remainingPoints > 0 &&
-                        currentBonus < 2 &&
+                        currentBonus < opportunity.maxPerAbility &&
+                        opportunity.allowedAbilities.includes(ability) &&
                         effectiveBeforeThisOpportunity + currentBonus < 20;
 
                       return (
@@ -359,6 +370,8 @@ export function FeatsAsiStep({
                               filteredFeats.map((feat) => {
                                 const isPreview = previewFeat?.id === feat.id;
                                 const isSelected = selection.featId === feat.id;
+                                const failures = featFailuresById[feat.id] ?? [];
+                                const canSelect = failures.length === 0;
                                 return (
                                   <button
                                     key={feat.id}
@@ -369,17 +382,24 @@ export function FeatsAsiStep({
                                         ...current,
                                         [opportunity.id]: feat.id,
                                       }));
-                                      onSelectionChange(opportunity.id, {
-                                        mode: "feat",
-                                        abilityBonuses: {},
-                                        featId: feat.id,
-                                        featName: feat.name,
-                                        featSource: feat.source,
-                                      });
+                                      if (canSelect) {
+                                        onSelectionChange(opportunity.id, {
+                                          mode: "feat",
+                                          abilityBonuses: {},
+                                          featId: feat.id,
+                                          featName: feat.name,
+                                          featSource: feat.source,
+                                        });
+                                      }
                                     }}
                                   >
                                     <strong>{feat.name}</strong>
                                     <span>{feat.source}</span>
+                                    {!canSelect ? (
+                                      <small className="auth-card__status auth-card__status--error">
+                                        {failures[0]}
+                                      </small>
+                                    ) : null}
                                   </button>
                                 );
                               })
@@ -409,9 +429,20 @@ export function FeatsAsiStep({
                                 className="catalog-selector__richText"
                                 dangerouslySetInnerHTML={{ __html: getDetailMarkup(previewFeat) }}
                               />
-                              <p className="builder-summary__meta">
-                                Feat prerequisite enforcement will be tightened later. For now, this picker focuses on choosing and reviewing feat content cleanly.
-                              </p>
+                              {previewFailures.length ? (
+                                <div className="builder-warnings">
+                                  {previewFailures.map((message) => (
+                                    <p className="auth-card__status auth-card__status--error" key={`${previewFeat.id}-${message}`}>
+                                      {message}
+                                    </p>
+                                  ))}
+                                </div>
+                              ) : null}
+                              {selectedFailures.length ? (
+                                <p className="builder-summary__meta">
+                                  The currently selected feat no longer satisfies its prerequisite checks.
+                                </p>
+                              ) : null}
                             </div>
                           ) : (
                             <p className="builder-summary__meta">Pick a feat from the left to inspect its details.</p>

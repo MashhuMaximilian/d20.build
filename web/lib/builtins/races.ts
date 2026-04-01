@@ -5,6 +5,13 @@ export type BuiltInRaceRecord = {
   race: BuiltInElement;
   subraces: BuiltInElement[];
   traits: BuiltInElement[];
+  ancestryChoices: {
+    id: string;
+    name: string;
+    number: number;
+    optionType: "Racial Trait" | "Ability Score Improvement";
+    options: BuiltInElement[];
+  }[];
 };
 
 function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
@@ -18,6 +25,54 @@ function collectGrantedIds(rules: BuiltInRule[]): string[] {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === "Racial Trait" ? [rule.id] : [],
   );
+}
+
+function splitSupportTokens(value: string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(/\|\||\||,/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function resolveSelectableElements(elements: BuiltInElement[], rules: BuiltInRule[]) {
+  return rules
+    .filter(
+      (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
+        rule.kind === "select" &&
+        (rule.type === "Racial Trait" || rule.type === "Ability Score Improvement"),
+    )
+    .map((rule) => {
+      const tokens = splitSupportTokens(rule.supports);
+      const options = elements.filter((element) => {
+        if (element.type !== rule.type) {
+          return false;
+        }
+
+        if (!tokens.length) {
+          return false;
+        }
+
+        return tokens.some(
+          (token) =>
+            element.id === token ||
+            element.name === token ||
+            element.supports.includes(token),
+        );
+      });
+
+      return {
+        id: `${rule.type}:${rule.name}:${rule.supports ?? "default"}`,
+        name: rule.name,
+        number: rule.number ?? 1,
+        optionType: rule.type as "Racial Trait" | "Ability Score Improvement",
+        options,
+      };
+    })
+    .filter((choice) => choice.options.length > 0);
 }
 
 export function getBuiltInSrdRaceElements(): readonly BuiltInElement[] {
@@ -52,6 +107,10 @@ export function getBuiltInSrdRaces(): BuiltInRaceRecord[] {
       race,
       subraces,
       traits,
+      ancestryChoices: resolveSelectableElements(elements, [
+        ...race.rules,
+        ...subraces.flatMap((subrace) => subrace.rules),
+      ]),
     };
   });
 }

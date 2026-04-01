@@ -152,6 +152,13 @@ function normalizeListKey(value: string) {
     .toLowerCase();
 }
 
+function splitSupportKeys(value: string) {
+  return value
+    .split(/\|\||&&|\||,/)
+    .map((token) => normalizeListKey(token))
+    .filter(Boolean);
+}
+
 function resolveSpellSupport(
   rule: Extract<BuiltInRule, { kind: "select" }>,
   fallbackListKey: string | undefined,
@@ -189,7 +196,9 @@ function resolveSpellSupport(
 
 function matchesSpellList(spell: BuiltInElement, listKey: string) {
   const normalizedList = normalizeListKey(listKey);
-  return spell.supports.some((support) => normalizeListKey(support) === normalizedList);
+  return spell.supports.some((support) =>
+    splitSupportKeys(support).includes(normalizedList),
+  );
 }
 
 function getAvailableSpellIdsForRule(

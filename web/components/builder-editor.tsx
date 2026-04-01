@@ -37,6 +37,7 @@ import {
 } from "@/lib/equipment/starting-equipment";
 import {
   deriveImprovementOpportunities,
+  getFeatPrerequisiteFailures,
   getImprovementBonuses,
   getImprovementSelectionPoints,
 } from "@/lib/progression/improvements";
@@ -489,30 +490,49 @@ function getImprovementValidationMessages(
   opportunities: ReturnType<typeof deriveImprovementOpportunities>,
   selections: Record<string, CharacterImprovementSelection>,
   availableFeatIds: Set<string>,
+  featFailuresById: Record<string, string[]>,
 ) {
   return opportunities.flatMap((opportunity) => {
     const selection = selections[opportunity.id];
+    const opportunityLabel =
+      opportunity.sourceType === "ancestry"
+        ? opportunity.title
+        : `${opportunity.className} level ${opportunity.unlockLevel}`;
 
     if (!selection) {
-      return [`Resolve ${opportunity.className} level ${opportunity.unlockLevel} by choosing an ASI or a feat.`];
+      return [
+        `Resolve ${opportunityLabel} by choosing ${
+          opportunity.featAllowed ? "an ASI or a feat" : "the required ability score increase"
+        }.`,
+      ];
     }
 
     if (selection.mode === "asi") {
       const totalPoints = getImprovementSelectionPoints(selection);
-      return totalPoints === 2
+      return totalPoints === opportunity.totalPoints
         ? []
-        : [`Spend exactly 2 ASI points for ${opportunity.className} level ${opportunity.unlockLevel}.`];
+        : [
+            `Spend exactly ${opportunity.totalPoints} ASI point${
+              opportunity.totalPoints === 1 ? "" : "s"
+            } for ${opportunityLabel}.`,
+          ];
+    }
+
+    if (!opportunity.featAllowed) {
+      return [`${opportunityLabel} only allows an ability score choice, not a feat.`];
     }
 
     if (!selection.featId) {
-      return [`Choose a feat for ${opportunity.className} level ${opportunity.unlockLevel}.`];
+      return [`Choose a feat for ${opportunityLabel}.`];
     }
 
     if (!availableFeatIds.has(selection.featId)) {
-      return [`The selected feat for ${opportunity.className} level ${opportunity.unlockLevel} is no longer available in the current catalog.`];
+      return [`The selected feat for ${opportunityLabel} is no longer available in the current catalog.`];
     }
 
-    return [];
+    return (featFailuresById[selection.featId] ?? []).map(
+      (failure) => `${opportunityLabel}: ${failure}`,
+    );
   });
 }
 
@@ -563,6 +583,22 @@ export function BuilderEditor({
     () => selectedClass?.subclassSteps[0] ?? null,
     [selectedClass],
   );
+  const subclassEntryIndexes = useMemo(
+    () =>
+      draft.classEntries.flatMap((entry, index) =>
+        entry.classId && classRecordsByEntry[index]?.subclassSteps[0] ? [index] : [],
+      ),
+    [classRecordsByEntry, draft.classEntries],
+  );
+  const unlockedSubclassEntryIndexes = useMemo(
+    () =>
+      subclassEntryIndexes.filter((index) => {
+        const entry = draft.classEntries[index];
+        const step = classRecordsByEntry[index]?.subclassSteps[0];
+        return Boolean(step && entry && (!step.level || entry.level >= step.level));
+      }),
+    [classRecordsByEntry, draft.classEntries, subclassEntryIndexes],
+  );
   const selectedBackground = useMemo(
     () => backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null,
     [backgrounds, draft.backgroundId],
@@ -572,8 +608,14 @@ export function BuilderEditor({
     [feats],
   );
   const improvementOpportunities = useMemo(
-    () => deriveImprovementOpportunities(draft.classEntries, classRecordsByEntry),
-    [classRecordsByEntry, draft.classEntries],
+    () =>
+      deriveImprovementOpportunities(
+        draft.classEntries,
+        classRecordsByEntry,
+        selectedRace,
+        selectedSubrace,
+      ),
+    [classRecordsByEntry, draft.classEntries, selectedRace, selectedSubrace],
   );
   const equipmentPlan = useMemo(
     () =>
@@ -608,6 +650,28 @@ export function BuilderEditor({
   const improvementBonuses = useMemo(
     () => getImprovementBonuses(draft.improvementSelections),
     [draft.improvementSelections],
+  );
+  const ancestryImprovementBonuses = useMemo(
+    () =>
+      getImprovementBonuses(
+        Object.fromEntries(
+          Object.entries(draft.improvementSelections).filter(([id]) =>
+            improvementOpportunities.find((opportunity) => opportunity.id === id)?.sourceType === "ancestry",
+          ),
+        ),
+      ),
+    [draft.improvementSelections, improvementOpportunities],
+  );
+  const classImprovementBonuses = useMemo(
+    () =>
+      getImprovementBonuses(
+        Object.fromEntries(
+          Object.entries(draft.improvementSelections).filter(([id]) =>
+            improvementOpportunities.find((opportunity) => opportunity.id === id)?.sourceType === "class",
+          ),
+        ),
+      ),
+    [draft.improvementSelections, improvementOpportunities],
   );
   const totalAppliedBonuses = useMemo(
     () =>
@@ -665,10 +729,15 @@ export function BuilderEditor({
     ABILITY_KEYS.forEach((ability) => {
       const parts: string[] = [];
       const racialBonus = racialBonuses[ability] ?? 0;
-      const asiBonus = improvementBonuses[ability] ?? 0;
+      const ancestryChoiceBonus = ancestryImprovementBonuses[ability] ?? 0;
+      const asiBonus = classImprovementBonuses[ability] ?? 0;
 
       if (racialBonus) {
         parts.push(`Ancestry ${racialBonus >= 0 ? "+" : ""}${racialBonus}`);
+      }
+
+      if (ancestryChoiceBonus) {
+        parts.push(`Ancestry choice ${ancestryChoiceBonus >= 0 ? "+" : ""}${ancestryChoiceBonus}`);
       }
 
       if (asiBonus) {
@@ -681,7 +750,7 @@ export function BuilderEditor({
     });
 
     return breakdown;
-  }, [improvementBonuses, racialBonuses]);
+  }, [ancestryImprovementBonuses, classImprovementBonuses, racialBonuses]);
 
   const selectedRacialTraitNames = useMemo(() => {
     if (!selectedRace) {
@@ -697,6 +766,66 @@ export function BuilderEditor({
       .filter((trait) => traitIds.has(trait.id))
       .map((trait) => trait.name);
   }, [selectedRace, selectedSubrace]);
+  const selectedClassFeatureNames = useMemo(
+    () =>
+      classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        if (!record || !entry?.classId) {
+          return [];
+        }
+
+        const classFeatureIds = new Set(collectGrantedIds(record.class.rules, "Class Feature"));
+        const baseFeatures = record.features
+          .filter((feature) => classFeatureIds.has(feature.id))
+          .map((feature) => feature.name);
+
+        const subclassFeatures =
+          record.subclassSteps
+            .flatMap((step) => step.options)
+            .find((option) => option.archetype.id === entry.subclassId)
+            ?.features.map((feature) => feature.name) ?? [];
+
+        return [...baseFeatures, ...subclassFeatures];
+      }),
+    [classRecordsByEntry, draft.classEntries],
+  );
+  const featPrerequisiteFailuresById = useMemo(() => {
+    const selectedFeatNames = Object.values(draft.improvementSelections)
+      .filter((selection) => selection.mode === "feat" && selection.featName)
+      .map((selection) => selection.featName as string);
+
+    return Object.fromEntries(
+      feats.map((feat) => [
+        feat.id,
+        getFeatPrerequisiteFailures(feat, {
+          effectiveAbilities,
+          selectedRaceName: selectedRace?.race.name,
+          selectedSubraceName: selectedSubrace?.name,
+          selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
+          selectedFeatureNames: [...selectedRacialTraitNames, ...selectedClassFeatureNames],
+          selectedFeatNames,
+          hasSpellcasting: spellGroups.length > 0,
+          totalLevel: totalCharacterLevel,
+          knownRaceNames: races.map((entry) => entry.race.name),
+          knownSubraceNames: races.flatMap((entry) => entry.subraces.map((subrace) => subrace.name)),
+          knownClassNames: classes.map((entry) => entry.class.name),
+        }),
+      ]),
+    ) as Record<string, string[]>;
+  }, [
+    classes,
+    classRecordsByEntry,
+    draft.improvementSelections,
+    effectiveAbilities,
+    feats,
+    races,
+    selectedRace,
+    selectedRacialTraitNames,
+    selectedSubrace,
+    selectedClassFeatureNames,
+    spellGroups.length,
+    totalCharacterLevel,
+  ]);
 
   const pendingChoices = useMemo(() => {
     const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
@@ -729,6 +858,7 @@ export function BuilderEditor({
       improvementOpportunities,
       draft.improvementSelections,
       availableFeatIds,
+      featPrerequisiteFailuresById,
     ).length;
 
     return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices + improvementPending;
@@ -739,6 +869,7 @@ export function BuilderEditor({
     draft.improvementSelections,
     improvementOpportunities,
     draft.subraceId,
+    featPrerequisiteFailuresById,
     missingEquipmentChoices,
     selectedBackground,
     selectedRace,
@@ -783,8 +914,14 @@ export function BuilderEditor({
     });
   }, [classRecordsByEntry, draft.classEntries, effectiveAbilities]);
   const improvementValidationMessages = useMemo(
-    () => getImprovementValidationMessages(improvementOpportunities, draft.improvementSelections, availableFeatIds),
-    [availableFeatIds, draft.improvementSelections, improvementOpportunities],
+    () =>
+      getImprovementValidationMessages(
+        improvementOpportunities,
+        draft.improvementSelections,
+        availableFeatIds,
+        featPrerequisiteFailuresById,
+      ),
+    [availableFeatIds, draft.improvementSelections, featPrerequisiteFailuresById, improvementOpportunities],
   );
   const spellValidationMessages = useMemo(
     () => getSpellValidationMessages(spellGroups, draft.spellSelections),
@@ -877,26 +1014,16 @@ export function BuilderEditor({
         label: "Class",
         description: "Assign the primary and multiclass tracks, then check multiclass requirements before moving on.",
       },
-      ...draft.classEntries.flatMap((entry, index) => {
-        const classRecord = classRecordsByEntry[index];
-        const subclassStep = classRecord?.subclassSteps[0];
-
-        if (!classRecord || !subclassStep) {
-          return [];
-        }
-
-        return [
-          {
-            id: `subclass-${index}`,
-            kind: "subclass" as const,
-            classEntryIndex: index,
-            label: `${classRecord.class.name} subclass`,
-            description: subclassStep.level
-              ? `Subclass normally chosen at class level ${subclassStep.level}.`
-              : subclassStep.timingLabel,
-          },
-        ];
-      }),
+      ...(subclassEntryIndexes.length
+        ? [
+            {
+              id: "subclass",
+              kind: "subclass" as const,
+              label: "Subclass",
+              description: "Resolve subclass choices across every class track that exposes one.",
+            },
+          ]
+        : []),
       {
         id: "background",
         kind: "background",
@@ -934,7 +1061,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [classRecordsByEntry, draft.classEntries, selectedRace, spellGroups.length]);
+  }, [selectedRace, spellGroups.length, subclassEntryIndexes.length]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -955,6 +1082,16 @@ export function BuilderEditor({
       setActiveClassEntryIndex(Math.max(0, draft.classEntries.length - 1));
     }
   }, [activeClassEntryIndex, draft.classEntries.length]);
+
+  useEffect(() => {
+    if (currentStep !== "subclass" || !subclassEntryIndexes.length) {
+      return;
+    }
+
+    if (!subclassEntryIndexes.includes(activeClassEntryIndex)) {
+      setActiveClassEntryIndex(subclassEntryIndexes[0]);
+    }
+  }, [activeClassEntryIndex, currentStep, subclassEntryIndexes]);
 
   useEffect(() => {
     const validIds = new Set(improvementOpportunities.map((opportunity) => opportunity.id));
@@ -1087,16 +1224,28 @@ export function BuilderEditor({
         return warnings;
       }
       case "subclass": {
-        const entry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
-        const classRecord = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
-        const subclassStep = classRecord?.subclassSteps[0] ?? null;
-
-        if (!entry || !subclassStep) {
+        if (!subclassEntryIndexes.length) {
           return [];
         }
+        const warnings = unlockedSubclassEntryIndexes
+          .filter((index) => !draft.classEntries[index]?.subclassId)
+          .map((index) => {
+            const className = classRecordsByEntry[index]?.class.name ?? `Class ${index + 1}`;
+            return `Choose a subclass for ${className} before continuing.`;
+          });
 
-        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
-        return unlocked && !entry.subclassId ? ["Choose a subclass to continue."] : [];
+        if (!warnings.length && activeClassEntryIndex !== 0) {
+          const activeRecord = classRecordsByEntry[activeClassEntryIndex];
+          const activeSubclassStep = activeRecord?.subclassSteps[0];
+          const activeEntry = draft.classEntries[activeClassEntryIndex];
+          if (activeRecord && activeSubclassStep && activeEntry && activeSubclassStep.level && activeEntry.level < activeSubclassStep.level) {
+            warnings.push(
+              `${activeRecord.class.name} subclass normally unlocks at class level ${activeSubclassStep.level}.`,
+            );
+          }
+        }
+
+        return warnings;
       }
       case "background":
         return draft.backgroundId ? [] : ["Choose a background to continue."];
@@ -1118,6 +1267,7 @@ export function BuilderEditor({
         return [];
     }
   }, [
+    activeClassEntryIndex,
     abilityValidationMessage,
     activeStep,
     classRecordsByEntry,
@@ -1131,6 +1281,8 @@ export function BuilderEditor({
     saveValidationMessage,
     selectedRace,
     spellValidationMessages,
+    subclassEntryIndexes,
+    unlockedSubclassEntryIndexes,
   ]);
 
   const canAdvance = (() => {
@@ -1144,14 +1296,7 @@ export function BuilderEditor({
       case "class":
         return draft.classEntries.every((entry) => Boolean(entry.classId));
       case "subclass": {
-        const entry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
-        const classRecord = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
-        const subclassStep = classRecord?.subclassSteps[0] ?? null;
-        if (!entry || !subclassStep) {
-          return true;
-        }
-        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
-        return !unlocked || Boolean(entry.subclassId);
+        return unlockedSubclassEntryIndexes.every((index) => Boolean(draft.classEntries[index]?.subclassId));
       }
       case "background":
         return Boolean(draft.backgroundId);
@@ -1179,14 +1324,7 @@ export function BuilderEditor({
       case "class":
         return draft.classEntries.every((entry) => Boolean(entry.classId));
       case "subclass": {
-        const entry = typeof step.classEntryIndex === "number" ? draft.classEntries[step.classEntryIndex] : null;
-        const classRecord = typeof step.classEntryIndex === "number" ? classRecordsByEntry[step.classEntryIndex] : null;
-        const subclassStep = classRecord?.subclassSteps[0] ?? null;
-        if (!entry || !subclassStep) {
-          return true;
-        }
-        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
-        return !unlocked || Boolean(entry.subclassId);
+        return unlockedSubclassEntryIndexes.every((index) => Boolean(draft.classEntries[index]?.subclassId));
       }
       case "background":
         return Boolean(draft.backgroundId);
@@ -1431,8 +1569,8 @@ export function BuilderEditor({
         );
       case "subclass":
         {
-          const subclassEntry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
-          const subclassClass = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
+          const subclassEntry = draft.classEntries[activeClassEntryIndex] ?? null;
+          const subclassClass = classRecordsByEntry[activeClassEntryIndex] ?? null;
           const subclassStep = subclassClass?.subclassSteps[0] ?? null;
           const subclassItems = buildSubclassCatalogItems(subclassStep);
           const unlocked = Boolean(subclassStep && subclassEntry && (!subclassStep.level || subclassEntry.level >= subclassStep.level));
@@ -1441,12 +1579,41 @@ export function BuilderEditor({
             <div className="builder-stepPanel__intro">
               <span className="route-shell__tag">Subclass</span>
               <h2 className="route-shell__title">
-                {subclassStep?.label ?? "Pick the subclass that shapes the class identity"}
+                {subclassStep?.label ?? "Resolve subclass choices across the selected class tracks"}
               </h2>
               <p className="route-shell__copy">
-                This step is generated for each chosen class that exposes subclass content. If the class level is below the normal unlock point, you can still inspect the options here before later progression work lands.
+                Use the class tabs to switch between subclass-bearing tracks. Save validation only requires subclasses for the tracks that are unlocked at their current class levels.
               </p>
             </div>
+            {subclassEntryIndexes.length ? (
+              <div className="builder-classSlots">
+                {subclassEntryIndexes.map((index) => {
+                  const entry = draft.classEntries[index];
+                  const record = classRecordsByEntry[index];
+                  const step = record?.subclassSteps[0];
+                  const isUnlocked = Boolean(step && entry && (!step.level || entry.level >= step.level));
+                  const isSelected = activeClassEntryIndex === index;
+
+                  return (
+                    <button
+                      key={`subclass-slot-picker-${index}`}
+                      className={`builder-classSlot${isSelected ? " builder-classSlot--active" : ""}${
+                        isUnlocked && !entry?.subclassId ? " builder-classSlot--warning" : ""
+                      }`}
+                      type="button"
+                      onClick={() => setActiveClassEntryIndex(index)}
+                    >
+                      <strong>{index === 0 ? "Primary" : `Multiclass ${index}`}</strong>
+                      <span>{record?.class.name ?? "Choose class"}</span>
+                      <small>
+                        Level {entry?.level ?? 1}
+                        {step?.level ? ` · subclass ${entry && entry.level >= step.level ? "unlocked" : `at ${step.level}`}` : ""}
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
             {subclassClass && subclassStep ? (
               subclassStep.options.length ? (
                 <CatalogSelector
@@ -1455,7 +1622,7 @@ export function BuilderEditor({
                   onSelect={(id) =>
                     updateDraft({
                       classEntries: draft.classEntries.map((entry, index) =>
-                        index === activeStep.classEntryIndex ? { ...entry, subclassId: id } : entry,
+                        index === activeClassEntryIndex ? { ...entry, subclassId: id } : entry,
                       ),
                     })
                   }
@@ -1505,6 +1672,7 @@ export function BuilderEditor({
           <section className="builder-stepPanel">
             <FeatsAsiStep
               effectiveAbilitiesBeforeImprovements={effectiveAbilities}
+              featFailuresById={featPrerequisiteFailuresById}
               feats={feats}
               opportunities={improvementOpportunities}
               selections={draft.improvementSelections}

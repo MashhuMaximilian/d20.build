@@ -26,12 +26,14 @@ import { listCachedElements } from "@/lib/content-sources/cache";
 import type { ImportedElement } from "@/lib/content-sources/types";
 
 const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
+  "Ability Score Improvement",
   "Background",
   "Background Feature",
   "Background Variant",
   "Class",
   "Class Feature",
   "Feat",
+  "Feat Feature",
   "Spell",
   "Archetype",
   "Archetype Feature",
@@ -40,6 +42,23 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Racial Trait",
   "Race Variant",
 ]);
+
+function extractPrerequisiteText(element: ImportedElement) {
+  const rawPrerequisite =
+    typeof element.raw_element?.prerequisite === "string"
+      ? element.raw_element.prerequisite
+      : typeof (element.raw_element as { prerequisite?: unknown } | null)?.prerequisite === "string"
+        ? (element.raw_element as { prerequisite?: string }).prerequisite
+        : undefined;
+
+  if (rawPrerequisite?.trim()) {
+    return rawPrerequisite.trim();
+  }
+
+  const descriptionText = element.description_text ?? "";
+  const match = descriptionText.match(/Prerequisite:\s*([^\n.]+(?:\.[^\n.]+)*)/i);
+  return match?.[1]?.trim() ?? "";
+}
 
 function toBuiltInRule(rule: unknown): BuiltInRule | null {
   if (!rule || typeof rule !== "object" || !("kind" in rule)) {
@@ -186,6 +205,7 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
       : [],
     description: element.description_text ?? "",
     descriptionHtml: element.description_html ?? undefined,
+    prerequisite: extractPrerequisiteText(element) || undefined,
     rules: Array.isArray(element.rules)
       ? element.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
       : [],
@@ -203,6 +223,54 @@ function collectGrantedIds(rules: BuiltInRule[], grantType: string) {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === grantType ? [rule.id] : [],
   );
+}
+
+function splitSupportTokens(value: string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(/\|\||\||,/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function resolveSelectableElements(elements: BuiltInElement[], rules: BuiltInRule[]) {
+  return rules
+    .filter(
+      (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
+        rule.kind === "select" &&
+        (rule.type === "Racial Trait" || rule.type === "Ability Score Improvement"),
+    )
+    .map((rule) => {
+      const tokens = splitSupportTokens(rule.supports);
+      const options = elements.filter((element) => {
+        if (element.type !== rule.type) {
+          return false;
+        }
+
+        if (!tokens.length) {
+          return false;
+        }
+
+        return tokens.some(
+          (token) =>
+            element.id === token ||
+            element.name === token ||
+            element.supports.includes(token),
+        );
+      });
+
+      return {
+        id: `${rule.type}:${rule.name}:${rule.supports ?? "default"}`,
+        name: rule.name,
+        number: rule.number ?? 1,
+        optionType: rule.type as "Racial Trait" | "Ability Score Improvement",
+        options,
+      };
+    })
+    .filter((choice) => choice.options.length > 0);
 }
 
 function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
@@ -225,6 +293,10 @@ function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
       traits: [...traitIds]
         .map((id) => elementsById.get(id))
         .filter((element): element is BuiltInElement => Boolean(element)),
+      ancestryChoices: resolveSelectableElements(elements, [
+        ...race.rules,
+        ...subraces.flatMap((subrace) => subrace.rules),
+      ]),
     };
   });
 }

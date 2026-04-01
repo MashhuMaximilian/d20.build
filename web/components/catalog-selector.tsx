@@ -175,6 +175,10 @@ export function CatalogSelector({
     const counts = new Map<string, number>();
 
     items.forEach((item) => {
+      if (sourceFilter !== "all" && item.origin !== sourceFilter) {
+        return;
+      }
+
       item.filterTags?.forEach((tag) => {
         counts.set(tag, (counts.get(tag) ?? 0) + 1);
       });
@@ -184,7 +188,7 @@ export function CatalogSelector({
       .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
       .slice(0, 8)
       .map(([tag]) => tag);
-  }, [items]);
+  }, [items, sourceFilter]);
 
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -325,21 +329,30 @@ export function CatalogSelector({
               <button
                 className={`choice-chip${sourceFilter === "all" ? " choice-chip--active" : ""}`}
                 type="button"
-                onClick={() => setSourceFilter("all")}
+                onClick={() => {
+                  setSourceFilter("all");
+                  setTagFilter(null);
+                }}
               >
                 All
               </button>
               <button
                 className={`choice-chip${sourceFilter === "built-in" ? " choice-chip--active" : ""}`}
                 type="button"
-                onClick={() => setSourceFilter("built-in")}
+                onClick={() => {
+                  setSourceFilter("built-in");
+                  setTagFilter(null);
+                }}
               >
                 Built-in
               </button>
               <button
                 className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
                 type="button"
-                onClick={() => setSourceFilter("imported")}
+                onClick={() => {
+                  setSourceFilter("imported");
+                  setTagFilter(null);
+                }}
               >
                 Imported sources
               </button>
