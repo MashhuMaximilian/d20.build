@@ -23,6 +23,117 @@ type FeatsAsiStepProps = {
   onSelectionChange: (opportunityId: string, selection: CharacterImprovementSelection) => void;
 };
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function sanitizeRichHtml(markup: string) {
+  const withoutDangerousBlocks = markup
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/\son[a-z-]+="[^"]*"/gi, "")
+    .replace(/\son[a-z-]+='[^']*'/gi, "")
+    .replace(/\sstyle="[^"]*"/gi, "")
+    .replace(/\sstyle='[^']*'/gi, "")
+    .replace(/\sclass="[^"]*"/gi, "")
+    .replace(/\sclass='[^']*'/gi, "");
+
+  return withoutDangerousBlocks.replace(
+    /<\/?([a-z0-9-]+)(?:\s[^>]*?)?>/gi,
+    (match, rawTag: string) => {
+      const tag = rawTag.toLowerCase();
+      const allowedTags = new Set([
+        "p",
+        "br",
+        "ul",
+        "ol",
+        "li",
+        "strong",
+        "b",
+        "em",
+        "i",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "blockquote",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+      ]);
+
+      return allowedTags.has(tag) ? match : "";
+    },
+  );
+}
+
+function formatPlainTextAsHtml(text: string) {
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const blocks = normalized.split(/\n\s*\n/);
+
+  return blocks
+    .map((block) => {
+      const lines = block
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      if (!lines.length) {
+        return "";
+      }
+
+      const bulletLines = lines.filter((line) => /^[-*•]\s+/.test(line));
+      if (bulletLines.length === lines.length) {
+        const items = bulletLines
+          .map((line) => `<li>${escapeHtml(line.replace(/^[-*•]\s+/, ""))}</li>`)
+          .join("");
+        return `<ul>${items}</ul>`;
+      }
+
+      const headingLine = lines[0];
+      const headingMatch = headingLine.match(/^([A-Z][A-Z0-9' /-]{3,}|[A-Z][^:]{2,40}):$/);
+      if (headingMatch) {
+        const remainder = lines.slice(1).join(" ");
+        return `<h4>${escapeHtml(headingLine.replace(/:$/, ""))}</h4>${
+          remainder ? `<p>${escapeHtml(remainder)}</p>` : ""
+        }`;
+      }
+
+      return `<p>${escapeHtml(lines.join(" "))}</p>`;
+    })
+    .join("");
+}
+
+function getDetailMarkup(feat: BuiltInElement | null) {
+  if (!feat) {
+    return "";
+  }
+
+  if (feat.descriptionHtml?.trim()) {
+    return sanitizeRichHtml(feat.descriptionHtml);
+  }
+
+  return formatPlainTextAsHtml(feat.description);
+}
+
 function getEmptyAsiSelection(): CharacterImprovementSelection {
   return {
     mode: "asi",
@@ -51,6 +162,7 @@ export function FeatsAsiStep({
   onSelectionChange,
 }: FeatsAsiStepProps) {
   const [queries, setQueries] = useState<Record<string, string>>({});
+  const [previewIds, setPreviewIds] = useState<Record<string, string>>({});
   const featOptions = useMemo(() => getAvailableFeatOptions(feats), [feats]);
 
   if (!opportunities.length) {
@@ -84,9 +196,20 @@ export function FeatsAsiStep({
                 `${feat.name} ${feat.source} ${feat.description}`.toLowerCase().includes(featQuery),
               )
             : featOptions;
+          const previewId =
+            previewIds[opportunity.id] ??
+            selection.featId ??
+            filteredFeats[0]?.id ??
+            "";
           const selectedFeat = selection.featId
             ? featOptions.find((feat) => feat.id === selection.featId) ?? null
             : null;
+          const previewFeat =
+            filteredFeats.find((feat) => feat.id === previewId) ??
+            featOptions.find((feat) => feat.id === previewId) ??
+            selectedFeat ??
+            filteredFeats[0] ??
+            null;
 
           return (
             <article className="feats-step__card" key={opportunity.id}>
@@ -211,60 +334,90 @@ export function FeatsAsiStep({
                 <div className="feats-step__featPicker">
                   {featOptions.length ? (
                     <>
-                      <label className="builder-field">
-                        <span>Search feats</span>
-                        <input
-                          className="input"
-                          value={queries[opportunity.id] ?? ""}
-                          onChange={(event) =>
-                            setQueries((current) => ({
-                              ...current,
-                              [opportunity.id]: event.target.value,
-                            }))
-                          }
-                          placeholder="Search imported feat library"
-                        />
-                      </label>
-                      <label className="builder-field">
-                        <span>Choose a feat</span>
-                        <select
-                          className="input"
-                          value={selection.featId}
-                          onChange={(event) => {
-                            const feat = featOptions.find((entry) => entry.id === event.target.value);
-                            onSelectionChange(opportunity.id, {
-                              mode: "feat",
-                              abilityBonuses: {},
-                              featId: feat?.id ?? "",
-                              featName: feat?.name ?? undefined,
-                              featSource: feat?.source ?? undefined,
-                            });
-                          }}
-                        >
-                          <option value="">Select a feat</option>
-                          {filteredFeats.map((feat) => (
-                            <option key={feat.id} value={feat.id}>
-                              {feat.name} · {feat.source}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {selectedFeat ? (
-                        <div className="feats-step__featPreview">
-                          <span className="builder-panel__label">Selected feat</span>
-                          <strong className="builder-summary__name">{selectedFeat.name}</strong>
-                          <p className="builder-summary__meta">{selectedFeat.source}</p>
-                          <p className="route-shell__copy">
-                            {selectedFeat.description.trim()
-                              ? selectedFeat.description.trim().slice(0, 260)
-                              : "This feat has imported rules text available in the reference layer."}
-                          </p>
+                      <div className="feats-step__pickerLayout">
+                        <div className="feats-step__pickerColumn feats-step__pickerColumn--list">
+                          <label className="builder-field">
+                            <span>Search feats</span>
+                            <input
+                              className="input"
+                              value={queries[opportunity.id] ?? ""}
+                              onChange={(event) =>
+                                setQueries((current) => ({
+                                  ...current,
+                                  [opportunity.id]: event.target.value,
+                                }))
+                              }
+                              placeholder="Search feat library"
+                            />
+                          </label>
+                          <div className="feats-step__listHeader">
+                            <span className="builder-panel__label">Choose feat</span>
+                            <span className="builder-summary__meta">{filteredFeats.length} entries</span>
+                          </div>
+                          <div className="feats-step__optionList" role="list">
+                            {filteredFeats.length ? (
+                              filteredFeats.map((feat) => {
+                                const isPreview = previewFeat?.id === feat.id;
+                                const isSelected = selection.featId === feat.id;
+                                return (
+                                  <button
+                                    key={feat.id}
+                                    className={`feats-step__option${isPreview ? " feats-step__option--preview" : ""}${isSelected ? " feats-step__option--selected" : ""}`}
+                                    type="button"
+                                    onClick={() => {
+                                      setPreviewIds((current) => ({
+                                        ...current,
+                                        [opportunity.id]: feat.id,
+                                      }));
+                                      onSelectionChange(opportunity.id, {
+                                        mode: "feat",
+                                        abilityBonuses: {},
+                                        featId: feat.id,
+                                        featName: feat.name,
+                                        featSource: feat.source,
+                                      });
+                                    }}
+                                  >
+                                    <strong>{feat.name}</strong>
+                                    <span>{feat.source}</span>
+                                  </button>
+                                );
+                              })
+                            ) : (
+                              <p className="builder-summary__meta">No feats match the current search.</p>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        <p className="builder-summary__meta">
-                          Feat prerequisite enforcement will be tightened later. For now, choose a feat from imported sources if you want to test feat flow.
-                        </p>
-                      )}
+                        <div className="feats-step__pickerColumn feats-step__pickerColumn--detail">
+                          {previewFeat ? (
+                            <div className="feats-step__featPreview">
+                              <span className="builder-panel__label">
+                                {selection.featId === previewFeat.id ? "Selected feat" : "Preview feat"}
+                              </span>
+                              <strong className="builder-summary__name">{previewFeat.name}</strong>
+                              <p className="builder-summary__meta">{previewFeat.source}</p>
+                              {previewFeat.supports?.length ? (
+                                <div className="catalog-selector__detailTags">
+                                  {previewFeat.supports.slice(0, 6).map((tag) => (
+                                    <span className="catalog-selector__detailTag" key={`${previewFeat.id}-${tag}`}>
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                              <div
+                                className="catalog-selector__richText"
+                                dangerouslySetInnerHTML={{ __html: getDetailMarkup(previewFeat) }}
+                              />
+                              <p className="builder-summary__meta">
+                                Feat prerequisite enforcement will be tightened later. For now, this picker focuses on choosing and reviewing feat content cleanly.
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="builder-summary__meta">Pick a feat from the left to inspect its details.</p>
+                          )}
+                        </div>
+                      </div>
                     </>
                   ) : (
                     <p className="auth-card__status auth-card__status--error">
