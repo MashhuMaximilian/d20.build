@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getBuiltInSrdBackgrounds } from "@/lib/builtins/backgrounds";
 import { getBuiltInSrdClasses } from "@/lib/builtins/classes";
 import { getBuiltInSrdRaces } from "@/lib/builtins/races";
+import type { BuiltInRule } from "@/lib/builtins/types";
 import { getRemoteCharacterDraft } from "@/lib/characters/repository";
 import { getCharacterDraft } from "@/lib/characters/storage";
 import {
@@ -13,13 +14,23 @@ import {
   ABILITY_LABELS,
   formatAbilityModifier,
   getPrimaryClassEntry,
+  type AbilityKey,
   type CharacterDraft,
 } from "@/lib/characters/types";
+import { getImprovementBonuses } from "@/lib/progression/improvements";
 
 type CharacterSheetProps = {
   draftId: string;
   editable?: boolean;
 };
+
+function getStatBonuses(values: string[]) {
+  return values.reduce<Record<string, number>>((accumulator, value) => {
+    const [name, amount] = value.split(":");
+    accumulator[name] = (accumulator[name] ?? 0) + Number(amount);
+    return accumulator;
+  }, {});
+}
 
 export function CharacterSheet({ draftId, editable = false }: CharacterSheetProps) {
   const [draft, setDraft] = useState<CharacterDraft | null>(null);
@@ -75,6 +86,18 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
   const selectedClass = classes.find((entry) => entry.class.id === primaryClassEntry?.classId) ?? null;
   const background =
     backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null;
+  const racialBonuses = (() => {
+    const statRules = [
+      ...(race?.race.rules ?? []),
+      ...(subrace?.rules ?? []),
+    ].filter(
+      (rule): rule is Extract<BuiltInRule, { kind: "stat" }> =>
+        rule.kind === "stat" && ABILITY_KEYS.includes(rule.name as AbilityKey),
+    );
+
+    return getStatBonuses(statRules.map((rule) => `${rule.name}:${rule.value}`));
+  })();
+  const improvementBonuses = getImprovementBonuses(draft.improvementSelections);
 
   return (
     <div className="builder-shell">
@@ -110,9 +133,13 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
             {ABILITY_KEYS.map((ability) => (
               <div className="ability-card" key={ability}>
                 <span className="ability-card__label">{ABILITY_LABELS[ability]}</span>
-                <strong className="summary-card__value">{draft.abilities[ability]}</strong>
+                <strong className="summary-card__value">
+                  {draft.abilities[ability] + (racialBonuses[ability] ?? 0) + (improvementBonuses[ability] ?? 0)}
+                </strong>
                 <span className="ability-card__meta">
-                  {formatAbilityModifier(draft.abilities[ability])}
+                  {formatAbilityModifier(
+                    draft.abilities[ability] + (racialBonuses[ability] ?? 0) + (improvementBonuses[ability] ?? 0),
+                  )}
                 </span>
               </div>
             ))}
@@ -136,6 +163,19 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
                   .join(" / ") || "Not chosen"
               : "Not chosen"}</li>
             <li>Background: {background?.background.name ?? "Not chosen"}</li>
+            <li>
+              Improvements: {Object.values(draft.improvementSelections).length
+                ? Object.values(draft.improvementSelections)
+                    .map((selection) =>
+                      selection.mode === "feat"
+                        ? selection.featName ?? "Selected feat"
+                        : Object.entries(selection.abilityBonuses)
+                            .map(([ability, amount]) => `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`)
+                            .join(", "),
+                    )
+                    .join(" / ")
+                : "None chosen"}
+            </li>
           </ul>
         </section>
       </div>

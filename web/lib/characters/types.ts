@@ -25,6 +25,14 @@ export type CharacterClassEntry = {
   level: number;
 };
 
+export type CharacterImprovementSelection = {
+  mode: "asi" | "feat";
+  abilityBonuses: Partial<Record<AbilityKey, number>>;
+  featId: string;
+  featName?: string;
+  featSource?: string;
+};
+
 export type CharacterDraft = {
   id: string;
   createdAt: string;
@@ -38,6 +46,7 @@ export type CharacterDraft = {
   backgroundId: string;
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
+  improvementSelections: Record<string, CharacterImprovementSelection>;
   equipmentSelections: Record<string, string>;
   sourceManifest: CharacterSourceManifestEntry[];
 };
@@ -89,6 +98,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       wisdom: 10,
       charisma: 10,
     },
+    improvementSelections: {},
     equipmentSelections: {},
     sourceManifest: [],
   };
@@ -150,6 +160,23 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
       ...empty.abilities,
       ...(draft.abilities ?? {}),
     },
+    improvementSelections: Object.fromEntries(
+      Object.entries(draft.improvementSelections ?? {}).map(([key, selection]) => [
+        key,
+        {
+          mode: selection?.mode === "feat" ? "feat" : "asi",
+          abilityBonuses: Object.fromEntries(
+            ABILITY_KEYS.map((ability) => [
+              ability,
+              Math.max(0, Math.min(2, Math.floor(selection?.abilityBonuses?.[ability] ?? 0))),
+            ]).filter(([, value]) => Number(value) > 0),
+          ) as Partial<Record<AbilityKey, number>>,
+          featId: selection?.featId ?? "",
+          featName: selection?.featName ?? undefined,
+          featSource: selection?.featSource ?? undefined,
+        } satisfies CharacterImprovementSelection,
+      ]),
+    ),
     equipmentSelections: draft.equipmentSelections ?? {},
     sourceManifest: draft.sourceManifest ?? [],
   } satisfies CharacterDraft;

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import { EquipmentStep } from "@/components/equipment-step";
+import { FeatsAsiStep } from "@/components/feats-asi-step";
 import { LevelingStep } from "@/components/leveling-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type {
@@ -14,7 +15,7 @@ import type {
   BuiltInSubclassStep,
 } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
-import type { BuiltInRule } from "@/lib/builtins/types";
+import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 import { saveRemoteCharacterDraft } from "@/lib/characters/repository";
 import {
   ABILITY_KEYS,
@@ -25,6 +26,7 @@ import {
   STANDARD_ARRAY,
   type AbilityKey,
   type CharacterDraft,
+  type CharacterImprovementSelection,
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
@@ -32,10 +34,16 @@ import {
   getStartingEquipmentPlan,
   resolveStartingEquipmentItems,
 } from "@/lib/equipment/starting-equipment";
+import {
+  deriveImprovementOpportunities,
+  getImprovementBonuses,
+  getImprovementSelectionPoints,
+} from "@/lib/progression/improvements";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
   classes: BuiltInClassRecord[];
+  feats: BuiltInElement[];
   initialDraft?: CharacterDraft;
   races: BuiltInRaceRecord[];
 };
@@ -47,6 +55,7 @@ type BuilderStepId =
   | "class"
   | "subclass"
   | "background"
+  | "feats"
   | "equipment"
   | "review";
 
@@ -394,6 +403,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
   needsSubclass: boolean;
   subclassesComplete: boolean;
   abilityValidationMessage: string;
+  improvementValidationMessages: string[];
   missingEquipmentChoices: number;
   levelingValidationMessage: string;
 }) {
@@ -406,6 +416,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Choose subclass", done: !flags.needsSubclass || flags.subclassesComplete },
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
+    { label: "Resolve feats / ASI", done: flags.improvementValidationMessages.length === 0 },
     { label: "Choose starting equipment", done: flags.missingEquipmentChoices === 0 },
   ];
 }
@@ -438,9 +449,65 @@ function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): Ca
   }));
 }
 
+function addAbilityBonusMaps(
+  left: Record<AbilityKey, number>,
+  right: Record<AbilityKey, number>,
+) {
+  return ABILITY_KEYS.reduce<Record<AbilityKey, number>>(
+    (totals, ability) => {
+      totals[ability] = (left[ability] ?? 0) + (right[ability] ?? 0);
+      return totals;
+    },
+    {
+      strength: 0,
+      dexterity: 0,
+      constitution: 0,
+      intelligence: 0,
+      wisdom: 0,
+      charisma: 0,
+    },
+  );
+}
+
+function formatAbilityBonus(amount: number, ability: AbilityKey) {
+  return `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`;
+}
+
+function getImprovementValidationMessages(
+  opportunities: ReturnType<typeof deriveImprovementOpportunities>,
+  selections: Record<string, CharacterImprovementSelection>,
+  availableFeatIds: Set<string>,
+) {
+  return opportunities.flatMap((opportunity) => {
+    const selection = selections[opportunity.id];
+
+    if (!selection) {
+      return [`Resolve ${opportunity.className} level ${opportunity.unlockLevel} by choosing an ASI or a feat.`];
+    }
+
+    if (selection.mode === "asi") {
+      const totalPoints = getImprovementSelectionPoints(selection);
+      return totalPoints === 2
+        ? []
+        : [`Spend exactly 2 ASI points for ${opportunity.className} level ${opportunity.unlockLevel}.`];
+    }
+
+    if (!selection.featId) {
+      return [`Choose a feat for ${opportunity.className} level ${opportunity.unlockLevel}.`];
+    }
+
+    if (!availableFeatIds.has(selection.featId)) {
+      return [`The selected feat for ${opportunity.className} level ${opportunity.unlockLevel} is no longer available in the current catalog.`];
+    }
+
+    return [];
+  });
+}
+
 export function BuilderEditor({
   backgrounds,
   classes,
+  feats,
   initialDraft,
   races,
 }: BuilderEditorProps) {
@@ -487,6 +554,14 @@ export function BuilderEditor({
     () => backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null,
     [backgrounds, draft.backgroundId],
   );
+  const availableFeatIds = useMemo(
+    () => new Set(feats.map((feat) => feat.id)),
+    [feats],
+  );
+  const improvementOpportunities = useMemo(
+    () => deriveImprovementOpportunities(draft.classEntries, classRecordsByEntry),
+    [classRecordsByEntry, draft.classEntries],
+  );
   const equipmentPlan = useMemo(
     () =>
       getStartingEquipmentPlan({
@@ -517,6 +592,69 @@ export function BuilderEditor({
       statRules.map((rule) => `${rule.name}:${rule.value}`),
     );
   }, [selectedRace, selectedSubrace]);
+  const improvementBonuses = useMemo(
+    () => getImprovementBonuses(draft.improvementSelections),
+    [draft.improvementSelections],
+  );
+  const totalAppliedBonuses = useMemo(
+    () =>
+      addAbilityBonusMaps(
+        ABILITY_KEYS.reduce<Record<AbilityKey, number>>(
+          (totals, ability) => {
+            totals[ability] = racialBonuses[ability] ?? 0;
+            return totals;
+          },
+          {
+            strength: 0,
+            dexterity: 0,
+            constitution: 0,
+            intelligence: 0,
+            wisdom: 0,
+            charisma: 0,
+          },
+        ),
+        improvementBonuses,
+      ),
+    [improvementBonuses, racialBonuses],
+  );
+  const effectiveAbilities = useMemo(
+    () =>
+      ABILITY_KEYS.reduce<Record<AbilityKey, number>>((totals, ability) => {
+        totals[ability] = draft.abilities[ability] + totalAppliedBonuses[ability];
+        return totals;
+      }, {
+        strength: 0,
+        dexterity: 0,
+        constitution: 0,
+        intelligence: 0,
+        wisdom: 0,
+        charisma: 0,
+      }),
+    [draft.abilities, totalAppliedBonuses],
+  );
+  const abilityBonusBreakdown = useMemo(() => {
+    const breakdown: Partial<Record<AbilityKey, string[]>> = {};
+
+    ABILITY_KEYS.forEach((ability) => {
+      const parts: string[] = [];
+      const racialBonus = racialBonuses[ability] ?? 0;
+      const asiBonus = improvementBonuses[ability] ?? 0;
+
+      if (racialBonus) {
+        parts.push(`Ancestry ${racialBonus >= 0 ? "+" : ""}${racialBonus}`);
+      }
+
+      if (asiBonus) {
+        parts.push(`ASI ${asiBonus >= 0 ? "+" : ""}${asiBonus}`);
+      }
+
+      if (parts.length) {
+        breakdown[ability] = parts;
+      }
+    });
+
+    return breakdown;
+  }, [improvementBonuses, racialBonuses]);
 
   const selectedRacialTraitNames = useMemo(() => {
     if (!selectedRace) {
@@ -560,11 +698,19 @@ export function BuilderEditor({
         )
       );
     }, 0);
+    const improvementPending = getImprovementValidationMessages(
+      improvementOpportunities,
+      draft.improvementSelections,
+      availableFeatIds,
+    ).length;
 
-    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices;
+    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices + improvementPending;
   }, [
+    availableFeatIds,
     classRecordsByEntry,
     draft.classEntries,
+    draft.improvementSelections,
+    improvementOpportunities,
     draft.subraceId,
     missingEquipmentChoices,
     selectedBackground,
@@ -594,7 +740,7 @@ export function BuilderEditor({
       }
 
       const classRecord = classRecordsByEntry[index];
-      const failures = getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, draft.abilities);
+      const failures = getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, effectiveAbilities);
 
       if (!failures.length) {
         return [];
@@ -608,7 +754,11 @@ export function BuilderEditor({
 
       return [`${classRecord?.class.name ?? "This class"} requires ${requirementsText} for multiclassing.`];
     });
-  }, [classRecordsByEntry, draft.abilities, draft.classEntries]);
+  }, [classRecordsByEntry, draft.classEntries, effectiveAbilities]);
+  const improvementValidationMessages = useMemo(
+    () => getImprovementValidationMessages(improvementOpportunities, draft.improvementSelections, availableFeatIds),
+    [availableFeatIds, draft.improvementSelections, improvementOpportunities],
+  );
   const selectionValidationMessage =
     selectedRace?.subraces.length && !draft.subraceId
       ? "Choose a subrace before saving this draft."
@@ -624,7 +774,9 @@ export function BuilderEditor({
             return Boolean(step && entry && (!step.level || entry.level >= step.level) && !entry.subclassId);
           })
         ? "Choose every unlocked subclass before saving this draft."
-        : missingEquipmentChoices
+      : improvementValidationMessages[0]
+        ? improvementValidationMessages[0]
+      : missingEquipmentChoices
           ? `Finish the remaining starting equipment choices before saving this draft.`
       : "";
   const saveValidationMessage = abilityValidationMessage || selectionValidationMessage;
@@ -651,10 +803,11 @@ export function BuilderEditor({
           return Boolean(entry.subclassId);
         }),
         abilityValidationMessage,
+        improvementValidationMessages,
         missingEquipmentChoices,
         levelingValidationMessage,
       }),
-    [abilityValidationMessage, classRecordsByEntry, draft, levelingValidationMessage, missingEquipmentChoices, selectedRace],
+    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, selectedRace],
   );
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -716,6 +869,12 @@ export function BuilderEditor({
         description: "Choose the story scaffold that grants proficiencies, features, and choices.",
       },
       {
+        id: "feats",
+        kind: "feats",
+        label: "Feats / ASI",
+        description: "Resolve every unlocked class-based improvement opportunity before gear and review.",
+      },
+      {
         id: "equipment",
         kind: "equipment",
         label: "Equipment",
@@ -751,6 +910,24 @@ export function BuilderEditor({
       setActiveClassEntryIndex(Math.max(0, draft.classEntries.length - 1));
     }
   }, [activeClassEntryIndex, draft.classEntries.length]);
+
+  useEffect(() => {
+    const validIds = new Set(improvementOpportunities.map((opportunity) => opportunity.id));
+    const hasStaleSelections = Object.keys(draft.improvementSelections).some((key) => !validIds.has(key));
+
+    if (!hasStaleSelections) {
+      return;
+    }
+
+    const nextSelections = Object.fromEntries(
+      Object.entries(draft.improvementSelections).filter(([key]) => validIds.has(key)),
+    );
+
+    setDraft((current) => ({
+      ...current,
+      improvementSelections: nextSelections,
+    }));
+  }, [draft.improvementSelections, improvementOpportunities]);
 
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
@@ -845,6 +1022,8 @@ export function BuilderEditor({
       }
       case "background":
         return draft.backgroundId ? [] : ["Choose a background to continue."];
+      case "feats":
+        return improvementValidationMessages;
       case "equipment":
         return missingEquipmentChoices
           ? [
@@ -864,6 +1043,7 @@ export function BuilderEditor({
     classRecordsByEntry,
     draft.backgroundId,
     draft.classEntries,
+    improvementValidationMessages,
     draft.subraceId,
     levelingValidationMessage,
     missingEquipmentChoices,
@@ -894,6 +1074,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "feats":
+        return improvementValidationMessages.length === 0;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
@@ -925,6 +1107,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "feats":
+        return improvementValidationMessages.length === 0;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
@@ -983,7 +1167,8 @@ export function BuilderEditor({
               mode={draft.abilityMode}
               onAbilitiesChange={(abilities) => updateDraft({ abilities })}
               onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
-              racialBonuses={racialBonuses}
+              appliedBonuses={totalAppliedBonuses}
+              bonusBreakdown={abilityBonusBreakdown}
               validationMessage={abilityValidationMessage}
             />
             <LevelingStep
@@ -1107,7 +1292,7 @@ export function BuilderEditor({
                 const classRecord = classRecordsByEntry[index];
                 const failures =
                   index > 0
-                    ? getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, draft.abilities)
+                    ? getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, effectiveAbilities)
                     : [];
                 return (
                   <button
@@ -1232,6 +1417,25 @@ export function BuilderEditor({
             />
           </section>
         );
+      case "feats":
+        return (
+          <section className="builder-stepPanel">
+            <FeatsAsiStep
+              effectiveAbilitiesBeforeImprovements={effectiveAbilities}
+              feats={feats}
+              opportunities={improvementOpportunities}
+              selections={draft.improvementSelections}
+              onSelectionChange={(opportunityId, selection) =>
+                updateDraft({
+                  improvementSelections: {
+                    ...draft.improvementSelections,
+                    [opportunityId]: selection,
+                  },
+                })
+              }
+            />
+          </section>
+        );
       case "equipment":
         return (
           <section className="builder-stepPanel">
@@ -1341,6 +1545,13 @@ export function BuilderEditor({
                   </p>
                   <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
                   <p className="builder-summary__meta">
+                    Improvements: {improvementOpportunities.length
+                      ? improvementValidationMessages.length
+                        ? `${improvementOpportunities.length - improvementValidationMessages.length}/${improvementOpportunities.length} resolved`
+                        : `${improvementOpportunities.length} resolved`
+                      : "None unlocked yet"}
+                  </p>
+                  <p className="builder-summary__meta">
                     Equipment: {selectedEquipmentItems.length ? `${selectedEquipmentItems.length} starting items selected` : "Missing"}
                   </p>
                 </article>
@@ -1357,6 +1568,15 @@ export function BuilderEditor({
                     : "None yet"}
                 </p>
                 <p className="builder-summary__meta">
+                  Feats / ASI bonuses:{" "}
+                  {Object.values(improvementBonuses).some((amount) => amount > 0)
+                    ? ABILITY_KEYS
+                        .filter((ability) => improvementBonuses[ability] > 0)
+                        .map((ability) => formatAbilityBonus(improvementBonuses[ability], ability))
+                        .join(", ")
+                    : "None yet"}
+                </p>
+                <p className="builder-summary__meta">
                   Traits: {selectedRacialTraitNames.length ? selectedRacialTraitNames.join(", ") : "None yet"}
                 </p>
                 <p className="builder-summary__meta">
@@ -1367,6 +1587,46 @@ export function BuilderEditor({
                   Equipment choices remaining: {missingEquipmentChoices}
                 </p>
                 <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
+              </article>
+
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Feats / ASI</span>
+                {improvementOpportunities.length ? (
+                  <ul className="route-shell__list">
+                    {improvementOpportunities.map((opportunity) => {
+                      const selection = draft.improvementSelections[opportunity.id];
+
+                      if (!selection) {
+                        return (
+                          <li key={opportunity.id}>
+                            {opportunity.className} {opportunity.unlockLevel}: pending
+                          </li>
+                        );
+                      }
+
+                      if (selection.mode === "feat") {
+                        return (
+                          <li key={opportunity.id}>
+                            {opportunity.className} {opportunity.unlockLevel}: {selection.featName ?? "Selected feat"}
+                          </li>
+                        );
+                      }
+
+                      const bonusText = ABILITY_KEYS
+                        .filter((ability) => (selection.abilityBonuses[ability] ?? 0) > 0)
+                        .map((ability) => formatAbilityBonus(selection.abilityBonuses[ability] ?? 0, ability))
+                        .join(", ");
+
+                      return (
+                        <li key={opportunity.id}>
+                          {opportunity.className} {opportunity.unlockLevel}: {bonusText || "pending"}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p className="builder-summary__meta">No improvements unlocked yet.</p>
+                )}
               </article>
 
               <article className="builder-review__card">

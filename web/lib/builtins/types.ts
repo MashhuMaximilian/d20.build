@@ -4,6 +4,7 @@ export type BuiltInElementType =
   | "Background Variant"
   | "Class"
   | "Class Feature"
+  | "Feat"
   | "Archetype"
   | "Archetype Feature"
   | "Race"

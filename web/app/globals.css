@@ -1431,6 +1431,68 @@ a {
   line-height: 1.4;
 }
 
+.ability-card__bonusNote {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.ability-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+.ability-card--compact {
+  gap: 8px;
+  padding: 14px;
+}
+
+.feats-step {
+  gap: 18px;
+}
+
+.feats-step__list {
+  display: grid;
+  gap: 16px;
+}
+
+.feats-step__card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 22px;
+  background: rgba(255, 252, 246, 0.94);
+}
+
+.feats-step__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.feats-step__modeSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.feats-step__asi,
+.feats-step__featPicker {
+  display: grid;
+  gap: 14px;
+}
+
+.feats-step__featPreview {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.88);
+}
+
 .draft-list {
   display: grid;
   gap: 12px;

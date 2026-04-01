@@ -18,7 +18,8 @@ type AbilityScoreEditorProps = {
   mode: AbilityMode;
   onAbilitiesChange: (abilities: CharacterAbilities) => void;
   onModeChange: (mode: AbilityMode, abilities: CharacterAbilities) => void;
-  racialBonuses: Record<string, number>;
+  appliedBonuses: Record<string, number>;
+  bonusBreakdown?: Partial<Record<AbilityKey, string[]>>;
   validationMessage?: string;
 };
 
@@ -125,7 +126,8 @@ export function AbilityScoreEditor({
   mode,
   onAbilitiesChange,
   onModeChange,
-  racialBonuses,
+  appliedBonuses,
+  bonusBreakdown,
   validationMessage,
 }: AbilityScoreEditorProps) {
   const pointBuySpent = getPointBuyTotal(abilities);
@@ -199,8 +201,9 @@ export function AbilityScoreEditor({
       <div className="ability-grid">
         {ABILITY_KEYS.map((ability) => {
           const baseScore = abilities[ability];
-          const bonus = racialBonuses[ability] ?? 0;
+          const bonus = appliedBonuses[ability] ?? 0;
           const total = baseScore + bonus;
+          const breakdown = bonusBreakdown?.[ability] ?? [];
 
           return (
             <label className="ability-card" key={ability}>
@@ -253,6 +256,9 @@ export function AbilityScoreEditor({
               <span className="ability-card__meta">
                 Total {total} ({formatAbilityModifier(total)})
               </span>
+              {breakdown.length ? (
+                <span className="ability-card__bonusNote">{breakdown.join(" · ")}</span>
+              ) : null}
             </label>
           );
         })}

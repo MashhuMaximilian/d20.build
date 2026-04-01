@@ -2,6 +2,7 @@
 
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
+import { getBuiltInSrdFeatElements } from "@/lib/builtins/feats";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
 import type {
   BuiltInElement,
@@ -30,6 +31,7 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Background Variant",
   "Class",
   "Class Feature",
+  "Feat",
   "Archetype",
   "Archetype Feature",
   "Race",
@@ -318,6 +320,7 @@ export async function resolveBuilderCatalogs() {
   const builtInRaceElements = [...getBuiltInSrdRaceElements()];
   const builtInClassElements = [...getBuiltInSrdClassElements()];
   const builtInBackgroundElements = [...getBuiltInSrdBackgroundElements()];
+  const builtInFeatElements = [...getBuiltInSrdFeatElements()];
   const cachedImported = await listCachedElements();
   const importedElements = cachedImported
     .map((element) => toBuiltInElement(element))
@@ -341,10 +344,15 @@ export async function resolveBuilderCatalogs() {
       ["Background", "Background Feature", "Background Variant"].includes(element.type),
     ),
   ]);
+  const featElements = dedupeElements([
+    ...builtInFeatElements,
+    ...importedElements.filter((element) => ["Feat"].includes(element.type)),
+  ]);
 
   return {
     races: buildRaceRecords(raceElements),
     classes: buildClassRecords(classElements),
     backgrounds: buildBackgroundRecords(backgroundElements),
+    feats: featElements,
   };
 }
