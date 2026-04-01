@@ -298,6 +298,17 @@ function buildBackgroundRecords(elements: BuiltInElement[]): BuiltInBackgroundRe
 function dedupeElements(elements: BuiltInElement[]) {
   const byId = new Map<string, BuiltInElement>();
   elements.forEach((element) => {
+    const existing = byId.get(element.id);
+
+    if (!existing) {
+      byId.set(element.id, element);
+      return;
+    }
+
+    if (existing.catalogOrigin === "built-in" && element.catalogOrigin === "imported") {
+      return;
+    }
+
     byId.set(element.id, element);
   });
   return [...byId.values()];

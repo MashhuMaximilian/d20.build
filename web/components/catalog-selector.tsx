@@ -165,7 +165,7 @@ export function CatalogSelector({
   selectedId,
 }: CatalogSelectorProps) {
   const [query, setQuery] = useState("");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "srd" | "imported">("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "built-in" | "imported">("all");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
@@ -192,7 +192,7 @@ export function CatalogSelector({
     return items.filter((item) => {
       const sourceMatches =
         sourceFilter === "all" ||
-        item.origin === (sourceFilter === "srd" ? "built-in" : "imported");
+        item.origin === sourceFilter;
 
       if (!sourceMatches) {
         return false;
@@ -266,7 +266,11 @@ export function CatalogSelector({
 
   const detailMarkup = useMemo(() => getDetailMarkup(previewItem), [previewItem]);
   const activeFilters = [
-    sourceFilter !== "all" ? (sourceFilter === "srd" ? "SRD" : "Imported") : "",
+    sourceFilter !== "all"
+      ? sourceFilter === "built-in"
+        ? "Built-in SRD"
+        : "Imported sources"
+      : "",
     tagFilter ?? "",
     query ? `Search: ${query}` : "",
   ].filter(Boolean);
@@ -326,18 +330,18 @@ export function CatalogSelector({
                 All
               </button>
               <button
-                className={`choice-chip${sourceFilter === "srd" ? " choice-chip--active" : ""}`}
+                className={`choice-chip${sourceFilter === "built-in" ? " choice-chip--active" : ""}`}
                 type="button"
-                onClick={() => setSourceFilter("srd")}
+                onClick={() => setSourceFilter("built-in")}
               >
-                SRD
+                Built-in
               </button>
               <button
                 className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
                 type="button"
                 onClick={() => setSourceFilter("imported")}
               >
-                Imported
+                Imported sources
               </button>
             </div>
           </div>

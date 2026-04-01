@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
 import type { CharacterClassEntry } from "@/lib/characters/types";
 
 type LevelingStepProps = {
@@ -14,19 +12,6 @@ type LevelingStepProps = {
   onRemoveClassSlot: (index: number) => void;
 };
 
-function useNumericDraft(value: number) {
-  const [draftValue, setDraftValue] = useState(String(value));
-
-  useEffect(() => {
-    setDraftValue(String(value));
-  }, [value]);
-
-  return {
-    draftValue,
-    setDraftValue,
-  };
-}
-
 export function LevelingStep({
   entries,
   totalLevel,
@@ -38,16 +23,6 @@ export function LevelingStep({
 }: LevelingStepProps) {
   const extraEntries = entries.slice(1);
   const assignedExtraLevels = extraEntries.reduce((sum, entry) => sum + entry.level, 0);
-  const totalLevelInput = useNumericDraft(totalLevel);
-  const entryInputs = useMemo(
-    () => extraEntries.map((entry) => String(entry.level)),
-    [extraEntries],
-  );
-  const [entryDrafts, setEntryDrafts] = useState<string[]>(entryInputs);
-
-  useEffect(() => {
-    setEntryDrafts(entryInputs);
-  }, [entryInputs]);
 
   return (
     <section className="leveling-step">
@@ -64,33 +39,21 @@ export function LevelingStep({
             onClick={() => onTotalLevelChange(Math.max(1, totalLevel - 1))}
             disabled={totalLevel <= 1}
           >
-            -1
+            -
           </button>
-          <label className="builder-field">
+          <div className="builder-field">
             <span>Total level</span>
-            <input
-              className="input"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={totalLevelInput.draftValue}
-              onChange={(event) => {
-                const nextValue = event.target.value.replace(/[^\d]/g, "");
-                totalLevelInput.setDraftValue(nextValue);
-              }}
-              onBlur={() => {
-                const parsed = Number(totalLevelInput.draftValue);
-                const nextLevel = Number.isFinite(parsed) && parsed > 0 ? parsed : totalLevel;
-                onTotalLevelChange(nextLevel);
-              }}
-            />
-          </label>
+            <div className="numeric-stepper__value numeric-stepper__value--wide" aria-live="polite">
+              {totalLevel}
+            </div>
+          </div>
           <button
             className="button button--secondary button--compact"
             type="button"
             onClick={() => onTotalLevelChange(Math.min(20, totalLevel + 1))}
             disabled={totalLevel >= 20}
           >
-            +1
+            +
           </button>
         </div>
         <ul className="route-shell__list">
@@ -135,27 +98,29 @@ export function LevelingStep({
                 </button>
               </div>
               <div className="leveling-step__entryControls">
-                <label className="builder-field">
+                <div className="builder-field">
                   <span>Class level</span>
-                  <input
-                    className="input"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={entryDrafts[index] ?? String(entry.level)}
-                    onChange={(event) => {
-                      const nextValue = event.target.value.replace(/[^\d]/g, "");
-                      setEntryDrafts((current) => {
-                        const next = [...current];
-                        next[index] = nextValue;
-                        return next;
-                      });
-                    }}
-                    onBlur={() => {
-                      const parsed = Number(entryDrafts[index]);
-                      onEntryLevelChange(index + 1, Number.isFinite(parsed) && parsed > 0 ? parsed : entry.level);
-                    }}
-                  />
-                </label>
+                  <div className="numeric-stepper">
+                    <button
+                      className="button button--secondary button--compact numeric-stepper__button"
+                      type="button"
+                      onClick={() => onEntryLevelChange(index + 1, Math.max(1, entry.level - 1))}
+                      disabled={entry.level <= 1}
+                    >
+                      -
+                    </button>
+                    <div className="numeric-stepper__value" aria-live="polite">
+                      {entry.level}
+                    </div>
+                    <button
+                      className="button button--secondary button--compact numeric-stepper__button"
+                      type="button"
+                      onClick={() => onEntryLevelChange(index + 1, Math.min(20, entry.level + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

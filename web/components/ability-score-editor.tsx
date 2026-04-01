@@ -22,15 +22,6 @@ type AbilityScoreEditorProps = {
   validationMessage?: string;
 };
 
-function readNumericValue(value: string, fallback: number) {
-  if (value.trim() === "") {
-    return fallback;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
 function clampAbilityValue(mode: AbilityMode, value: number) {
   const min = mode === "point-buy" ? 8 : 3;
   const max = mode === "point-buy" ? 15 : 20;
@@ -76,15 +67,57 @@ function getNextAbilityValue(
   abilities: CharacterAbilities,
   ability: AbilityKey,
   mode: AbilityMode,
-  rawValue: string,
+  requestedValue: number,
 ) {
-  const requestedValue = readNumericValue(rawValue, abilities[ability]);
-
   if (mode === "point-buy") {
     return clampPointBuyValue(abilities, ability, requestedValue);
   }
 
   return clampAbilityValue(mode, requestedValue);
+}
+
+function getNextStandardArrayValue(
+  abilities: CharacterAbilities,
+  ability: AbilityKey,
+  delta: -1 | 1,
+) {
+  const ordered = [...STANDARD_ARRAY].sort((left, right) => left - right) as number[];
+  const current = abilities[ability];
+  const currentIndex = ordered.indexOf(current);
+
+  if (currentIndex === -1) {
+    return current;
+  }
+
+  for (
+    let index = currentIndex + delta;
+    index >= 0 && index < ordered.length;
+    index += delta
+  ) {
+    const candidate = ordered[index];
+    const takenElsewhere = ABILITY_KEYS.some(
+      (key) => key !== ability && abilities[key] === candidate,
+    );
+
+    if (!takenElsewhere) {
+      return candidate;
+    }
+  }
+
+  return current;
+}
+
+function getAdjustedAbilityValue(
+  abilities: CharacterAbilities,
+  ability: AbilityKey,
+  mode: AbilityMode,
+  delta: -1 | 1,
+) {
+  if (mode === "standard-array") {
+    return getNextStandardArrayValue(abilities, ability, delta);
+  }
+
+  return getNextAbilityValue(abilities, ability, mode, abilities[ability] + delta);
 }
 
 export function AbilityScoreEditor({
@@ -96,7 +129,6 @@ export function AbilityScoreEditor({
   validationMessage,
 }: AbilityScoreEditorProps) {
   const pointBuySpent = getPointBuyTotal(abilities);
-  const assignedArray = Object.values(abilities);
 
   return (
     <section className="builder-panel">
@@ -173,66 +205,51 @@ export function AbilityScoreEditor({
           return (
             <label className="ability-card" key={ability}>
               <span className="ability-card__label">{ABILITY_LABELS[ability]}</span>
-              {mode === "standard-array" ? (
-                <select
-                  className="input"
-                  value={baseScore}
-                  onChange={(event) =>
+              <div className="numeric-stepper">
+                <button
+                  className="button button--secondary button--compact numeric-stepper__button"
+                  type="button"
+                  onClick={() =>
                     onAbilitiesChange(
-                      nextAbilities(abilities, ability, Number(event.target.value)),
+                      nextAbilities(
+                        abilities,
+                        ability,
+                        getAdjustedAbilityValue(abilities, ability, mode, -1),
+                      ),
                     )
+                  }
+                  disabled={
+                    mode === "standard-array"
+                      ? getNextStandardArrayValue(abilities, ability, -1) === baseScore
+                      : getAdjustedAbilityValue(abilities, ability, mode, -1) === baseScore
                   }
                 >
-                  {STANDARD_ARRAY.map((score) => {
-                    const takenElsewhere =
-                      assignedArray.filter((value) => value === score).length >=
-                        STANDARD_ARRAY.filter((value) => value === score).length &&
-                      baseScore !== score;
-
-                    return (
-                      <option disabled={takenElsewhere} key={score} value={score}>
-                        {score}
-                      </option>
-                    );
-                  })}
-                </select>
-              ) : (
-                <input
-                  className="input"
-                  type="number"
-                  min={mode === "point-buy" ? 8 : 3}
-                  max={mode === "point-buy" ? 15 : 20}
-                  value={baseScore}
-                  onInput={(event) =>
+                  -
+                </button>
+                <div className="numeric-stepper__value" aria-live="polite">
+                  {baseScore}
+                </div>
+                <button
+                  className="button button--secondary button--compact numeric-stepper__button"
+                  type="button"
+                  onClick={() =>
                     onAbilitiesChange(
                       nextAbilities(
                         abilities,
                         ability,
-                        getNextAbilityValue(
-                          abilities,
-                          ability,
-                          mode,
-                          event.currentTarget.value,
-                        ),
+                        getAdjustedAbilityValue(abilities, ability, mode, 1),
                       ),
                     )
                   }
-                  onChange={(event) =>
-                    onAbilitiesChange(
-                      nextAbilities(
-                        abilities,
-                        ability,
-                        getNextAbilityValue(
-                          abilities,
-                          ability,
-                          mode,
-                          event.target.value,
-                        ),
-                      ),
-                    )
+                  disabled={
+                    mode === "standard-array"
+                      ? getNextStandardArrayValue(abilities, ability, 1) === baseScore
+                      : getAdjustedAbilityValue(abilities, ability, mode, 1) === baseScore
                   }
-                />
-              )}
+                >
+                  +
+                </button>
+              </div>
               <span className="ability-card__meta">
                 Total {total} ({formatAbilityModifier(total)})
               </span>

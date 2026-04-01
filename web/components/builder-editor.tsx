@@ -812,45 +812,51 @@ export function BuilderEditor({
     draft.raceId && primaryClassEntry?.classId && draft.backgroundId && !saveValidationMessage,
   );
 
-  const currentStepWarning = useMemo(() => {
+  const currentStepWarnings = useMemo(() => {
     switch (activeStep.kind) {
       case "foundation":
-        return abilityValidationMessage || levelingValidationMessage;
+        return [abilityValidationMessage, levelingValidationMessage].filter(Boolean);
       case "race":
-        return "";
+        return [];
       case "subrace":
         return selectedRace?.subraces.length && !draft.subraceId
-          ? "Choose a subrace to continue."
-          : "";
-      case "class":
-        return (
-          multiclassValidationMessages[0] ||
-          (draft.classEntries.some((entry) => !entry.classId)
-            ? "Choose a class for every declared class track before continuing."
-            : "")
-        );
+          ? ["Choose a subrace to continue."]
+          : [];
+      case "class": {
+        const warnings = [...multiclassValidationMessages];
+
+        if (draft.classEntries.some((entry) => !entry.classId)) {
+          warnings.push("Choose a class for every declared class track before continuing.");
+        }
+
+        return warnings;
+      }
       case "subclass": {
         const entry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
         const classRecord = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
         const subclassStep = classRecord?.subclassSteps[0] ?? null;
 
         if (!entry || !subclassStep) {
-          return "";
+          return [];
         }
 
         const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
-        return unlocked && !entry.subclassId ? "Choose a subclass to continue." : "";
+        return unlocked && !entry.subclassId ? ["Choose a subclass to continue."] : [];
       }
       case "background":
-        return draft.backgroundId ? "" : "Choose a background to continue.";
+        return draft.backgroundId ? [] : ["Choose a background to continue."];
       case "equipment":
         return missingEquipmentChoices
-          ? `Finish the remaining ${missingEquipmentChoices} starting equipment choice${missingEquipmentChoices === 1 ? "" : "s"} before continuing.`
-          : "";
+          ? [
+              `Finish the remaining ${missingEquipmentChoices} starting equipment choice${
+                missingEquipmentChoices === 1 ? "" : "s"
+              } before continuing.`,
+            ]
+          : [];
       case "review":
-        return saveValidationMessage;
+        return saveValidationMessage ? [saveValidationMessage] : [];
       default:
-        return "";
+        return [];
     }
   }, [
     abilityValidationMessage,
@@ -1463,11 +1469,17 @@ export function BuilderEditor({
       <section className="builder-navigation">
         <div className="builder-navigation__meta">
           <span className="builder-panel__label">Current step</span>
-          <div className={`builder-navigation__summary${currentStepWarning ? " builder-navigation__summary--warning" : ""}`}>
+          <div className={`builder-navigation__summary${currentStepWarnings.length ? " builder-navigation__summary--warning" : ""}`}>
             <strong>{activeStep.label}</strong>
             <p>{activeStep.description}</p>
-            {currentStepWarning ? (
-              <p className="auth-card__status auth-card__status--error">{currentStepWarning}</p>
+            {currentStepWarnings.length ? (
+              <div className="builder-navigation__warningList">
+                {currentStepWarnings.map((warning) => (
+                  <p className="auth-card__status auth-card__status--error builder-navigation__warningItem" key={warning}>
+                    {warning}
+                  </p>
+                ))}
+              </div>
             ) : null}
           </div>
         </div>
