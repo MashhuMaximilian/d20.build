@@ -9,6 +9,7 @@ import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector
 import { EquipmentStep } from "@/components/equipment-step";
 import { FeatsAsiStep } from "@/components/feats-asi-step";
 import { LevelingStep } from "@/components/leveling-step";
+import { SpellcastingStep } from "@/components/spellcasting-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type {
   BuiltInClassRecord,
@@ -39,6 +40,10 @@ import {
   getImprovementBonuses,
   getImprovementSelectionPoints,
 } from "@/lib/progression/improvements";
+import {
+  deriveSpellcastingGroups,
+  getSpellValidationMessages,
+} from "@/lib/progression/spellcasting";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
@@ -46,6 +51,7 @@ type BuilderEditorProps = {
   feats: BuiltInElement[];
   initialDraft?: CharacterDraft;
   races: BuiltInRaceRecord[];
+  spells: BuiltInElement[];
 };
 
 type BuilderStepId =
@@ -56,6 +62,7 @@ type BuilderStepId =
   | "subclass"
   | "background"
   | "feats"
+  | "spellcasting"
   | "equipment"
   | "review";
 
@@ -404,6 +411,8 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
   subclassesComplete: boolean;
   abilityValidationMessage: string;
   improvementValidationMessages: string[];
+  spellSelectionEnabled: boolean;
+  spellValidationMessages: string[];
   missingEquipmentChoices: number;
   levelingValidationMessage: string;
 }) {
@@ -417,6 +426,9 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
     { label: "Resolve feats / ASI", done: flags.improvementValidationMessages.length === 0 },
+    ...(flags.spellSelectionEnabled
+      ? [{ label: "Resolve spellcasting", done: flags.spellValidationMessages.length === 0 }]
+      : []),
     { label: "Choose starting equipment", done: flags.missingEquipmentChoices === 0 },
   ];
 }
@@ -510,6 +522,7 @@ export function BuilderEditor({
   feats,
   initialDraft,
   races,
+  spells,
 }: BuilderEditorProps) {
   const router = useRouter();
   const [draft, setDraft] = useState<CharacterDraft>(() => {
@@ -631,6 +644,20 @@ export function BuilderEditor({
         charisma: 0,
       }),
     [draft.abilities, totalAppliedBonuses],
+  );
+  const spellGroups = useMemo(
+    () =>
+      deriveSpellcastingGroups({
+        classRecordsByEntry,
+        classEntries: draft.classEntries,
+        effectiveAbilities,
+        race: selectedRace,
+        spellSelections: draft.spellSelections,
+        spells,
+        subrace: selectedSubrace,
+        totalLevel: totalCharacterLevel,
+      }),
+    [classRecordsByEntry, draft.classEntries, draft.spellSelections, effectiveAbilities, selectedRace, selectedSubrace, spells, totalCharacterLevel],
   );
   const abilityBonusBreakdown = useMemo(() => {
     const breakdown: Partial<Record<AbilityKey, string[]>> = {};
@@ -759,6 +786,10 @@ export function BuilderEditor({
     () => getImprovementValidationMessages(improvementOpportunities, draft.improvementSelections, availableFeatIds),
     [availableFeatIds, draft.improvementSelections, improvementOpportunities],
   );
+  const spellValidationMessages = useMemo(
+    () => getSpellValidationMessages(spellGroups, draft.spellSelections),
+    [draft.spellSelections, spellGroups],
+  );
   const selectionValidationMessage =
     selectedRace?.subraces.length && !draft.subraceId
       ? "Choose a subrace before saving this draft."
@@ -776,6 +807,8 @@ export function BuilderEditor({
         ? "Choose every unlocked subclass before saving this draft."
       : improvementValidationMessages[0]
         ? improvementValidationMessages[0]
+      : spellValidationMessages[0]
+        ? spellValidationMessages[0]
       : missingEquipmentChoices
           ? `Finish the remaining starting equipment choices before saving this draft.`
       : "";
@@ -804,10 +837,12 @@ export function BuilderEditor({
         }),
         abilityValidationMessage,
         improvementValidationMessages,
+        spellSelectionEnabled: spellGroups.length > 0,
+        spellValidationMessages,
         missingEquipmentChoices,
         levelingValidationMessage,
       }),
-    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, selectedRace],
+    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, selectedRace, spellGroups.length, spellValidationMessages],
   );
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -874,6 +909,16 @@ export function BuilderEditor({
         label: "Feats / ASI",
         description: "Resolve every unlocked class-based improvement opportunity before gear and review.",
       },
+      ...(spellGroups.length
+        ? [
+            {
+              id: "spellcasting",
+              kind: "spellcasting" as const,
+              label: "Spellcasting",
+              description: "Pick cantrips, spellbook entries, prepared spells, and other spell grants from the current build.",
+            },
+          ]
+        : []),
       {
         id: "equipment",
         kind: "equipment",
@@ -889,7 +934,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [classRecordsByEntry, draft.classEntries, selectedRace]);
+  }, [classRecordsByEntry, draft.classEntries, selectedRace, spellGroups.length]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -928,6 +973,39 @@ export function BuilderEditor({
       improvementSelections: nextSelections,
     }));
   }, [draft.improvementSelections, improvementOpportunities]);
+
+  useEffect(() => {
+    const validGroupIds = new Set(spellGroups.map((group) => group.id));
+    const validSpellIds = new Map(
+      spellGroups.map((group) => [group.id, new Set([...group.availableSpellIds, ...group.grantedSpellIds])]),
+    );
+    const hasStaleSelections = Object.entries(draft.spellSelections).some(([groupId, spellIds]) => {
+      if (!validGroupIds.has(groupId)) {
+        return true;
+      }
+
+      const allowed = validSpellIds.get(groupId);
+      return (spellIds ?? []).some((spellId) => !allowed?.has(spellId));
+    });
+
+    if (!hasStaleSelections) {
+      return;
+    }
+
+    const nextSelections = Object.fromEntries(
+      Object.entries(draft.spellSelections)
+        .filter(([groupId]) => validGroupIds.has(groupId))
+        .map(([groupId, spellIds]) => [
+          groupId,
+          (spellIds ?? []).filter((spellId) => validSpellIds.get(groupId)?.has(spellId)),
+        ]),
+    );
+
+    setDraft((current) => ({
+      ...current,
+      spellSelections: nextSelections,
+    }));
+  }, [draft.spellSelections, spellGroups]);
 
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
@@ -1024,6 +1102,8 @@ export function BuilderEditor({
         return draft.backgroundId ? [] : ["Choose a background to continue."];
       case "feats":
         return improvementValidationMessages;
+      case "spellcasting":
+        return spellValidationMessages;
       case "equipment":
         return missingEquipmentChoices
           ? [
@@ -1050,6 +1130,7 @@ export function BuilderEditor({
     multiclassValidationMessages,
     saveValidationMessage,
     selectedRace,
+    spellValidationMessages,
   ]);
 
   const canAdvance = (() => {
@@ -1076,6 +1157,8 @@ export function BuilderEditor({
         return Boolean(draft.backgroundId);
       case "feats":
         return improvementValidationMessages.length === 0;
+      case "spellcasting":
+        return spellValidationMessages.length === 0;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
@@ -1436,6 +1519,24 @@ export function BuilderEditor({
             />
           </section>
         );
+      case "spellcasting":
+        return (
+          <section className="builder-stepPanel">
+            <SpellcastingStep
+              groups={spellGroups}
+              selections={draft.spellSelections}
+              spells={spells}
+              onSelectionChange={(groupId, spellIds) =>
+                updateDraft({
+                  spellSelections: {
+                    ...draft.spellSelections,
+                    [groupId]: spellIds,
+                  },
+                })
+              }
+            />
+          </section>
+        );
       case "equipment":
         return (
           <section className="builder-stepPanel">
@@ -1552,6 +1653,13 @@ export function BuilderEditor({
                       : "None unlocked yet"}
                   </p>
                   <p className="builder-summary__meta">
+                    Spellcasting: {spellGroups.length
+                      ? spellValidationMessages.length
+                        ? `${spellGroups.length - spellValidationMessages.length}/${spellGroups.length} groups resolved`
+                        : `${spellGroups.length} groups resolved`
+                      : "No spell selections unlocked yet"}
+                  </p>
+                  <p className="builder-summary__meta">
                     Equipment: {selectedEquipmentItems.length ? `${selectedEquipmentItems.length} starting items selected` : "Missing"}
                   </p>
                 </article>
@@ -1585,6 +1693,9 @@ export function BuilderEditor({
                 <p className="builder-summary__meta">Total level: {draft.level}</p>
                 <p className="builder-summary__meta">
                   Equipment choices remaining: {missingEquipmentChoices}
+                </p>
+                <p className="builder-summary__meta">
+                  Spell groups pending: {spellValidationMessages.length}
                 </p>
                 <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
               </article>

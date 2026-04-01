@@ -32,6 +32,7 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Class",
   "Class Feature",
   "Feat",
+  "Spell",
   "Archetype",
   "Archetype Feature",
   "Race",
@@ -316,11 +317,12 @@ function dedupeElements(elements: BuiltInElement[]) {
   return [...byId.values()];
 }
 
-export async function resolveBuilderCatalogs() {
+export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElement[] = []) {
   const builtInRaceElements = [...getBuiltInSrdRaceElements()];
   const builtInClassElements = [...getBuiltInSrdClassElements()];
   const builtInBackgroundElements = [...getBuiltInSrdBackgroundElements()];
   const builtInFeatElements = [...getBuiltInSrdFeatElements()];
+  const builtInSpellElements = [...initialSpellElements];
   const cachedImported = await listCachedElements();
   const importedElements = cachedImported
     .map((element) => toBuiltInElement(element))
@@ -348,11 +350,16 @@ export async function resolveBuilderCatalogs() {
     ...builtInFeatElements,
     ...importedElements.filter((element) => ["Feat"].includes(element.type)),
   ]);
+  const spellElements = dedupeElements([
+    ...builtInSpellElements,
+    ...importedElements.filter((element) => ["Spell"].includes(element.type)),
+  ]);
 
   return {
     races: buildRaceRecords(raceElements),
     classes: buildClassRecords(classElements),
     backgrounds: buildBackgroundRecords(backgroundElements),
     feats: featElements,
+    spells: spellElements,
   };
 }

@@ -176,6 +176,11 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
                     .join(" / ")
                 : "None chosen"}
             </li>
+            <li>
+              Spell selections: {Object.values(draft.spellSelections).reduce((sum, spellIds) => sum + spellIds.length, 0)
+                ? `${Object.values(draft.spellSelections).reduce((sum, spellIds) => sum + spellIds.length, 0)} selected`
+                : "None chosen"}
+            </li>
           </ul>
         </section>
       </div>

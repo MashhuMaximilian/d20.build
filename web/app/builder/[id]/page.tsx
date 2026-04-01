@@ -3,6 +3,7 @@ import { getBuiltInSrdBackgrounds } from "@/lib/builtins/backgrounds";
 import { getBuiltInSrdClasses } from "@/lib/builtins/classes";
 import { getBuiltInSrdFeats } from "@/lib/builtins/feats";
 import { getBuiltInSrdRaces } from "@/lib/builtins/races";
+import { getBuiltInSrdSpells } from "@/lib/builtins/spells";
 
 type BuilderDetailPageProps = {
   params: Promise<{
@@ -18,6 +19,7 @@ export default async function BuilderDetailPage({
   const races = getBuiltInSrdRaces();
   const classes = getBuiltInSrdClasses();
   const feats = getBuiltInSrdFeats();
+  const spells = getBuiltInSrdSpells();
 
   return (
     <BuilderResume
@@ -26,6 +28,7 @@ export default async function BuilderDetailPage({
       draftId={id}
       feats={feats}
       races={races}
+      spells={spells}
     />
   );
 }

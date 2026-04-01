@@ -17,6 +17,7 @@ type BuilderResumeProps = {
   draftId: string;
   feats: BuiltInElement[];
   races: BuiltInRaceRecord[];
+  spells: BuiltInElement[];
 };
 
 export function BuilderResume({
@@ -25,6 +26,7 @@ export function BuilderResume({
   draftId,
   feats,
   races,
+  spells,
 }: BuilderResumeProps) {
   const [draft, setDraft] = useState<CharacterDraft | null | undefined>(undefined);
 
@@ -77,6 +79,7 @@ export function BuilderResume({
       initialDraft={draft}
       initialFeats={feats}
       initialRaces={races}
+      initialSpells={spells}
     />
   );
 }

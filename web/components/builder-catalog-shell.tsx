@@ -16,6 +16,7 @@ type BuilderCatalogShellProps = {
   initialDraft?: CharacterDraft;
   initialFeats: BuiltInElement[];
   initialRaces: BuiltInRaceRecord[];
+  initialSpells: BuiltInElement[];
 };
 
 export function BuilderCatalogShell({
@@ -24,12 +25,14 @@ export function BuilderCatalogShell({
   initialDraft,
   initialFeats,
   initialRaces,
+  initialSpells,
 }: BuilderCatalogShellProps) {
   const [catalogs, setCatalogs] = useState({
     backgrounds: initialBackgrounds,
     classes: initialClasses,
     feats: initialFeats,
     races: initialRaces,
+    spells: initialSpells,
   });
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export function BuilderCatalogShell({
 
     async function hydrateCatalogs() {
       try {
-        const resolved = await resolveBuilderCatalogs();
+        const resolved = await resolveBuilderCatalogs(initialSpells);
 
         if (!cancelled) {
           setCatalogs(resolved);
@@ -52,7 +55,7 @@ export function BuilderCatalogShell({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialSpells]);
 
   return (
     <BuilderEditor
@@ -61,6 +64,7 @@ export function BuilderCatalogShell({
       feats={catalogs.feats}
       initialDraft={initialDraft}
       races={catalogs.races}
+      spells={catalogs.spells}
     />
   );
 }

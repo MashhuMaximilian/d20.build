@@ -31,7 +31,7 @@ type CatalogSelectorProps = {
   selectedId: string;
 };
 
-function escapeHtml(value: string) {
+export function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -40,7 +40,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
-function sanitizeRichHtml(markup: string) {
+export function sanitizeRichHtml(markup: string) {
   const withoutDangerousBlocks = markup
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
@@ -85,7 +85,7 @@ function sanitizeRichHtml(markup: string) {
   );
 }
 
-function formatPlainTextAsHtml(text: string) {
+export function formatPlainTextAsHtml(text: string) {
   const normalized = text
     .replace(/\r\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
@@ -130,7 +130,7 @@ function formatPlainTextAsHtml(text: string) {
     .join("");
 }
 
-function getDetailMarkup(item: CatalogItem | null) {
+export function getDetailMarkup(item: CatalogItem | null) {
   if (!item) {
     return "";
   }
@@ -142,7 +142,7 @@ function getDetailMarkup(item: CatalogItem | null) {
   return formatPlainTextAsHtml(item.description);
 }
 
-function getPreviewText(text: string) {
+export function getPreviewText(text: string) {
   const normalized = text.replace(/\s+/g, " ").trim();
 
   if (normalized.length <= 320) {
