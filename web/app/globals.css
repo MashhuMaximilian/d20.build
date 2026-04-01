@@ -1856,6 +1856,7 @@ a {
 
 .spellcasting-step {
   gap: 18px;
+  overflow: hidden;
 }
 
 .spellcasting-step__groupTabs {
@@ -1929,8 +1930,10 @@ a {
 }
 
 .spellcasting-step__workbench {
-  min-height: min(72vh, 820px);
+  height: min(58vh, 700px);
+  min-height: 520px;
   align-items: start;
+  overflow: hidden;
 }
 
 .spellcasting-step__table {
