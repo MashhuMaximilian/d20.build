@@ -485,9 +485,8 @@ export function CatalogSelector({
 
         <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}${viewMode === "table" ? " catalog-selector__optionsPanel--table" : ""}`}>
           <div className="catalog-selector__optionsHeader">
-            <div>
+            <div className="catalog-selector__headingBlock">
               <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
-              <h3 className="catalog-selector__optionsTitle">{label} library</h3>
             </div>
             <div className="catalog-selector__optionsActions">
               <div className="catalog-selector__viewMode">

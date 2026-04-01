@@ -939,10 +939,26 @@ a {
   gap: 6px;
 }
 
+.catalog-selector__headingBlock {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
 .catalog-selector__count,
 .catalog-selector__optionsTitle,
 .catalog-selector__snapshotTitle {
   color: var(--accent-strong);
+}
+
+.catalog-selector__optionsTitle {
+  display: block;
+  margin: 0;
+}
+
+.catalog-selector__optionsTitle--tight {
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .catalog-selector__optionsHeader {
@@ -1079,9 +1095,6 @@ a {
   min-height: 0;
   overflow: auto;
   padding-right: 4px;
-}
-
-.catalog-selector__list {
   align-content: start;
 }
 
@@ -1239,6 +1252,15 @@ a {
 .spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableToolbar {
   gap: 10px;
   padding: 10px 12px;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableWrap {
+  border-radius: 14px;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableHead,
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableRow {
+  grid-template-columns: minmax(170px, 1.2fr) minmax(120px, 0.7fr) minmax(180px, 1fr) minmax(90px, 0.55fr);
 }
 
 .spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableHead {
@@ -1663,6 +1685,12 @@ a {
   gap: 14px;
 }
 
+.feats-step__slotHeading {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
 .feats-step__modeSwitch {
   display: flex;
   flex-wrap: wrap;
@@ -1834,6 +1862,7 @@ a {
 
 .spellcasting-step__workbench {
   min-height: min(72vh, 820px);
+  align-items: start;
 }
 
 .spellcasting-step__table {

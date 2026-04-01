@@ -221,7 +221,7 @@ export function FeatsAsiStep({
           return (
             <article className="feats-step__card" key={opportunity.id}>
               <div className="feats-step__header">
-                <div>
+                <div className="feats-step__slotHeading">
                   <span className="builder-panel__label">Improvement slot</span>
                   <strong className="builder-summary__name">{opportunity.title}</strong>
                   <p className="builder-summary__meta">

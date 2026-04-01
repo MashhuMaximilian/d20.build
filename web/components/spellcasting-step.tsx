@@ -464,9 +464,11 @@ export function SpellcastingStep({
 
             <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}${viewMode === "table" ? " catalog-selector__optionsPanel--table" : ""}`}>
               <div className="catalog-selector__optionsHeader">
-                <div>
+                <div className="catalog-selector__headingBlock">
                   <span className="catalog-selector__sectionLabel">Spell library</span>
-                  <strong className="catalog-selector__optionsTitle">{activeGroup.title}</strong>
+                  <strong className="catalog-selector__optionsTitle catalog-selector__optionsTitle--tight">
+                    {activeGroup.title}
+                  </strong>
                 </div>
                 <div className="catalog-selector__optionsActions">
                   <div className="catalog-selector__viewMode">
@@ -678,41 +680,87 @@ export function SpellcastingStep({
                   })}
                 </div>
               ) : filteredSpells.length ? (
-                <div className="catalog-selector__list spellcasting-step__table">
-                  {filteredSpells.map((spell) => {
-                    const isSelected = selectedSpellIds.includes(spell.id);
-                    const level = getSpellLevel(spell);
+                viewMode === "table" ? (
+                  <div className="catalog-selector__tableWrap" role="table" aria-label={`${activeGroup.title} spell table`}>
+                    <div className="catalog-selector__tableHead" role="row">
+                      <span>Name</span>
+                      <span>School</span>
+                      <span>Source</span>
+                      <span>Level</span>
+                    </div>
+                    <div className="catalog-selector__tableBody" role="rowgroup">
+                      {filteredSpells.map((spell) => {
+                        const isSelected = selectedSpellIds.includes(spell.id);
+                        const level = getSpellLevel(spell);
+                        return (
+                          <button
+                            key={spell.id}
+                            className={`catalog-selector__tableRow${previewSpell?.id === spell.id ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
+                            type="button"
+                            onClick={() => {
+                              setPreviewIds((current) => ({
+                                ...current,
+                                [activeGroup.id]: spell.id,
+                              }));
+                              toggleSpell(spell.id);
+                            }}
+                            role="row"
+                          >
+                            <span className="catalog-selector__tableCell catalog-selector__tableCell--name" role="cell">
+                              <strong>{spell.name}</strong>
+                              {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
+                            </span>
+                            <span className="catalog-selector__tableCell" role="cell">
+                              {getSpellSchool(spell)}
+                            </span>
+                            <span className="catalog-selector__tableCell" role="cell">
+                              {spell.source}
+                            </span>
+                            <span className="catalog-selector__tableCell" role="cell">
+                              {formatSpellLevel(level)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="catalog-selector__list spellcasting-step__table">
+                    {filteredSpells.map((spell) => {
+                      const isSelected = selectedSpellIds.includes(spell.id);
+                      const level = getSpellLevel(spell);
 
-                    return (
-                      <button
-                        key={spell.id}
-                        className={`spellcasting-step__row${previewSpell?.id === spell.id ? " spellcasting-step__row--preview" : ""}${isSelected ? " spellcasting-step__row--selected" : ""}`}
-                        type="button"
-                        onClick={() => {
-                          setPreviewIds((current) => ({
-                            ...current,
-                            [activeGroup.id]: spell.id,
-                          }));
-                          toggleSpell(spell.id);
-                        }}
-                      >
-                        <div className="spellcasting-step__rowHeader">
-                          <strong>{spell.name}</strong>
-                          <span>{formatSpellLevel(level)}</span>
-                        </div>
-                        <div className="spellcasting-step__rowMeta">
-                          <span>{getSpellSchool(spell)}</span>
-                          <span>{spell.source}</span>
-                        </div>
-                        <div className="spellcasting-step__rowBadges">
-                          {isSpellConcentration(spell) ? <span className="catalog-selector__impactChip">Concentration</span> : null}
-                          {isSpellRitual(spell) ? <span className="catalog-selector__impactChip">Ritual</span> : null}
-                          {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      return (
+                        <button
+                          key={spell.id}
+                          className={`spellcasting-step__row${previewSpell?.id === spell.id ? " spellcasting-step__row--preview" : ""}${isSelected ? " spellcasting-step__row--selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            setPreviewIds((current) => ({
+                              ...current,
+                              [activeGroup.id]: spell.id,
+                            }));
+                            toggleSpell(spell.id);
+                          }}
+                        >
+                          <div className="spellcasting-step__rowHeader">
+                            <strong>{spell.name}</strong>
+                            <span>{formatSpellLevel(level)}</span>
+                          </div>
+                          <div className="spellcasting-step__rowMeta">
+                            <span>{getSpellSchool(spell)}</span>
+                            <span>{spell.source}</span>
+                          </div>
+                          <div className="spellcasting-step__rowBadges">
+                            {isSpellConcentration(spell) ? <span className="catalog-selector__impactChip">Concentration</span> : null}
+                            {isSpellRitual(spell) ? <span className="catalog-selector__impactChip">Ritual</span> : null}
+                            {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
               ) : (
                 <p className="catalog-selector__empty">
                   No matching spells. Adjust filters or sync a source that includes spell data.
