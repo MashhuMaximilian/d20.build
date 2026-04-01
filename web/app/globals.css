@@ -915,6 +915,7 @@ a {
 .catalog-selector__detailPanel {
   display: grid;
   gap: 14px;
+  align-content: start;
   min-height: 0;
   padding: 18px;
   border: 1px solid rgba(146, 38, 16, 0.16);
@@ -999,17 +1000,13 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: flex-start;
+  align-content: flex-start;
 }
 
 .catalog-selector__appliedFilter {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(146, 38, 16, 0.1);
-  background: rgba(146, 38, 16, 0.04);
-  color: var(--accent-strong);
-  font-size: 0.78rem;
+  align-self: flex-start;
+  font-size: 0.8rem;
 }
 
 .catalog-selector__sectionLabel {
@@ -1227,7 +1224,7 @@ a {
 
 .catalog-selector__tableRow {
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 0;
   border-bottom: 1px solid rgba(146, 38, 16, 0.08);
   background: transparent;
@@ -1237,6 +1234,24 @@ a {
   font-size: 0.82rem;
   line-height: 1.32;
   font-size: 0.78rem;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableToolbar {
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableHead {
+  padding: 8px 12px;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableRow {
+  padding: 7px 12px;
+  font-size: 0.76rem;
+}
+
+.spellcasting-step__workbench.catalog-selector__workbench--table .catalog-selector__tableCell strong {
+  font-size: 0.84rem;
 }
 
 .catalog-selector__tableRow:last-child {

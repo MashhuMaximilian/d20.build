@@ -620,7 +620,7 @@ export function CatalogSelector({
           {activeFilters.length ? (
             <div className="catalog-selector__appliedFilters">
               {activeFilters.map((filter) => (
-                <span className="catalog-selector__appliedFilter" key={filter}>
+                <span className="catalog-selector__filterChip catalog-selector__appliedFilter" key={filter}>
                   {filter}
                 </span>
               ))}

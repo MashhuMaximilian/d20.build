@@ -1438,6 +1438,8 @@ export function BuilderEditor({
         return Boolean(draft.backgroundId);
       case "feats":
         return improvementValidationMessages.length === 0;
+      case "spellcasting":
+        return spellValidationMessages.length === 0;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
