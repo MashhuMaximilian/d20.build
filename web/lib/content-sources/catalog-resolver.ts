@@ -122,6 +122,50 @@ function toBuiltInSetter(setter: unknown): BuiltInSetter | null {
   };
 }
 
+function toBuiltInMulticlass(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return {
+    requirements:
+      typeof candidate.requirements === "string" ? candidate.requirements : undefined,
+    requirementsDescription:
+      typeof candidate.requirementsDescription === "string"
+        ? candidate.requirementsDescription
+        : undefined,
+    rules: Array.isArray(candidate.rules)
+      ? candidate.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
+      : undefined,
+    setters: Array.isArray(candidate.setters)
+      ? candidate.setters
+          .map((setter) => toBuiltInSetter(setter))
+          .filter((setter): setter is BuiltInSetter => Boolean(setter))
+      : undefined,
+  };
+}
+
+function toBuiltInSpellcasting(value: unknown) {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return {
+    ability: typeof candidate.ability === "string" ? candidate.ability : undefined,
+    name: typeof candidate.name === "string" ? candidate.name : undefined,
+    rules: Array.isArray(candidate.rules)
+      ? candidate.rules.map((rule) => toBuiltInRule(rule)).filter((rule): rule is BuiltInRule => Boolean(rule))
+      : undefined,
+    setters: Array.isArray(candidate.setters)
+      ? candidate.setters
+          .map((setter) => toBuiltInSetter(setter))
+          .filter((setter): setter is BuiltInSetter => Boolean(setter))
+      : undefined,
+  };
+}
+
 function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
   if (!SUPPORTED_ELEMENT_TYPES.has(element.element_type as BuiltInElementType)) {
     return null;
@@ -147,6 +191,8 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
           .map((setter) => toBuiltInSetter(setter))
           .filter((setter): setter is BuiltInSetter => Boolean(setter))
       : [],
+    multiclass: toBuiltInMulticlass(element.multiclass),
+    spellcasting: toBuiltInSpellcasting(element.spellcasting),
   };
 }
 

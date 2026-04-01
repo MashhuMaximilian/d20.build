@@ -24,7 +24,6 @@ import {
   getTotalCharacterLevel,
   STANDARD_ARRAY,
   type AbilityKey,
-  type CharacterClassEntry,
   type CharacterDraft,
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
@@ -42,16 +41,22 @@ type BuilderEditorProps = {
 };
 
 type BuilderStepId =
-  | "identity"
+  | "foundation"
   | "race"
   | "subrace"
   | "class"
-  | "leveling"
   | "subclass"
   | "background"
-  | "abilities"
   | "equipment"
   | "review";
+
+type BuilderStep = {
+  id: string;
+  kind: BuilderStepId;
+  label: string;
+  description: string;
+  classEntryIndex?: number;
+};
 
 function getStatBonuses(values: string[]) {
   return values.reduce<Record<string, number>>((accumulator, value) => {
@@ -116,6 +121,28 @@ function buildFeatureDetails(features: Array<{ name: string; description: string
       detailHtml: feature.descriptionHtml,
       source: feature.source,
     }));
+}
+
+const REQUIREMENT_ABILITY_MAP: Record<string, AbilityKey> = {
+  str: "strength",
+  dex: "dexterity",
+  con: "constitution",
+  int: "intelligence",
+  wis: "wisdom",
+  cha: "charisma",
+};
+
+function getMulticlassRequirementFailures(rulesText: string | undefined, abilities: CharacterDraft["abilities"]) {
+  if (!rulesText) {
+    return [];
+  }
+
+  const clauses = [...rulesText.matchAll(/\[([a-z]+):(\d+)\]/gi)].map((match) => ({
+    ability: REQUIREMENT_ABILITY_MAP[match[1].toLowerCase()],
+    minimum: Number(match[2]),
+  })).filter((entry): entry is { ability: AbilityKey; minimum: number } => Boolean(entry.ability));
+
+  return clauses.filter((entry) => abilities[entry.ability] < entry.minimum);
 }
 
 function isStandardArrayValid(draft: CharacterDraft) {
@@ -339,6 +366,7 @@ function buildSubclassCatalogItems(step: BuiltInSubclassStep | null): CatalogIte
 function buildCompletionChecklist(draft: CharacterDraft, flags: {
   needsSubrace: boolean;
   needsSubclass: boolean;
+  subclassesComplete: boolean;
   abilityValidationMessage: string;
   missingEquipmentChoices: number;
   levelingValidationMessage: string;
@@ -347,9 +375,9 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Name draft", done: Boolean(draft.name.trim()) },
     { label: "Choose race", done: Boolean(draft.raceId) },
     { label: "Choose subrace", done: !flags.needsSubrace || Boolean(draft.subraceId) },
-    { label: "Choose class", done: Boolean(getPrimaryClassEntry(draft)?.classId) },
+    { label: "Choose classes", done: draft.classEntries.every((entry) => Boolean(entry.classId)) },
     { label: "Distribute levels", done: !flags.levelingValidationMessage },
-    { label: "Choose subclass", done: !flags.needsSubclass || Boolean(getPrimaryClassEntry(draft)?.subclassId) },
+    { label: "Choose subclass", done: !flags.needsSubclass || flags.subclassesComplete },
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
     { label: "Choose starting equipment", done: flags.missingEquipmentChoices === 0 },
@@ -395,9 +423,16 @@ export function BuilderEditor({
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
-  const [currentStep, setCurrentStep] = useState<BuilderStepId>("identity");
+  const [currentStep, setCurrentStep] = useState("foundation");
+  const [activeClassEntryIndex, setActiveClassEntryIndex] = useState(0);
   const primaryClassEntry = useMemo(() => getPrimaryClassEntry(draft), [draft]);
   const totalCharacterLevel = useMemo(() => getTotalCharacterLevel(draft), [draft]);
+  const classRecordsByEntry = useMemo(
+    () =>
+      draft.classEntries.map((entry) => classes.find((candidate) => candidate.class.id === entry.classId) ?? null),
+    [classes, draft.classEntries],
+  );
+  const activeClassEntry = draft.classEntries[activeClassEntryIndex] ?? null;
 
   const selectedRace = useMemo(
     () => races.find((entry) => entry.race.id === draft.raceId) ?? null,
@@ -411,19 +446,9 @@ export function BuilderEditor({
     () => classes.find((entry) => entry.class.id === primaryClassEntry?.classId) ?? null,
     [classes, primaryClassEntry?.classId],
   );
-  const activeSubclassStep = useMemo(
-    () =>
-      selectedClass?.subclassSteps.find(
-        (step) => !step.level || (primaryClassEntry?.level ?? 0) >= step.level,
-      ) ?? null,
-    [primaryClassEntry?.level, selectedClass],
-  );
-  const selectedSubclass = useMemo(
-    () =>
-      activeSubclassStep?.options.find(
-        (entry) => entry.archetype.id === primaryClassEntry?.subclassId,
-      ) ?? null,
-    [activeSubclassStep, primaryClassEntry?.subclassId],
+  const primarySubclassStep = useMemo(
+    () => selectedClass?.subclassSteps[0] ?? null,
+    [selectedClass],
   );
   const selectedBackground = useMemo(
     () => backgrounds.find((entry) => entry.background.id === draft.backgroundId) ?? null,
@@ -477,39 +502,44 @@ export function BuilderEditor({
 
   const pendingChoices = useMemo(() => {
     const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
-    const subclassPending =
-      activeSubclassStep && activeSubclassStep.options.length > 0 && !primaryClassEntry?.subclassId ? 1 : 0;
+    const subclassPending = classRecordsByEntry.reduce((count, record, index) => {
+      const step = record?.subclassSteps[0];
+      const entry = draft.classEntries[index];
+      if (!step || !entry) {
+        return count;
+      }
+
+      const unlocked = !step.level || entry.level >= step.level;
+      return count + (unlocked && !entry.subclassId ? 1 : 0);
+    }, 0);
     const backgroundPending =
       selectedBackground?.background.rules.filter((rule) => rule.kind === "select").length ?? 0;
-    const classPending = selectedClass
-      ? selectedClass.features.reduce(
-          (count, feature) =>
-            count + feature.rules.filter((rule) => rule.kind === "select").length,
-          selectedClass.class.rules.filter((rule) => rule.kind === "select").length,
+    const classPending = classRecordsByEntry.reduce((sum, record) => {
+      if (!record) {
+        return sum;
+      }
+
+      return (
+        sum +
+        record.features.reduce(
+          (count, feature) => count + feature.rules.filter((rule) => rule.kind === "select").length,
+          record.class.rules.filter((rule) => rule.kind === "select").length,
         )
-      : 0;
+      );
+    }, 0);
 
     return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices;
   }, [
-    activeSubclassStep,
+    classRecordsByEntry,
+    draft.classEntries,
     draft.subraceId,
     missingEquipmentChoices,
-    primaryClassEntry?.subclassId,
     selectedBackground,
-    selectedClass,
     selectedRace,
   ]);
 
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
   const levelingValidationMessage = useMemo(() => {
-    if (!primaryClassEntry?.classId) {
-      return "Choose a primary class before you distribute levels.";
-    }
-
-    if (draft.classEntries.some((entry) => !entry.classId)) {
-      return "Each class entry needs a valid class before you continue.";
-    }
-
     if (draft.classEntries.some((entry) => entry.level < 1)) {
       return "Every class entry must keep at least one level.";
     }
@@ -519,14 +549,44 @@ export function BuilderEditor({
     }
 
     return "";
-  }, [draft.classEntries, draft.level, primaryClassEntry?.classId, totalCharacterLevel]);
+  }, [draft.classEntries, draft.level, totalCharacterLevel]);
+  const multiclassValidationMessages = useMemo(() => {
+    return draft.classEntries.flatMap((entry, index) => {
+      if (index === 0 || !entry.classId) {
+        return [];
+      }
+
+      const classRecord = classRecordsByEntry[index];
+      const failures = getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, draft.abilities);
+
+      if (!failures.length) {
+        return [];
+      }
+
+      const requirementsText =
+        classRecord?.class.multiclass?.requirementsDescription ??
+        failures
+          .map((failure) => `${failure.ability.toUpperCase()} ${failure.minimum}`)
+          .join(" and ");
+
+      return [`${classRecord?.class.name ?? "This class"} requires ${requirementsText} for multiclassing.`];
+    });
+  }, [classRecordsByEntry, draft.abilities, draft.classEntries]);
   const selectionValidationMessage =
     selectedRace?.subraces.length && !draft.subraceId
       ? "Choose a subrace before saving this draft."
       : levelingValidationMessage
         ? levelingValidationMessage
-      : activeSubclassStep?.options.length && !primaryClassEntry?.subclassId
-        ? `Choose a subclass before saving this draft.`
+      : draft.classEntries.some((entry) => !entry.classId)
+        ? "Choose a class for every declared class slot before saving this draft."
+      : multiclassValidationMessages[0]
+        ? multiclassValidationMessages[0]
+      : classRecordsByEntry.some((record, index) => {
+            const step = record?.subclassSteps[0];
+            const entry = draft.classEntries[index];
+            return Boolean(step && entry && (!step.level || entry.level >= step.level) && !entry.subclassId);
+          })
+        ? "Choose every unlocked subclass before saving this draft."
         : missingEquipmentChoices
           ? `Finish the remaining starting equipment choices before saving this draft.`
       : "";
@@ -535,29 +595,42 @@ export function BuilderEditor({
   const raceItems = useMemo(() => buildRaceCatalogItems(races), [races]);
   const subraceItems = useMemo(() => buildSubraceCatalogItems(selectedRace), [selectedRace]);
   const classItems = useMemo(() => buildClassCatalogItems(classes), [classes]);
-  const subclassItems = useMemo(() => buildSubclassCatalogItems(activeSubclassStep), [activeSubclassStep]);
   const backgroundItems = useMemo(() => buildBackgroundCatalogItems(backgrounds), [backgrounds]);
   const completionChecklist = useMemo(
     () =>
       buildCompletionChecklist(draft, {
         needsSubrace: Boolean(selectedRace?.subraces.length),
-        needsSubclass: Boolean(activeSubclassStep?.options.length),
+        needsSubclass: classRecordsByEntry.some((record, index) => {
+          const step = record?.subclassSteps[0];
+          const entry = draft.classEntries[index];
+          return Boolean(step && entry && (!step.level || entry.level >= step.level));
+        }),
+        subclassesComplete: classRecordsByEntry.every((record, index) => {
+          const step = record?.subclassSteps[0];
+          const entry = draft.classEntries[index];
+          if (!step || !entry || (step.level && entry.level < step.level)) {
+            return true;
+          }
+          return Boolean(entry.subclassId);
+        }),
         abilityValidationMessage,
         missingEquipmentChoices,
         levelingValidationMessage,
       }),
-    [activeSubclassStep, abilityValidationMessage, draft, levelingValidationMessage, missingEquipmentChoices, selectedRace],
+    [abilityValidationMessage, classRecordsByEntry, draft, levelingValidationMessage, missingEquipmentChoices, selectedRace],
   );
 
-  const steps = useMemo(() => {
-    const base: { id: BuilderStepId; label: string; description: string }[] = [
+  const steps = useMemo<BuilderStep[]>(() => {
+    const base: BuilderStep[] = [
       {
-        id: "identity",
-        label: "Identity",
-        description: "Set the character and player names before rules choices start stacking.",
+        id: "foundation",
+        kind: "foundation",
+        label: "Foundation",
+        description: "Set identity, abilities, total level, and the multiclass level plan first.",
       },
       {
         id: "race",
+        kind: "race",
         label: "Race",
         description: "Choose ancestry, compare traits, and see the immediate build impact.",
       },
@@ -565,6 +638,7 @@ export function BuilderEditor({
 
     if (selectedRace?.subraces.length) {
       base.push({
+        kind: "subrace",
         id: "subrace",
         label: "Subrace",
         description: "Refine the race choice with its branching traits and bonus changes.",
@@ -574,47 +648,52 @@ export function BuilderEditor({
     base.push(
       {
         id: "class",
+        kind: "class",
         label: "Class",
-        description: "Compare class features, spellcasting, and future choice complexity.",
+        description: "Assign the declared class slots and check multiclass requirements before moving on.",
       },
-      {
-        id: "leveling",
-        label: "Levels",
-        description: "Set total level and split it across classes before progression systems stack on top.",
-      },
-      ...(activeSubclassStep?.options.length
-        ? [
-            {
-              id: "subclass" as const,
-              label: "Subclass",
-              description: activeSubclassStep.timingLabel,
-            },
-          ]
-        : []),
+      ...draft.classEntries.flatMap((entry, index) => {
+        const classRecord = classRecordsByEntry[index];
+        const subclassStep = classRecord?.subclassSteps[0];
+
+        if (!classRecord || !subclassStep) {
+          return [];
+        }
+
+        return [
+          {
+            id: `subclass-${index}`,
+            kind: "subclass" as const,
+            classEntryIndex: index,
+            label: `${classRecord.class.name} subclass`,
+            description: subclassStep.level
+              ? `Subclass normally chosen at class level ${subclassStep.level}.`
+              : subclassStep.timingLabel,
+          },
+        ];
+      }),
       {
         id: "background",
+        kind: "background",
         label: "Background",
         description: "Choose the story scaffold that grants proficiencies, features, and choices.",
       },
       {
-        id: "abilities",
-        label: "Abilities",
-        description: "Set base ability scores and see racial bonuses update in real time.",
-      },
-      {
         id: "equipment",
+        kind: "equipment",
         label: "Equipment",
         description: "Choose starting gear packages and auto-add the fixed gear from class and background.",
       },
       {
         id: "review",
+        kind: "review",
         label: "Review",
         description: "Confirm the build summary and save the draft once everything looks right.",
       },
     );
 
     return base;
-  }, [activeSubclassStep, selectedRace]);
+  }, [classRecordsByEntry, draft.classEntries, selectedRace]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -626,9 +705,15 @@ export function BuilderEditor({
 
   useEffect(() => {
     if (!steps.some((step) => step.id === currentStep)) {
-      setCurrentStep(steps[0]?.id ?? "identity");
+      setCurrentStep(steps[0]?.id ?? "foundation");
     }
   }, [currentStep, steps]);
+
+  useEffect(() => {
+    if (activeClassEntryIndex >= draft.classEntries.length) {
+      setActiveClassEntryIndex(Math.max(0, draft.classEntries.length - 1));
+    }
+  }, [activeClassEntryIndex, draft.classEntries.length]);
 
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
@@ -653,8 +738,12 @@ export function BuilderEditor({
       subraceId: selectedRace?.subraces.length ? draft.subraceId : "",
       classEntries: draft.classEntries.map((entry, index) => ({
         ...entry,
-        subclassId:
-          index === 0 && activeSubclassStep?.options.length ? entry.subclassId : "",
+        subclassId: (() => {
+          const classRecord = classRecordsByEntry[index];
+          const subclassStep = classRecord?.subclassSteps[0];
+          const unlocked = Boolean(subclassStep && (!subclassStep.level || entry.level >= subclassStep.level));
+          return unlocked ? entry.subclassId : "";
+        })(),
       })),
       level: totalCharacterLevel || draft.level,
       updatedAt: new Date().toISOString(),
@@ -676,23 +765,27 @@ export function BuilderEditor({
   );
 
   const canAdvance = (() => {
-    switch (activeStep.id) {
-      case "identity":
-        return true;
+    switch (activeStep.kind) {
+      case "foundation":
+        return !abilityValidationMessage && !levelingValidationMessage;
       case "race":
         return Boolean(draft.raceId);
       case "subrace":
         return selectedRace?.subraces.length ? Boolean(draft.subraceId) : true;
       case "class":
-        return Boolean(primaryClassEntry?.classId);
-      case "leveling":
-        return !levelingValidationMessage;
-      case "subclass":
-        return !activeSubclassStep?.options.length || Boolean(primaryClassEntry?.subclassId);
+        return draft.classEntries.every((entry) => Boolean(entry.classId));
+      case "subclass": {
+        const entry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
+        const classRecord = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
+        const subclassStep = classRecord?.subclassSteps[0] ?? null;
+        if (!entry || !subclassStep) {
+          return true;
+        }
+        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
+        return !unlocked || Boolean(entry.subclassId);
+      }
       case "background":
         return Boolean(draft.backgroundId);
-      case "abilities":
-        return !abilityValidationMessage;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
@@ -702,24 +795,28 @@ export function BuilderEditor({
     }
   })();
 
-  function isStepComplete(stepId: BuilderStepId) {
-    switch (stepId) {
-      case "identity":
-        return Boolean(draft.name.trim() || draft.playerName.trim());
+  function isStepComplete(step: BuilderStep) {
+    switch (step.kind) {
+      case "foundation":
+        return Boolean(draft.name.trim() || draft.playerName.trim()) && !abilityValidationMessage && !levelingValidationMessage;
       case "race":
         return Boolean(draft.raceId);
       case "subrace":
         return !selectedRace?.subraces.length || Boolean(draft.subraceId);
       case "class":
-        return Boolean(primaryClassEntry?.classId);
-      case "leveling":
-        return !levelingValidationMessage;
-      case "subclass":
-        return !activeSubclassStep?.options.length || Boolean(primaryClassEntry?.subclassId);
+        return draft.classEntries.every((entry) => Boolean(entry.classId));
+      case "subclass": {
+        const entry = typeof step.classEntryIndex === "number" ? draft.classEntries[step.classEntryIndex] : null;
+        const classRecord = typeof step.classEntryIndex === "number" ? classRecordsByEntry[step.classEntryIndex] : null;
+        const subclassStep = classRecord?.subclassSteps[0] ?? null;
+        if (!entry || !subclassStep) {
+          return true;
+        }
+        const unlocked = !subclassStep.level || entry.level >= subclassStep.level;
+        return !unlocked || Boolean(entry.subclassId);
+      }
       case "background":
         return Boolean(draft.backgroundId);
-      case "abilities":
-        return !abilityValidationMessage;
       case "equipment":
         return missingEquipmentChoices === 0;
       case "review":
@@ -729,27 +826,27 @@ export function BuilderEditor({
     }
   }
 
-  const firstBlockedIndex = steps.findIndex((step) => !isStepComplete(step.id));
+  const firstBlockedIndex = steps.findIndex((step) => !isStepComplete(step));
   const furthestUnlockedIndex =
     firstBlockedIndex === -1 ? steps.length - 1 : Math.min(firstBlockedIndex + 1, steps.length - 1);
 
   useEffect(() => {
     const activeIndex = steps.findIndex((step) => step.id === currentStep);
     if (activeIndex > furthestUnlockedIndex) {
-      setCurrentStep(steps[furthestUnlockedIndex]?.id ?? "identity");
+      setCurrentStep(steps[furthestUnlockedIndex]?.id ?? "foundation");
     }
   }, [currentStep, furthestUnlockedIndex, steps]);
 
   function renderStepBody() {
-    switch (activeStep.id) {
-      case "identity":
+    switch (activeStep.kind) {
+      case "foundation":
         return (
           <section className="builder-stepPanel">
             <div className="builder-stepPanel__intro">
-              <span className="route-shell__tag">Identity</span>
-              <h2 className="route-shell__title">Name the character before the rules stack up</h2>
+              <span className="route-shell__tag">Step 1</span>
+              <h2 className="route-shell__title">Frame the character before the rules branch</h2>
               <p className="route-shell__copy">
-                Give the draft a character name and player name now so every later choice has a clear anchor.
+                Set identity, ability scores, total level, and multiclass level allocation first. Later steps then validate race, class, subclass, and equipment against this foundation.
               </p>
             </div>
 
@@ -773,6 +870,91 @@ export function BuilderEditor({
                 />
               </label>
             </div>
+            <AbilityScoreEditor
+              abilities={draft.abilities}
+              mode={draft.abilityMode}
+              onAbilitiesChange={(abilities) => updateDraft({ abilities })}
+              onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
+              racialBonuses={racialBonuses}
+              validationMessage={abilityValidationMessage}
+            />
+            <LevelingStep
+              entries={draft.classEntries}
+              totalLevel={draft.level}
+              onTotalLevelChange={(level) => {
+                const nextLevel = Math.max(1, Math.min(20, Math.floor(level || 1)));
+                let nextEntries = [...draft.classEntries];
+                const assigned = nextEntries.reduce((sum, entry) => sum + entry.level, 0);
+
+                if (assigned > nextLevel) {
+                  let overflow = assigned - nextLevel;
+
+                  for (let index = nextEntries.length - 1; index >= 0 && overflow > 0; index -= 1) {
+                    const reducible = Math.max(0, nextEntries[index].level - 1);
+                    const reduction = Math.min(reducible, overflow);
+                    nextEntries[index] = {
+                      ...nextEntries[index],
+                      level: nextEntries[index].level - reduction,
+                    };
+                    overflow -= reduction;
+                  }
+                }
+
+                updateDraft({
+                  level: nextLevel,
+                  classEntries: nextEntries,
+                });
+              }}
+              onEntryLevelChange={(index, level) => {
+                const nextEntries = draft.classEntries.map((entry, entryIndex) =>
+                  entryIndex === index
+                    ? { ...entry, level: Math.max(1, Math.min(20, Math.floor(level || 1))) }
+                    : entry,
+                );
+
+                updateDraft({ classEntries: nextEntries });
+              }}
+              onAddClassSlot={() => {
+                const donorIndex = draft.classEntries.findIndex((entry) => entry.level > 1);
+                let nextEntries = [...draft.classEntries];
+                let nextLevel = draft.level;
+
+                if (donorIndex >= 0) {
+                  nextEntries[donorIndex] = {
+                    ...nextEntries[donorIndex],
+                    level: nextEntries[donorIndex].level - 1,
+                  };
+                } else {
+                  nextLevel = Math.min(20, draft.level + 1);
+                }
+
+                updateDraft({
+                  level: nextLevel,
+                  classEntries: [...nextEntries, { classId: "", subclassId: "", level: 1 }],
+                });
+              }}
+              onRemoveClassSlot={(index) => {
+                const removed = draft.classEntries[index];
+                if (!removed || index === 0) {
+                  return;
+                }
+
+                const nextEntries = draft.classEntries.filter((_, entryIndex) => entryIndex !== index);
+                if (nextEntries.length) {
+                  nextEntries[0] = {
+                    ...nextEntries[0],
+                    level: nextEntries[0].level + removed.level,
+                  };
+                }
+
+                updateDraft({
+                  classEntries: nextEntries,
+                });
+              }}
+            />
+            {levelingValidationMessage ? (
+              <p className="auth-card__status auth-card__status--error">{levelingValidationMessage}</p>
+            ) : null}
           </section>
         );
       case "race":
@@ -826,166 +1008,108 @@ export function BuilderEditor({
         return (
           <section className="builder-stepPanel">
             <div className="builder-stepPanel__intro">
-              <span className="route-shell__tag">Step {selectedRace?.subraces.length ? "3" : "2"}</span>
-              <h2 className="route-shell__title">Compare classes by impact, not by walls of text</h2>
+              <span className="route-shell__tag">Class</span>
+              <h2 className="route-shell__title">Assign each class slot against the level plan</h2>
               <p className="route-shell__copy">
-                The class browser focuses on feature count, spellcasting presence, and future choice complexity so the tradeoffs are visible.
+                The level plan decides how many class tracks exist. Here you choose the class for each track and see multiclass requirement warnings before saving.
               </p>
             </div>
+            <div className="builder-classSlots">
+              {draft.classEntries.map((entry, index) => {
+                const classRecord = classRecordsByEntry[index];
+                const failures =
+                  index > 0
+                    ? getMulticlassRequirementFailures(classRecord?.class.multiclass?.requirements, draft.abilities)
+                    : [];
+                return (
+                  <button
+                    key={`class-slot-picker-${index}`}
+                    className={`builder-classSlot${index === activeClassEntryIndex ? " builder-classSlot--active" : ""}${
+                      failures.length ? " builder-classSlot--warning" : ""
+                    }`}
+                    type="button"
+                    onClick={() => setActiveClassEntryIndex(index)}
+                  >
+                    <strong>{index === 0 ? "Primary" : `Multiclass ${index}`}</strong>
+                    <span>{classRecord?.class.name ?? "Choose class"}</span>
+                    <small>Level {entry.level}</small>
+                  </button>
+                );
+              })}
+            </div>
+            {activeClassEntry ? (
+              <p className="builder-summary__meta">
+                Editing {activeClassEntryIndex === 0 ? "Primary class" : `Multiclass ${activeClassEntryIndex}`} at class level {activeClassEntry.level}.
+              </p>
+            ) : null}
+            {multiclassValidationMessages.length ? (
+              <div className="builder-warnings">
+                {multiclassValidationMessages.map((message) => (
+                  <p className="auth-card__status auth-card__status--error" key={message}>
+                    {message}
+                  </p>
+                ))}
+              </div>
+            ) : null}
             <CatalogSelector
-              items={classItems}
+              items={classItems.filter((item) => {
+                const usedElsewhere = draft.classEntries.some(
+                  (entry, index) => index !== activeClassEntryIndex && entry.classId === item.id,
+                );
+                return !usedElsewhere;
+              })}
               label="Class"
               onSelect={(id) =>
                 updateDraft({
-                  classEntries: [{ classId: id, subclassId: "", level: Math.max(1, draft.level) }],
-                  equipmentSelections: {},
+                  classEntries: draft.classEntries.map((entry, index) =>
+                    index === activeClassEntryIndex
+                      ? { ...entry, classId: id, subclassId: "" }
+                      : entry,
+                  ),
+                  equipmentSelections: activeClassEntryIndex === 0 ? {} : draft.equipmentSelections,
                 })
               }
-              selectedId={primaryClassEntry?.classId ?? ""}
+              selectedId={activeClassEntry?.classId ?? ""}
             />
-          </section>
-        );
-      case "leveling":
-        return (
-          <section className="builder-stepPanel">
-            <div className="builder-stepPanel__intro">
-              <span className="route-shell__tag">Levels</span>
-              <h2 className="route-shell__title">Set the character level and split it across classes</h2>
-              <p className="route-shell__copy">
-                This foundation step separates total level from class level so subclass timing, feats, ASIs, and later spell rules can land on the right structure.
-              </p>
-            </div>
-            <LevelingStep
-              classes={classes}
-              entries={draft.classEntries}
-              totalLevel={draft.level}
-              onTotalLevelChange={(level) => {
-                const nextLevel = Math.max(1, Math.min(20, Math.floor(level || 1)));
-                let nextEntries = [...draft.classEntries];
-                let assigned = nextEntries.reduce((sum, entry) => sum + entry.level, 0);
-
-                if (assigned > nextLevel) {
-                  let overflow = assigned - nextLevel;
-
-                  for (let index = nextEntries.length - 1; index >= 0 && overflow > 0; index -= 1) {
-                    const reducible = Math.max(0, nextEntries[index].level - 1);
-                    const reduction = Math.min(reducible, overflow);
-                    nextEntries[index] = {
-                      ...nextEntries[index],
-                      level: nextEntries[index].level - reduction,
-                    };
-                    overflow -= reduction;
-                  }
-                }
-
-                const nextPrimaryLevel = nextEntries[0]?.level ?? 0;
-                const nextSubclassUnlocked = selectedClass?.subclassSteps.some(
-                  (step) => !step.level || nextPrimaryLevel >= step.level,
-                );
-                if (!nextSubclassUnlocked && nextEntries[0]) {
-                  nextEntries[0] = {
-                    ...nextEntries[0],
-                    subclassId: "",
-                  };
-                }
-
-                updateDraft({
-                  level: nextLevel,
-                  classEntries: nextEntries,
-                });
-              }}
-              onEntryLevelChange={(classId, level) => {
-                const nextEntries = draft.classEntries.map((entry) =>
-                  entry.classId === classId
-                    ? { ...entry, level: Math.max(1, Math.min(20, Math.floor(level || 1))) }
-                    : entry,
-                );
-                const nextPrimaryLevel = nextEntries[0]?.level ?? 0;
-                const nextSubclassUnlocked = selectedClass?.subclassSteps.some(
-                  (step) => !step.level || nextPrimaryLevel >= step.level,
-                );
-                updateDraft({
-                  classEntries: nextEntries.map((entry, index) =>
-                    index === 0 && !nextSubclassUnlocked ? { ...entry, subclassId: "" } : entry,
-                  ),
-                });
-              }}
-              onAddClass={(classId) => {
-                const nextEntries = [...draft.classEntries];
-                const donorIndex = nextEntries.findIndex((entry) => entry.level > 1);
-                let nextLevel = draft.level;
-
-                if (donorIndex >= 0) {
-                  nextEntries[donorIndex] = {
-                    ...nextEntries[donorIndex],
-                    level: nextEntries[donorIndex].level - 1,
-                  };
-                } else {
-                  nextLevel = Math.min(20, draft.level + 1);
-                }
-
-                updateDraft({
-                  level: nextLevel,
-                  classEntries: [
-                    ...nextEntries,
-                    { classId, subclassId: "", level: 1 },
-                  ],
-                });
-              }}
-              onRemoveClass={(classId) => {
-                const removed = draft.classEntries.find((entry) => entry.classId === classId);
-                if (!removed) {
-                  return;
-                }
-
-                const nextEntries = draft.classEntries.filter((entry) => entry.classId !== classId);
-                if (nextEntries.length) {
-                  nextEntries[0] = {
-                    ...nextEntries[0],
-                    level: nextEntries[0].level + removed.level,
-                  };
-                }
-
-                updateDraft({ classEntries: nextEntries });
-              }}
-            />
-            {levelingValidationMessage ? (
-              <p className="auth-card__status auth-card__status--error">{levelingValidationMessage}</p>
-            ) : null}
           </section>
         );
       case "subclass":
+        {
+          const subclassEntry = typeof activeStep.classEntryIndex === "number" ? draft.classEntries[activeStep.classEntryIndex] : null;
+          const subclassClass = typeof activeStep.classEntryIndex === "number" ? classRecordsByEntry[activeStep.classEntryIndex] : null;
+          const subclassStep = subclassClass?.subclassSteps[0] ?? null;
+          const subclassItems = buildSubclassCatalogItems(subclassStep);
+          const unlocked = Boolean(subclassStep && subclassEntry && (!subclassStep.level || subclassEntry.level >= subclassStep.level));
         return (
           <section className="builder-stepPanel">
             <div className="builder-stepPanel__intro">
               <span className="route-shell__tag">Subclass</span>
               <h2 className="route-shell__title">
-                {activeSubclassStep?.label ?? "Pick the subclass that shapes the class identity"}
+                {subclassStep?.label ?? "Pick the subclass that shapes the class identity"}
               </h2>
               <p className="route-shell__copy">
-                This step appears only when the selected class opens a supported subclass choice. The workbench shows the timing, features,
-                and identity of each available archetype.
+                This step is generated for each chosen class that exposes subclass content. If the class level is below the normal unlock point, you can still inspect the options here before later progression work lands.
               </p>
             </div>
-            {selectedClass && activeSubclassStep ? (
-              activeSubclassStep.options.length ? (
+            {subclassClass && subclassStep ? (
+              subclassStep.options.length ? (
                 <CatalogSelector
                   items={subclassItems}
                   label="Subclass"
                   onSelect={(id) =>
                     updateDraft({
                       classEntries: draft.classEntries.map((entry, index) =>
-                        index === 0 ? { ...entry, subclassId: id } : entry,
+                        index === activeStep.classEntryIndex ? { ...entry, subclassId: id } : entry,
                       ),
                     })
                   }
-                  selectedId={primaryClassEntry?.subclassId ?? ""}
+                  selectedId={subclassEntry?.subclassId ?? ""}
                 />
               ) : (
                 <div className="builder-review__card">
                   <span className="builder-panel__label">Subclass timing</span>
-                  <strong className="builder-summary__name">{activeSubclassStep.label}</strong>
-                  <p className="builder-summary__meta">{activeSubclassStep.timingLabel}</p>
+                  <strong className="builder-summary__name">{subclassStep.label}</strong>
+                  <p className="builder-summary__meta">{subclassStep.timingLabel}</p>
                   <p className="builder-summary__meta">
                     This class has a subclass choice node, but no subclass options are currently available from built-in or imported content.
                   </p>
@@ -994,8 +1118,14 @@ export function BuilderEditor({
             ) : (
               <p className="route-shell__copy">Choose a class first to unlock subclass planning.</p>
             )}
+            {subclassStep && !unlocked ? (
+              <p className="builder-summary__meta">
+                This subclass normally unlocks at class level {subclassStep.level ?? 1}. You can inspect it now, but it will not be required for save validation until that class level is reached.
+              </p>
+            ) : null}
           </section>
         );
+      }
       case "background":
         return (
           <section className="builder-stepPanel">
@@ -1013,26 +1143,6 @@ export function BuilderEditor({
               selectedId={draft.backgroundId}
             />
           </section>
-        );
-      case "abilities":
-        return (
-          <div className="builder-stepPanel">
-            <div className="builder-stepPanel__intro">
-              <span className="route-shell__tag">Abilities</span>
-              <h2 className="route-shell__title">Set the base scores with the bonuses visible</h2>
-              <p className="route-shell__copy">
-                Ability-score mode is still part of the guided flow, but it updates immediately using the race and subrace bonuses you already picked.
-              </p>
-            </div>
-            <AbilityScoreEditor
-              abilities={draft.abilities}
-              mode={draft.abilityMode}
-              onAbilitiesChange={(abilities) => updateDraft({ abilities })}
-              onModeChange={(abilityMode, abilities) => updateDraft({ abilityMode, abilities })}
-              racialBonuses={racialBonuses}
-              validationMessage={abilityValidationMessage}
-            />
-          </div>
         );
       case "equipment":
         return (
@@ -1114,12 +1224,26 @@ export function BuilderEditor({
                       : "Missing"}
                   </p>
                   <p className="builder-summary__meta">
-                    Subclass:{" "}
-                    {activeSubclassStep?.options.length
-                      ? selectedSubclass?.archetype.name ?? "Missing"
-                      : selectedClass
-                        ? "Not available"
-                        : "No class yet"}
+                    Subclasses:{" "}
+                    {draft.classEntries.length
+                      ? draft.classEntries
+                          .map((entry, index) => {
+                            const classRecord = classRecordsByEntry[index];
+                            const subclassStep = classRecord?.subclassSteps[0];
+                            if (!classRecord) {
+                              return "Missing class";
+                            }
+                            if (!subclassStep) {
+                              return `${classRecord.class.name}: none`;
+                            }
+                            if (subclassStep.level && entry.level < subclassStep.level) {
+                              return `${classRecord.class.name}: unlocks at ${subclassStep.level}`;
+                            }
+                            const selected = subclassStep.options.find((option) => option.archetype.id === entry.subclassId);
+                            return `${classRecord.class.name}: ${selected?.archetype.name ?? "Missing"}`;
+                          })
+                          .join(" / ")
+                      : "No class yet"}
                   </p>
                   <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
                   <p className="builder-summary__meta">
@@ -1142,7 +1266,7 @@ export function BuilderEditor({
                   Traits: {selectedRacialTraitNames.length ? selectedRacialTraitNames.join(", ") : "None yet"}
                 </p>
                 <p className="builder-summary__meta">
-                  Subclass timing: {activeSubclassStep?.timingLabel ?? "No subclass step available"}
+                  Subclass timing: {primarySubclassStep?.timingLabel ?? "No subclass step available"}
                 </p>
                 <p className="builder-summary__meta">Total level: {draft.level}</p>
                 <p className="builder-summary__meta">
@@ -1217,7 +1341,7 @@ export function BuilderEditor({
 
       <section className="builder-stepper">
         {steps.map((step, index) => {
-          const isComplete = isStepComplete(step.id);
+          const isComplete = isStepComplete(step);
           const isLocked = index > furthestUnlockedIndex;
           const state =
             step.id === activeStep.id

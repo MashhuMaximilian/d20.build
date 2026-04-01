@@ -169,6 +169,7 @@ export function CatalogSelector({
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
+  const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -257,6 +258,12 @@ export function CatalogSelector({
     }
   }, [filteredItems, items, previewId, previewItem, selectedId]);
 
+  useEffect(() => {
+    if (selectedId) {
+      setActivePane("detail");
+    }
+  }, [selectedId]);
+
   const detailMarkup = useMemo(() => getDetailMarkup(previewItem), [previewItem]);
   const activeFilters = [
     sourceFilter !== "all" ? (sourceFilter === "srd" ? "SRD" : "Imported") : "",
@@ -266,8 +273,31 @@ export function CatalogSelector({
 
   return (
     <div className="catalog-selector">
+      <div className="catalog-selector__mobileToggles">
+        <button
+          className={`choice-chip${activePane === "filters" ? " choice-chip--active" : ""}`}
+          type="button"
+          onClick={() => setActivePane("filters")}
+        >
+          Filters
+        </button>
+        <button
+          className={`choice-chip${activePane === "list" ? " choice-chip--active" : ""}`}
+          type="button"
+          onClick={() => setActivePane("list")}
+        >
+          Library
+        </button>
+        <button
+          className={`choice-chip${activePane === "detail" ? " choice-chip--active" : ""}`}
+          type="button"
+          onClick={() => setActivePane("detail")}
+        >
+          Details
+        </button>
+      </div>
       <div className="catalog-selector__workbench">
-        <aside className="catalog-selector__filtersPanel">
+        <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
           <div className="catalog-selector__panelHeader">
             <span className="builder-panel__label">{label}</span>
             <strong className="catalog-selector__count">
@@ -352,7 +382,7 @@ export function CatalogSelector({
           ) : null}
         </aside>
 
-        <div className="catalog-selector__optionsPanel">
+        <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}`}>
           <div className="catalog-selector__optionsHeader">
             <div>
               <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
@@ -398,6 +428,7 @@ export function CatalogSelector({
                     onClick={() => {
                       setPreviewId(item.id);
                       onSelect(item.id);
+                      setActivePane("detail");
                     }}
                   >
                     <div className="catalog-selector__rowHeader">
@@ -430,7 +461,7 @@ export function CatalogSelector({
           </div>
         </div>
 
-        <div className="catalog-selector__detailPanel">
+        <div className={`catalog-selector__detailPanel${activePane === "detail" ? " is-mobileActive" : ""}`}>
           {previewItem ? (
             <>
               <div className="catalog-selector__detailHeader">

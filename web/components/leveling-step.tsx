@@ -1,35 +1,51 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { CharacterClassEntry } from "@/lib/characters/types";
 
 type LevelingStepProps = {
-  classes: BuiltInClassRecord[];
   entries: CharacterClassEntry[];
   totalLevel: number;
   onTotalLevelChange: (level: number) => void;
-  onEntryLevelChange: (classId: string, level: number) => void;
-  onAddClass: (classId: string) => void;
-  onRemoveClass: (classId: string) => void;
+  onEntryLevelChange: (index: number, level: number) => void;
+  onAddClassSlot: () => void;
+  onRemoveClassSlot: (index: number) => void;
 };
 
+function useNumericDraft(value: number) {
+  const [draftValue, setDraftValue] = useState(String(value));
+
+  useEffect(() => {
+    setDraftValue(String(value));
+  }, [value]);
+
+  return {
+    draftValue,
+    setDraftValue,
+  };
+}
+
 export function LevelingStep({
-  classes,
   entries,
   totalLevel,
   onTotalLevelChange,
   onEntryLevelChange,
-  onAddClass,
-  onRemoveClass,
+  onAddClassSlot,
+  onRemoveClassSlot,
 }: LevelingStepProps) {
   const assignedLevels = entries.reduce((sum, entry) => sum + entry.level, 0);
   const remainingLevels = totalLevel - assignedLevels;
-  const availableClasses = useMemo(
-    () => classes.filter((entry) => !entries.some((classEntry) => classEntry.classId === entry.class.id)),
-    [classes, entries],
+  const totalLevelInput = useNumericDraft(totalLevel);
+  const entryInputs = useMemo(
+    () => entries.map((entry) => String(entry.level)),
+    [entries],
   );
+  const [entryDrafts, setEntryDrafts] = useState<string[]>(entryInputs);
+
+  useEffect(() => {
+    setEntryDrafts(entryInputs);
+  }, [entryInputs]);
 
   return (
     <section className="leveling-step">
@@ -41,7 +57,7 @@ export function LevelingStep({
         </p>
         <div className="leveling-step__totalControl">
           <button
-            className="button button--secondary"
+            className="button button--secondary button--compact"
             type="button"
             onClick={() => onTotalLevelChange(Math.max(1, totalLevel - 1))}
             disabled={totalLevel <= 1}
@@ -52,18 +68,22 @@ export function LevelingStep({
             <span>Total level</span>
             <input
               className="input"
-              type="number"
-              min={1}
-              max={20}
-              value={totalLevel}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={totalLevelInput.draftValue}
               onChange={(event) => {
-                const value = Number(event.target.value);
-                onTotalLevelChange(Number.isFinite(value) ? value : totalLevel);
+                const nextValue = event.target.value.replace(/[^\d]/g, "");
+                totalLevelInput.setDraftValue(nextValue);
+              }}
+              onBlur={() => {
+                const parsed = Number(totalLevelInput.draftValue);
+                const nextLevel = Number.isFinite(parsed) && parsed > 0 ? parsed : totalLevel;
+                onTotalLevelChange(nextLevel);
               }}
             />
           </label>
           <button
-            className="button button--secondary"
+            className="button button--secondary button--compact"
             type="button"
             onClick={() => onTotalLevelChange(Math.min(20, totalLevel + 1))}
             disabled={totalLevel >= 20}
@@ -72,89 +92,67 @@ export function LevelingStep({
           </button>
         </div>
         <ul className="route-shell__list">
-          <li>Use this step to distribute levels across classes before feats, ASIs, and spells exist.</li>
-          <li>Subclass timing follows the primary class level, not total character level.</li>
-          <li>Multiclass prerequisites are planned next, not enforced in this first foundation slice.</li>
+          <li>Declare the level plan first, then choose the race and class breakdown against it.</li>
+          <li>Each extra class slot becomes a multiclass track later in the wizard.</li>
+          <li>Class prerequisites are checked after class selection and can block saving if unmet.</li>
         </ul>
       </article>
 
       <article className="builder-panel leveling-step__entries">
-        <span className="builder-panel__label">Class breakdown</span>
+        <span className="builder-panel__label">Class slots</span>
         <div className="leveling-step__entryList">
-          {entries.map((entry, index) => {
-            const classRecord = classes.find((candidate) => candidate.class.id === entry.classId) ?? null;
-            const subclassStep = classRecord?.subclassSteps[0] ?? null;
-            const subclassReady =
-              subclassStep && subclassStep.level ? entry.level >= subclassStep.level : Boolean(subclassStep);
-
-            return (
-              <div className="leveling-step__entryCard" key={entry.classId || `entry-${index}`}>
-                <div className="leveling-step__entryHeader">
-                  <div>
-                    <strong>{classRecord?.class.name ?? "Choose class"}</strong>
-                    <p className="builder-summary__meta">
-                      {index === 0 ? "Primary class" : "Multiclass"} ·{" "}
-                      {subclassStep
-                        ? subclassReady
-                          ? subclassStep.timingLabel
-                          : `Subclass unlocks at class level ${subclassStep.level ?? 1}`
-                        : "No subclass step available yet"}
-                    </p>
-                  </div>
-                  {index > 0 ? (
-                    <button
-                      className="button button--secondary"
-                      type="button"
-                      onClick={() => onRemoveClass(entry.classId)}
-                    >
-                      Remove
-                    </button>
-                  ) : null}
+          {entries.map((entry, index) => (
+            <div className="leveling-step__entryCard" key={`class-slot-${index}`}>
+              <div className="leveling-step__entryHeader">
+                <div>
+                  <strong>{index === 0 ? "Primary class" : `Multiclass ${index}`}</strong>
+                  <p className="builder-summary__meta">
+                    {entry.classId ? "Class chosen later in the class step." : "Unassigned class slot."}
+                  </p>
                 </div>
-                <div className="leveling-step__entryControls">
-                  <label className="builder-field">
-                    <span>Class level</span>
-                    <input
-                      className="input"
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={entry.level}
-                      onChange={(event) => {
-                        const value = Number(event.target.value);
-                        onEntryLevelChange(entry.classId, Number.isFinite(value) ? value : entry.level);
-                      }}
-                    />
-                  </label>
-                </div>
+                {index > 0 ? (
+                  <button
+                    className="button button--secondary button--compact"
+                    type="button"
+                    onClick={() => onRemoveClassSlot(index)}
+                  >
+                    Remove
+                  </button>
+                ) : null}
               </div>
-            );
-          })}
+              <div className="leveling-step__entryControls">
+                <label className="builder-field">
+                  <span>Class level</span>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={entryDrafts[index] ?? String(entry.level)}
+                    onChange={(event) => {
+                      const nextValue = event.target.value.replace(/[^\d]/g, "");
+                      setEntryDrafts((current) => {
+                        const next = [...current];
+                        next[index] = nextValue;
+                        return next;
+                      });
+                    }}
+                    onBlur={() => {
+                      const parsed = Number(entryDrafts[index]);
+                      onEntryLevelChange(index, Number.isFinite(parsed) && parsed > 0 ? parsed : entry.level);
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="leveling-step__addClass">
-          <label className="builder-field">
-            <span>Add another class</span>
-            <select
-              className="input"
-              defaultValue=""
-              onChange={(event) => {
-                if (event.target.value) {
-                  onAddClass(event.target.value);
-                  event.target.value = "";
-                }
-              }}
-            >
-              <option value="">Select a class</option>
-              {availableClasses.map((entry) => (
-                <option key={entry.class.id} value={entry.class.id}>
-                  {entry.class.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <button className="button button--secondary" type="button" onClick={onAddClassSlot}>
+            Add class slot
+          </button>
           <p className="builder-summary__meta">
-            Add a second class only when you want to split levels. The draft keeps one primary class and any number of additional class entries.
+            Add another class slot now if this build is multiclassed. You will assign the actual classes in the class step.
           </p>
         </div>
       </article>
