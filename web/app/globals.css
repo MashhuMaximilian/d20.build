@@ -460,7 +460,7 @@ a {
 
 .builder-shell > .builder-panel,
 .builder-shell > .builder-stepPanel {
-  margin-bottom: 8.5rem;
+  margin-bottom: 0;
 }
 
 .builder-summary__label,
@@ -1856,7 +1856,8 @@ a {
 
 .spellcasting-step {
   gap: 18px;
-  overflow: hidden;
+  min-height: 0;
+  overflow: visible;
 }
 
 .spellcasting-step__groupTabs {
@@ -1930,10 +1931,10 @@ a {
 }
 
 .spellcasting-step__workbench {
-  height: min(58vh, 700px);
-  min-height: 520px;
+  height: min(76vh, 920px);
+  min-height: 680px;
   align-items: start;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .spellcasting-step__table {
