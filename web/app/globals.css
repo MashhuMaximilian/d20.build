@@ -906,6 +906,10 @@ a {
   min-height: 680px;
 }
 
+.catalog-selector__workbench--table {
+  grid-template-columns: minmax(540px, 1.25fr) minmax(420px, 0.95fr);
+}
+
 .catalog-selector__filtersPanel,
 .catalog-selector__optionsPanel,
 .catalog-selector__detailPanel {
@@ -921,6 +925,10 @@ a {
 
 .catalog-selector__optionsPanel {
   overflow: hidden;
+}
+
+.catalog-selector__optionsPanel--table {
+  gap: 12px;
 }
 
 .catalog-selector__panelHeader,
@@ -948,6 +956,28 @@ a {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.catalog-selector__tableToolbar {
+  display: grid;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 16px;
+  background: rgba(146, 38, 16, 0.035);
+}
+
+.catalog-selector__tableSearch {
+  max-width: 420px;
+}
+
+.catalog-selector__tableToolbarRow {
+  display: grid;
+  gap: 12px;
+}
+
+.catalog-selector__tableTags .catalog-selector__filterTags {
+  gap: 6px;
 }
 
 .catalog-selector__appliedFilters {
@@ -1133,6 +1163,11 @@ a {
   align-items: center;
 }
 
+.catalog-selector__optionsPanel--table .catalog-selector__tableHead,
+.catalog-selector__optionsPanel--table .catalog-selector__tableRow {
+  grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.75fr) minmax(190px, 1fr) minmax(150px, 0.85fr);
+}
+
 .catalog-selector__tableHead {
   position: sticky;
   top: 0;
@@ -1163,6 +1198,7 @@ a {
   cursor: pointer;
   font-size: 0.82rem;
   line-height: 1.32;
+  font-size: 0.78rem;
 }
 
 .catalog-selector__tableRow:last-child {
@@ -1185,6 +1221,7 @@ a {
 
 .catalog-selector__tableCell strong {
   color: var(--accent-strong);
+  font-size: 0.88rem;
 }
 
 .catalog-selector__tableCell--name {
@@ -1952,6 +1989,10 @@ a {
     min-height: 0;
   }
 
+  .catalog-selector__workbench--table {
+    grid-template-columns: 1fr;
+  }
+
   .catalog-selector__mobileToggles {
     display: flex;
     gap: 8px;
@@ -1976,6 +2017,10 @@ a {
 
   .catalog-selector__optionsHeader {
     grid-template-columns: 1fr;
+  }
+
+  .catalog-selector__tableToolbar {
+    padding: 12px;
   }
 
   .catalog-selector__tableHead {

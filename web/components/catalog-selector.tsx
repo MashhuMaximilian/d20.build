@@ -283,13 +283,15 @@ export function CatalogSelector({
   return (
     <div className="catalog-selector">
       <div className="catalog-selector__mobileToggles">
-        <button
-          className={`choice-chip${activePane === "filters" ? " choice-chip--active" : ""}`}
-          type="button"
-          onClick={() => setActivePane("filters")}
-        >
-          Filters
-        </button>
+        {viewMode === "cards" ? (
+          <button
+            className={`choice-chip${activePane === "filters" ? " choice-chip--active" : ""}`}
+            type="button"
+            onClick={() => setActivePane("filters")}
+          >
+            Filters
+          </button>
+        ) : null}
         <button
           className={`choice-chip${activePane === "list" ? " choice-chip--active" : ""}`}
           type="button"
@@ -305,102 +307,104 @@ export function CatalogSelector({
           Details
         </button>
       </div>
-      <div className="catalog-selector__workbench">
-        <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
-          <div className="catalog-selector__panelHeader">
-            <span className="builder-panel__label">{label}</span>
-            <strong className="catalog-selector__count">
-              {filteredItems.length} {filteredItems.length === 1 ? "entry" : "entries"}
-            </strong>
-          </div>
-
-          <label className="catalog-selector__searchField">
-            <span className="catalog-selector__sectionLabel">Search</span>
-            <input
-              className="input catalog-selector__search"
-              placeholder={`Search ${label.toLowerCase()}`}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </label>
-
-          <div className="catalog-selector__filterGroup">
-            <span className="catalog-selector__sectionLabel">Source</span>
-            <div className="catalog-selector__filters">
-              <button
-                className={`choice-chip${sourceFilter === "all" ? " choice-chip--active" : ""}`}
-                type="button"
-                onClick={() => {
-                  setSourceFilter("all");
-                  setTagFilter(null);
-                }}
-              >
-                All
-              </button>
-              <button
-                className={`choice-chip${sourceFilter === "built-in" ? " choice-chip--active" : ""}`}
-                type="button"
-                onClick={() => {
-                  setSourceFilter("built-in");
-                  setTagFilter(null);
-                }}
-              >
-                Built-in
-              </button>
-              <button
-                className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
-                type="button"
-                onClick={() => {
-                  setSourceFilter("imported");
-                  setTagFilter(null);
-                }}
-              >
-                Imported sources
-              </button>
+      <div className={`catalog-selector__workbench${viewMode === "table" ? " catalog-selector__workbench--table" : ""}`}>
+        {viewMode === "cards" ? (
+          <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
+            <div className="catalog-selector__panelHeader">
+              <span className="builder-panel__label">{label}</span>
+              <strong className="catalog-selector__count">
+                {filteredItems.length} {filteredItems.length === 1 ? "entry" : "entries"}
+              </strong>
             </div>
-          </div>
 
-          {tagOptions.length ? (
+            <label className="catalog-selector__searchField">
+              <span className="catalog-selector__sectionLabel">Search</span>
+              <input
+                className="input catalog-selector__search"
+                placeholder={`Search ${label.toLowerCase()}`}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
+
             <div className="catalog-selector__filterGroup">
-              <span className="catalog-selector__sectionLabel">Filter by tags</span>
-              <div className="catalog-selector__filterTags">
-                {tagOptions.map((tag) => (
-                  <button
-                    key={tag}
-                    className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
-                    type="button"
-                    onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
-                  >
-                    {tag}
-                  </button>
-                ))}
+              <span className="catalog-selector__sectionLabel">Source</span>
+              <div className="catalog-selector__filters">
+                <button
+                  className={`choice-chip${sourceFilter === "all" ? " choice-chip--active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setSourceFilter("all");
+                    setTagFilter(null);
+                  }}
+                >
+                  All
+                </button>
+                <button
+                  className={`choice-chip${sourceFilter === "built-in" ? " choice-chip--active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setSourceFilter("built-in");
+                    setTagFilter(null);
+                  }}
+                >
+                  Built-in
+                </button>
+                <button
+                  className={`choice-chip${sourceFilter === "imported" ? " choice-chip--active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setSourceFilter("imported");
+                    setTagFilter(null);
+                  }}
+                >
+                  Imported sources
+                </button>
               </div>
             </div>
-          ) : null}
 
-          {previewItem ? (
-            <div className="catalog-selector__selectionSnapshot">
-              <span className="catalog-selector__sectionLabel">Build impact</span>
-              <strong className="catalog-selector__snapshotTitle">{previewItem.name}</strong>
-              <p className="catalog-selector__snapshotMeta">
-                {previewItem.source ?? "Unknown source"}
-              </p>
-              {previewItem.impactLines?.length ? (
-                <ul className="catalog-selector__impactList">
-                  {previewItem.impactLines.slice(0, 4).map((line) => (
-                    <li key={line}>{line}</li>
+            {tagOptions.length ? (
+              <div className="catalog-selector__filterGroup">
+                <span className="catalog-selector__sectionLabel">Filter by tags</span>
+                <div className="catalog-selector__filterTags">
+                  {tagOptions.map((tag) => (
+                    <button
+                      key={tag}
+                      className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
+                      type="button"
+                      onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                    >
+                      {tag}
+                    </button>
                   ))}
-                </ul>
-              ) : (
-                <p className="catalog-selector__snapshotEmpty">
-                  Select an option to inspect what it changes in your build.
-                </p>
-              )}
-            </div>
-          ) : null}
-        </aside>
+                </div>
+              </div>
+            ) : null}
 
-        <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}`}>
+            {previewItem ? (
+              <div className="catalog-selector__selectionSnapshot">
+                <span className="catalog-selector__sectionLabel">Build impact</span>
+                <strong className="catalog-selector__snapshotTitle">{previewItem.name}</strong>
+                <p className="catalog-selector__snapshotMeta">
+                  {previewItem.source ?? "Unknown source"}
+                </p>
+                {previewItem.impactLines?.length ? (
+                  <ul className="catalog-selector__impactList">
+                    {previewItem.impactLines.slice(0, 4).map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="catalog-selector__snapshotEmpty">
+                    Select an option to inspect what it changes in your build.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
+
+        <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}${viewMode === "table" ? " catalog-selector__optionsPanel--table" : ""}`}>
           <div className="catalog-selector__optionsHeader">
             <div>
               <span className="catalog-selector__sectionLabel">Choose {label.toLowerCase()}</span>
@@ -438,6 +442,59 @@ export function CatalogSelector({
               ) : null}
             </div>
           </div>
+
+          {viewMode === "table" ? (
+            <div className="catalog-selector__tableToolbar">
+              <label className="catalog-selector__searchField catalog-selector__tableSearch">
+                <span className="catalog-selector__sectionLabel">Search</span>
+                <input
+                  className="input catalog-selector__search"
+                  placeholder={`Search ${label.toLowerCase()}`}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </label>
+
+              <div className="catalog-selector__tableToolbarRow">
+                <div className="catalog-selector__filterGroup">
+                  <span className="catalog-selector__sectionLabel">Source</span>
+                  <div className="catalog-selector__filters">
+                    {(["all", "built-in", "imported"] as const).map((option) => (
+                      <button
+                        key={option}
+                        className={`choice-chip${sourceFilter === option ? " choice-chip--active" : ""}`}
+                        type="button"
+                        onClick={() => {
+                          setSourceFilter(option);
+                          setTagFilter(null);
+                        }}
+                      >
+                        {option === "all" ? "All" : option === "built-in" ? "Built-in" : "Imported sources"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {tagOptions.length ? (
+                  <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                    <span className="catalog-selector__sectionLabel">Tags</span>
+                    <div className="catalog-selector__filterTags">
+                      {tagOptions.map((tag) => (
+                        <button
+                          key={tag}
+                          className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
+                          type="button"
+                          onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {activeFilters.length ? (
             <div className="catalog-selector__appliedFilters">

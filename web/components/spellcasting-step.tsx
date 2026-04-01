@@ -52,6 +52,7 @@ export function SpellcastingStep({
   const [levelFilters, setLevelFilters] = useState<Record<string, number | null>>({});
   const [schoolFilters, setSchoolFilters] = useState<Record<string, string | null>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -120,6 +121,7 @@ export function SpellcastingStep({
     availableSpells.find((spell) => spell.id === previewId) ??
     (activeGroup?.grantedSpellIds[0] ? spellsById.get(activeGroup.grantedSpellIds[0]) ?? null : null);
 
+  const allWarnings = getSpellValidationMessages(groups, selections);
   const activeWarnings = activeGroup
     ? getSpellValidationMessages([activeGroup], selections)
     : [];
@@ -203,14 +205,26 @@ export function SpellcastingStep({
 
       {activeGroup ? (
         <>
+          {allWarnings.length ? (
+            <div className="builder-warnings">
+              {allWarnings.map((warning) => (
+                <p className="auth-card__status auth-card__status--error" key={warning}>
+                  {warning}
+                </p>
+              ))}
+            </div>
+          ) : null}
+
           <div className="catalog-selector__mobileToggles">
-            <button
-              className={`button button--secondary button--compact${activePane === "filters" ? " ability-mode__tab--active" : ""}`}
-              type="button"
-              onClick={() => setActivePane("filters")}
-            >
-              Filters
-            </button>
+            {viewMode === "cards" ? (
+              <button
+                className={`button button--secondary button--compact${activePane === "filters" ? " ability-mode__tab--active" : ""}`}
+                type="button"
+                onClick={() => setActivePane("filters")}
+              >
+                Filters
+              </button>
+            ) : null}
             <button
               className={`button button--secondary button--compact${activePane === "list" ? " ability-mode__tab--active" : ""}`}
               type="button"
@@ -227,142 +241,273 @@ export function SpellcastingStep({
             </button>
           </div>
 
-          <div className="catalog-selector__workbench spellcasting-step__workbench">
-            <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
-              <div className="catalog-selector__panelHeader">
-                <span className="catalog-selector__sectionLabel">{activeGroup.ownerLabel}</span>
-                <strong className="catalog-selector__count">
-                  {activeGroup.kind === "granted"
-                    ? `${activeGroup.grantedSpellIds.length} granted`
-                    : `${selectedSpellIds.length}/${activeGroup.maxSelections} selected`}
-                </strong>
-              </div>
-
-              <div className="catalog-selector__searchField">
-                <span className="catalog-selector__sectionLabel">Search</span>
-                <input
-                  className="input catalog-selector__search"
-                  type="search"
-                  placeholder="Search spells"
-                  value={queries[activeGroup.id] ?? ""}
-                  onChange={(event) =>
-                    setQueries((current) => ({
-                      ...current,
-                      [activeGroup.id]: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="catalog-selector__filterGroup">
-                <span className="catalog-selector__sectionLabel">Source</span>
-                <div className="catalog-selector__filters">
-                  {(["all", "built-in", "imported"] as const).map((option) => (
-                    <button
-                      key={option}
-                      className={`button button--secondary button--compact${
-                        sourceFilter === option ? " ability-mode__tab--active" : ""
-                      }`}
-                      type="button"
-                      onClick={() =>
-                        setSourceFilters((current) => ({
-                          ...current,
-                          [activeGroup.id]: option,
-                        }))
-                      }
-                    >
-                      {sourceLabel(option)}
-                    </button>
-                  ))}
+          <div className={`catalog-selector__workbench spellcasting-step__workbench${viewMode === "table" ? " catalog-selector__workbench--table" : ""}`}>
+            {viewMode === "cards" ? (
+              <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
+                <div className="catalog-selector__panelHeader">
+                  <span className="catalog-selector__sectionLabel">{activeGroup.ownerLabel}</span>
+                  <strong className="catalog-selector__count">
+                    {activeGroup.kind === "granted"
+                      ? `${activeGroup.grantedSpellIds.length} granted`
+                      : `${selectedSpellIds.length}/${activeGroup.maxSelections} selected`}
+                  </strong>
                 </div>
-              </div>
 
-              <div className="catalog-selector__filterGroup">
-                <span className="catalog-selector__sectionLabel">Spell level</span>
-                <div className="catalog-selector__filterTags">
-                  <button
-                    className={`catalog-selector__tag${levelFilter === null ? " catalog-selector__tag--active" : ""}`}
-                    type="button"
-                    onClick={() =>
-                      setLevelFilters((current) => ({
+                <div className="catalog-selector__searchField">
+                  <span className="catalog-selector__sectionLabel">Search</span>
+                  <input
+                    className="input catalog-selector__search"
+                    type="search"
+                    placeholder="Search spells"
+                    value={queries[activeGroup.id] ?? ""}
+                    onChange={(event) =>
+                      setQueries((current) => ({
                         ...current,
-                        [activeGroup.id]: null,
+                        [activeGroup.id]: event.target.value,
                       }))
                     }
-                  >
-                    Any
-                  </button>
-                  {levelOptions.map((level) => (
+                  />
+                </div>
+
+                <div className="catalog-selector__filterGroup">
+                  <span className="catalog-selector__sectionLabel">Source</span>
+                  <div className="catalog-selector__filters">
+                    {(["all", "built-in", "imported"] as const).map((option) => (
+                      <button
+                        key={option}
+                        className={`button button--secondary button--compact${
+                          sourceFilter === option ? " ability-mode__tab--active" : ""
+                        }`}
+                        type="button"
+                        onClick={() =>
+                          setSourceFilters((current) => ({
+                            ...current,
+                            [activeGroup.id]: option,
+                          }))
+                        }
+                      >
+                        {sourceLabel(option)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="catalog-selector__filterGroup">
+                  <span className="catalog-selector__sectionLabel">Spell level</span>
+                  <div className="catalog-selector__filterTags">
                     <button
-                      key={level}
-                      className={`catalog-selector__tag${levelFilter === level ? " catalog-selector__tag--active" : ""}`}
+                      className={`catalog-selector__tag${levelFilter === null ? " catalog-selector__tag--active" : ""}`}
                       type="button"
                       onClick={() =>
                         setLevelFilters((current) => ({
                           ...current,
-                          [activeGroup.id]: level,
+                          [activeGroup.id]: null,
                         }))
                       }
                     >
-                      {formatSpellLevel(level)}
+                      Any
                     </button>
-                  ))}
+                    {levelOptions.map((level) => (
+                      <button
+                        key={level}
+                        className={`catalog-selector__tag${levelFilter === level ? " catalog-selector__tag--active" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          setLevelFilters((current) => ({
+                            ...current,
+                            [activeGroup.id]: level,
+                          }))
+                        }
+                      >
+                        {formatSpellLevel(level)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="catalog-selector__filterGroup">
-                <span className="catalog-selector__sectionLabel">School</span>
-                <div className="catalog-selector__filterTags">
-                  <button
-                    className={`catalog-selector__tag${schoolFilter === null ? " catalog-selector__tag--active" : ""}`}
-                    type="button"
-                    onClick={() =>
-                      setSchoolFilters((current) => ({
-                        ...current,
-                        [activeGroup.id]: null,
-                      }))
-                    }
-                  >
-                    Any
-                  </button>
-                  {schoolOptions.slice(0, 8).map((school) => (
+                <div className="catalog-selector__filterGroup">
+                  <span className="catalog-selector__sectionLabel">School</span>
+                  <div className="catalog-selector__filterTags">
                     <button
-                      key={school}
-                      className={`catalog-selector__tag${schoolFilter === school ? " catalog-selector__tag--active" : ""}`}
+                      className={`catalog-selector__tag${schoolFilter === null ? " catalog-selector__tag--active" : ""}`}
                       type="button"
                       onClick={() =>
                         setSchoolFilters((current) => ({
                           ...current,
-                          [activeGroup.id]: school,
+                          [activeGroup.id]: null,
                         }))
                       }
                     >
-                      {school}
+                      Any
                     </button>
-                  ))}
+                    {schoolOptions.slice(0, 8).map((school) => (
+                      <button
+                        key={school}
+                        className={`catalog-selector__tag${schoolFilter === school ? " catalog-selector__tag--active" : ""}`}
+                        type="button"
+                        onClick={() =>
+                          setSchoolFilters((current) => ({
+                            ...current,
+                            [activeGroup.id]: school,
+                          }))
+                        }
+                      >
+                        {school}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="catalog-selector__selectionSnapshot">
-                <span className="catalog-selector__sectionLabel">Build impact</span>
-                <strong className="catalog-selector__snapshotTitle">{activeGroup.title}</strong>
-                <p className="catalog-selector__snapshotMeta">{activeGroup.description}</p>
-                <ul className="catalog-selector__impactList">
-                  {activeGroup.notes.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
-                </ul>
-              </div>
-            </aside>
+                <div className="catalog-selector__selectionSnapshot">
+                  <span className="catalog-selector__sectionLabel">Build impact</span>
+                  <strong className="catalog-selector__snapshotTitle">{activeGroup.title}</strong>
+                  <p className="catalog-selector__snapshotMeta">{activeGroup.description}</p>
+                  <ul className="catalog-selector__impactList">
+                    {activeGroup.notes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              </aside>
+            ) : null}
 
-            <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}`}>
+            <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}${viewMode === "table" ? " catalog-selector__optionsPanel--table" : ""}`}>
               <div className="catalog-selector__optionsHeader">
                 <div>
                   <span className="catalog-selector__sectionLabel">Spell library</span>
                   <strong className="catalog-selector__optionsTitle">{activeGroup.title}</strong>
                 </div>
-                <span className="catalog-selector__count">{filteredSpells.length} spells</span>
+                <div className="catalog-selector__optionsActions">
+                  <div className="catalog-selector__viewMode">
+                    <button
+                      className={`button button--secondary button--compact${viewMode === "cards" ? " ability-mode__tab--active" : ""}`}
+                      type="button"
+                      onClick={() => setViewMode("cards")}
+                    >
+                      Workbench
+                    </button>
+                    <button
+                      className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
+                      type="button"
+                      onClick={() => setViewMode("table")}
+                    >
+                      Table
+                    </button>
+                  </div>
+                  <span className="catalog-selector__count">{filteredSpells.length} spells</span>
+                </div>
               </div>
+
+              {viewMode === "table" ? (
+                <div className="catalog-selector__tableToolbar">
+                  <label className="catalog-selector__searchField catalog-selector__tableSearch">
+                    <span className="catalog-selector__sectionLabel">Search</span>
+                    <input
+                      className="input catalog-selector__search"
+                      type="search"
+                      placeholder="Search spells"
+                      value={queries[activeGroup.id] ?? ""}
+                      onChange={(event) =>
+                        setQueries((current) => ({
+                          ...current,
+                          [activeGroup.id]: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <div className="catalog-selector__tableToolbarRow">
+                    <div className="catalog-selector__filterGroup">
+                      <span className="catalog-selector__sectionLabel">Source</span>
+                      <div className="catalog-selector__filters">
+                        {(["all", "built-in", "imported"] as const).map((option) => (
+                          <button
+                            key={option}
+                            className={`button button--secondary button--compact${
+                              sourceFilter === option ? " ability-mode__tab--active" : ""
+                            }`}
+                            type="button"
+                            onClick={() =>
+                              setSourceFilters((current) => ({
+                                ...current,
+                                [activeGroup.id]: option,
+                              }))
+                            }
+                          >
+                            {sourceLabel(option)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                      <span className="catalog-selector__sectionLabel">Spell level</span>
+                      <div className="catalog-selector__filterTags">
+                        <button
+                          className={`catalog-selector__tag${levelFilter === null ? " catalog-selector__tag--active" : ""}`}
+                          type="button"
+                          onClick={() =>
+                            setLevelFilters((current) => ({
+                              ...current,
+                              [activeGroup.id]: null,
+                            }))
+                          }
+                        >
+                          Any
+                        </button>
+                        {levelOptions.map((level) => (
+                          <button
+                            key={level}
+                            className={`catalog-selector__tag${levelFilter === level ? " catalog-selector__tag--active" : ""}`}
+                            type="button"
+                            onClick={() =>
+                              setLevelFilters((current) => ({
+                                ...current,
+                                [activeGroup.id]: level,
+                              }))
+                            }
+                          >
+                            {formatSpellLevel(level)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                      <span className="catalog-selector__sectionLabel">School</span>
+                      <div className="catalog-selector__filterTags">
+                        <button
+                          className={`catalog-selector__tag${schoolFilter === null ? " catalog-selector__tag--active" : ""}`}
+                          type="button"
+                          onClick={() =>
+                            setSchoolFilters((current) => ({
+                              ...current,
+                              [activeGroup.id]: null,
+                            }))
+                          }
+                        >
+                          Any
+                        </button>
+                        {schoolOptions.slice(0, 8).map((school) => (
+                          <button
+                            key={school}
+                            className={`catalog-selector__tag${schoolFilter === school ? " catalog-selector__tag--active" : ""}`}
+                            type="button"
+                            onClick={() =>
+                              setSchoolFilters((current) => ({
+                                ...current,
+                                [activeGroup.id]: school,
+                              }))
+                            }
+                          >
+                            {school}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               {activeGroup.kind === "granted" ? (
                 <div className="catalog-selector__list">
