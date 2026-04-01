@@ -434,7 +434,7 @@ a {
 .builder-shell {
   display: grid;
   gap: 22px;
-  padding-bottom: 10rem;
+  padding-bottom: 0;
 }
 
 .builder-hero {
@@ -945,6 +945,8 @@ a {
 }
 
 .catalog-selector__optionsPanel {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -1264,11 +1266,18 @@ a {
 
 .catalog-selector__tableWrap {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
   border: 1px solid rgba(146, 38, 16, 0.12);
   border-radius: 16px;
   background: rgba(255, 252, 246, 0.94);
+}
+
+.catalog-selector__optionsPanel > .catalog-selector__list,
+.catalog-selector__optionsPanel > .catalog-selector__tableWrap {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .catalog-selector__tableHead,
