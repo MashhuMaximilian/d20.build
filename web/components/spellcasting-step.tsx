@@ -39,6 +39,14 @@ function sourceLabel(origin: "all" | "built-in" | "imported") {
   }
 }
 
+function getSpellSourceFilterLabel(spell: BuiltInElement) {
+  if (spell.catalogOrigin === "built-in") {
+    return "SRD";
+  }
+
+  return spell.source?.trim() || "Imported source";
+}
+
 export function SpellcastingStep({
   groups,
   selections,
@@ -49,6 +57,7 @@ export function SpellcastingStep({
   const [previewIds, setPreviewIds] = useState<Record<string, string>>({});
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [sourceFilters, setSourceFilters] = useState<Record<string, "all" | "built-in" | "imported">>({});
+  const [selectedSources, setSelectedSources] = useState<Record<string, string[]>>({});
   const [levelFilters, setLevelFilters] = useState<Record<string, number | null>>({});
   const [schoolFilters, setSchoolFilters] = useState<Record<string, string | null>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
@@ -70,12 +79,20 @@ export function SpellcastingStep({
     : [];
   const query = activeGroup ? queries[activeGroup.id]?.trim().toLowerCase() ?? "" : "";
   const sourceFilter = activeGroup ? sourceFilters[activeGroup.id] ?? "all" : "all";
+  const selectedSourceFilters = activeGroup ? selectedSources[activeGroup.id] ?? [] : [];
   const levelFilter = activeGroup ? levelFilters[activeGroup.id] ?? null : null;
   const schoolFilter = activeGroup ? schoolFilters[activeGroup.id] ?? null : null;
 
   const filteredSpells = availableSpells.filter((spell) => {
     if (sourceFilter !== "all" && spell.catalogOrigin !== sourceFilter) {
       return false;
+    }
+
+    if (selectedSourceFilters.length) {
+      const label = getSpellSourceFilterLabel(spell);
+      if (!selectedSourceFilters.includes(label)) {
+        return false;
+      }
     }
 
     if (levelFilter !== null && getSpellLevel(spell) !== levelFilter) {
@@ -107,6 +124,11 @@ export function SpellcastingStep({
   });
 
   const schoolOptions = [...new Set(availableSpells.map((spell) => getSpellSchool(spell)))].sort();
+  const sourceOptions = [...new Set(
+    availableSpells
+      .filter((spell) => sourceFilter === "all" || spell.catalogOrigin === sourceFilter)
+      .map((spell) => getSpellSourceFilterLabel(spell)),
+  )].sort();
   const levelOptions = [...new Set(availableSpells.map((spell) => getSpellLevel(spell)))].sort((a, b) => a - b);
   const previewId =
     activeGroup
@@ -138,6 +160,22 @@ export function SpellcastingStep({
       }));
     }
   }, [activeGroup, previewSpell]);
+
+  useEffect(() => {
+    if (!activeGroup) {
+      return;
+    }
+
+    if (!selectedSourceFilters.length) {
+      return;
+    }
+
+    const allowed = new Set(sourceOptions);
+    setSelectedSources((current) => ({
+      ...current,
+      [activeGroup.id]: (current[activeGroup.id] ?? []).filter((source) => allowed.has(source)),
+    }));
+  }, [activeGroup, selectedSourceFilters.length, sourceOptions]);
 
   if (!groups.length) {
     return (
@@ -279,18 +317,46 @@ export function SpellcastingStep({
                           sourceFilter === option ? " ability-mode__tab--active" : ""
                         }`}
                         type="button"
-                        onClick={() =>
-                          setSourceFilters((current) => ({
-                            ...current,
-                            [activeGroup.id]: option,
-                          }))
-                        }
+                          onClick={() =>
+                            setSourceFilters((current) => ({
+                              ...current,
+                              [activeGroup.id]: option,
+                            }))
+                          }
                       >
                         {sourceLabel(option)}
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {sourceOptions.length > 1 ? (
+                  <div className="catalog-selector__filterGroup">
+                    <span className="catalog-selector__sectionLabel">Named sources</span>
+                    <div className="catalog-selector__filterTags">
+                      {sourceOptions.slice(0, 12).map((source) => (
+                        <button
+                          key={source}
+                          className={`catalog-selector__tag${selectedSourceFilters.includes(source) ? " catalog-selector__tag--active" : ""}`}
+                          type="button"
+                          onClick={() =>
+                            setSelectedSources((current) => {
+                              const existing = current[activeGroup.id] ?? [];
+                              return {
+                                ...current,
+                                [activeGroup.id]: existing.includes(source)
+                                  ? existing.filter((entry) => entry !== source)
+                                  : [...existing, source],
+                              };
+                            })
+                          }
+                        >
+                          {source}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="catalog-selector__filterGroup">
                   <span className="catalog-selector__sectionLabel">Spell level</span>
@@ -439,6 +505,34 @@ export function SpellcastingStep({
                         ))}
                       </div>
                     </div>
+
+                    {sourceOptions.length > 1 ? (
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">Sources</span>
+                        <div className="catalog-selector__filterTags">
+                          {sourceOptions.slice(0, 12).map((source) => (
+                            <button
+                              key={source}
+                              className={`catalog-selector__tag${selectedSourceFilters.includes(source) ? " catalog-selector__tag--active" : ""}`}
+                              type="button"
+                              onClick={() =>
+                                setSelectedSources((current) => {
+                                  const existing = current[activeGroup.id] ?? [];
+                                  return {
+                                    ...current,
+                                    [activeGroup.id]: existing.includes(source)
+                                      ? existing.filter((entry) => entry !== source)
+                                      : [...existing, source],
+                                  };
+                                })
+                              }
+                            >
+                              {source}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="catalog-selector__filterGroup catalog-selector__tableTags">
                       <span className="catalog-selector__sectionLabel">Spell level</span>

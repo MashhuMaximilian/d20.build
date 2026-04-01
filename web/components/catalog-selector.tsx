@@ -23,6 +23,14 @@ export type CatalogItem = {
   }[];
 };
 
+function getSourceFilterLabel(item: CatalogItem) {
+  if (item.origin === "built-in") {
+    return "SRD";
+  }
+
+  return item.source?.trim() || "Imported source";
+}
+
 type CatalogSelectorProps = {
   emptyMessage?: string;
   items: CatalogItem[];
@@ -166,6 +174,7 @@ export function CatalogSelector({
 }: CatalogSelectorProps) {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "built-in" | "imported">("all");
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
@@ -191,6 +200,23 @@ export function CatalogSelector({
       .map(([tag]) => tag);
   }, [items, sourceFilter]);
 
+  const sourceOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    items.forEach((item) => {
+      if (sourceFilter !== "all" && item.origin !== sourceFilter) {
+        return;
+      }
+
+      const label = getSourceFilterLabel(item);
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    });
+
+    return [...counts.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .map(([label]) => label);
+  }, [items, sourceFilter]);
+
   const filteredItems = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
@@ -205,6 +231,13 @@ export function CatalogSelector({
 
       if (tagFilter && !(item.filterTags ?? []).includes(tagFilter)) {
         return false;
+      }
+
+      if (selectedSources.length) {
+        const label = getSourceFilterLabel(item);
+        if (!selectedSources.includes(label)) {
+          return false;
+        }
       }
 
       if (!normalized) {
@@ -225,7 +258,7 @@ export function CatalogSelector({
 
       return haystack.includes(normalized);
     });
-  }, [items, query, sourceFilter, tagFilter]);
+  }, [items, query, selectedSources, sourceFilter, tagFilter]);
 
   useEffect(() => {
     if (!tagFilter) {
@@ -236,6 +269,15 @@ export function CatalogSelector({
       setTagFilter(null);
     }
   }, [tagFilter, tagOptions]);
+
+  useEffect(() => {
+    if (!selectedSources.length) {
+      return;
+    }
+
+    const allowed = new Set(sourceOptions);
+    setSelectedSources((current) => current.filter((source) => allowed.has(source)));
+  }, [selectedSources.length, sourceOptions]);
 
   const committedSelection =
     items.find((item) => item.id === selectedId) ?? null;
@@ -276,6 +318,7 @@ export function CatalogSelector({
         ? "Built-in SRD"
         : "Imported sources"
       : "",
+    ...selectedSources,
     tagFilter ?? "",
     query ? `Search: ${query}` : "",
   ].filter(Boolean);
@@ -336,6 +379,7 @@ export function CatalogSelector({
                   onClick={() => {
                     setSourceFilter("all");
                     setTagFilter(null);
+                    setSelectedSources([]);
                   }}
                 >
                   All
@@ -346,6 +390,7 @@ export function CatalogSelector({
                   onClick={() => {
                     setSourceFilter("built-in");
                     setTagFilter(null);
+                    setSelectedSources([]);
                   }}
                 >
                   Built-in
@@ -356,12 +401,37 @@ export function CatalogSelector({
                   onClick={() => {
                     setSourceFilter("imported");
                     setTagFilter(null);
+                    setSelectedSources([]);
                   }}
                 >
                   Imported sources
                 </button>
               </div>
             </div>
+
+            {sourceOptions.length > 1 ? (
+              <div className="catalog-selector__filterGroup">
+                <span className="catalog-selector__sectionLabel">Named sources</span>
+                <div className="catalog-selector__filterTags">
+                  {sourceOptions.slice(0, 12).map((source) => (
+                    <button
+                      key={source}
+                      className={`choice-chip${selectedSources.includes(source) ? " choice-chip--active" : ""}`}
+                      type="button"
+                      onClick={() =>
+                        setSelectedSources((current) =>
+                          current.includes(source)
+                            ? current.filter((entry) => entry !== source)
+                            : [...current, source],
+                        )
+                      }
+                    >
+                      {source}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {tagOptions.length ? (
               <div className="catalog-selector__filterGroup">
@@ -434,6 +504,7 @@ export function CatalogSelector({
                   onClick={() => {
                     setTagFilter(null);
                     setSourceFilter("all");
+                    setSelectedSources([]);
                     setQuery("");
                   }}
                 >
@@ -467,6 +538,7 @@ export function CatalogSelector({
                         onClick={() => {
                           setSourceFilter(option);
                           setTagFilter(null);
+                          setSelectedSources([]);
                         }}
                       >
                         {option === "all" ? "All" : option === "built-in" ? "Built-in" : "Imported sources"}
@@ -474,6 +546,30 @@ export function CatalogSelector({
                     ))}
                   </div>
                 </div>
+
+                {sourceOptions.length > 1 ? (
+                  <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                    <span className="catalog-selector__sectionLabel">Sources</span>
+                    <div className="catalog-selector__filterTags">
+                      {sourceOptions.slice(0, 12).map((source) => (
+                        <button
+                          key={source}
+                          className={`choice-chip${selectedSources.includes(source) ? " choice-chip--active" : ""}`}
+                          type="button"
+                          onClick={() =>
+                            setSelectedSources((current) =>
+                              current.includes(source)
+                                ? current.filter((entry) => entry !== source)
+                                : [...current, source],
+                            )
+                          }
+                        >
+                          {source}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 {tagOptions.length ? (
                   <div className="catalog-selector__filterGroup catalog-selector__tableTags">
