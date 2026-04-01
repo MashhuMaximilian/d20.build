@@ -19,6 +19,7 @@
 }
 
 html {
+  font-size: 87.5%;
   font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
   background:
     radial-gradient(circle at top, rgba(122, 32, 13, 0.16), transparent 26%),
@@ -582,10 +583,9 @@ a {
 }
 
 .builder-navigation {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
   gap: 12px;
   position: sticky;
   bottom: 16px;
@@ -595,9 +595,9 @@ a {
 }
 
 .builder-navigation__meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .builder-navigation__meta strong {
@@ -608,12 +608,13 @@ a {
   display: inline-flex;
   align-items: baseline;
   gap: 8px;
+  min-width: 0;
 }
 
 .builder-navigation__meta p {
   margin: 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -624,6 +625,7 @@ a {
   display: grid;
   align-items: start;
   gap: 4px;
+  min-width: 0;
 }
 
 .builder-navigation__summary--warning p {
@@ -635,6 +637,9 @@ a {
 .builder-navigation__warningList {
   display: grid;
   gap: 6px;
+  max-height: 7.2rem;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .builder-navigation__warningItem {
@@ -647,6 +652,7 @@ a {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
+  align-items: center;
 }
 
 .builder-review__grid {
