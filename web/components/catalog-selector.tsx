@@ -495,14 +495,20 @@ export function CatalogSelector({
                   type="button"
                   onClick={() => setViewMode("cards")}
                 >
-                  Workbench
+                  <span className="catalog-selector__viewModeButton">
+                    <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--workbench" aria-hidden="true" />
+                    <span>Workbench</span>
+                  </span>
                 </button>
                 <button
                   className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
                   type="button"
                   onClick={() => setViewMode("table")}
                 >
-                  Table
+                  <span className="catalog-selector__viewModeButton">
+                    <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--table" aria-hidden="true" />
+                    <span>Table</span>
+                  </span>
                 </button>
               </div>
               {activeFilters.length ? (

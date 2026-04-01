@@ -975,6 +975,54 @@ a {
   gap: 8px;
 }
 
+.catalog-selector__viewMode .button--compact {
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.catalog-selector__viewModeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.catalog-selector__viewModeGlyph {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.catalog-selector__viewModeGlyph--workbench::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--accent-strong), var(--accent-strong)) left top / 5px 5px no-repeat,
+    linear-gradient(var(--accent-strong), var(--accent-strong)) right top / 5px 5px no-repeat,
+    linear-gradient(var(--accent-strong), var(--accent-strong)) left bottom / 5px 5px no-repeat,
+    linear-gradient(var(--accent-strong), var(--accent-strong)) right bottom / 5px 5px no-repeat;
+  opacity: 0.9;
+}
+
+.catalog-selector__viewModeGlyph--table::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--accent-strong), var(--accent-strong)) center 2px / 100% 2px no-repeat,
+    linear-gradient(var(--accent-strong), var(--accent-strong)) center 6px / 100% 2px no-repeat,
+    linear-gradient(var(--accent-strong), var(--accent-strong)) center 10px / 100% 2px no-repeat;
+  opacity: 0.9;
+}
+
 .catalog-selector__tableToolbar {
   display: grid;
   gap: 12px;
