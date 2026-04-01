@@ -62,6 +62,7 @@ export function SpellcastingStep({
   const [schoolFilters, setSchoolFilters] = useState<Record<string, string | null>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [showTableFilters, setShowTableFilters] = useState(false);
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -144,8 +145,15 @@ export function SpellcastingStep({
     (activeGroup?.grantedSpellIds[0] ? spellsById.get(activeGroup.grantedSpellIds[0]) ?? null : null);
 
   const allWarnings = getSpellValidationMessages(groups, selections);
+  const groupWarningsById = useMemo(
+    () =>
+      Object.fromEntries(
+        groups.map((group) => [group.id, getSpellValidationMessages([group], selections)]),
+      ) as Record<string, string[]>,
+    [groups, selections],
+  );
   const activeWarnings = activeGroup
-    ? getSpellValidationMessages([activeGroup], selections)
+    ? groupWarningsById[activeGroup.id] ?? []
     : [];
 
   useEffect(() => {
@@ -225,10 +233,11 @@ export function SpellcastingStep({
         {groups.map((group) => {
           const pickedCount = selections[group.id]?.length ?? 0;
           const targetCount = group.exactSelections ?? group.maxSelections;
+          const groupWarnings = groupWarningsById[group.id] ?? [];
           return (
             <button
               key={group.id}
-              className={`spellcasting-step__groupTab${group.id === activeGroupId ? " spellcasting-step__groupTab--active" : ""}`}
+              className={`spellcasting-step__groupTab${group.id === activeGroupId ? " spellcasting-step__groupTab--active" : ""}${groupWarnings.length ? " spellcasting-step__groupTab--warning" : ""}`}
               type="button"
               onClick={() => setActiveGroupId(group.id)}
             >
@@ -236,6 +245,11 @@ export function SpellcastingStep({
               <small>
                 {group.kind === "prepared" ? `${pickedCount}/${targetCount} prepared` : `${pickedCount}/${targetCount}`}
               </small>
+              {groupWarnings.length ? (
+                <em className="spellcasting-step__groupTabAlert">
+                  {groupWarnings.length} issue{groupWarnings.length === 1 ? "" : "s"}
+                </em>
+              ) : null}
             </button>
           );
         })}
@@ -243,6 +257,13 @@ export function SpellcastingStep({
 
       {activeGroup ? (
         <>
+          {allWarnings.length ? (
+            <div className="spellcasting-step__warningSummary">
+              <strong>{allWarnings.length} spellcasting issue{allWarnings.length === 1 ? "" : "s"} blocking review</strong>
+              <span>{allWarnings[0]}</span>
+            </div>
+          ) : null}
+
           {allWarnings.length ? (
             <div className="builder-warnings">
               {allWarnings.map((warning) => (
@@ -317,12 +338,16 @@ export function SpellcastingStep({
                           sourceFilter === option ? " ability-mode__tab--active" : ""
                         }`}
                         type="button"
-                          onClick={() =>
-                            setSourceFilters((current) => ({
-                              ...current,
-                              [activeGroup.id]: option,
-                            }))
-                          }
+                        onClick={() => {
+                          setSourceFilters((current) => ({
+                            ...current,
+                            [activeGroup.id]: option,
+                          }));
+                          setSelectedSources((current) => ({
+                            ...current,
+                            [activeGroup.id]: [],
+                          }));
+                        }}
                       >
                         {sourceLabel(option)}
                       </button>
@@ -337,7 +362,7 @@ export function SpellcastingStep({
                       {sourceOptions.slice(0, 12).map((source) => (
                         <button
                           key={source}
-                          className={`catalog-selector__tag${selectedSourceFilters.includes(source) ? " catalog-selector__tag--active" : ""}`}
+                          className={`catalog-selector__filterChip${selectedSourceFilters.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
                           type="button"
                           onClick={() =>
                             setSelectedSources((current) => {
@@ -362,7 +387,7 @@ export function SpellcastingStep({
                   <span className="catalog-selector__sectionLabel">Spell level</span>
                   <div className="catalog-selector__filterTags">
                     <button
-                      className={`catalog-selector__tag${levelFilter === null ? " catalog-selector__tag--active" : ""}`}
+                      className={`catalog-selector__filterChip${levelFilter === null ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() =>
                         setLevelFilters((current) => ({
@@ -376,7 +401,7 @@ export function SpellcastingStep({
                     {levelOptions.map((level) => (
                       <button
                         key={level}
-                        className={`catalog-selector__tag${levelFilter === level ? " catalog-selector__tag--active" : ""}`}
+                        className={`catalog-selector__filterChip${levelFilter === level ? " catalog-selector__filterChip--active" : ""}`}
                         type="button"
                         onClick={() =>
                           setLevelFilters((current) => ({
@@ -395,7 +420,7 @@ export function SpellcastingStep({
                   <span className="catalog-selector__sectionLabel">School</span>
                   <div className="catalog-selector__filterTags">
                     <button
-                      className={`catalog-selector__tag${schoolFilter === null ? " catalog-selector__tag--active" : ""}`}
+                      className={`catalog-selector__filterChip${schoolFilter === null ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() =>
                         setSchoolFilters((current) => ({
@@ -409,7 +434,7 @@ export function SpellcastingStep({
                     {schoolOptions.slice(0, 8).map((school) => (
                       <button
                         key={school}
-                        className={`catalog-selector__tag${schoolFilter === school ? " catalog-selector__tag--active" : ""}`}
+                        className={`catalog-selector__filterChip${schoolFilter === school ? " catalog-selector__filterChip--active" : ""}`}
                         type="button"
                         onClick={() =>
                           setSchoolFilters((current) => ({
@@ -466,140 +491,160 @@ export function SpellcastingStep({
 
               {viewMode === "table" ? (
                 <div className="catalog-selector__tableToolbar">
-                  <label className="catalog-selector__searchField catalog-selector__tableSearch">
-                    <span className="catalog-selector__sectionLabel">Search</span>
-                    <input
-                      className="input catalog-selector__search"
-                      type="search"
-                      placeholder="Search spells"
-                      value={queries[activeGroup.id] ?? ""}
-                      onChange={(event) =>
-                        setQueries((current) => ({
-                          ...current,
-                          [activeGroup.id]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
+                  <div className="catalog-selector__tableToolbarPrimary">
+                    <label className="catalog-selector__searchField catalog-selector__tableSearch">
+                      <span className="catalog-selector__sectionLabel">Search</span>
+                      <input
+                        className="input catalog-selector__search"
+                        type="search"
+                        placeholder="Search spells"
+                        value={queries[activeGroup.id] ?? ""}
+                        onChange={(event) =>
+                          setQueries((current) => ({
+                            ...current,
+                            [activeGroup.id]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
 
-                  <div className="catalog-selector__tableToolbarRow">
-                    <div className="catalog-selector__filterGroup">
-                      <span className="catalog-selector__sectionLabel">Source</span>
-                      <div className="catalog-selector__filters">
-                        {(["all", "built-in", "imported"] as const).map((option) => (
-                          <button
-                            key={option}
-                            className={`button button--secondary button--compact${
-                              sourceFilter === option ? " ability-mode__tab--active" : ""
-                            }`}
-                            type="button"
-                            onClick={() =>
-                              setSourceFilters((current) => ({
-                                ...current,
-                                [activeGroup.id]: option,
-                              }))
-                            }
-                          >
-                            {sourceLabel(option)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {sourceOptions.length > 1 ? (
-                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                        <span className="catalog-selector__sectionLabel">Sources</span>
-                        <div className="catalog-selector__filterTags">
-                          {sourceOptions.slice(0, 12).map((source) => (
+                    <div className="catalog-selector__tableToolbarControls">
+                      <div className="catalog-selector__filterGroup">
+                        <span className="catalog-selector__sectionLabel">Source</span>
+                        <div className="catalog-selector__filters">
+                          {(["all", "built-in", "imported"] as const).map((option) => (
                             <button
-                              key={source}
-                              className={`catalog-selector__tag${selectedSourceFilters.includes(source) ? " catalog-selector__tag--active" : ""}`}
+                              key={option}
+                              className={`button button--secondary button--compact${
+                                sourceFilter === option ? " ability-mode__tab--active" : ""
+                              }`}
                               type="button"
-                              onClick={() =>
-                                setSelectedSources((current) => {
-                                  const existing = current[activeGroup.id] ?? [];
-                                  return {
-                                    ...current,
-                                    [activeGroup.id]: existing.includes(source)
-                                      ? existing.filter((entry) => entry !== source)
-                                      : [...existing, source],
-                                  };
-                                })
-                              }
+                              onClick={() => {
+                                setSourceFilters((current) => ({
+                                  ...current,
+                                  [activeGroup.id]: option,
+                                }));
+                                setSelectedSources((current) => ({
+                                  ...current,
+                                  [activeGroup.id]: [],
+                                }));
+                              }}
                             >
-                              {source}
+                              {sourceLabel(option)}
                             </button>
                           ))}
                         </div>
                       </div>
-                    ) : null}
 
-                    <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                      <span className="catalog-selector__sectionLabel">Spell level</span>
-                      <div className="catalog-selector__filterTags">
+                      {(sourceOptions.length > 1 || levelOptions.length > 1 || schoolOptions.length > 1) ? (
                         <button
-                          className={`catalog-selector__tag${levelFilter === null ? " catalog-selector__tag--active" : ""}`}
+                          className={`button button--secondary button--compact${showTableFilters ? " ability-mode__tab--active" : ""}`}
                           type="button"
-                          onClick={() =>
-                            setLevelFilters((current) => ({
-                              ...current,
-                              [activeGroup.id]: null,
-                            }))
-                          }
+                          onClick={() => setShowTableFilters((current) => !current)}
                         >
-                          Any
+                          {showTableFilters ? "Hide filters" : "More filters"}
                         </button>
-                        {levelOptions.map((level) => (
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {showTableFilters ? (
+                    <div className="catalog-selector__tableToolbarRow">
+                      {sourceOptions.length > 1 ? (
+                        <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                          <span className="catalog-selector__sectionLabel">Sources</span>
+                          <div className="catalog-selector__filterTags">
+                            {sourceOptions.slice(0, 12).map((source) => (
+                              <button
+                                key={source}
+                                className={`catalog-selector__filterChip${selectedSourceFilters.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedSources((current) => {
+                                    const existing = current[activeGroup.id] ?? [];
+                                    return {
+                                      ...current,
+                                      [activeGroup.id]: existing.includes(source)
+                                        ? existing.filter((entry) => entry !== source)
+                                        : [...existing, source],
+                                    };
+                                  })
+                                }
+                              >
+                                {source}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">Spell level</span>
+                        <div className="catalog-selector__filterTags">
                           <button
-                            key={level}
-                            className={`catalog-selector__tag${levelFilter === level ? " catalog-selector__tag--active" : ""}`}
+                            className={`catalog-selector__filterChip${levelFilter === null ? " catalog-selector__filterChip--active" : ""}`}
                             type="button"
                             onClick={() =>
                               setLevelFilters((current) => ({
                                 ...current,
-                                [activeGroup.id]: level,
+                                [activeGroup.id]: null,
                               }))
                             }
                           >
-                            {formatSpellLevel(level)}
+                            Any
                           </button>
-                        ))}
+                          {levelOptions.map((level) => (
+                            <button
+                              key={level}
+                              className={`catalog-selector__filterChip${levelFilter === level ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              onClick={() =>
+                                setLevelFilters((current) => ({
+                                  ...current,
+                                  [activeGroup.id]: level,
+                                }))
+                              }
+                            >
+                              {formatSpellLevel(level)}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                      <span className="catalog-selector__sectionLabel">School</span>
-                      <div className="catalog-selector__filterTags">
-                        <button
-                          className={`catalog-selector__tag${schoolFilter === null ? " catalog-selector__tag--active" : ""}`}
-                          type="button"
-                          onClick={() =>
-                            setSchoolFilters((current) => ({
-                              ...current,
-                              [activeGroup.id]: null,
-                            }))
-                          }
-                        >
-                          Any
-                        </button>
-                        {schoolOptions.slice(0, 8).map((school) => (
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">School</span>
+                        <div className="catalog-selector__filterTags">
                           <button
-                            key={school}
-                            className={`catalog-selector__tag${schoolFilter === school ? " catalog-selector__tag--active" : ""}`}
+                            className={`catalog-selector__filterChip${schoolFilter === null ? " catalog-selector__filterChip--active" : ""}`}
                             type="button"
                             onClick={() =>
                               setSchoolFilters((current) => ({
                                 ...current,
-                                [activeGroup.id]: school,
+                                [activeGroup.id]: null,
                               }))
                             }
                           >
-                            {school}
+                            Any
                           </button>
-                        ))}
+                          {schoolOptions.slice(0, 8).map((school) => (
+                            <button
+                              key={school}
+                              className={`catalog-selector__filterChip${schoolFilter === school ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              onClick={() =>
+                                setSchoolFilters((current) => ({
+                                  ...current,
+                                  [activeGroup.id]: school,
+                                }))
+                              }
+                            >
+                              {school}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               ) : null}
 

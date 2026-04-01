@@ -180,6 +180,7 @@ export function CatalogSelector({
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [showTableFilters, setShowTableFilters] = useState(false);
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -194,10 +195,18 @@ export function CatalogSelector({
       });
     });
 
-    return [...counts.entries()]
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-      .slice(0, 8)
-      .map(([tag]) => tag);
+    const sorted = [...counts.entries()].sort(
+      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0]),
+    );
+    const abilityTags = sorted
+      .map(([tag]) => tag)
+      .filter((tag) => /^[+-]\d+\s[A-Z]{3,}$/.test(tag));
+    const remaining = sorted
+      .map(([tag]) => tag)
+      .filter((tag) => !abilityTags.includes(tag))
+      .slice(0, Math.max(0, 12 - abilityTags.length));
+
+    return [...abilityTags, ...remaining];
   }, [items, sourceFilter]);
 
   const sourceOptions = useMemo(() => {
@@ -416,7 +425,7 @@ export function CatalogSelector({
                   {sourceOptions.slice(0, 12).map((source) => (
                     <button
                       key={source}
-                      className={`choice-chip${selectedSources.includes(source) ? " choice-chip--active" : ""}`}
+                      className={`catalog-selector__filterChip${selectedSources.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() =>
                         setSelectedSources((current) =>
@@ -440,7 +449,7 @@ export function CatalogSelector({
                   {tagOptions.map((tag) => (
                     <button
                       key={tag}
-                      className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
+                      className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
                     >
@@ -515,81 +524,97 @@ export function CatalogSelector({
           </div>
 
           {viewMode === "table" ? (
-            <div className="catalog-selector__tableToolbar">
-              <label className="catalog-selector__searchField catalog-selector__tableSearch">
-                <span className="catalog-selector__sectionLabel">Search</span>
-                <input
-                  className="input catalog-selector__search"
-                  placeholder={`Search ${label.toLowerCase()}`}
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                />
-              </label>
+              <div className="catalog-selector__tableToolbar">
+                <div className="catalog-selector__tableToolbarPrimary">
+                  <label className="catalog-selector__searchField catalog-selector__tableSearch">
+                    <span className="catalog-selector__sectionLabel">Search</span>
+                    <input
+                      className="input catalog-selector__search"
+                      placeholder={`Search ${label.toLowerCase()}`}
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                    />
+                  </label>
 
-              <div className="catalog-selector__tableToolbarRow">
-                <div className="catalog-selector__filterGroup">
-                  <span className="catalog-selector__sectionLabel">Source</span>
-                  <div className="catalog-selector__filters">
-                    {(["all", "built-in", "imported"] as const).map((option) => (
+                  <div className="catalog-selector__tableToolbarControls">
+                    <div className="catalog-selector__filterGroup">
+                      <span className="catalog-selector__sectionLabel">Source</span>
+                      <div className="catalog-selector__filters">
+                        {(["all", "built-in", "imported"] as const).map((option) => (
+                          <button
+                            key={option}
+                            className={`choice-chip${sourceFilter === option ? " choice-chip--active" : ""}`}
+                            type="button"
+                            onClick={() => {
+                              setSourceFilter(option);
+                              setTagFilter(null);
+                              setSelectedSources([]);
+                            }}
+                          >
+                            {option === "all" ? "All" : option === "built-in" ? "Built-in" : "Imported sources"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {(sourceOptions.length > 1 || tagOptions.length) ? (
                       <button
-                        key={option}
-                        className={`choice-chip${sourceFilter === option ? " choice-chip--active" : ""}`}
+                        className={`button button--secondary button--compact${showTableFilters ? " ability-mode__tab--active" : ""}`}
                         type="button"
-                        onClick={() => {
-                          setSourceFilter(option);
-                          setTagFilter(null);
-                          setSelectedSources([]);
-                        }}
+                        onClick={() => setShowTableFilters((current) => !current)}
                       >
-                        {option === "all" ? "All" : option === "built-in" ? "Built-in" : "Imported sources"}
+                        {showTableFilters ? "Hide filters" : "More filters"}
                       </button>
-                    ))}
+                    ) : null}
                   </div>
                 </div>
 
-                {sourceOptions.length > 1 ? (
-                  <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                    <span className="catalog-selector__sectionLabel">Sources</span>
-                    <div className="catalog-selector__filterTags">
-                      {sourceOptions.slice(0, 12).map((source) => (
-                        <button
-                          key={source}
-                          className={`choice-chip${selectedSources.includes(source) ? " choice-chip--active" : ""}`}
-                          type="button"
-                          onClick={() =>
-                            setSelectedSources((current) =>
-                              current.includes(source)
-                                ? current.filter((entry) => entry !== source)
-                                : [...current, source],
-                            )
-                          }
-                        >
-                          {source}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+                {showTableFilters ? (
+                  <div className="catalog-selector__tableToolbarRow">
+                    {sourceOptions.length > 1 ? (
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">Sources</span>
+                        <div className="catalog-selector__filterTags">
+                          {sourceOptions.slice(0, 12).map((source) => (
+                            <button
+                              key={source}
+                              className={`catalog-selector__filterChip${selectedSources.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              onClick={() =>
+                                setSelectedSources((current) =>
+                                  current.includes(source)
+                                    ? current.filter((entry) => entry !== source)
+                                    : [...current, source],
+                                )
+                              }
+                            >
+                              {source}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
 
-                {tagOptions.length ? (
-                  <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                    <span className="catalog-selector__sectionLabel">Tags</span>
-                    <div className="catalog-selector__filterTags">
-                      {tagOptions.map((tag) => (
-                        <button
-                          key={tag}
-                          className={`choice-chip${tagFilter === tag ? " choice-chip--active" : ""}`}
-                          type="button"
-                          onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
+                    {tagOptions.length ? (
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">Tags</span>
+                        <div className="catalog-selector__filterTags">
+                          {tagOptions.map((tag) => (
+                            <button
+                              key={tag}
+                              className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
-            </div>
           ) : null}
 
           {activeFilters.length ? (

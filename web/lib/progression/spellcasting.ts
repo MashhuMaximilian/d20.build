@@ -367,7 +367,21 @@ function createSelectionGroupFromRules(args: {
   spellcastingAbility?: string;
   title: string;
 }) {
-  const exactSelections = args.rules.reduce((sum, rule) => sum + (rule.number ?? 1), 0);
+  const exactSelections = args.rules.reduce((sum, rule) => {
+    const baseSelections = rule.number ?? 1;
+    const usesDynamicSlots = /\$\(spellcasting:slots\)/i.test(rule.supports ?? "");
+    const ruleLevel = rule.level ?? 1;
+    const repeatsPerLevel =
+      args.kind === "spellbook" &&
+      usesDynamicSlots &&
+      typeof rule.level === "number" &&
+      ruleLevel >= 1;
+    const occurrenceCount = repeatsPerLevel
+      ? Math.max(0, args.classLevel - ruleLevel + 1)
+      : 1;
+
+    return sum + baseSelections * occurrenceCount;
+  }, 0);
 
   return {
     id: `${args.ownerType}:${args.ownerLabel}:${args.kind}:${args.classLevel}:${args.title}`,
