@@ -1,6 +1,6 @@
 "use client";
 
-import { RichTextEditor } from "@/components/rich-text-editor";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import type { CharacterBackstory } from "@/lib/characters/types";
 
 type BackstoryStepProps = {
@@ -17,6 +17,7 @@ type BackstoryFieldConfig = {
   placeholder: string;
   compact?: boolean;
   layout: "small" | "medium" | "large";
+  slashContext: string;
 };
 
 const SMALL_FIELDS: BackstoryFieldConfig[] = [
@@ -27,6 +28,7 @@ const SMALL_FIELDS: BackstoryFieldConfig[] = [
     placeholder: "Write short personality bullets or a brief paragraph.",
     compact: true,
     layout: "small",
+    slashContext: "Personality traits",
   },
   {
     key: "ideals",
@@ -35,6 +37,7 @@ const SMALL_FIELDS: BackstoryFieldConfig[] = [
     placeholder: "Write ideals, motives, and values that guide decisions.",
     compact: true,
     layout: "small",
+    slashContext: "Ideals",
   },
   {
     key: "bonds",
@@ -43,6 +46,7 @@ const SMALL_FIELDS: BackstoryFieldConfig[] = [
     placeholder: "Write personal bonds, loyalties, debts, and attachments.",
     compact: true,
     layout: "small",
+    slashContext: "Bonds",
   },
   {
     key: "flaws",
@@ -51,6 +55,7 @@ const SMALL_FIELDS: BackstoryFieldConfig[] = [
     placeholder: "Write flaws, emotional weak spots, or self-sabotaging tendencies.",
     compact: true,
     layout: "small",
+    slashContext: "Flaws",
   },
 ];
 
@@ -61,6 +66,7 @@ const MEDIUM_FIELDS: BackstoryFieldConfig[] = [
     description: "Contacts, factions, mentors, rivals, patrons, and affiliations.",
     placeholder: "List allies, organizations, rivals, enemies, patrons, and faction ties.",
     layout: "medium",
+    slashContext: "Allies and organizations",
   },
   {
     key: "additionalFeatures",
@@ -68,6 +74,7 @@ const MEDIUM_FIELDS: BackstoryFieldConfig[] = [
     description: "Extra notes, hooks, quirks, obligations, appearance notes, and open threads.",
     placeholder: "Write additional hooks, quirks, rumors, obligations, and anything else worth tracking.",
     layout: "medium",
+    slashContext: "Additional features",
   },
 ];
 
@@ -77,6 +84,7 @@ const LARGE_FIELD: BackstoryFieldConfig = {
   description: "The full story of where they came from, what shaped them, and why they adventure now.",
   placeholder: "Write the character's longer story, important turning points, and current direction.",
   layout: "large",
+  slashContext: "Backstory",
 };
 
 function BackstoryField({
@@ -96,10 +104,11 @@ function BackstoryField({
         <span className="builder-panel__label">{config.label}</span>
         <p className="builder-summary__meta">{config.description}</p>
       </div>
-      <RichTextEditor
+      <MarkdownEditor
         compact={config.compact}
         onChange={onChange}
         placeholder={config.placeholder}
+        slashContext={config.slashContext}
         value={value}
       />
     </article>
@@ -113,15 +122,16 @@ export function BackstoryStep({ value, onChange }: BackstoryStepProps) {
         <span className="route-shell__tag">Backstory</span>
         <h2 className="route-shell__title">Write the roleplay notes in a real notebook space</h2>
         <p className="route-shell__copy">
-          These fields are optional and freeform. Use them for the parts of the character that should feel written by you,
-          not rolled from a background table.
+          These notes are optional and freeform. Use Markdown shortcuts as you type, or press <code>/</code> for headings,
+          lists, quotes, and character-note prompts.
         </p>
       </div>
 
       <div className="builder-panel builder-panel--compact backstory-step__help">
         <span className="builder-panel__label">Editor help</span>
         <p className="builder-summary__meta">
-          The editor supports headings, bold, italics, lists, and quotes. Use the toolbar or select text to get the floating formatting menu.
+          This editor is meant to feel like a notebook, not a form. Keep short list-like notes in the small cards, use the side-by-side
+          cards for relationships and extra hooks, and use the large backstory space for the longer narrative.
         </p>
       </div>
 

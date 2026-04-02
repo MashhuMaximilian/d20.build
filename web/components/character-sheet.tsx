@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { hasMarkdownContent, MarkdownRenderer } from "@/components/markdown-editor";
 import { getBuiltInSrdBackgrounds } from "@/lib/builtins/backgrounds";
 import { getBuiltInSrdClasses } from "@/lib/builtins/classes";
 import { getBuiltInSrdRaces } from "@/lib/builtins/races";
@@ -99,7 +100,7 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
   })();
   const improvementBonuses = getImprovementBonuses(draft.improvementSelections);
   const filledBackstoryEntries = Object.entries(draft.backstory).filter(([, value]) =>
-    value.replace(/<[^>]+>/g, "").trim(),
+    hasMarkdownContent(value),
   );
 
   return (
@@ -200,10 +201,7 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
                         ? "Additional features"
                         : key.charAt(0).toUpperCase() + key.slice(1)}
                   </strong>
-                  <div
-                    className="backstory-step__rendered"
-                    dangerouslySetInnerHTML={{ __html: value }}
-                  />
+                  <MarkdownRenderer compact value={value} />
                 </article>
               ))}
             </div>

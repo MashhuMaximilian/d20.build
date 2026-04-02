@@ -10,6 +10,7 @@ import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector
 import { EquipmentStep } from "@/components/equipment-step";
 import { FeatsAsiStep } from "@/components/feats-asi-step";
 import { LevelingStep } from "@/components/leveling-step";
+import { getMarkdownPreview, hasMarkdownContent } from "@/components/markdown-editor";
 import { ProgressionChoicesStep } from "@/components/progression-choices-step";
 import { SpellcastingStep } from "@/components/spellcasting-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
@@ -2273,9 +2274,9 @@ export function BuilderEditor({
                   <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
                   <p className="builder-summary__meta">
                     Backstory notes:{" "}
-                    {Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length
-                      ? `${Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length} section${
-                          Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length === 1 ? "" : "s"
+                    {Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length
+                      ? `${Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length} section${
+                          Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length === 1 ? "" : "s"
                         } filled`
                       : "None yet"}
                   </p>
@@ -2389,10 +2390,10 @@ export function BuilderEditor({
 
               <article className="builder-review__card">
                 <span className="builder-panel__label">Backstory</span>
-                {Object.entries(draft.backstory).some(([, value]) => value.replace(/<[^>]+>/g, "").trim()) ? (
+                {Object.entries(draft.backstory).some(([, value]) => hasMarkdownContent(value)) ? (
                   <ul className="route-shell__list">
                     {Object.entries(draft.backstory)
-                      .filter(([, value]) => value.replace(/<[^>]+>/g, "").trim())
+                      .filter(([, value]) => hasMarkdownContent(value))
                       .map(([key, value]) => (
                         <li key={key}>
                           {key === "alliesAndOrganizations"
@@ -2400,8 +2401,7 @@ export function BuilderEditor({
                             : key === "additionalFeatures"
                               ? "Additional features"
                               : key.charAt(0).toUpperCase() + key.slice(1)}
-                          : {value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 100)}
-                          {value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length > 100 ? "..." : ""}
+                          : {getMarkdownPreview(value, 100)}
                         </li>
                       ))}
                   </ul>

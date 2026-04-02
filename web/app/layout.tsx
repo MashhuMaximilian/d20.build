@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
 
 import { SiteShell } from "@/components/site-shell";
 
