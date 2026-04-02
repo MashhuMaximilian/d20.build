@@ -15,6 +15,7 @@ type BuilderCatalogShellProps = {
   initialClasses: BuiltInClassRecord[];
   initialDraft?: CharacterDraft;
   initialFeats: BuiltInElement[];
+  initialProgressionElements?: readonly BuiltInElement[];
   initialRaces: BuiltInRaceRecord[];
   initialSpells: BuiltInElement[];
 };
@@ -24,6 +25,7 @@ export function BuilderCatalogShell({
   initialClasses,
   initialDraft,
   initialFeats,
+  initialProgressionElements = [],
   initialRaces,
   initialSpells,
 }: BuilderCatalogShellProps) {
@@ -31,6 +33,7 @@ export function BuilderCatalogShell({
     backgrounds: initialBackgrounds,
     classes: initialClasses,
     feats: initialFeats,
+    progressionElements: [...initialProgressionElements],
     races: initialRaces,
     spells: initialSpells,
   });
@@ -63,6 +66,7 @@ export function BuilderCatalogShell({
       classes={catalogs.classes}
       feats={catalogs.feats}
       initialDraft={initialDraft}
+      progressionElements={catalogs.progressionElements}
       races={catalogs.races}
       spells={catalogs.spells}
     />

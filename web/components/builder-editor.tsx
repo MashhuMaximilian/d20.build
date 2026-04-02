@@ -61,6 +61,7 @@ type BuilderEditorProps = {
   classes: BuiltInClassRecord[];
   feats: BuiltInElement[];
   initialDraft?: CharacterDraft;
+  progressionElements: BuiltInElement[];
   races: BuiltInRaceRecord[];
   spells: BuiltInElement[];
 };
@@ -576,6 +577,7 @@ export function BuilderEditor({
   classes,
   feats,
   initialDraft,
+  progressionElements,
   races,
   spells,
 }: BuilderEditorProps) {
@@ -913,15 +915,23 @@ export function BuilderEditor({
   const progressionGroups = useMemo(
     () =>
       deriveProgressionChoiceGroups({
-        allClassRecords: classes,
         activeClassRecords: classRecordsByEntry,
         classEntries: draft.classEntries,
         feats,
+        progressionElements,
         selections: draft.progressionSelections,
         spells,
         context: requirementContext,
       }),
-    [classRecordsByEntry, classes, draft.classEntries, draft.progressionSelections, feats, requirementContext, spells],
+    [
+      classRecordsByEntry,
+      draft.classEntries,
+      draft.progressionSelections,
+      feats,
+      progressionElements,
+      requirementContext,
+      spells,
+    ],
   );
   const selectedProgressionElements = useMemo(
     () => getSelectedProgressionOptionElements(progressionGroups, draft.progressionSelections),

@@ -73,17 +73,71 @@ function hasSupportTokenOverlap(left: string[], right: string[]) {
   return left.some((token) => rightSet.has(token));
 }
 
+function buildElementTokenSet(element: BuiltInElement) {
+  return new Set(
+    [
+      normalizeToken(element.id),
+      normalizeToken(element.name),
+      ...element.supports.map((support) => normalizeToken(support)),
+      ...element.supports.flatMap((support) => splitSupportTokens(support)),
+    ].filter(Boolean),
+  );
+}
+
+function buildRuleFamilyTokens(
+  feature: BuiltInElement,
+  rule: Extract<BuiltInRule, { kind: "select" }>,
+) {
+  return [
+    ...splitSupportTokens(rule.supports),
+    ...splitSupportTokens(rule.name),
+    normalizeToken(rule.name),
+    normalizeToken(feature.name),
+  ].filter(Boolean);
+}
+
+function isGenericSpellcastingRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
+  if (rule.type !== "Spell") {
+    return false;
+  }
+
+  const normalizedName = normalizeToken(rule.name);
+  const supportString = normalizeToken(rule.supports ?? "");
+  return (
+    normalizedName.includes("cantrip") ||
+    normalizedName.includes("spellbook") ||
+    supportString.includes("$(spellcasting:list)") ||
+    supportString.includes("$(spellcasting:slots)") ||
+    supportString.includes(",0") ||
+    supportString.startsWith("0,")
+  );
+}
+
+function isSpecialProgressionSpellRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
+  if (rule.type !== "Spell") {
+    return false;
+  }
+
+  const tokens = [
+    ...splitSupportTokens(rule.supports),
+    ...splitSupportTokens(rule.name),
+    normalizeToken(rule.name),
+  ];
+  return tokens.some(
+    (token) =>
+      token.includes("discipline") ||
+      token.includes("psionic") ||
+      token.includes("mystic order") ||
+      token.includes("talent"),
+  );
+}
+
 function collectOptionPool(
-  classRecords: BuiltInClassRecord[],
+  progressionElements: BuiltInElement[],
   feats: BuiltInElement[],
   spells: BuiltInElement[],
 ) {
-  const classFeatures = classRecords.flatMap((record) => record.features);
-  const subclassFeatures = classRecords.flatMap((record) =>
-    record.subclassSteps.flatMap((step) => step.options.flatMap((option) => option.features)),
-  );
-
-  return [...classFeatures, ...subclassFeatures, ...feats, ...spells].reduce<Map<string, BuiltInElement>>(
+  return [...progressionElements, ...feats, ...spells].reduce<Map<string, BuiltInElement>>(
     (map, element) => {
       if (!map.has(element.id)) {
         map.set(element.id, element);
@@ -101,7 +155,7 @@ function resolveRuleOptions(
   context: RequirementContext,
 ) {
   const allOptions = [...optionPool.values()].filter((element) => element.type === rule.type);
-  const familyTokens = splitSupportTokens(rule.supports);
+  const familyTokens = buildRuleFamilyTokens(feature, rule);
 
   const byChoices = rule.choices?.length
     ? rule.choices
@@ -122,12 +176,8 @@ function resolveRuleOptions(
 
   const directMatches = familyTokens.length
     ? allOptions.filter((element) => {
-        const optionTokens = element.supports.map((support) => normalizeToken(support));
-        const matchesFamily = familyTokens.some(
-          (token) =>
-            normalizeToken(element.id) === token ||
-            optionTokens.includes(token),
-        );
+        const optionTokens = buildElementTokenSet(element);
+        const matchesFamily = familyTokens.some((token) => optionTokens.has(token));
 
         if (!matchesFamily) {
           return false;
@@ -142,7 +192,7 @@ function resolveRuleOptions(
               childRule.kind === "select" &&
               childRule.type === rule.type &&
               (normalizeToken(childRule.name) === normalizeToken(rule.name) ||
-                hasSupportTokenOverlap(splitSupportTokens(childRule.supports), familyTokens)),
+                hasSupportTokenOverlap(buildRuleFamilyTokens(element, childRule), familyTokens)),
           );
 
         return !isShellElement;
@@ -180,9 +230,8 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
     (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
-      (rule.type !== "Spell" ||
-        normalizeToken(rule.name).includes("discipline") ||
-        splitSupportTokens(rule.supports).some((token) => token.includes("discipline"))) &&
+      !isGenericSpellcastingRule(rule) &&
+      (rule.type !== "Spell" || isSpecialProgressionSpellRule(rule)) &&
       !isImprovementRule(rule) &&
       (!rule.level || rule.level <= entryLevel),
   );
@@ -265,15 +314,15 @@ function extendRequirementContext(
 }
 
 export function deriveProgressionChoiceGroups(args: {
-  allClassRecords: BuiltInClassRecord[];
   activeClassRecords: Array<BuiltInClassRecord | null>;
   classEntries: CharacterClassEntry[];
   feats: BuiltInElement[];
+  progressionElements: BuiltInElement[];
   selections: Record<string, string[]>;
   spells: BuiltInElement[];
   context: RequirementContext;
 }) {
-  const optionPool = collectOptionPool(args.allClassRecords, args.feats, args.spells);
+  const optionPool = collectOptionPool(args.progressionElements, args.feats, args.spells);
 
   const baseGroups = args.activeClassRecords.flatMap((record, classEntryIndex) => {
     const entry = args.classEntries[classEntryIndex];

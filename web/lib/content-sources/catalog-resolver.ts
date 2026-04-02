@@ -447,12 +447,22 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
     ...builtInSpellElements,
     ...importedElements.filter((element) => ["Spell"].includes(element.type)),
   ]);
+  const progressionElements = dedupeElements([
+    ...classElements.filter((element) =>
+      ["Class Feature", "Archetype Feature"].includes(element.type),
+    ),
+    ...featElements.filter((element) =>
+      ["Feat", "Feat Feature", "Ability Score Improvement"].includes(element.type),
+    ),
+    ...spellElements,
+  ]);
 
   return {
     races: buildRaceRecords(raceElements),
     classes: buildClassRecords(classElements),
     backgrounds: buildBackgroundRecords(backgroundElements),
     feats: featElements,
+    progressionElements,
     spells: spellElements,
   };
 }
