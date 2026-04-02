@@ -7,6 +7,8 @@ export type BuiltInElementType =
   | "Class Feature"
   | "Feat"
   | "Feat Feature"
+  | "Language"
+  | "Proficiency"
   | "Spell"
   | "Archetype"
   | "Archetype Feature"

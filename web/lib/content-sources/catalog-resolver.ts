@@ -34,6 +34,8 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Class Feature",
   "Feat",
   "Feat Feature",
+  "Language",
+  "Proficiency",
   "Spell",
   "Archetype",
   "Archetype Feature",
@@ -448,8 +450,16 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
     ...importedElements.filter((element) => ["Spell"].includes(element.type)),
   ]);
   const progressionElements = dedupeElements([
+    ...raceElements.filter((element) =>
+      ["Race", "Sub Race", "Racial Trait", "Race Variant", "Ability Score Improvement", "Language", "Proficiency"].includes(
+        element.type,
+      ),
+    ),
     ...classElements.filter((element) =>
-      ["Class Feature", "Archetype Feature"].includes(element.type),
+      ["Class Feature", "Archetype Feature", "Language", "Proficiency"].includes(element.type),
+    ),
+    ...backgroundElements.filter((element) =>
+      ["Background Feature", "Background Variant", "Language", "Proficiency"].includes(element.type),
     ),
     ...featElements.filter((element) =>
       ["Feat", "Feat Feature", "Ability Score Improvement"].includes(element.type),

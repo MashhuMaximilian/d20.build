@@ -102,9 +102,9 @@ export function ProgressionChoicesStep({
   if (!groups.length) {
     return (
       <section className="builder-panel">
-        <span className="builder-panel__label">Class choices</span>
+        <span className="builder-panel__label">Choices</span>
         <p className="route-shell__copy">
-          No level-gated class-specific choice families are unlocked for the current build yet.
+          No unresolved progression, proficiency, or nested choice families are unlocked for the current build yet.
         </p>
       </section>
     );
@@ -141,10 +141,10 @@ export function ProgressionChoicesStep({
   return (
     <section className="builder-panel progression-step">
       <div className="builder-stepPanel__intro">
-        <span className="route-shell__tag">Class choices</span>
-        <h2 className="route-shell__title">Resolve level-gated class families and nested picks</h2>
+        <span className="route-shell__tag">Choices</span>
+        <h2 className="route-shell__title">Resolve unlocked choice families and nested picks</h2>
         <p className="route-shell__copy">
-          This step handles class-specific choice systems like invocations, disciplines, fighting styles, metamagic-like picks, and other recursive family nodes unlocked by your current build.
+          This step handles class-specific systems like invocations, disciplines, fighting styles, nested subclass picks, and broader proficiency or language choices unlocked by your build.
         </p>
       </div>
 

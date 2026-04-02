@@ -421,7 +421,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Choose classes", done: draft.classEntries.every((entry) => Boolean(entry.classId)) },
     { label: "Distribute levels", done: !flags.levelingValidationMessage },
     { label: "Choose subclass", done: !flags.needsSubclass || flags.subclassesComplete },
-    { label: "Resolve class choices", done: flags.progressionValidationMessages.length === 0 },
+    { label: "Resolve choices", done: flags.progressionValidationMessages.length === 0 },
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
     { label: "Resolve feats / ASI", done: flags.improvementValidationMessages.length === 0 },
@@ -916,9 +916,12 @@ export function BuilderEditor({
     () =>
       deriveProgressionChoiceGroups({
         activeClassRecords: classRecordsByEntry,
+        activeBackground: selectedBackground ?? null,
+        activeRace: selectedRace ?? null,
         classEntries: draft.classEntries,
         feats,
         progressionElements,
+        selectedSubrace: selectedSubrace ?? null,
         selections: draft.progressionSelections,
         spells,
         context: requirementContext,
@@ -930,6 +933,9 @@ export function BuilderEditor({
       feats,
       progressionElements,
       requirementContext,
+      selectedBackground,
+      selectedRace,
+      selectedSubrace,
       spells,
     ],
   );
@@ -1220,8 +1226,8 @@ export function BuilderEditor({
             {
               id: "progression",
               kind: "progression" as const,
-              label: "Class choices",
-              description: "Resolve invocations, disciplines, fighting styles, metamagic-like picks, and other unlocked class families.",
+              label: "Choices",
+              description: "Resolve invocations, disciplines, proficiencies, fighting styles, and other unlocked nested families.",
             },
           ]
         : []),
