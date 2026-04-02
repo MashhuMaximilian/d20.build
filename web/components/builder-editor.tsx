@@ -606,6 +606,7 @@ export function BuilderEditor({
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState("foundation");
+  const [showNavigationWarnings, setShowNavigationWarnings] = useState(false);
   const [activeClassEntryIndex, setActiveClassEntryIndex] = useState(0);
   const primaryClassEntry = useMemo(() => getPrimaryClassEntry(draft), [draft]);
   const totalCharacterLevel = useMemo(() => getTotalCharacterLevel(draft), [draft]);
@@ -1432,6 +1433,10 @@ export function BuilderEditor({
   }, [currentStep, steps]);
 
   useEffect(() => {
+    setShowNavigationWarnings(false);
+  }, [currentStep]);
+
+  useEffect(() => {
     if (activeClassEntryIndex >= draft.classEntries.length) {
       setActiveClassEntryIndex(Math.max(0, draft.classEntries.length - 1));
     }
@@ -1710,7 +1715,7 @@ export function BuilderEditor({
   const canAdvance = (() => {
     switch (activeStep.kind) {
       case "foundation":
-        return !abilityValidationMessage && !levelingValidationMessage;
+        return Boolean(draft.name.trim()) && !abilityValidationMessage && !levelingValidationMessage;
       case "race":
         return Boolean(draft.raceId);
       case "subrace":
@@ -2527,7 +2532,7 @@ export function BuilderEditor({
           <div className={`builder-navigation__summary${navigationWarnings.length ? " builder-navigation__summary--warning" : ""}`}>
             <strong>{activeStep.label}</strong>
             <p>{activeStep.description}</p>
-            {navigationWarnings.length ? (
+            {showNavigationWarnings && navigationWarnings.length ? (
               <div className="builder-navigation__warningList">
                 {navigationWarnings.map((warning) => (
                   <p className="auth-card__status auth-card__status--error builder-navigation__warningItem" key={warning}>
@@ -2543,7 +2548,10 @@ export function BuilderEditor({
             <button
               className="button button--secondary"
               type="button"
-              onClick={() => setCurrentStep(previousStep.id)}
+              onClick={() => {
+                setShowNavigationWarnings(false);
+                setCurrentStep(previousStep.id);
+              }}
             >
               Back to {previousStep.label}
             </button>
@@ -2552,8 +2560,18 @@ export function BuilderEditor({
             <button
               className="button"
               type="button"
-              disabled={!canAdvance}
-              onClick={() => setCurrentStep(nextStep.id)}
+              onClick={() => {
+                const nextStepIndex = steps.findIndex((step) => step.id === nextStep.id);
+                const isNextUnlocked = nextStepIndex <= furthestUnlockedIndex;
+
+                if (!canAdvance || !isNextUnlocked) {
+                  setShowNavigationWarnings(true);
+                  return;
+                }
+
+                setShowNavigationWarnings(false);
+                setCurrentStep(nextStep.id);
+              }}
             >
               Continue to {nextStep.label}
             </button>
