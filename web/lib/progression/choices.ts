@@ -17,7 +17,7 @@ export type ProgressionChoiceOption = {
 export type ProgressionChoiceGroup = {
   id: string;
   classEntryIndex: number;
-  ownerType: "class" | "subclass" | "race" | "background" | "nested";
+  ownerType: "class" | "subclass" | "race" | "background" | "feat" | "nested";
   ownerLabel: string;
   featureId: string;
   featureName: string;
@@ -498,7 +498,7 @@ function resolveRuleOptions(
 
 function buildGroupId(
   classEntryIndex: number,
-  ownerType: "class" | "subclass" | "race" | "background" | "nested",
+  ownerType: "class" | "subclass" | "race" | "background" | "feat" | "nested",
   featureId: string,
   rule: Extract<BuiltInRule, { kind: "select" }>,
 ) {
@@ -530,7 +530,7 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
 
 function buildGroupsFromFeatures(args: {
   classEntryIndex: number;
-  ownerType: "class" | "subclass" | "race" | "background" | "nested";
+  ownerType: "class" | "subclass" | "race" | "background" | "feat" | "nested";
   ownerLabel: string;
   entryLevel: number;
   features: BuiltInElement[];
@@ -631,6 +631,7 @@ function extendRequirementContext(
 export function deriveProgressionChoiceGroups(args: {
   activeClassRecords: Array<BuiltInClassRecord | null>;
   activeBackground: BuiltInBackgroundRecord | null;
+  activeFeats: BuiltInElement[];
   activeRace: BuiltInRaceRecord | null;
   classEntries: CharacterClassEntry[];
   feats: BuiltInElement[];
@@ -711,7 +712,19 @@ export function deriveProgressionChoiceGroups(args: {
       })
     : [];
 
-  const groups = [...raceGroups, ...backgroundGroups, ...classGroups];
+  const featGroups = args.activeFeats.flatMap((feat) =>
+    buildGroupsFromFeatures({
+      classEntryIndex: -1,
+      ownerType: "feat",
+      ownerLabel: feat.name,
+      entryLevel: Math.max(args.context.totalLevel, 1),
+      features: [feat],
+      optionPool,
+      context: args.context,
+    }),
+  );
+
+  const groups = [...raceGroups, ...backgroundGroups, ...featGroups, ...classGroups];
   const processedSelectedKeys = new Set<string>();
   let frontier = getSelectedProgressionOptionEntries(groups, args.selections);
 

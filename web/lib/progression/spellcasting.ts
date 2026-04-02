@@ -22,7 +22,7 @@ export type SpellSelectionGroup = {
   title: string;
   description: string;
   ownerLabel: string;
-  ownerType: "race" | "subrace" | "class" | "subclass";
+  ownerType: "race" | "subrace" | "class" | "subclass" | "feat";
   kind: SpellSelectionGroupKind;
   spellcastingAbility?: string;
   exactSelections?: number;
@@ -34,6 +34,7 @@ export type SpellSelectionGroup = {
 };
 
 type DeriveSpellcastingGroupsArgs = {
+  activeFeats: BuiltInElement[];
   classRecordsByEntry: Array<BuiltInClassRecord | null>;
   classEntries: CharacterClassEntry[];
   effectiveAbilities: Record<AbilityKey, number>;
@@ -562,6 +563,7 @@ function buildGroupsForSource(
 }
 
 export function deriveSpellcastingGroups({
+  activeFeats,
   classRecordsByEntry,
   classEntries,
   effectiveAbilities,
@@ -587,6 +589,27 @@ export function deriveSpellcastingGroups({
       spellcastingAbility: trait.spellcasting?.ability?.toLowerCase(),
       rules: trait.rules,
       spellcastingRules: trait.spellcasting?.rules,
+    });
+  });
+
+  activeFeats.forEach((feat) => {
+    const hasSpellRules =
+      Boolean(feat.spellcasting) ||
+      feat.rules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
+      feat.rules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
+
+    if (!hasSpellRules) {
+      return;
+    }
+
+    sources.push({
+      currentLevel: totalLevel,
+      fallbackListKey: feat.spellcasting?.name || feat.name,
+      ownerLabel: feat.name,
+      ownerType: "feat",
+      spellcastingAbility: feat.spellcasting?.ability?.toLowerCase(),
+      rules: feat.rules,
+      spellcastingRules: feat.spellcasting?.rules ?? feat.rules,
     });
   });
 
