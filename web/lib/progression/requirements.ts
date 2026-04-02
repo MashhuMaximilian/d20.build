@@ -130,6 +130,14 @@ function normalizeRequirementKey(value: string) {
   return normalizeRequirementText(value).replace(/[_-]+/g, " ");
 }
 
+function normalizeRequirementCandidate(value: string) {
+  return normalizeRequirementText(value)
+    .replace(/\b(?:a|an|the)\b/g, " ")
+    .replace(/\b(?:proficiency|skill|skills|tool|tools|kit|kits|armor|weapon|weapons|language|languages)\b/g, " $& ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function humanizeRequirementId(value: string) {
   return value
     .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
@@ -304,11 +312,20 @@ export function getRequirementFailures(
     failures.push("Requires spellcasting.");
   }
 
+  if (
+    /(ability to cast at least one spell|ability to cast one spell|ability to cast a spell|pact magic feature)/i.test(
+      fallbackText,
+    ) &&
+    !context.hasSpellcasting
+  ) {
+    failures.push("Requires spellcasting.");
+  }
+
   const selectedProficiencyNames = new Set(
     [
       ...context.selectedProficiencyNames,
       ...context.selectedProficiencyIds.map(humanizeRequirementId),
-    ].map(normalizeRequirementText),
+    ].map(normalizeRequirementCandidate),
   );
   const selectedLanguageNames = new Set(
     [
@@ -321,7 +338,7 @@ export function getRequirementFailures(
     ...fallbackText.matchAll(/proficiency\s+(?:with|in)\s+([A-Za-z'’ -]+?)(?:\s+skill|\s+tool|\s+tools|\s+kit|\s+language)?(?=[,.;)]|$)/gi),
   ];
   proficiencyMatches.forEach((match) => {
-    const required = normalizeRequirementText(match[1].trim());
+    const required = normalizeRequirementCandidate(match[1].trim());
     const hasMatch = [...selectedProficiencyNames].some(
       (name) => name === required || name.includes(required) || required.includes(name),
     );

@@ -46,6 +46,13 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
 ]);
 
 function extractPrerequisiteText(element: ImportedElement) {
+  const cleanPrerequisite = (value: string) =>
+    value
+      .replace(/\s+/g, " ")
+      .replace(/\b(?:As part of|You can|You may|Once per|When you)\b[\s\S]*$/i, "")
+      .replace(/[.,;:]\s*$/g, "")
+      .trim();
+
   const rawPrerequisite =
     typeof element.raw_element?.prerequisite === "string"
       ? element.raw_element.prerequisite
@@ -54,13 +61,13 @@ function extractPrerequisiteText(element: ImportedElement) {
         : undefined;
 
   if (rawPrerequisite?.trim()) {
-    return rawPrerequisite.trim();
+    return cleanPrerequisite(rawPrerequisite);
   }
 
   if (element.description_html) {
     const inlineMatch = element.description_html.match(/<i>\s*Prerequisite:\s*([\s\S]*?)<\/i>/i);
     if (inlineMatch?.[1]) {
-      return inlineMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      return cleanPrerequisite(inlineMatch[1].replace(/<[^>]+>/g, " "));
     }
   }
 
@@ -68,7 +75,7 @@ function extractPrerequisiteText(element: ImportedElement) {
   const match = descriptionText.match(
     /Prerequisite:\s*(.+?)(?=(?:\r?\n)|(?:\s{2,})|(?:\bYou\b)|(?:\bYour\b)|(?:\.))/i,
   );
-  return match?.[1]?.trim() ?? "";
+  return match?.[1] ? cleanPrerequisite(match[1]) : "";
 }
 
 function extractRequirementsText(element: ImportedElement) {

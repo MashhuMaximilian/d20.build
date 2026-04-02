@@ -380,6 +380,7 @@ export function FeatsAsiStep({
                                 const isSelected = selection.featId === feat.id;
                                 const failures = featFailuresById[feat.id] ?? [];
                                 const canSelect = failures.length === 0;
+                                const hasInvalidSelection = isSelected && failures.length > 0;
                                 return (
                                   <button
                                     key={feat.id}
@@ -401,10 +402,21 @@ export function FeatsAsiStep({
                                       }
                                     }}
                                   >
-                                    <strong>{feat.name}</strong>
+                                    <div className="feats-step__optionHeader">
+                                      <strong>{feat.name}</strong>
+                                      <div className="feats-step__optionBadges">
+                                        {hasInvalidSelection ? (
+                                          <span className="catalog-selector__selectedBadge catalog-selector__selectedBadge--error">
+                                            Prerequisites not met
+                                          </span>
+                                        ) : isSelected ? (
+                                          <span className="catalog-selector__selectedBadge">Selected</span>
+                                        ) : null}
+                                      </div>
+                                    </div>
                                     <span>{feat.source}</span>
                                     {!canSelect ? (
-                                      <small className="auth-card__status auth-card__status--error">
+                                      <small className={`auth-card__status auth-card__status--error${hasInvalidSelection ? " feats-step__optionError--active" : ""}`}>
                                         {failures[0]}
                                       </small>
                                     ) : null}

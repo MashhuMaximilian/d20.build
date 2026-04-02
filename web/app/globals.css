@@ -1335,6 +1335,11 @@ a {
   border: 1px solid rgba(122, 32, 13, 0.1);
 }
 
+.catalog-selector__selectedBadge--error {
+  background: #c43c2f;
+  border-color: rgba(111, 18, 13, 0.18);
+}
+
 .catalog-selector__row--preview,
 .catalog-selector__row--selected {
   border-color: var(--accent);
@@ -1962,6 +1967,26 @@ a {
 .feats-step__option--selected {
   border-color: rgba(146, 38, 16, 0.38);
   background: rgba(146, 38, 16, 0.06);
+}
+
+.feats-step__optionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.feats-step__optionBadges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.feats-step__optionError--active {
+  color: #b4261b;
+  font-weight: 700;
 }
 
 .feats-step__featPreview {
