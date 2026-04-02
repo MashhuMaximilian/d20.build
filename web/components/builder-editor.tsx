@@ -1378,12 +1378,6 @@ export function BuilderEditor({
         description: "Choose the story scaffold that grants proficiencies, features, and choices.",
       },
       {
-        id: "backstory",
-        kind: "backstory",
-        label: "Backstory",
-        description: "Write ideals, flaws, allies, and history in freeform notes instead of forcing table-roll lists.",
-      },
-      {
         id: "feats",
         kind: "feats",
         label: "Feats / ASI",
@@ -1404,6 +1398,12 @@ export function BuilderEditor({
         kind: "equipment",
         label: "Equipment",
         description: "Choose starting gear packages and auto-add the fixed gear from class and background.",
+      },
+      {
+        id: "backstory",
+        kind: "backstory",
+        label: "Backstory",
+        description: "Write ideals, flaws, allies, and history in freeform notes instead of forcing table-roll lists.",
       },
       {
         id: "review",

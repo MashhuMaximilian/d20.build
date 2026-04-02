@@ -1975,23 +1975,37 @@ a {
 }
 
 .backstory-step {
-  gap: 16px;
+  gap: 18px;
 }
 
 .backstory-step__help {
   gap: 8px;
 }
 
-.backstory-step__grid,
+.backstory-step__smallGrid,
+.backstory-step__mediumGrid,
 .backstory-step__sheetGrid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.backstory-step__smallGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.backstory-step__mediumGrid,
+.backstory-step__sheetGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .backstory-step__field,
 .backstory-step__sheetCard {
   gap: 12px;
+  align-content: start;
+}
+
+.backstory-step__field--large {
+  min-height: 30rem;
 }
 
 .backstory-step__fieldHeader {
@@ -2004,55 +2018,83 @@ a {
   gap: 6px;
 }
 
-.backstory-step__toolbar {
+.rich-text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rich-text-editor__toolbar,
+.rich-text-editor__bubbleMenu {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
-.backstory-step__toolbarButton {
+.rich-text-editor__bubbleMenu {
+  padding: 8px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.98);
+  box-shadow: 0 10px 24px rgba(77, 39, 20, 0.12);
+}
+
+.rich-text-editor__toolbar {
+  padding: 10px 12px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.92);
+}
+
+.rich-text-editor__toolbarButton {
   min-width: 0;
 }
 
-.backstory-step__toolbarButton--active {
+.rich-text-editor__toolbarButton--active {
   border-color: rgba(146, 38, 16, 0.3);
   background: rgba(146, 38, 16, 0.08);
 }
 
-.backstory-step__editor {
-  min-height: 180px;
-  padding: 12px 14px;
+.rich-text-editor__content {
+  min-height: 16rem;
+  padding: 16px 18px;
   border: 1px solid rgba(146, 38, 16, 0.14);
-  border-radius: 16px;
+  border-radius: 18px;
   background: rgba(255, 252, 246, 0.96);
   color: var(--foreground);
   line-height: 1.55;
   outline: none;
 }
 
-.backstory-step__editor--short {
-  min-height: 120px;
+.rich-text-editor__content--compact {
+  min-height: 10rem;
 }
 
-.backstory-step__editor p {
+.rich-text-editor__content p,
+.backstory-step__rendered p {
   margin: 0 0 0.8em;
 }
 
-.backstory-step__editor p:last-child,
-.backstory-step__editor ul:last-child,
-.backstory-step__editor ol:last-child,
-.backstory-step__editor blockquote:last-child {
+.rich-text-editor__content p:last-child,
+.rich-text-editor__content ul:last-child,
+.rich-text-editor__content ol:last-child,
+.rich-text-editor__content blockquote:last-child,
+.backstory-step__rendered p:last-child,
+.backstory-step__rendered ul:last-child,
+.backstory-step__rendered ol:last-child,
+.backstory-step__rendered blockquote:last-child {
   margin-bottom: 0;
 }
 
-.backstory-step__editor ul,
-.backstory-step__editor ol,
+.rich-text-editor__content ul,
+.rich-text-editor__content ol,
 .backstory-step__rendered ul,
 .backstory-step__rendered ol {
   padding-left: 1.25rem;
 }
 
-.backstory-step__editor blockquote,
+.rich-text-editor__content blockquote,
 .backstory-step__rendered blockquote {
   margin: 0;
   padding-left: 12px;
@@ -2060,19 +2102,19 @@ a {
   color: var(--muted);
 }
 
-.backstory-step__editor h2,
+.rich-text-editor__content h2,
 .backstory-step__rendered h2 {
   font-size: 1.1rem;
   color: var(--accent-strong);
 }
 
-.backstory-step__editor h3,
+.rich-text-editor__content h3,
 .backstory-step__rendered h3 {
   font-size: 0.98rem;
   color: var(--accent-strong);
 }
 
-.backstory-step__editor .is-editor-empty:first-child::before {
+.rich-text-editor__content .is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: rgba(110, 87, 74, 0.72);
   float: left;
@@ -2087,6 +2129,24 @@ a {
 .backstory-step__rendered {
   color: var(--foreground);
   line-height: 1.55;
+}
+
+@media (max-width: 1200px) {
+  .backstory-step__smallGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .backstory-step__smallGrid,
+  .backstory-step__mediumGrid,
+  .backstory-step__sheetGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .backstory-step__field--large {
+    min-height: 24rem;
+  }
 }
 
 .spellcasting-step {
