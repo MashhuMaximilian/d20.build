@@ -130,6 +130,19 @@ function normalizeRequirementKey(value: string) {
   return normalizeRequirementText(value).replace(/[_-]+/g, " ");
 }
 
+function humanizeRequirementId(value: string) {
+  return value
+    .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
+    .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^ID_LANGUAGE_/, "")
+    .replace(/^ID_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bTools\b/g, "Tools")
+    .replace(/\bCant\b/g, "Cant");
+}
+
 function buildSelectedIdSet(context: RequirementContext) {
   return new Set(
     [
@@ -290,6 +303,47 @@ export function getRequirementFailures(
   if (normalizedPrerequisite.includes("spellcasting") && !context.hasSpellcasting) {
     failures.push("Requires spellcasting.");
   }
+
+  const selectedProficiencyNames = new Set(
+    [
+      ...context.selectedProficiencyNames,
+      ...context.selectedProficiencyIds.map(humanizeRequirementId),
+    ].map(normalizeRequirementText),
+  );
+  const selectedLanguageNames = new Set(
+    [
+      ...context.selectedLanguageNames,
+      ...context.selectedLanguageIds.map(humanizeRequirementId),
+    ].map(normalizeRequirementText),
+  );
+
+  const proficiencyMatches = [
+    ...fallbackText.matchAll(/proficiency\s+(?:with|in)\s+([A-Za-z'’ -]+?)(?:\s+skill|\s+tool|\s+tools|\s+kit|\s+language)?(?=[,.;)]|$)/gi),
+  ];
+  proficiencyMatches.forEach((match) => {
+    const required = normalizeRequirementText(match[1].trim());
+    const hasMatch = [...selectedProficiencyNames].some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasMatch) {
+      failures.push(`Requires proficiency with ${match[1].trim()}.`);
+    }
+  });
+
+  const languageMatches = [
+    ...fallbackText.matchAll(/(?:speak|read|write|know)\s+([A-Za-z'’ -]+?)(?:\s+language)?(?=[,.;)]|$)/gi),
+  ];
+  languageMatches.forEach((match) => {
+    const required = normalizeRequirementText(match[1].trim());
+    const hasMatch = [...selectedLanguageNames].some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasMatch) {
+      failures.push(`Requires ${match[1].trim()} language proficiency.`);
+    }
+  });
 
   const levelMatch = fallbackText.match(/(\d+)(?:st|nd|rd|th)-level/i);
   if (levelMatch && context.totalLevel < Number(levelMatch[1])) {

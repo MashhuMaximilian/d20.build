@@ -36,6 +36,7 @@ export function ProgressionChoicesStep({
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [interactionWarning, setInteractionWarning] = useState("");
   const [tableSort, setTableSort] = useState<TableSortState<"name" | "source" | "summary" | "impact">>({
     key: "name",
     direction: "asc",
@@ -46,6 +47,10 @@ export function ProgressionChoicesStep({
       setActiveGroupId(groups[0]?.id ?? "");
     }
   }, [activeGroupId, groups]);
+
+  useEffect(() => {
+    setInteractionWarning("");
+  }, [activeGroupId]);
 
   const activeGroup = groups.find((group) => group.id === activeGroupId) ?? null;
   const query = activeGroup ? queries[activeGroup.id]?.trim().toLowerCase() ?? "" : "";
@@ -115,6 +120,18 @@ export function ProgressionChoicesStep({
       return;
     }
 
+    const option = activeGroup.options.find((entry) => entry.element.id === optionId);
+    if (!option) {
+      return;
+    }
+
+    if (option.requirementFailures.length && !(selections[activeGroup.id] ?? []).includes(optionId)) {
+      setInteractionWarning(option.requirementFailures[0] ?? "That option does not meet its prerequisites yet.");
+      return;
+    }
+
+    setInteractionWarning("");
+
     const current = selections[activeGroup.id] ?? [];
     const alreadySelected = current.includes(optionId);
 
@@ -167,6 +184,12 @@ export function ProgressionChoicesStep({
 
       {activeGroup ? (
         <>
+          {interactionWarning ? (
+            <div className="builder-warnings">
+              <p className="auth-card__status auth-card__status--error">{interactionWarning}</p>
+            </div>
+          ) : null}
+
           <div className="catalog-selector__mobileToggles">
             {viewMode === "cards" ? (
               <button
@@ -322,7 +345,6 @@ export function ProgressionChoicesStep({
                             key={option.element.id}
                             className={`catalog-selector__tableRow${previewOption?.element.id === option.element.id ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
                             type="button"
-                            disabled={option.requirementFailures.length > 0 && !isSelected}
                             onClick={() => {
                               setPreviewIds((current) => ({
                                 ...current,
@@ -355,7 +377,6 @@ export function ProgressionChoicesStep({
                           key={option.element.id}
                           className={`catalog-selector__row${previewOption?.element.id === option.element.id ? " catalog-selector__row--preview" : ""}${isSelected ? " catalog-selector__row--selected" : ""}`}
                           type="button"
-                          disabled={option.requirementFailures.length > 0 && !isSelected}
                           onClick={() => {
                             setPreviewIds((current) => ({
                               ...current,
