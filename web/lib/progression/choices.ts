@@ -27,6 +27,12 @@ export type ProgressionChoiceGroup = {
   options: ProgressionChoiceOption[];
 };
 
+type SelectedProgressionOptionEntry = {
+  classEntryIndex: number;
+  ownerLabel: string;
+  element: BuiltInElement;
+};
+
 function collectGrantedIdsAtLevel(rules: BuiltInRule[], type: string, level: number) {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === type && (!rule.level || rule.level <= level) ? [rule.id] : [],
@@ -58,6 +64,15 @@ function splitSupportTokens(value: string | undefined) {
     .filter(Boolean);
 }
 
+function hasSupportTokenOverlap(left: string[], right: string[]) {
+  if (!left.length || !right.length) {
+    return false;
+  }
+
+  const rightSet = new Set(right);
+  return left.some((token) => rightSet.has(token));
+}
+
 function collectOptionPool(
   classRecords: BuiltInClassRecord[],
   feats: BuiltInElement[],
@@ -80,11 +95,13 @@ function collectOptionPool(
 }
 
 function resolveRuleOptions(
+  feature: BuiltInElement,
   rule: Extract<BuiltInRule, { kind: "select" }>,
   optionPool: Map<string, BuiltInElement>,
   context: RequirementContext,
 ) {
   const allOptions = [...optionPool.values()].filter((element) => element.type === rule.type);
+  const familyTokens = splitSupportTokens(rule.supports);
 
   const byChoices = rule.choices?.length
     ? rule.choices
@@ -103,14 +120,32 @@ function resolveRuleOptions(
         })
     : [];
 
-  const directMatches = splitSupportTokens(rule.supports).length
+  const directMatches = familyTokens.length
     ? allOptions.filter((element) => {
-        const tokens = splitSupportTokens(rule.supports);
-        return tokens.some(
+        const optionTokens = element.supports.map((support) => normalizeToken(support));
+        const matchesFamily = familyTokens.some(
           (token) =>
             normalizeToken(element.id) === token ||
-            element.supports.some((support) => normalizeToken(support) === token),
+            optionTokens.includes(token),
         );
+
+        if (!matchesFamily) {
+          return false;
+        }
+
+        const isShellElement =
+          element.id === feature.id ||
+          normalizeToken(element.name) === normalizeToken(rule.name) ||
+          normalizeToken(element.name) === normalizeToken(feature.name) ||
+          element.rules.some(
+            (childRule) =>
+              childRule.kind === "select" &&
+              childRule.type === rule.type &&
+              (normalizeToken(childRule.name) === normalizeToken(rule.name) ||
+                hasSupportTokenOverlap(splitSupportTokens(childRule.supports), familyTokens)),
+          );
+
+        return !isShellElement;
       })
     : [];
 
@@ -145,7 +180,9 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
     (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
-      rule.type !== "Spell" &&
+      (rule.type !== "Spell" ||
+        normalizeToken(rule.name).includes("discipline") ||
+        splitSupportTokens(rule.supports).some((token) => token.includes("discipline"))) &&
       !isImprovementRule(rule) &&
       (!rule.level || rule.level <= entryLevel),
   );
@@ -180,8 +217,28 @@ function buildGroupsFromFeatures(args: {
         optional: rule.optional === true,
         supportsKey: rule.supports,
         description: feature.description,
-        options: resolveRuleOptions(rule, optionPool, context),
+        options: resolveRuleOptions(feature, rule, optionPool, context),
       } satisfies ProgressionChoiceGroup)),
+  );
+}
+
+function getSelectedProgressionOptionEntries(
+  groups: ProgressionChoiceGroup[],
+  selections: Record<string, string[]>,
+) {
+  return groups.flatMap((group) =>
+    (selections[group.id] ?? []).flatMap((id) => {
+      const option = group.options.find((candidate) => candidate.element.id === id);
+      return option
+        ? [
+            {
+              classEntryIndex: group.classEntryIndex,
+              ownerLabel: group.ownerLabel,
+              element: option.element,
+            } satisfies SelectedProgressionOptionEntry,
+          ]
+        : [];
+    }),
   );
 }
 
@@ -189,16 +246,22 @@ export function getSelectedProgressionOptionElements(
   groups: ProgressionChoiceGroup[],
   selections: Record<string, string[]>,
 ) {
-  const optionMap = new Map(
-    groups.flatMap((group) => group.options.map((option) => [option.element.id, option.element] as const)),
-  );
+  return getSelectedProgressionOptionEntries(groups, selections).map((entry) => entry.element);
+}
 
-  return groups.flatMap((group) =>
-    (selections[group.id] ?? []).flatMap((id) => {
-      const element = optionMap.get(id);
-      return element ? [element] : [];
-    }),
-  );
+function extendRequirementContext(
+  context: RequirementContext,
+  selectedEntries: SelectedProgressionOptionEntry[],
+): RequirementContext {
+  if (!selectedEntries.length) {
+    return context;
+  }
+
+  return {
+    ...context,
+    selectedFeatureIds: [...context.selectedFeatureIds, ...selectedEntries.map((entry) => entry.element.id)],
+    selectedFeatureNames: [...context.selectedFeatureNames, ...selectedEntries.map((entry) => entry.element.name)],
+  };
 }
 
 export function deriveProgressionChoiceGroups(args: {
@@ -253,18 +316,51 @@ export function deriveProgressionChoiceGroups(args: {
     ];
   });
 
-  const selectedBaseOptions = getSelectedProgressionOptionElements(baseGroups, args.selections);
-  const nestedGroups = buildGroupsFromFeatures({
-    classEntryIndex: -1,
-    ownerType: "nested",
-    ownerLabel: "Selected feature",
-    entryLevel: Math.max(...args.classEntries.map((entry) => entry.level), 1),
-    features: selectedBaseOptions,
-    optionPool,
-    context: args.context,
-  });
+  const groups = [...baseGroups];
+  const processedSelectedKeys = new Set<string>();
+  let frontier = getSelectedProgressionOptionEntries(baseGroups, args.selections);
 
-  return [...baseGroups, ...nestedGroups];
+  while (frontier.length) {
+    const contextWithSelections = extendRequirementContext(args.context, frontier);
+    const nestedGroups = frontier.flatMap((entry) =>
+      buildGroupsFromFeatures({
+        classEntryIndex: entry.classEntryIndex,
+        ownerType: "nested",
+        ownerLabel: entry.ownerLabel,
+        entryLevel: Math.max(args.classEntries[entry.classEntryIndex]?.level ?? 1, 1),
+        features: [entry.element],
+        optionPool,
+        context: contextWithSelections,
+      }),
+    );
+
+    const uniqueNestedGroups = nestedGroups.filter((group) => !groups.some((existing) => existing.id === group.id));
+    if (!uniqueNestedGroups.length) {
+      break;
+    }
+
+    groups.push(...uniqueNestedGroups);
+
+    frontier = getSelectedProgressionOptionEntries(uniqueNestedGroups, args.selections).filter((entry) => {
+      const key = `${entry.classEntryIndex}:${entry.element.id}`;
+      if (processedSelectedKeys.has(key)) {
+        return false;
+      }
+
+      processedSelectedKeys.add(key);
+      return true;
+    });
+  }
+
+  const finalContext = extendRequirementContext(args.context, getSelectedProgressionOptionEntries(groups, args.selections));
+
+  return groups.map((group) => ({
+    ...group,
+    options: group.options.map((option) => ({
+      ...option,
+      requirementFailures: getRequirementFailures(option.element.requirements, option.element.prerequisite, finalContext),
+    })),
+  }));
 }
 
 export function getProgressionValidationMessages(

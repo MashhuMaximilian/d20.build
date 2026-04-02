@@ -1008,6 +1008,7 @@ a {
   gap: 14px;
   align-content: start;
   min-height: 0;
+  height: 100%;
   padding: 18px;
   border: 1px solid rgba(146, 38, 16, 0.16);
   border-radius: 20px;
@@ -1356,6 +1357,7 @@ a {
 .catalog-selector__optionsPanel > .catalog-selector__tableWrap {
   flex: 1 1 auto;
   min-height: 0;
+  max-height: 100%;
 }
 
 .catalog-selector__tableHead,
@@ -1383,6 +1385,34 @@ a {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.catalog-selector__tableSort {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.catalog-selector__tableSortGlyph {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  text-align: center;
+  color: rgba(95, 57, 44, 0.72);
+  font-size: 0.66rem;
+}
+
+.catalog-selector__tableSort.is-active {
+  color: var(--accent-strong);
 }
 
 .catalog-selector__tableBody {

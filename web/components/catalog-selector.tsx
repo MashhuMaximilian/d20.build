@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
+
 export type CatalogItem = {
   id: string;
   name: string;
@@ -181,6 +183,10 @@ export function CatalogSelector({
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [showTableFilters, setShowTableFilters] = useState(false);
+  const [tableSort, setTableSort] = useState<TableSortState<"name" | "source" | "summary" | "impact">>({
+    key: "name",
+    direction: "asc",
+  });
 
   const tagOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -269,6 +275,24 @@ export function CatalogSelector({
     });
   }, [items, query, selectedSources, sourceFilter, tagFilter]);
 
+  const sortedItems = useMemo(
+    () =>
+      sortTableRows(filteredItems, tableSort, (item, key) => {
+        switch (key) {
+          case "source":
+            return item.source ?? "";
+          case "summary":
+            return item.summaryLines?.[0] || item.meta || "";
+          case "impact":
+            return item.impactLines?.[0] || "";
+          case "name":
+          default:
+            return item.name;
+        }
+      }),
+    [filteredItems, tableSort],
+  );
+
   useEffect(() => {
     if (!tagFilter) {
       return;
@@ -292,9 +316,9 @@ export function CatalogSelector({
     items.find((item) => item.id === selectedId) ?? null;
 
   const previewItem =
-    filteredItems.find((item) => item.id === previewId) ??
+    sortedItems.find((item) => item.id === previewId) ??
     items.find((item) => item.id === previewId) ??
-    filteredItems[0] ??
+    sortedItems[0] ??
     committedSelection ??
     items[0] ??
     null;
@@ -309,10 +333,10 @@ export function CatalogSelector({
       return;
     }
 
-    if (!previewItem && filteredItems[0]) {
-      setPreviewId(filteredItems[0].id);
+    if (!previewItem && sortedItems[0]) {
+      setPreviewId(sortedItems[0].id);
     }
-  }, [filteredItems, items, previewId, previewItem, selectedId]);
+  }, [items, previewId, previewItem, selectedId, sortedItems]);
 
   useEffect(() => {
     if (selectedId) {
@@ -365,7 +389,7 @@ export function CatalogSelector({
             <div className="catalog-selector__panelHeader">
               <span className="builder-panel__label">{label}</span>
               <strong className="catalog-selector__count">
-                {filteredItems.length} {filteredItems.length === 1 ? "entry" : "entries"}
+                {sortedItems.length} {sortedItems.length === 1 ? "entry" : "entries"}
               </strong>
             </div>
 
@@ -634,8 +658,8 @@ export function CatalogSelector({
 
           {viewMode === "cards" ? (
             <div className="catalog-selector__list" role="listbox" aria-label={label}>
-              {filteredItems.length ? (
-                filteredItems.map((item) => {
+              {sortedItems.length ? (
+                sortedItems.map((item) => {
                   const isPreview = item.id === previewItem?.id;
                   const isSelected = item.id === selectedId;
                   return (
@@ -682,14 +706,33 @@ export function CatalogSelector({
           ) : (
             <div className="catalog-selector__tableWrap" role="table" aria-label={`${label} table`}>
               <div className="catalog-selector__tableHead" role="row">
-                <span role="columnheader">Name</span>
-                <span role="columnheader">Source</span>
-                <span role="columnheader">Summary</span>
-                <span role="columnheader">Impact</span>
+                {([
+                  ["name", "Name"],
+                  ["source", "Source"],
+                  ["summary", "Summary"],
+                  ["impact", "Impact"],
+                ] as const).map(([key, headerLabel]) => {
+                  const active = tableSort.key === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="columnheader"
+                      aria-sort={active ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none"}
+                      className={`catalog-selector__tableSort${active ? " is-active" : ""}`}
+                      onClick={() => setTableSort((current) => toggleTableSort(current, key))}
+                    >
+                      <span>{headerLabel}</span>
+                      <span className="catalog-selector__tableSortGlyph" aria-hidden="true">
+                        {active ? (tableSort.direction === "asc" ? "▲" : "▼") : "↕"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="catalog-selector__tableBody" role="rowgroup">
-                {filteredItems.length ? (
-                  filteredItems.map((item) => {
+                {sortedItems.length ? (
+                  sortedItems.map((item) => {
                     const isPreview = item.id === previewItem?.id;
                     const isSelected = item.id === selectedId;
 

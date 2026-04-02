@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getDetailMarkup } from "@/components/catalog-selector";
+import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
 import type { BuiltInElement } from "@/lib/builtins/types";
 import {
   getSpellCastingTime,
@@ -63,6 +64,10 @@ export function SpellcastingStep({
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [showTableFilters, setShowTableFilters] = useState(false);
+  const [tableSort, setTableSort] = useState<TableSortState<"name" | "school" | "source" | "level">>({
+    key: "level",
+    direction: "asc",
+  });
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -123,6 +128,23 @@ export function SpellcastingStep({
 
     return haystack.includes(query);
   });
+  const sortedSpells = useMemo(
+    () =>
+      sortTableRows(filteredSpells, tableSort, (spell, key) => {
+        switch (key) {
+          case "school":
+            return getSpellSchool(spell);
+          case "source":
+            return spell.source ?? "";
+          case "level":
+            return getSpellLevel(spell);
+          case "name":
+          default:
+            return spell.name;
+        }
+      }),
+    [filteredSpells, tableSort],
+  );
 
   const schoolOptions = [...new Set(availableSpells.map((spell) => getSpellSchool(spell)))].sort();
   const sourceOptions = [...new Set(
@@ -135,12 +157,12 @@ export function SpellcastingStep({
     activeGroup
       ? previewIds[activeGroup.id] ??
         selectedSpellIds[0] ??
-        filteredSpells[0]?.id ??
+        sortedSpells[0]?.id ??
         activeGroup.grantedSpellIds[0] ??
         ""
       : "";
   const previewSpell =
-    filteredSpells.find((spell) => spell.id === previewId) ??
+    sortedSpells.find((spell) => spell.id === previewId) ??
     availableSpells.find((spell) => spell.id === previewId) ??
     (activeGroup?.grantedSpellIds[0] ? spellsById.get(activeGroup.grantedSpellIds[0]) ?? null : null);
 
@@ -493,7 +515,7 @@ export function SpellcastingStep({
                       </span>
                     </button>
                   </div>
-                  <span className="catalog-selector__count">{filteredSpells.length} spells</span>
+                  <span className="catalog-selector__count">{sortedSpells.length} spells</span>
                 </div>
               </div>
 
@@ -685,17 +707,36 @@ export function SpellcastingStep({
                     );
                   })}
                 </div>
-              ) : filteredSpells.length ? (
+              ) : sortedSpells.length ? (
                 viewMode === "table" ? (
                   <div className="catalog-selector__tableWrap" role="table" aria-label={`${activeGroup.title} spell table`}>
                     <div className="catalog-selector__tableHead" role="row">
-                      <span>Name</span>
-                      <span>School</span>
-                      <span>Source</span>
-                      <span>Level</span>
+                      {([
+                        ["name", "Name"],
+                        ["school", "School"],
+                        ["source", "Source"],
+                        ["level", "Level"],
+                      ] as const).map(([key, headerLabel]) => {
+                        const active = tableSort.key === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            role="columnheader"
+                            aria-sort={active ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none"}
+                            className={`catalog-selector__tableSort${active ? " is-active" : ""}`}
+                            onClick={() => setTableSort((current) => toggleTableSort(current, key))}
+                          >
+                            <span>{headerLabel}</span>
+                            <span className="catalog-selector__tableSortGlyph" aria-hidden="true">
+                              {active ? (tableSort.direction === "asc" ? "▲" : "▼") : "↕"}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="catalog-selector__tableBody" role="rowgroup">
-                      {filteredSpells.map((spell) => {
+                      {sortedSpells.map((spell) => {
                         const isSelected = selectedSpellIds.includes(spell.id);
                         const level = getSpellLevel(spell);
                         return (
@@ -732,7 +773,7 @@ export function SpellcastingStep({
                   </div>
                 ) : (
                   <div className="catalog-selector__list spellcasting-step__table">
-                    {filteredSpells.map((spell) => {
+                    {sortedSpells.map((spell) => {
                       const isSelected = selectedSpellIds.includes(spell.id);
                       const level = getSpellLevel(spell);
 

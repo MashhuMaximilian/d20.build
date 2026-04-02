@@ -250,6 +250,7 @@ export function getRequirementFailures(
 ) {
   const readablePrerequisite = prerequisite?.trim() ?? "";
   const readableRequirements = requirements?.trim() ?? "";
+  const fallbackText = [readablePrerequisite, readableRequirements].filter(Boolean).join(" ").trim();
 
   if (readableRequirements) {
     const evaluation = evaluateRequirementExpression(readableRequirements, context);
@@ -263,14 +264,14 @@ export function getRequirementFailures(
     }
   }
 
-  if (!readablePrerequisite) {
+  if (!fallbackText) {
     return [];
   }
 
   const failures: string[] = [];
-  const normalizedPrerequisite = readablePrerequisite.toLowerCase();
+  const normalizedPrerequisite = fallbackText.toLowerCase();
 
-  const abilityMatches = [...readablePrerequisite.matchAll(/\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)\b[^\d]{0,10}(\d{1,2})/gi)];
+  const abilityMatches = [...fallbackText.matchAll(/\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)\b[^\d]{0,10}(\d{1,2})/gi)];
   abilityMatches.forEach((match) => {
     const ability = ABILITY_NAME_MAP[match[1].toLowerCase()];
     const minimum = Number(match[2]);
@@ -284,13 +285,13 @@ export function getRequirementFailures(
     failures.push("Requires spellcasting.");
   }
 
-  const levelMatch = readablePrerequisite.match(/(\d+)(?:st|nd|rd|th)-level/i);
+  const levelMatch = fallbackText.match(/(\d+)(?:st|nd|rd|th)-level/i);
   if (levelMatch && context.totalLevel < Number(levelMatch[1])) {
     failures.push(`Requires level ${levelMatch[1]} or higher.`);
   }
 
   const mentionedClasses = context.knownClassNames.filter((name) =>
-    includesNamedRequirementToken(readablePrerequisite, name),
+    includesNamedRequirementToken(fallbackText, name),
   );
   if (mentionedClasses.length) {
     const hasRequiredClass = mentionedClasses.some((name) =>
@@ -302,8 +303,21 @@ export function getRequirementFailures(
     }
   }
 
+  mentionedClasses.forEach((name) => {
+    const classLevelMatch = fallbackText.match(new RegExp(`${name}[^\\d]{0,12}(\\d+)(?:st|nd|rd|th)-level`, "i"));
+    if (!classLevelMatch) {
+      return;
+    }
+
+    const currentLevel = context.classLevelsByName[normalizeRequirementText(name)] ?? 0;
+    const minimum = Number(classLevelMatch[1]);
+    if (currentLevel < minimum) {
+      failures.push(`Requires ${name} level ${minimum} or higher.`);
+    }
+  });
+
   const mentionedLineages = [...context.knownRaceNames, ...context.knownSubraceNames].filter((name) =>
-    includesNamedRequirementToken(readablePrerequisite, name),
+    includesNamedRequirementToken(fallbackText, name),
   );
 
   if (mentionedLineages.length) {
@@ -320,7 +334,7 @@ export function getRequirementFailures(
     }
   }
 
-  const namedFeatureOrFeatOptions = [...readablePrerequisite.matchAll(/([A-Z][A-Za-z' -]+?)\s+(feature|feat)/g)].map(
+  const namedFeatureOrFeatOptions = [...fallbackText.matchAll(/([A-Z][A-Za-z' -]+?)\s+(feature|feat)/g)].map(
     (match) => ({
       name: match[1].trim(),
       kind: match[2].toLowerCase(),

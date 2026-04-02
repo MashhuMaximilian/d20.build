@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getDetailMarkup } from "@/components/catalog-selector";
+import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
 import type { ProgressionChoiceGroup } from "@/lib/progression/choices";
 
 type ProgressionChoicesStepProps = {
@@ -35,6 +36,10 @@ export function ProgressionChoicesStep({
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [tableSort, setTableSort] = useState<TableSortState<"name" | "source" | "summary" | "impact">>({
+    key: "name",
+    direction: "asc",
+  });
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -44,23 +49,44 @@ export function ProgressionChoicesStep({
 
   const activeGroup = groups.find((group) => group.id === activeGroupId) ?? null;
   const query = activeGroup ? queries[activeGroup.id]?.trim().toLowerCase() ?? "" : "";
-  const filteredOptions = activeGroup
-    ? activeGroup.options.filter((option) =>
-        !query
-          ? true
-          : `${option.element.name} ${option.element.source} ${option.element.description} ${
-              option.element.prerequisite ?? ""
-            }`
-              .toLowerCase()
-              .includes(query),
-      )
-    : [];
+  const filteredOptions = useMemo(
+    () =>
+      activeGroup
+        ? activeGroup.options.filter((option) =>
+            !query
+              ? true
+              : `${option.element.name} ${option.element.source} ${option.element.description} ${
+                  option.element.prerequisite ?? ""
+                }`
+                  .toLowerCase()
+                  .includes(query),
+          )
+        : [],
+    [activeGroup, query],
+  );
+  const sortedOptions = useMemo(
+    () =>
+      sortTableRows(filteredOptions, tableSort, (option, key) => {
+        switch (key) {
+          case "source":
+            return option.element.source ?? "";
+          case "summary":
+            return getOptionSummary(activeGroup as ProgressionChoiceGroup, option.element.description, option.element.prerequisite);
+          case "impact":
+            return option.requirementFailures[0] || `Adds ${(activeGroup as ProgressionChoiceGroup).optionType.toLowerCase()} option`;
+          case "name":
+          default:
+            return option.element.name;
+        }
+      }),
+    [activeGroup, filteredOptions, tableSort],
+  );
   const selectedIds = activeGroup ? selections[activeGroup.id] ?? [] : [];
   const previewId = activeGroup
-    ? previewIds[activeGroup.id] ?? selectedIds[0] ?? filteredOptions[0]?.element.id ?? ""
+    ? previewIds[activeGroup.id] ?? selectedIds[0] ?? sortedOptions[0]?.element.id ?? ""
     : "";
   const previewOption =
-    filteredOptions.find((option) => option.element.id === previewId) ??
+    sortedOptions.find((option) => option.element.id === previewId) ??
     activeGroup?.options.find((option) => option.element.id === previewId) ??
     null;
 
@@ -234,7 +260,7 @@ export function ProgressionChoicesStep({
                       </span>
                     </button>
                   </div>
-                  <span className="catalog-selector__count">{filteredOptions.length} options</span>
+                  <span className="catalog-selector__count">{sortedOptions.length} options</span>
                 </div>
               </div>
 
@@ -259,17 +285,36 @@ export function ProgressionChoicesStep({
                 </div>
               ) : null}
 
-              {filteredOptions.length ? (
+              {sortedOptions.length ? (
                 viewMode === "table" ? (
                   <div className="catalog-selector__tableWrap" role="table" aria-label={`${activeGroup.title} option table`}>
                     <div className="catalog-selector__tableHead" role="row">
-                      <span>Name</span>
-                      <span>Source</span>
-                      <span>Summary</span>
-                      <span>Impact</span>
+                      {([
+                        ["name", "Name"],
+                        ["source", "Source"],
+                        ["summary", "Summary"],
+                        ["impact", "Impact"],
+                      ] as const).map(([key, headerLabel]) => {
+                        const active = tableSort.key === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            role="columnheader"
+                            aria-sort={active ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none"}
+                            className={`catalog-selector__tableSort${active ? " is-active" : ""}`}
+                            onClick={() => setTableSort((current) => toggleTableSort(current, key))}
+                          >
+                            <span>{headerLabel}</span>
+                            <span className="catalog-selector__tableSortGlyph" aria-hidden="true">
+                              {active ? (tableSort.direction === "asc" ? "▲" : "▼") : "↕"}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="catalog-selector__tableBody" role="rowgroup">
-                      {filteredOptions.map((option) => {
+                      {sortedOptions.map((option) => {
                         const isSelected = selectedIds.includes(option.element.id);
                         const summary = getOptionSummary(activeGroup, option.element.description, option.element.prerequisite);
                         return (
@@ -303,7 +348,7 @@ export function ProgressionChoicesStep({
                   </div>
                 ) : (
                   <div className="catalog-selector__list">
-                    {filteredOptions.map((option) => {
+                    {sortedOptions.map((option) => {
                       const isSelected = selectedIds.includes(option.element.id);
                       return (
                         <button
