@@ -109,7 +109,6 @@ function resolveRuleOptions(
         return tokens.some(
           (token) =>
             normalizeToken(element.id) === token ||
-            normalizeToken(element.name) === token ||
             element.supports.some((support) => normalizeToken(support) === token),
         );
       })
@@ -146,6 +145,7 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
     (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
+      rule.type !== "Spell" &&
       !isImprovementRule(rule) &&
       (!rule.level || rule.level <= entryLevel),
   );

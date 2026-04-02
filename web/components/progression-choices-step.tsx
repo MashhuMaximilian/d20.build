@@ -11,6 +11,20 @@ type ProgressionChoicesStepProps = {
   onSelectionChange: (groupId: string, optionIds: string[]) => void;
 };
 
+function getOptionSummary(group: ProgressionChoiceGroup, description: string, prerequisite?: string) {
+  if (prerequisite?.trim()) {
+    return prerequisite.trim();
+  }
+
+  const firstSentence = description
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(/(?<=[.!?])\s+/)[0];
+
+  return firstSentence || `${group.optionType} option`;
+}
+
 export function ProgressionChoicesStep({
   groups,
   selections,
@@ -19,6 +33,8 @@ export function ProgressionChoicesStep({
   const [activeGroupId, setActiveGroupId] = useState(groups[0]?.id ?? "");
   const [previewIds, setPreviewIds] = useState<Record<string, string>>({});
   const [queries, setQueries] = useState<Record<string, string>>({});
+  const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -124,94 +140,245 @@ export function ProgressionChoicesStep({
       </div>
 
       {activeGroup ? (
-        <div className="progression-step__layout">
-          <aside className="builder-review__card progression-step__sidebar">
-            <span className="builder-panel__label">{activeGroup.ownerLabel}</span>
-            <strong className="builder-summary__name">{selectedIds.length}/{activeGroup.exactSelections} selected</strong>
-            <p className="builder-summary__meta">
-              {activeGroup.optionType} family at level {activeGroup.unlockLevel}
-            </p>
-            <label className="builder-field">
-              <span>Search</span>
-              <input
-                className="input"
-                value={activeGroup ? queries[activeGroup.id] ?? "" : ""}
-                onChange={(event) =>
-                  setQueries((current) => ({
-                    ...current,
-                    [activeGroup.id]: event.target.value,
-                  }))
-                }
-                placeholder={`Search ${activeGroup.optionType.toLowerCase()}`}
-              />
-            </label>
-            <div className="builder-review__card">
-              <span className="builder-panel__label">Selection rule</span>
-              <p className="builder-summary__meta">
-                Choose exactly {activeGroup.exactSelections} option{activeGroup.exactSelections === 1 ? "" : "s"}.
-              </p>
-              {activeGroup.supportsKey ? (
-                <p className="builder-summary__meta">{activeGroup.supportsKey}</p>
-              ) : null}
-            </div>
-          </aside>
-
-          <div className="builder-review__card progression-step__options">
-            {filteredOptions.map((option) => {
-              const isSelected = selectedIds.includes(option.element.id);
-              const isDisabled = option.requirementFailures.length > 0 && !isSelected;
-
-              return (
-                <button
-                  key={option.element.id}
-                  className={`catalog-selector__option${isSelected ? " is-selected" : ""}`}
-                  type="button"
-                  disabled={isDisabled}
-                  onClick={() => {
-                    setPreviewIds((current) => ({
-                      ...current,
-                      [activeGroup.id]: option.element.id,
-                    }));
-                    toggleOption(option.element.id);
-                  }}
-                >
-                  <div className="catalog-selector__optionHeader">
-                    <strong>{option.element.name}</strong>
-                    {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
-                  </div>
-                  <p className="catalog-selector__optionMeta">{option.element.source}</p>
-                  {option.element.prerequisite ? (
-                    <p className="catalog-selector__optionSummary">{option.element.prerequisite}</p>
-                  ) : null}
-                  {option.requirementFailures.length ? (
-                    <p className="auth-card__status auth-card__status--error">
-                      {option.requirementFailures[0]}
-                    </p>
-                  ) : null}
-                </button>
-              );
-            })}
+        <>
+          <div className="catalog-selector__mobileToggles">
+            {viewMode === "cards" ? (
+              <button
+                className={`button button--secondary button--compact${activePane === "filters" ? " ability-mode__tab--active" : ""}`}
+                type="button"
+                onClick={() => setActivePane("filters")}
+              >
+                Filters
+              </button>
+            ) : null}
+            <button
+              className={`button button--secondary button--compact${activePane === "list" ? " ability-mode__tab--active" : ""}`}
+              type="button"
+              onClick={() => setActivePane("list")}
+            >
+              Library
+            </button>
+            <button
+              className={`button button--secondary button--compact${activePane === "detail" ? " ability-mode__tab--active" : ""}`}
+              type="button"
+              onClick={() => setActivePane("detail")}
+            >
+              Details
+            </button>
           </div>
 
-          <aside className="builder-review__card progression-step__detail">
-            {previewOption ? (
-              <>
-                <span className="builder-panel__label">Selected</span>
-                <strong className="builder-summary__name">{previewOption.element.name}</strong>
-                <p className="builder-summary__meta">{previewOption.element.source}</p>
-                {previewOption.element.prerequisite ? (
-                  <p className="builder-summary__meta">{previewOption.element.prerequisite}</p>
-                ) : null}
-                <div
-                  className="catalog-selector__detailRichText"
-                  dangerouslySetInnerHTML={{ __html: getDetailMarkup(previewOption.element) }}
-                />
-              </>
-            ) : (
-              <p className="builder-summary__meta">Choose an option to inspect its details.</p>
-            )}
-          </aside>
-        </div>
+          <div className={`catalog-selector__workbench${viewMode === "table" ? " catalog-selector__workbench--table" : ""}`}>
+            {viewMode === "cards" ? (
+              <aside className={`catalog-selector__filtersPanel${activePane === "filters" ? " is-mobileActive" : ""}`}>
+                <div className="catalog-selector__panelHeader">
+                  <span className="catalog-selector__sectionLabel">{activeGroup.ownerLabel}</span>
+                  <strong className="catalog-selector__count">
+                    {selectedIds.length}/{activeGroup.exactSelections} selected
+                  </strong>
+                </div>
+
+                <div className="catalog-selector__searchField">
+                  <span className="catalog-selector__sectionLabel">Search</span>
+                  <input
+                    className="input catalog-selector__search"
+                    value={queries[activeGroup.id] ?? ""}
+                    onChange={(event) =>
+                      setQueries((current) => ({
+                        ...current,
+                        [activeGroup.id]: event.target.value,
+                      }))
+                    }
+                    placeholder={`Search ${activeGroup.optionType.toLowerCase()}`}
+                  />
+                </div>
+
+                <div className="catalog-selector__selectionSnapshot">
+                  <span className="catalog-selector__sectionLabel">Selection rule</span>
+                  <strong className="catalog-selector__snapshotTitle">{activeGroup.title}</strong>
+                  <p className="catalog-selector__snapshotMeta">
+                    Choose exactly {activeGroup.exactSelections} option{activeGroup.exactSelections === 1 ? "" : "s"}.
+                  </p>
+                  <ul className="catalog-selector__impactList">
+                    <li>{activeGroup.optionType} family at level {activeGroup.unlockLevel}</li>
+                    {activeGroup.supportsKey ? <li>{activeGroup.supportsKey}</li> : null}
+                  </ul>
+                </div>
+              </aside>
+            ) : null}
+
+            <div className={`catalog-selector__optionsPanel${activePane === "list" ? " is-mobileActive" : ""}${viewMode === "table" ? " catalog-selector__optionsPanel--table" : ""}`}>
+              <div className="catalog-selector__optionsHeader">
+                <div className="catalog-selector__headingBlock">
+                  <span className="catalog-selector__sectionLabel">Choose {activeGroup.optionType.toLowerCase()}</span>
+                </div>
+                <div className="catalog-selector__optionsActions">
+                  <div className="catalog-selector__viewMode">
+                    <button
+                      className={`button button--secondary button--compact${viewMode === "cards" ? " ability-mode__tab--active" : ""}`}
+                      type="button"
+                      onClick={() => setViewMode("cards")}
+                    >
+                      <span className="catalog-selector__viewModeButton">
+                        <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--workbench" aria-hidden="true" />
+                        <span>Workbench</span>
+                      </span>
+                    </button>
+                    <button
+                      className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
+                      type="button"
+                      onClick={() => setViewMode("table")}
+                    >
+                      <span className="catalog-selector__viewModeButton">
+                        <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--table" aria-hidden="true" />
+                        <span>Table</span>
+                      </span>
+                    </button>
+                  </div>
+                  <span className="catalog-selector__count">{filteredOptions.length} options</span>
+                </div>
+              </div>
+
+              {viewMode === "table" ? (
+                <div className="catalog-selector__tableToolbar">
+                  <div className="catalog-selector__tableToolbarPrimary">
+                    <label className="catalog-selector__searchField catalog-selector__tableSearch">
+                      <span className="catalog-selector__sectionLabel">Search</span>
+                      <input
+                        className="input catalog-selector__search"
+                        placeholder={`Search ${activeGroup.optionType.toLowerCase()}`}
+                        value={queries[activeGroup.id] ?? ""}
+                        onChange={(event) =>
+                          setQueries((current) => ({
+                            ...current,
+                            [activeGroup.id]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+
+              {filteredOptions.length ? (
+                viewMode === "table" ? (
+                  <div className="catalog-selector__tableWrap" role="table" aria-label={`${activeGroup.title} option table`}>
+                    <div className="catalog-selector__tableHead" role="row">
+                      <span>Name</span>
+                      <span>Source</span>
+                      <span>Summary</span>
+                      <span>Impact</span>
+                    </div>
+                    <div className="catalog-selector__tableBody" role="rowgroup">
+                      {filteredOptions.map((option) => {
+                        const isSelected = selectedIds.includes(option.element.id);
+                        const summary = getOptionSummary(activeGroup, option.element.description, option.element.prerequisite);
+                        return (
+                          <button
+                            key={option.element.id}
+                            className={`catalog-selector__tableRow${previewOption?.element.id === option.element.id ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
+                            type="button"
+                            disabled={option.requirementFailures.length > 0 && !isSelected}
+                            onClick={() => {
+                              setPreviewIds((current) => ({
+                                ...current,
+                                [activeGroup.id]: option.element.id,
+                              }));
+                              toggleOption(option.element.id);
+                            }}
+                            role="row"
+                          >
+                            <span className="catalog-selector__tableCell catalog-selector__tableCell--name" role="cell">
+                              <strong>{option.element.name}</strong>
+                              {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
+                            </span>
+                            <span className="catalog-selector__tableCell" role="cell">{option.element.source}</span>
+                            <span className="catalog-selector__tableCell" role="cell">{summary}</span>
+                            <span className="catalog-selector__tableCell" role="cell">
+                              {option.requirementFailures.length ? option.requirementFailures[0] : `Adds ${activeGroup.optionType.toLowerCase()} option`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="catalog-selector__list">
+                    {filteredOptions.map((option) => {
+                      const isSelected = selectedIds.includes(option.element.id);
+                      return (
+                        <button
+                          key={option.element.id}
+                          className={`catalog-selector__row${previewOption?.element.id === option.element.id ? " catalog-selector__row--preview" : ""}${isSelected ? " catalog-selector__row--selected" : ""}`}
+                          type="button"
+                          disabled={option.requirementFailures.length > 0 && !isSelected}
+                          onClick={() => {
+                            setPreviewIds((current) => ({
+                              ...current,
+                              [activeGroup.id]: option.element.id,
+                            }));
+                            toggleOption(option.element.id);
+                          }}
+                        >
+                          <div className="catalog-selector__rowHeader">
+                            <strong>{option.element.name}</strong>
+                            {isSelected ? <span className="catalog-selector__selectedBadge">Selected</span> : null}
+                          </div>
+                          <span className="catalog-selector__source">{option.element.source}</span>
+                          <div className="catalog-selector__summaryList">
+                            <span>{getOptionSummary(activeGroup, option.element.description, option.element.prerequisite)}</span>
+                          </div>
+                          <div className="catalog-selector__rowImpact">
+                            <span className="catalog-selector__impactChip">
+                              {activeGroup.optionType}
+                            </span>
+                            {option.requirementFailures.length ? (
+                              <span className="catalog-selector__impactChip">{option.requirementFailures[0]}</span>
+                            ) : null}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              ) : (
+                <p className="catalog-selector__empty">
+                  No matching options. Adjust the search or change to another family tab.
+                </p>
+              )}
+            </div>
+
+            <aside className={`catalog-selector__detailPanel${activePane === "detail" ? " is-mobileActive" : ""}`}>
+              {previewOption ? (
+                <>
+                  <div className="catalog-selector__detailHeader">
+                    <span className="catalog-selector__detailLabel">Selected</span>
+                    <h3 className="catalog-selector__detailTitle">{previewOption.element.name}</h3>
+                    <p className="catalog-selector__detailMeta">
+                      {previewOption.element.source}
+                      {previewOption.element.prerequisite ? ` • ${previewOption.element.prerequisite}` : ""}
+                    </p>
+                  </div>
+
+                  <section className="catalog-selector__detailSection">
+                    <span className="catalog-selector__detailLabel">Selection summary</span>
+                    <ul className="catalog-selector__impactList">
+                      <li>Selected {selectedIds.length} of {activeGroup.exactSelections}</li>
+                      <li>{activeGroup.optionType} family at level {activeGroup.unlockLevel}</li>
+                      {activeGroup.supportsKey ? <li>{activeGroup.supportsKey}</li> : null}
+                    </ul>
+                  </section>
+
+                  <div
+                    className="catalog-selector__detailRichText"
+                    dangerouslySetInnerHTML={{ __html: getDetailMarkup(previewOption.element) }}
+                  />
+                </>
+              ) : (
+                <p className="builder-summary__meta">Choose an option to inspect its details.</p>
+              )}
+            </aside>
+          </div>
+        </>
       ) : null}
     </section>
   );

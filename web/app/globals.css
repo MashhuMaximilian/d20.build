@@ -663,8 +663,9 @@ a {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 12px;
-  position: static;
-  z-index: 1;
+  position: sticky;
+  bottom: 16px;
+  z-index: 11;
   backdrop-filter: blur(10px);
   padding: 14px 18px;
 }
