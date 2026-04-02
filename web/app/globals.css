@@ -1974,6 +1974,121 @@ a {
   min-height: 100%;
 }
 
+.backstory-step {
+  gap: 16px;
+}
+
+.backstory-step__help {
+  gap: 8px;
+}
+
+.backstory-step__grid,
+.backstory-step__sheetGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.backstory-step__field,
+.backstory-step__sheetCard {
+  gap: 12px;
+}
+
+.backstory-step__fieldHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.backstory-step__headingBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.backstory-step__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.backstory-step__toolbarButton {
+  min-width: 0;
+}
+
+.backstory-step__toolbarButton--active {
+  border-color: rgba(146, 38, 16, 0.3);
+  background: rgba(146, 38, 16, 0.08);
+}
+
+.backstory-step__editor {
+  min-height: 180px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.96);
+  color: var(--foreground);
+  line-height: 1.55;
+  outline: none;
+}
+
+.backstory-step__editor--short {
+  min-height: 120px;
+}
+
+.backstory-step__editor p {
+  margin: 0 0 0.8em;
+}
+
+.backstory-step__editor p:last-child,
+.backstory-step__editor ul:last-child,
+.backstory-step__editor ol:last-child,
+.backstory-step__editor blockquote:last-child {
+  margin-bottom: 0;
+}
+
+.backstory-step__editor ul,
+.backstory-step__editor ol,
+.backstory-step__rendered ul,
+.backstory-step__rendered ol {
+  padding-left: 1.25rem;
+}
+
+.backstory-step__editor blockquote,
+.backstory-step__rendered blockquote {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid rgba(146, 38, 16, 0.22);
+  color: var(--muted);
+}
+
+.backstory-step__editor h2,
+.backstory-step__rendered h2 {
+  font-size: 1.1rem;
+  color: var(--accent-strong);
+}
+
+.backstory-step__editor h3,
+.backstory-step__rendered h3 {
+  font-size: 0.98rem;
+  color: var(--accent-strong);
+}
+
+.backstory-step__editor .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: rgba(110, 87, 74, 0.72);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.backstory-step__sheetTitle {
+  font-size: 1.05rem;
+}
+
+.backstory-step__rendered {
+  color: var(--foreground);
+  line-height: 1.55;
+}
+
 .spellcasting-step {
   gap: 18px;
   min-height: 0;

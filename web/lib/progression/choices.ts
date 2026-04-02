@@ -400,6 +400,18 @@ function isSpecialProgressionSpellRule(rule: Extract<BuiltInRule, { kind: "selec
   );
 }
 
+function isNarrativeBackstoryRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
+  const normalizedName = normalizeToken(rule.name);
+
+  return (
+    normalizeToken(rule.type) === "list" ||
+    normalizedName === "personality trait" ||
+    normalizedName === "ideal" ||
+    normalizedName === "bond" ||
+    normalizedName === "flaw"
+  );
+}
+
 function collectOptionPool(
   progressionElements: BuiltInElement[],
   feats: BuiltInElement[],
@@ -508,6 +520,7 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
       rule.type !== "Sub Race" &&
+      !isNarrativeBackstoryRule(rule) &&
       !isGenericSpellcastingRule(rule) &&
       (rule.type !== "Spell" || isSpecialProgressionSpellRule(rule)) &&
       !isImprovementRule(rule) &&

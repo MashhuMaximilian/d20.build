@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
+import { BackstoryStep } from "@/components/backstory-step";
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import { EquipmentStep } from "@/components/equipment-step";
 import { FeatsAsiStep } from "@/components/feats-asi-step";
@@ -74,6 +75,7 @@ type BuilderStepId =
   | "subclass"
   | "progression"
   | "background"
+  | "backstory"
   | "feats"
   | "spellcasting"
   | "equipment"
@@ -1176,55 +1178,6 @@ export function BuilderEditor({
     totalCharacterLevel,
   ]);
 
-  const pendingChoices = useMemo(() => {
-    const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
-    const subclassPending = classRecordsByEntry.reduce((count, record, index) => {
-      const step = record?.subclassSteps[0];
-      const entry = draft.classEntries[index];
-      if (!step || !entry) {
-        return count;
-      }
-
-      const unlocked = !step.level || entry.level >= step.level;
-      return count + (unlocked && !entry.subclassId ? 1 : 0);
-    }, 0);
-    const backgroundPending =
-      selectedBackground?.background.rules.filter((rule) => rule.kind === "select").length ?? 0;
-    const classPending = classRecordsByEntry.reduce((sum, record) => {
-      if (!record) {
-        return sum;
-      }
-
-      return (
-        sum +
-        record.features.reduce(
-          (count, feature) => count + feature.rules.filter((rule) => rule.kind === "select").length,
-          record.class.rules.filter((rule) => rule.kind === "select").length,
-        )
-      );
-    }, 0);
-    const improvementPending = getImprovementValidationMessages(
-      improvementOpportunities,
-      draft.improvementSelections,
-      availableFeatIds,
-      featPrerequisiteFailuresById,
-    ).length;
-
-    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices + improvementPending + progressionValidationMessages.length;
-  }, [
-    availableFeatIds,
-    classRecordsByEntry,
-    draft.classEntries,
-    draft.improvementSelections,
-    improvementOpportunities,
-    draft.subraceId,
-    featPrerequisiteFailuresById,
-    missingEquipmentChoices,
-    selectedBackground,
-    selectedRace,
-    progressionValidationMessages.length,
-  ]);
-
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
   const levelingValidationMessage = useMemo(() => {
     if (draft.classEntries.slice(1).some((entry) => entry.level < 1)) {
@@ -1277,6 +1230,37 @@ export function BuilderEditor({
     () => getSpellValidationMessages(spellGroups, draft.spellSelections),
     [draft.spellSelections, spellGroups],
   );
+  const pendingChoices = useMemo(() => {
+    const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
+    const subclassPending = classRecordsByEntry.reduce((count, record, index) => {
+      const step = record?.subclassSteps[0];
+      const entry = draft.classEntries[index];
+      if (!step || !entry) {
+        return count;
+      }
+
+      const unlocked = !step.level || entry.level >= step.level;
+      return count + (unlocked && !entry.subclassId ? 1 : 0);
+    }, 0);
+
+    return (
+      subracePending +
+      subclassPending +
+      missingEquipmentChoices +
+      improvementValidationMessages.length +
+      progressionValidationMessages.length +
+      spellValidationMessages.length
+    );
+  }, [
+    classRecordsByEntry,
+    draft.classEntries,
+    draft.subraceId,
+    improvementValidationMessages.length,
+    missingEquipmentChoices,
+    selectedRace,
+    progressionValidationMessages.length,
+    spellValidationMessages.length,
+  ]);
   const selectionValidationMessage =
     selectedRace?.subraces.length && !draft.subraceId
       ? "Choose a subrace before saving this draft."
@@ -1392,6 +1376,12 @@ export function BuilderEditor({
         kind: "background",
         label: "Background",
         description: "Choose the story scaffold that grants proficiencies, features, and choices.",
+      },
+      {
+        id: "backstory",
+        kind: "backstory",
+        label: "Backstory",
+        description: "Write ideals, flaws, allies, and history in freeform notes instead of forcing table-roll lists.",
       },
       {
         id: "feats",
@@ -1648,6 +1638,8 @@ export function BuilderEditor({
       }
       case "background":
         return draft.backgroundId ? [] : ["Choose a background to continue."];
+      case "backstory":
+        return [];
       case "progression":
         return progressionValidationMessages;
       case "feats":
@@ -1702,6 +1694,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "backstory":
+        return true;
       case "progression":
         return progressionValidationMessages.length === 0;
       case "feats":
@@ -1732,6 +1726,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "backstory":
+        return true;
       case "progression":
         return progressionValidationMessages.length === 0;
       case "feats":
@@ -2103,6 +2099,15 @@ export function BuilderEditor({
             />
           </section>
         );
+      case "backstory":
+        return (
+          <section className="builder-stepPanel">
+            <BackstoryStep
+              onChange={(backstory) => updateDraft({ backstory })}
+              value={draft.backstory}
+            />
+          </section>
+        );
       case "progression":
         return (
           <section className="builder-stepPanel">
@@ -2267,6 +2272,14 @@ export function BuilderEditor({
                   </p>
                   <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
                   <p className="builder-summary__meta">
+                    Backstory notes:{" "}
+                    {Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length
+                      ? `${Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length} section${
+                          Object.values(draft.backstory).filter((value) => value.replace(/<[^>]+>/g, "").trim()).length === 1 ? "" : "s"
+                        } filled`
+                      : "None yet"}
+                  </p>
+                  <p className="builder-summary__meta">
                     Improvements: {improvementOpportunities.length
                       ? improvementValidationMessages.length
                         ? `${improvementOpportunities.length - improvementValidationMessages.length}/${improvementOpportunities.length} resolved`
@@ -2371,6 +2384,29 @@ export function BuilderEditor({
                   </ul>
                 ) : (
                   <p className="builder-summary__meta">No starting gear selected yet.</p>
+                )}
+              </article>
+
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Backstory</span>
+                {Object.entries(draft.backstory).some(([, value]) => value.replace(/<[^>]+>/g, "").trim()) ? (
+                  <ul className="route-shell__list">
+                    {Object.entries(draft.backstory)
+                      .filter(([, value]) => value.replace(/<[^>]+>/g, "").trim())
+                      .map(([key, value]) => (
+                        <li key={key}>
+                          {key === "alliesAndOrganizations"
+                            ? "Allies and organizations"
+                            : key === "additionalFeatures"
+                              ? "Additional features"
+                              : key.charAt(0).toUpperCase() + key.slice(1)}
+                          : {value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 100)}
+                          {value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length > 100 ? "..." : ""}
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className="builder-summary__meta">No backstory notes yet.</p>
                 )}
               </article>
             </div>

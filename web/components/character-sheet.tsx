@@ -98,6 +98,9 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
     return getStatBonuses(statRules.map((rule) => `${rule.name}:${rule.value}`));
   })();
   const improvementBonuses = getImprovementBonuses(draft.improvementSelections);
+  const filledBackstoryEntries = Object.entries(draft.backstory).filter(([, value]) =>
+    value.replace(/<[^>]+>/g, "").trim(),
+  );
 
   return (
     <div className="builder-shell">
@@ -182,6 +185,31 @@ export function CharacterSheet({ draftId, editable = false }: CharacterSheetProp
                 : "None chosen"}
             </li>
           </ul>
+        </section>
+
+        <section className="builder-panel">
+          <span className="builder-panel__label">Backstory</span>
+          {filledBackstoryEntries.length ? (
+            <div className="backstory-step__sheetGrid">
+              {filledBackstoryEntries.map(([key, value]) => (
+                <article className="backstory-step__sheetCard" key={key}>
+                  <strong className="builder-summary__name backstory-step__sheetTitle">
+                    {key === "alliesAndOrganizations"
+                      ? "Allies and organizations"
+                      : key === "additionalFeatures"
+                        ? "Additional features"
+                        : key.charAt(0).toUpperCase() + key.slice(1)}
+                  </strong>
+                  <div
+                    className="backstory-step__rendered"
+                    dangerouslySetInnerHTML={{ __html: value }}
+                  />
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="builder-summary__meta">No backstory notes yet.</p>
+          )}
         </section>
       </div>
     </div>

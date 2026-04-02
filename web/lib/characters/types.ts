@@ -33,6 +33,16 @@ export type CharacterImprovementSelection = {
   featSource?: string;
 };
 
+export type CharacterBackstory = {
+  personalityTraits: string;
+  ideals: string;
+  bonds: string;
+  flaws: string;
+  alliesAndOrganizations: string;
+  backstory: string;
+  additionalFeatures: string;
+};
+
 export type CharacterDraft = {
   id: string;
   createdAt: string;
@@ -51,6 +61,7 @@ export type CharacterDraft = {
   progressionSelections: Record<string, string[]>;
   spellSelections: Record<string, string[]>;
   equipmentSelections: Record<string, string>;
+  backstory: CharacterBackstory;
   sourceManifest: CharacterSourceManifestEntry[];
 };
 
@@ -106,6 +117,15 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     progressionSelections: {},
     spellSelections: {},
     equipmentSelections: {},
+    backstory: {
+      personalityTraits: "",
+      ideals: "",
+      bonds: "",
+      flaws: "",
+      alliesAndOrganizations: "",
+      backstory: "",
+      additionalFeatures: "",
+    },
     sourceManifest: [],
   };
 }
@@ -197,6 +217,10 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
       ]),
     ),
     equipmentSelections: draft.equipmentSelections ?? {},
+    backstory: {
+      ...empty.backstory,
+      ...(draft.backstory ?? {}),
+    },
     sourceManifest: draft.sourceManifest ?? [],
   } satisfies CharacterDraft;
 }

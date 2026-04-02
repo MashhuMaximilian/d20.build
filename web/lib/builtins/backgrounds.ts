@@ -7,6 +7,21 @@ export type BuiltInBackgroundRecord = {
   choiceCount: number;
 };
 
+function isNarrativeBackstorySelect(rule: BuiltInRule) {
+  if (rule.kind !== "select") {
+    return false;
+  }
+
+  const normalized = rule.name.trim().toLowerCase();
+  return (
+    rule.type.trim().toLowerCase() === "list" ||
+    normalized === "personality trait" ||
+    normalized === "ideal" ||
+    normalized === "bond" ||
+    normalized === "flaw"
+  );
+}
+
 function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
   return elements.map((element): BuiltInElement => ({
     ...element,
@@ -42,7 +57,7 @@ export function getBuiltInSrdBackgrounds(): BuiltInBackgroundRecord[] {
     return {
       background,
       features,
-      choiceCount: background.rules.filter((rule) => rule.kind === "select").length,
+      choiceCount: background.rules.filter((rule) => rule.kind === "select" && !isNarrativeBackstorySelect(rule)).length,
     };
   });
 }

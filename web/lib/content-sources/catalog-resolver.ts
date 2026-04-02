@@ -248,6 +248,21 @@ function collectGrantedIds(rules: BuiltInRule[], grantType: string) {
   );
 }
 
+function isNarrativeBackstorySelect(rule: BuiltInRule) {
+  if (rule.kind !== "select") {
+    return false;
+  }
+
+  const normalized = rule.name.trim().toLowerCase();
+  return (
+    rule.type.trim().toLowerCase() === "list" ||
+    normalized === "personality trait" ||
+    normalized === "ideal" ||
+    normalized === "bond" ||
+    normalized === "flaw"
+  );
+}
+
 function splitSupportTokens(value: string | undefined) {
   if (!value) {
     return [];
@@ -388,7 +403,7 @@ function buildBackgroundRecords(elements: BuiltInElement[]): BuiltInBackgroundRe
     return {
       background,
       features,
-      choiceCount: background.rules.filter((rule) => rule.kind === "select").length,
+      choiceCount: background.rules.filter((rule) => rule.kind === "select" && !isNarrativeBackstorySelect(rule)).length,
     };
   });
 }
