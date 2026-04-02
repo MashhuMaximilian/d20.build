@@ -12,6 +12,11 @@
   --border-gold: #e69a28;
   --success: #4a6741;
   --shadow: rgba(77, 39, 20, 0.14);
+  --scrollbar-size: 6px;
+  --scrollbar-track: rgba(242, 229, 213, 0.82);
+  --scrollbar-thumb: rgba(122, 32, 13, 0.32);
+  --scrollbar-thumb-hover: rgba(146, 38, 16, 0.78);
+  --scrollbar-thumb-active: rgba(122, 32, 13, 0.92);
 }
 
 * {
@@ -40,6 +45,65 @@ body {
       transparent 1px,
       transparent 6px
     );
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.builder-stepper,
+.builder-navigation__warningList,
+.catalog-selector__filtersPanel,
+.catalog-selector__optionsPanel,
+.catalog-selector__detailPanel,
+.catalog-selector__list,
+.catalog-selector__tableBody,
+.feats-step__optionList {
+  --scrollbar-track: rgba(242, 229, 213, 0.68);
+  --scrollbar-thumb: rgba(122, 32, 13, 0.26);
+  --scrollbar-thumb-hover: rgba(146, 38, 16, 0.82);
+  --scrollbar-thumb-active: rgba(122, 32, 13, 0.95);
+}
+
+.builder-stepper:hover,
+.builder-navigation__warningList:hover,
+.catalog-selector__filtersPanel:hover,
+.catalog-selector__optionsPanel:hover,
+.catalog-selector__detailPanel:hover,
+.catalog-selector__list:hover,
+.catalog-selector__tableBody:hover,
+.feats-step__optionList:hover {
+  --scrollbar-thumb: rgba(146, 38, 16, 0.6);
 }
 
 a {
@@ -461,6 +525,11 @@ a {
 .builder-shell > .builder-panel,
 .builder-shell > .builder-stepPanel {
   margin-bottom: 0;
+}
+
+.builder-panel,
+.builder-stepPanel {
+  overflow: hidden;
 }
 
 .builder-summary__label,
@@ -922,8 +991,8 @@ a {
   grid-template-columns: 260px minmax(340px, 0.85fr) minmax(420px, 1.15fr);
   gap: 18px;
   align-items: stretch;
-  height: min(76vh, 920px);
-  min-height: 680px;
+  height: min(64vh, 760px);
+  min-height: 540px;
   overflow: hidden;
 }
 
@@ -942,8 +1011,10 @@ a {
   border: 1px solid rgba(146, 38, 16, 0.16);
   border-radius: 20px;
   background: rgba(255, 252, 246, 0.95);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: 100%;
+  overscroll-behavior: contain;
 }
 
 .catalog-selector__optionsPanel {
@@ -1166,9 +1237,11 @@ a {
   gap: 10px;
   min-height: 0;
   height: 100%;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-right: 4px;
   align-content: start;
+  overscroll-behavior: contain;
 }
 
 .catalog-selector__row {
@@ -1314,7 +1387,9 @@ a {
 .catalog-selector__tableBody {
   height: 100%;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .catalog-selector__tableRow {

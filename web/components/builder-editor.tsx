@@ -9,6 +9,7 @@ import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector
 import { EquipmentStep } from "@/components/equipment-step";
 import { FeatsAsiStep } from "@/components/feats-asi-step";
 import { LevelingStep } from "@/components/leveling-step";
+import { ProgressionChoicesStep } from "@/components/progression-choices-step";
 import { SpellcastingStep } from "@/components/spellcasting-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type {
@@ -42,6 +43,15 @@ import {
   getImprovementSelectionPoints,
 } from "@/lib/progression/improvements";
 import {
+  deriveProgressionChoiceGroups,
+  getProgressionValidationMessages,
+  getSelectedProgressionOptionElements,
+} from "@/lib/progression/choices";
+import {
+  extractAbilityThresholdClauses,
+  type RequirementContext,
+} from "@/lib/progression/requirements";
+import {
   deriveSpellcastingGroups,
   getSpellValidationMessages,
 } from "@/lib/progression/spellcasting";
@@ -61,6 +71,7 @@ type BuilderStepId =
   | "subrace"
   | "class"
   | "subclass"
+  | "progression"
   | "background"
   | "feats"
   | "spellcasting"
@@ -166,26 +177,10 @@ function buildFeatureDetails(features: Array<{ name: string; description: string
     }));
 }
 
-const REQUIREMENT_ABILITY_MAP: Record<string, AbilityKey> = {
-  str: "strength",
-  dex: "dexterity",
-  con: "constitution",
-  int: "intelligence",
-  wis: "wisdom",
-  cha: "charisma",
-};
-
 function getMulticlassRequirementFailures(rulesText: string | undefined, abilities: CharacterDraft["abilities"]) {
-  if (!rulesText) {
-    return [];
-  }
-
-  const clauses = [...rulesText.matchAll(/\[([a-z]+):(\d+)\]/gi)].map((match) => ({
-    ability: REQUIREMENT_ABILITY_MAP[match[1].toLowerCase()],
-    minimum: Number(match[2]),
-  })).filter((entry): entry is { ability: AbilityKey; minimum: number } => Boolean(entry.ability));
-
-  return clauses.filter((entry) => abilities[entry.ability] < entry.minimum);
+  return extractAbilityThresholdClauses(rulesText).filter(
+    (entry) => abilities[entry.ability] < entry.minimum,
+  );
 }
 
 function isStandardArrayValid(draft: CharacterDraft) {
@@ -410,6 +405,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
   needsSubrace: boolean;
   needsSubclass: boolean;
   subclassesComplete: boolean;
+  progressionValidationMessages: string[];
   abilityValidationMessage: string;
   improvementValidationMessages: string[];
   spellSelectionEnabled: boolean;
@@ -424,6 +420,7 @@ function buildCompletionChecklist(draft: CharacterDraft, flags: {
     { label: "Choose classes", done: draft.classEntries.every((entry) => Boolean(entry.classId)) },
     { label: "Distribute levels", done: !flags.levelingValidationMessage },
     { label: "Choose subclass", done: !flags.needsSubclass || flags.subclassesComplete },
+    { label: "Resolve class choices", done: flags.progressionValidationMessages.length === 0 },
     { label: "Choose background", done: Boolean(draft.backgroundId) },
     { label: "Finalize abilities", done: !flags.abilityValidationMessage },
     { label: "Resolve feats / ASI", done: flags.improvementValidationMessages.length === 0 },
@@ -872,6 +869,68 @@ export function BuilderEditor({
       }),
     [classRecordsByEntry, draft.classEntries],
   );
+  const requirementContext = useMemo<RequirementContext>(
+    () => ({
+      effectiveAbilities,
+      selectedRaceId: selectedRace?.race.id,
+      selectedRaceName: selectedRace?.race.name,
+      selectedSubraceId: selectedSubrace?.id,
+      selectedSubraceName: selectedSubrace?.name,
+      selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
+      selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
+      selectedFeatureIds: [...selectedRacialTraitIds, ...selectedClassFeatureIds],
+      selectedFeatureNames: [...selectedRacialTraitNames, ...selectedClassFeatureNames],
+      selectedFeatIds: [],
+      selectedFeatNames: [],
+      hasSpellcasting: spellGroups.length > 0,
+      totalLevel: totalCharacterLevel,
+      classLevelsByName: Object.fromEntries(
+        classRecordsByEntry.flatMap((record, index) => {
+          const entry = draft.classEntries[index];
+          return record && entry?.classId ? [[record.class.name.trim().toLowerCase(), entry.level] as const] : [];
+        }),
+      ),
+      knownRaceNames: races.map((entry) => entry.race.name),
+      knownSubraceNames: races.flatMap((entry) => entry.subraces.map((subrace) => subrace.name)),
+      knownClassNames: classes.map((entry) => entry.class.name),
+    }),
+    [
+      classRecordsByEntry,
+      classes,
+      draft.classEntries,
+      effectiveAbilities,
+      races,
+      selectedClassFeatureIds,
+      selectedClassFeatureNames,
+      selectedRace,
+      selectedRacialTraitIds,
+      selectedRacialTraitNames,
+      selectedSubrace,
+      spellGroups.length,
+      totalCharacterLevel,
+    ],
+  );
+  const progressionGroups = useMemo(
+    () =>
+      deriveProgressionChoiceGroups({
+        allClassRecords: classes,
+        activeClassRecords: classRecordsByEntry,
+        classEntries: draft.classEntries,
+        feats,
+        selections: draft.progressionSelections,
+        spells,
+        context: requirementContext,
+      }),
+    [classRecordsByEntry, classes, draft.classEntries, draft.progressionSelections, feats, requirementContext, spells],
+  );
+  const selectedProgressionElements = useMemo(
+    () => getSelectedProgressionOptionElements(progressionGroups, draft.progressionSelections),
+    [draft.progressionSelections, progressionGroups],
+  );
+  const progressionValidationMessages = useMemo(
+    () => getProgressionValidationMessages(progressionGroups, draft.progressionSelections),
+    [draft.progressionSelections, progressionGroups],
+  );
   const featPrerequisiteFailuresById = useMemo(() => {
     const selectedFeatNames = Object.values(draft.improvementSelections)
       .filter((selection) => selection.mode === "feat" && selection.featName)
@@ -904,8 +963,17 @@ export function BuilderEditor({
           selectedSubraceName: selectedSubrace?.name,
           selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
           selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
-          selectedFeatureIds: [...selectedRacialTraitIds, ...selectedClassFeatureIds, ...selectedFeatFeatureIds],
-          selectedFeatureNames: [...selectedRacialTraitNames, ...selectedClassFeatureNames],
+          selectedFeatureIds: [
+            ...selectedRacialTraitIds,
+            ...selectedClassFeatureIds,
+            ...selectedFeatFeatureIds,
+            ...selectedProgressionElements.map((element) => element.id),
+          ],
+          selectedFeatureNames: [
+            ...selectedRacialTraitNames,
+            ...selectedClassFeatureNames,
+            ...selectedProgressionElements.map((element) => element.name),
+          ],
           selectedFeatIds,
           selectedFeatNames,
           hasSpellcasting: spellGroups.length > 0,
@@ -931,6 +999,7 @@ export function BuilderEditor({
     selectedRace,
     selectedSubrace,
     selectedClassFeatureNames,
+    selectedProgressionElements,
     spellGroups.length,
     totalCharacterLevel,
   ]);
@@ -969,7 +1038,7 @@ export function BuilderEditor({
       featPrerequisiteFailuresById,
     ).length;
 
-    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices + improvementPending;
+    return subracePending + subclassPending + backgroundPending + classPending + missingEquipmentChoices + improvementPending + progressionValidationMessages.length;
   }, [
     availableFeatIds,
     classRecordsByEntry,
@@ -981,6 +1050,7 @@ export function BuilderEditor({
     missingEquipmentChoices,
     selectedBackground,
     selectedRace,
+    progressionValidationMessages.length,
   ]);
 
   const abilityValidationMessage = useMemo(() => getAbilityValidationMessage(draft), [draft]);
@@ -1050,6 +1120,8 @@ export function BuilderEditor({
             return Boolean(step && entry && (!step.level || entry.level >= step.level) && !entry.subclassId);
           })
         ? "Choose every unlocked subclass before saving this draft."
+      : progressionValidationMessages[0]
+        ? progressionValidationMessages[0]
       : improvementValidationMessages[0]
         ? improvementValidationMessages[0]
       : spellValidationMessages[0]
@@ -1080,6 +1152,7 @@ export function BuilderEditor({
           }
           return Boolean(entry.subclassId);
         }),
+        progressionValidationMessages,
         abilityValidationMessage,
         improvementValidationMessages,
         spellSelectionEnabled: spellGroups.length > 0,
@@ -1087,7 +1160,7 @@ export function BuilderEditor({
         missingEquipmentChoices,
         levelingValidationMessage,
       }),
-    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, selectedRace, spellGroups.length, spellValidationMessages],
+    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, progressionValidationMessages, selectedRace, spellGroups.length, spellValidationMessages],
   );
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -1132,6 +1205,16 @@ export function BuilderEditor({
             },
           ]
         : []),
+      ...(progressionGroups.length
+        ? [
+            {
+              id: "progression",
+              kind: "progression" as const,
+              label: "Class choices",
+              description: "Resolve invocations, disciplines, fighting styles, metamagic-like picks, and other unlocked class families.",
+            },
+          ]
+        : []),
       {
         id: "background",
         kind: "background",
@@ -1169,7 +1252,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [selectedRace, spellGroups.length, subclassEntryIndexes.length]);
+  }, [progressionGroups.length, selectedRace, spellGroups.length, subclassEntryIndexes.length]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -1200,6 +1283,42 @@ export function BuilderEditor({
       setActiveClassEntryIndex(subclassEntryIndexes[0]);
     }
   }, [activeClassEntryIndex, currentStep, subclassEntryIndexes]);
+
+  useEffect(() => {
+    const validGroupIds = new Set(progressionGroups.map((group) => group.id));
+    const validOptionIds = new Map(
+      progressionGroups.map((group) => [
+        group.id,
+        new Set(group.options.map((option) => option.element.id)),
+      ]),
+    );
+    const hasStaleSelections = Object.entries(draft.progressionSelections).some(([groupId, optionIds]) => {
+      if (!validGroupIds.has(groupId)) {
+        return true;
+      }
+
+      const allowed = validOptionIds.get(groupId);
+      return (optionIds ?? []).some((optionId) => !allowed?.has(optionId));
+    });
+
+    if (!hasStaleSelections) {
+      return;
+    }
+
+    const nextSelections = Object.fromEntries(
+      Object.entries(draft.progressionSelections)
+        .filter(([groupId]) => validGroupIds.has(groupId))
+        .map(([groupId, optionIds]) => [
+          groupId,
+          (optionIds ?? []).filter((optionId) => validOptionIds.get(groupId)?.has(optionId)),
+        ]),
+    );
+
+    setDraft((current) => ({
+      ...current,
+      progressionSelections: nextSelections,
+    }));
+  }, [draft.progressionSelections, progressionGroups]);
 
   useEffect(() => {
     const validIds = new Set(improvementOpportunities.map((opportunity) => opportunity.id));
@@ -1357,6 +1476,8 @@ export function BuilderEditor({
       }
       case "background":
         return draft.backgroundId ? [] : ["Choose a background to continue."];
+      case "progression":
+        return progressionValidationMessages;
       case "feats":
         return improvementValidationMessages;
       case "spellcasting":
@@ -1389,6 +1510,7 @@ export function BuilderEditor({
     saveValidationMessage,
     selectedRace,
     spellValidationMessages,
+    progressionValidationMessages,
     subclassEntryIndexes,
     unlockedSubclassEntryIndexes,
   ]);
@@ -1408,6 +1530,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "progression":
+        return progressionValidationMessages.length === 0;
       case "feats":
         return improvementValidationMessages.length === 0;
       case "spellcasting":
@@ -1436,6 +1560,8 @@ export function BuilderEditor({
       }
       case "background":
         return Boolean(draft.backgroundId);
+      case "progression":
+        return progressionValidationMessages.length === 0;
       case "feats":
         return improvementValidationMessages.length === 0;
       case "spellcasting":
@@ -1802,6 +1928,23 @@ export function BuilderEditor({
               label="Background"
               onSelect={(id) => updateDraft({ backgroundId: id, equipmentSelections: {} })}
               selectedId={draft.backgroundId}
+            />
+          </section>
+        );
+      case "progression":
+        return (
+          <section className="builder-stepPanel">
+            <ProgressionChoicesStep
+              groups={progressionGroups}
+              selections={draft.progressionSelections}
+              onSelectionChange={(groupId, optionIds) =>
+                updateDraft({
+                  progressionSelections: {
+                    ...draft.progressionSelections,
+                    [groupId]: optionIds,
+                  },
+                })
+              }
             />
           </section>
         );

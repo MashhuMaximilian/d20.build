@@ -48,6 +48,7 @@ export type CharacterDraft = {
   abilityMode: AbilityMode;
   abilities: CharacterAbilities;
   improvementSelections: Record<string, CharacterImprovementSelection>;
+  progressionSelections: Record<string, string[]>;
   spellSelections: Record<string, string[]>;
   equipmentSelections: Record<string, string>;
   sourceManifest: CharacterSourceManifestEntry[];
@@ -102,6 +103,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       charisma: 10,
     },
     improvementSelections: {},
+    progressionSelections: {},
     spellSelections: {},
     equipmentSelections: {},
     sourceManifest: [],
@@ -180,6 +182,12 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
           featName: selection?.featName ?? undefined,
           featSource: selection?.featSource ?? undefined,
         } satisfies CharacterImprovementSelection,
+      ]),
+    ),
+    progressionSelections: Object.fromEntries(
+      Object.entries((draft as CharacterDraft).progressionSelections ?? {}).map(([key, value]) => [
+        key,
+        Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [],
       ]),
     ),
     spellSelections: Object.fromEntries(
