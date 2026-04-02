@@ -477,6 +477,7 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
     (rule): rule is Extract<BuiltInRule, { kind: "select" }> =>
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
+      rule.type !== "Sub Race" &&
       !isGenericSpellcastingRule(rule) &&
       (rule.type !== "Spell" || isSpecialProgressionSpellRule(rule)) &&
       !isImprovementRule(rule) &&
@@ -599,7 +600,7 @@ export function deriveProgressionChoiceGroups(args: {
         ownerType: "class",
         ownerLabel: record.class.name,
         entryLevel: entry.level,
-        features: unlockedClassFeatures,
+        features: [record.class, ...unlockedClassFeatures],
         optionPool,
         context: args.context,
       }),
@@ -608,7 +609,7 @@ export function deriveProgressionChoiceGroups(args: {
         ownerType: "subclass",
         ownerLabel: selectedSubclass?.archetype.name ?? record.class.name,
         entryLevel: entry.level,
-        features: unlockedSubclassFeatures,
+        features: selectedSubclass ? [selectedSubclass.archetype, ...unlockedSubclassFeatures] : unlockedSubclassFeatures,
         optionPool,
         context: args.context,
       }),
