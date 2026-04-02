@@ -127,6 +127,16 @@ function collectGrantedIds(rules: BuiltInRule[], type: string) {
   );
 }
 
+function collectGrantedIdsAtLevel(rules: BuiltInRule[], type: string, level: number) {
+  return rules.flatMap((rule) =>
+    rule.kind === "grant" && rule.type === type && (!rule.level || rule.level <= level) ? [rule.id] : [],
+  );
+}
+
+function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string) {
+  return elements.flatMap((element) => collectGrantedIds(element.rules, type));
+}
+
 function countSelectRules(rules: BuiltInRule[]) {
   return rules.filter((rule) => rule.kind === "select").length;
 }
@@ -837,16 +847,24 @@ export function BuilderEditor({
           return [];
         }
 
-        const classFeatureIds = new Set(collectGrantedIds(record.class.rules, "Class Feature"));
+        const classFeatureIds = new Set(collectGrantedIdsAtLevel(record.class.rules, "Class Feature", entry.level));
         const baseFeatures = record.features
           .filter((feature) => classFeatureIds.has(feature.id))
           .map((feature) => feature.name);
 
-        const subclassFeatures =
+        const selectedSubclass =
           record.subclassSteps
             .flatMap((step) => step.options)
-            .find((option) => option.archetype.id === entry.subclassId)
-            ?.features.map((feature) => feature.name) ?? [];
+            .find((option) => option.archetype.id === entry.subclassId) ?? null;
+        const subclassFeatureIds = new Set(
+          selectedSubclass
+            ? collectGrantedIdsAtLevel(selectedSubclass.archetype.rules, "Archetype Feature", entry.level)
+            : [],
+        );
+        const subclassFeatures =
+          selectedSubclass?.features
+            .filter((feature) => subclassFeatureIds.has(feature.id))
+            .map((feature) => feature.name) ?? [];
 
         return [...baseFeatures, ...subclassFeatures];
       }),
@@ -860,16 +878,98 @@ export function BuilderEditor({
           return [];
         }
 
-        const classFeatureIds = collectGrantedIds(record.class.rules, "Class Feature");
-        const subclassFeatureIds =
+        const classFeatureIds = collectGrantedIdsAtLevel(record.class.rules, "Class Feature", entry.level);
+        const selectedSubclass =
           record.subclassSteps
             .flatMap((step) => step.options)
-            .find((option) => option.archetype.id === entry.subclassId)
-            ?.features.map((feature) => feature.id) ?? [];
+            .find((option) => option.archetype.id === entry.subclassId) ?? null;
+        const subclassFeatureIds =
+          selectedSubclass
+            ? selectedSubclass.features
+                .filter((feature) =>
+                  collectGrantedIdsAtLevel(selectedSubclass.archetype.rules, "Archetype Feature", entry.level).includes(feature.id),
+                )
+                .map((feature) => feature.id)
+            : [];
 
         return [...classFeatureIds, ...subclassFeatureIds];
       }),
     [classRecordsByEntry, draft.classEntries],
+  );
+  const selectedBackgroundFeatureIds = useMemo(
+    () =>
+      selectedBackground
+        ? collectGrantedIds(selectedBackground.background.rules, "Background Feature")
+        : [],
+    [selectedBackground],
+  );
+  const selectedBackgroundFeatureNames = useMemo(
+    () =>
+      selectedBackground
+        ? selectedBackground.features
+            .filter((feature) => selectedBackgroundFeatureIds.includes(feature.id))
+            .map((feature) => feature.name)
+        : [],
+    [selectedBackground, selectedBackgroundFeatureIds],
+  );
+  const selectedBaseProficiencyIds = useMemo(() => {
+    const raceTraitIds = new Set(selectedRacialTraitIds);
+    const selectedRaceTraitElements =
+      selectedRace?.traits.filter((trait) => raceTraitIds.has(trait.id)) ?? [];
+    const classGrantedFeatureIds = new Set(selectedClassFeatureIds);
+    const selectedClassFeatureElements = classRecordsByEntry.flatMap((record, index) => {
+      const entry = draft.classEntries[index];
+      if (!record || !entry?.classId) {
+        return [];
+      }
+
+      const selectedSubclass =
+        record.subclassSteps
+          .flatMap((step) => step.options)
+          .find((option) => option.archetype.id === entry.subclassId) ?? null;
+
+      return [
+        record.class,
+        ...record.features.filter((feature) => classGrantedFeatureIds.has(feature.id)),
+        ...(selectedSubclass ? [selectedSubclass.archetype] : []),
+        ...(selectedSubclass?.features.filter((feature) => classGrantedFeatureIds.has(feature.id)) ?? []),
+      ];
+    });
+
+    const selectedBackgroundFeatureElements =
+      selectedBackground?.features.filter((feature) => selectedBackgroundFeatureIds.includes(feature.id)) ?? [];
+
+    return [
+      ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Proficiency") : []),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Proficiency") : []),
+      ...collectGrantedIdsFromElements(selectedRaceTraitElements, "Proficiency"),
+      ...classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        return record && entry?.classId
+          ? collectGrantedIdsAtLevel(record.class.rules, "Proficiency", entry.level)
+          : [];
+      }),
+      ...collectGrantedIdsFromElements(classGrantedFeatureIds.size ? selectedClassFeatureElements : [], "Proficiency"),
+      ...(selectedBackground ? collectGrantedIds(selectedBackground.background.rules, "Proficiency") : []),
+      ...collectGrantedIdsFromElements(selectedBackgroundFeatureElements, "Proficiency"),
+    ];
+  }, [
+    classRecordsByEntry,
+    draft.classEntries,
+    selectedBackground,
+    selectedBackgroundFeatureIds,
+    selectedClassFeatureIds,
+    selectedRace,
+    selectedRacialTraitIds,
+    selectedSubrace,
+  ]);
+  const selectedBaseLanguageIds = useMemo(
+    () => [
+      ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Language") : []),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Language") : []),
+      ...(selectedBackground ? collectGrantedIds(selectedBackground.background.rules, "Language") : []),
+    ],
+    [selectedBackground, selectedRace, selectedSubrace],
   );
   const requirementContext = useMemo<RequirementContext>(
     () => ({
@@ -880,8 +980,16 @@ export function BuilderEditor({
       selectedSubraceName: selectedSubrace?.name,
       selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
       selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
-      selectedFeatureIds: [...selectedRacialTraitIds, ...selectedClassFeatureIds],
-      selectedFeatureNames: [...selectedRacialTraitNames, ...selectedClassFeatureNames],
+      selectedFeatureIds: [...selectedRacialTraitIds, ...selectedBackgroundFeatureIds, ...selectedClassFeatureIds],
+      selectedFeatureNames: [
+        ...selectedRacialTraitNames,
+        ...selectedBackgroundFeatureNames,
+        ...selectedClassFeatureNames,
+      ],
+      selectedProficiencyIds: selectedBaseProficiencyIds,
+      selectedProficiencyNames: [],
+      selectedLanguageIds: selectedBaseLanguageIds,
+      selectedLanguageNames: [],
       selectedFeatIds: [],
       selectedFeatNames: [],
       hasSpellcasting: spellGroups.length > 0,
@@ -902,8 +1010,12 @@ export function BuilderEditor({
       draft.classEntries,
       effectiveAbilities,
       races,
+      selectedBackgroundFeatureIds,
+      selectedBackgroundFeatureNames,
       selectedClassFeatureIds,
       selectedClassFeatureNames,
+      selectedBaseLanguageIds,
+      selectedBaseProficiencyIds,
       selectedRace,
       selectedRacialTraitIds,
       selectedRacialTraitNames,
@@ -943,6 +1055,38 @@ export function BuilderEditor({
     () => getSelectedProgressionOptionElements(progressionGroups, draft.progressionSelections),
     [draft.progressionSelections, progressionGroups],
   );
+  const selectedProficiencyIds = useMemo(
+    () => [
+      ...selectedBaseProficiencyIds,
+      ...selectedProgressionElements.flatMap((element) =>
+        element.type === "Proficiency" ? [element.id] : collectGrantedIds(element.rules, "Proficiency"),
+      ),
+    ],
+    [selectedBaseProficiencyIds, selectedProgressionElements],
+  );
+  const selectedProficiencyNames = useMemo(
+    () =>
+      selectedProgressionElements
+        .filter((element) => element.type === "Proficiency")
+        .map((element) => element.name),
+    [selectedProgressionElements],
+  );
+  const selectedLanguageIds = useMemo(
+    () => [
+      ...selectedBaseLanguageIds,
+      ...selectedProgressionElements.flatMap((element) =>
+        element.type === "Language" ? [element.id] : collectGrantedIds(element.rules, "Language"),
+      ),
+    ],
+    [selectedBaseLanguageIds, selectedProgressionElements],
+  );
+  const selectedLanguageNames = useMemo(
+    () =>
+      selectedProgressionElements
+        .filter((element) => element.type === "Language")
+        .map((element) => element.name),
+    [selectedProgressionElements],
+  );
   const progressionValidationMessages = useMemo(
     () => getProgressionValidationMessages(progressionGroups, draft.progressionSelections),
     [draft.progressionSelections, progressionGroups],
@@ -981,15 +1125,21 @@ export function BuilderEditor({
           selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
           selectedFeatureIds: [
             ...selectedRacialTraitIds,
+            ...selectedBackgroundFeatureIds,
             ...selectedClassFeatureIds,
             ...selectedFeatFeatureIds,
             ...selectedProgressionElements.map((element) => element.id),
           ],
           selectedFeatureNames: [
             ...selectedRacialTraitNames,
+            ...selectedBackgroundFeatureNames,
             ...selectedClassFeatureNames,
             ...selectedProgressionElements.map((element) => element.name),
           ],
+          selectedProficiencyIds,
+          selectedProficiencyNames,
+          selectedLanguageIds,
+          selectedLanguageNames,
           selectedFeatIds,
           selectedFeatNames,
           hasSpellcasting: spellGroups.length > 0,
@@ -1009,13 +1159,19 @@ export function BuilderEditor({
     effectiveAbilities,
     feats,
     races,
+    selectedBackgroundFeatureIds,
+    selectedBackgroundFeatureNames,
     selectedClassFeatureIds,
     selectedRacialTraitIds,
     selectedRacialTraitNames,
     selectedRace,
     selectedSubrace,
     selectedClassFeatureNames,
+    selectedLanguageNames,
     selectedProgressionElements,
+    selectedProficiencyNames,
+    selectedProficiencyIds,
+    selectedLanguageIds,
     spellGroups.length,
     totalCharacterLevel,
   ]);

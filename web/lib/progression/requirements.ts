@@ -10,6 +10,10 @@ export type RequirementContext = {
   selectedClassNames: string[];
   selectedFeatureIds: string[];
   selectedFeatureNames: string[];
+  selectedProficiencyIds: string[];
+  selectedProficiencyNames: string[];
+  selectedLanguageIds: string[];
+  selectedLanguageNames: string[];
   selectedFeatIds: string[];
   selectedFeatNames: string[];
   hasSpellcasting: boolean;
@@ -133,6 +137,8 @@ function buildSelectedIdSet(context: RequirementContext) {
       context.selectedSubraceId,
       ...context.selectedClassIds,
       ...context.selectedFeatureIds,
+      ...context.selectedProficiencyIds,
+      ...context.selectedLanguageIds,
       ...context.selectedFeatIds,
     ].filter((value): value is string => Boolean(value)),
   );

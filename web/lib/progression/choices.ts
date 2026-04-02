@@ -48,6 +48,36 @@ function collectGrantedIdsAtLevel(rules: BuiltInRule[], type: string, level: num
   );
 }
 
+function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string, level?: number) {
+  return elements.flatMap((element) =>
+    element.rules.flatMap((rule) =>
+      rule.kind === "grant" &&
+      rule.type === type &&
+      (!level || !rule.level || rule.level <= level)
+        ? [rule.id]
+        : [],
+    ),
+  );
+}
+
+function resolveNestedOwnerFeatures(entry: SelectedProgressionOptionEntry, optionPool: Map<string, BuiltInElement>) {
+  const nestedGrantTypes = [
+    "Class Feature",
+    "Archetype Feature",
+    "Racial Trait",
+    "Background Feature",
+    "Feat Feature",
+  ];
+
+  const grantedFeatures = nestedGrantTypes.flatMap((type) =>
+    collectGrantedIdsFromElements([entry.element], type)
+      .map((id) => optionPool.get(id))
+      .filter((element): element is BuiltInElement => Boolean(element)),
+  );
+
+  return [entry.element, ...grantedFeatures];
+}
+
 function isImprovementRule(rule: BuiltInRule) {
   return (
     rule.kind === "select" &&
@@ -558,6 +588,30 @@ function extendRequirementContext(
     ...context,
     selectedFeatureIds: [...context.selectedFeatureIds, ...selectedEntries.map((entry) => entry.element.id)],
     selectedFeatureNames: [...context.selectedFeatureNames, ...selectedEntries.map((entry) => entry.element.name)],
+    selectedProficiencyIds: [
+      ...context.selectedProficiencyIds,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Proficiency" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Proficiency"),
+      ),
+    ],
+    selectedProficiencyNames: [
+      ...context.selectedProficiencyNames,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Proficiency" ? [entry.element.name] : [],
+      ),
+    ],
+    selectedLanguageIds: [
+      ...context.selectedLanguageIds,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Language" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Language"),
+      ),
+    ],
+    selectedLanguageNames: [
+      ...context.selectedLanguageNames,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Language" ? [entry.element.name] : [],
+      ),
+    ],
   };
 }
 
@@ -659,7 +713,7 @@ export function deriveProgressionChoiceGroups(args: {
           entry.classEntryIndex >= 0
             ? Math.max(args.classEntries[entry.classEntryIndex]?.level ?? 1, 1)
             : Math.max(args.context.totalLevel, 1),
-        features: [entry.element],
+        features: resolveNestedOwnerFeatures(entry, optionPool),
         optionPool,
         context: contextWithSelections,
       }),
