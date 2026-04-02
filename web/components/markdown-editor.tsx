@@ -30,11 +30,11 @@ const DND_THEME = {
     },
     hovered: {
       text: "#24150f",
-      background: "rgba(230, 154, 40, 0.16)",
+      background: "rgba(146, 38, 16, 0.12)",
     },
     selected: {
-      text: "#fff8f1",
-      background: "#922610",
+      text: "#24150f",
+      background: "rgba(146, 38, 16, 0.18)",
     },
     border: "#e6cdb5",
     shadow: "rgba(77, 39, 20, 0.12)",
@@ -191,9 +191,6 @@ export function MarkdownEditor({
           triggerCharacter="/"
         />
       </BlockNoteView>
-      <p className="builder-summary__meta markdown-editor__hint">
-        Use Markdown shortcuts or type <code>/</code> for headings, lists, quotes, and D&D note templates.
-      </p>
     </div>
   );
 }

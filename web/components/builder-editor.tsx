@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AbilityScoreEditor } from "@/components/ability-score-editor";
@@ -1594,10 +1594,14 @@ export function BuilderEditor({
     draft.raceId && primaryClassEntry?.classId && draft.backgroundId && !saveValidationMessage,
   );
 
-  const currentStepWarnings = useMemo(() => {
-    switch (activeStep.kind) {
+  const getStepWarnings = useCallback((step: BuilderStep) => {
+    switch (step.kind) {
       case "foundation":
-        return [abilityValidationMessage, levelingValidationMessage].filter(Boolean);
+        return [
+          !draft.name.trim() ? "Enter a character name before continuing." : "",
+          abilityValidationMessage,
+          levelingValidationMessage,
+        ].filter(Boolean);
       case "race":
         return [];
       case "subrace":
@@ -1661,24 +1665,47 @@ export function BuilderEditor({
         return [];
     }
   }, [
-    activeClassEntryIndex,
     abilityValidationMessage,
-    activeStep,
+    activeClassEntryIndex,
     classRecordsByEntry,
     draft.backgroundId,
     draft.classEntries,
-    improvementValidationMessages,
+    draft.name,
     draft.subraceId,
+    improvementValidationMessages,
     levelingValidationMessage,
     missingEquipmentChoices,
     multiclassValidationMessages,
+    progressionValidationMessages,
     saveValidationMessage,
     selectedRace,
     spellValidationMessages,
-    progressionValidationMessages,
     subclassEntryIndexes,
     unlockedSubclassEntryIndexes,
   ]);
+
+  const currentStepWarnings = useMemo(() => getStepWarnings(activeStep), [activeStep, getStepWarnings]);
+
+  const unresolvedStepWarnings = useMemo(
+    () =>
+      steps
+        .filter((step) => step.id !== activeStep.id)
+        .flatMap((step) =>
+          getStepWarnings(step).map((warning) => ({
+            step: step.label,
+            message: warning,
+          })),
+        ),
+    [activeStep.id, getStepWarnings, steps],
+  );
+
+  const navigationWarnings = useMemo(() => {
+    if (currentStepWarnings.length) {
+      return currentStepWarnings;
+    }
+
+    return unresolvedStepWarnings.map(({ step, message }) => `${step}: ${message}`);
+  }, [currentStepWarnings, unresolvedStepWarnings]);
 
   const canAdvance = (() => {
     switch (activeStep.kind) {
@@ -2497,12 +2524,12 @@ export function BuilderEditor({
       <section className="builder-navigation">
         <div className="builder-navigation__meta">
           <span className="builder-panel__label">Current step</span>
-          <div className={`builder-navigation__summary${currentStepWarnings.length ? " builder-navigation__summary--warning" : ""}`}>
+          <div className={`builder-navigation__summary${navigationWarnings.length ? " builder-navigation__summary--warning" : ""}`}>
             <strong>{activeStep.label}</strong>
             <p>{activeStep.description}</p>
-            {currentStepWarnings.length ? (
+            {navigationWarnings.length ? (
               <div className="builder-navigation__warningList">
-                {currentStepWarnings.map((warning) => (
+                {navigationWarnings.map((warning) => (
                   <p className="auth-card__status auth-card__status--error builder-navigation__warningItem" key={warning}>
                     {warning}
                   </p>

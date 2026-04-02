@@ -133,6 +133,9 @@ export function BackstoryStep({ value, onChange }: BackstoryStepProps) {
           This editor is meant to feel like a notebook, not a form. Keep short list-like notes in the small cards, use the side-by-side
           cards for relationships and extra hooks, and use the large backstory space for the longer narrative.
         </p>
+        <p className="builder-summary__meta">
+          Use Markdown shortcuts or type <code>/</code> for headings, lists, quotes, and D&amp;D note templates.
+        </p>
       </div>
 
       <div className="backstory-step__smallGrid">

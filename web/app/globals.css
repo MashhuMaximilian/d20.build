@@ -2070,21 +2070,32 @@ a {
   border-radius: 16px;
   border-color: rgba(146, 38, 16, 0.14);
   box-shadow: 0 14px 30px rgba(77, 39, 20, 0.12);
+  background: rgba(255, 252, 246, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 .markdown-editor__surface .bn-editor h1,
 .markdown-editor__surface .bn-editor h2,
 .markdown-editor__surface .bn-editor h3,
+.markdown-editor__surface .bn-editor h4,
+.markdown-editor__surface .bn-editor h5,
+.markdown-editor__surface .bn-editor h6,
 .markdown-renderer__surface .bn-editor h1,
 .markdown-renderer__surface .bn-editor h2,
-.markdown-renderer__surface .bn-editor h3 {
+.markdown-renderer__surface .bn-editor h3,
+.markdown-renderer__surface .bn-editor h4,
+.markdown-renderer__surface .bn-editor h5,
+.markdown-renderer__surface .bn-editor h6 {
   color: var(--accent-strong);
+  margin: 0 0 0.7em;
+  line-height: 1.2;
 }
 
 .markdown-editor__surface .bn-editor p,
 .markdown-renderer__surface .bn-editor p,
 .backstory-step__rendered p {
   margin: 0 0 0.8em;
+  font-size: 0.95rem;
 }
 
 .markdown-editor__surface .bn-editor p:last-child,
@@ -2120,22 +2131,45 @@ a {
   color: var(--muted);
 }
 
+.markdown-editor__surface .bn-editor h1,
+.markdown-renderer__surface .bn-editor h1,
+.backstory-step__rendered h1 {
+  font-size: 1.4rem;
+}
+
 .markdown-editor__surface .bn-editor h2,
 .markdown-renderer__surface .bn-editor h2,
 .backstory-step__rendered h2 {
-  font-size: 1.1rem;
+  font-size: 1.22rem;
   color: var(--accent-strong);
 }
 
 .markdown-editor__surface .bn-editor h3,
 .markdown-renderer__surface .bn-editor h3,
 .backstory-step__rendered h3 {
-  font-size: 0.98rem;
+  font-size: 1.12rem;
   color: var(--accent-strong);
 }
 
-.markdown-editor__hint {
-  margin: 0;
+.markdown-editor__surface .bn-editor h4,
+.markdown-renderer__surface .bn-editor h4,
+.backstory-step__rendered h4 {
+  font-size: 1.05rem;
+  color: var(--accent-strong);
+}
+
+.markdown-editor__surface .bn-editor h5,
+.markdown-renderer__surface .bn-editor h5,
+.backstory-step__rendered h5 {
+  font-size: 1rem;
+  color: var(--accent-strong);
+}
+
+.markdown-editor__surface .bn-editor h6,
+.markdown-renderer__surface .bn-editor h6,
+.backstory-step__rendered h6 {
+  font-size: 0.95rem;
+  color: var(--accent-strong);
 }
 
 .backstory-step__sheetTitle {
