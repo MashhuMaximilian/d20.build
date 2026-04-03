@@ -140,6 +140,18 @@ function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string)
   return elements.flatMap((element) => collectGrantedIds(element.rules, type));
 }
 
+function humanizeGrantedId(value: string) {
+  return value
+    .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
+    .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^ID_LANGUAGE_/, "")
+    .replace(/^ID_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bCant\b/g, "Cant");
+}
+
 function collectStatBonusesFromElements(elements: BuiltInElement[]) {
   const values = elements.flatMap((element) =>
     element.rules.flatMap((rule) =>
@@ -1038,6 +1050,13 @@ export function BuilderEditor({
     ],
     [selectedBackground, selectedFeatElements, selectedRace, selectedSubrace],
   );
+  const selectedSizeIds = useMemo(
+    () => [
+      ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Size") : []),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Size") : []),
+    ],
+    [selectedRace, selectedSubrace],
+  );
   const requirementContext = useMemo<RequirementContext>(
     () => ({
       effectiveAbilities,
@@ -1045,6 +1064,7 @@ export function BuilderEditor({
       selectedRaceName: selectedRace?.race.name,
       selectedSubraceId: selectedSubrace?.id,
       selectedSubraceName: selectedSubrace?.name,
+      selectedSizeIds,
       selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
       selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
       selectedFeatureIds: [
@@ -1060,9 +1080,9 @@ export function BuilderEditor({
         ...selectedFeatFeatureNames,
       ],
       selectedProficiencyIds: selectedBaseProficiencyIds,
-      selectedProficiencyNames: [],
+      selectedProficiencyNames: selectedBaseProficiencyIds.map(humanizeGrantedId),
       selectedLanguageIds: selectedBaseLanguageIds,
-      selectedLanguageNames: [],
+      selectedLanguageNames: selectedBaseLanguageIds.map(humanizeGrantedId),
       selectedFeatIds: selectedFeatElements.map((feat) => feat.id),
       selectedFeatNames: selectedFeatElements.map((feat) => feat.name),
       hasSpellcasting: spellGroups.length > 0 || selectedFeatElements.some((feat) => Boolean(feat.spellcasting)),
@@ -1096,6 +1116,7 @@ export function BuilderEditor({
       selectedRacialTraitIds,
       selectedRacialTraitNames,
       selectedSubrace,
+      selectedSizeIds,
       spellGroups.length,
       totalCharacterLevel,
     ],
@@ -1199,6 +1220,7 @@ export function BuilderEditor({
           selectedRaceName: selectedRace?.race.name,
           selectedSubraceId: selectedSubrace?.id,
           selectedSubraceName: selectedSubrace?.name,
+          selectedSizeIds,
           selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
           selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
           selectedFeatureIds: [
@@ -1243,6 +1265,7 @@ export function BuilderEditor({
     selectedRacialTraitIds,
     selectedRacialTraitNames,
     selectedRace,
+    selectedSizeIds,
     selectedSubrace,
     selectedClassFeatureNames,
     selectedLanguageNames,

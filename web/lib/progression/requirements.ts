@@ -6,6 +6,7 @@ export type RequirementContext = {
   selectedRaceName?: string;
   selectedSubraceId?: string;
   selectedSubraceName?: string;
+  selectedSizeIds: string[];
   selectedClassIds: string[];
   selectedClassNames: string[];
   selectedFeatureIds: string[];
@@ -151,11 +152,20 @@ function humanizeRequirementId(value: string) {
     .replace(/\bCant\b/g, "Cant");
 }
 
+function normalizeComparisonText(value: string) {
+  return normalizeRequirementText(value)
+    .replace(/\b(?:a|an|the)\b/g, " ")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function buildSelectedIdSet(context: RequirementContext) {
   return new Set(
     [
       context.selectedRaceId,
       context.selectedSubraceId,
+      ...context.selectedSizeIds,
       ...context.selectedClassIds,
       ...context.selectedFeatureIds,
       ...context.selectedProficiencyIds,
@@ -348,6 +358,20 @@ export function getRequirementFailures(
     }
   });
 
+  const normalizedProficiencyNames = [...selectedProficiencyNames].map(normalizeComparisonText);
+  if (
+    /proficiency\s+(?:with|in)\s+a?\s*martial weapon/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("martial weapon"))
+  ) {
+    failures.push("Requires proficiency with a martial weapon.");
+  }
+  if (
+    /proficiency\s+(?:with|in)\s+a?\s*simple weapon/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("simple weapon"))
+  ) {
+    failures.push("Requires proficiency with a simple weapon.");
+  }
+
   const languageMatches = [
     ...fallbackText.matchAll(/(?:speak|read|write|know)\s+([A-Za-z'’ -]+?)(?:\s+language)?(?=[,.;)]|$)/gi),
   ];
@@ -411,6 +435,13 @@ export function getRequirementFailures(
     }
   }
 
+  if (/small race/i.test(fallbackText) && !context.selectedSizeIds.includes("ID_SIZE_SMALL")) {
+    failures.push("Requires a Small race.");
+  }
+  if (/medium race/i.test(fallbackText) && !context.selectedSizeIds.includes("ID_SIZE_MEDIUM")) {
+    failures.push("Requires a Medium race.");
+  }
+
   const namedFeatureOrFeatOptions = [...fallbackText.matchAll(/([A-Z][A-Za-z' -]+?)\s+(feature|feat)/g)].map(
     (match) => ({
       name: match[1].trim(),
@@ -432,6 +463,26 @@ export function getRequirementFailures(
       );
     }
   }
+
+  const selectedNamedOptions = [...context.selectedFeatureNames, ...context.selectedFeatNames].map(normalizeComparisonText);
+  const specialNamedRequirements = [
+    ...fallbackText.matchAll(/\b([A-Z][A-Za-z' -]+?)\s+patron\b/g),
+    ...fallbackText.matchAll(/\b(Pact of the [A-Za-z' -]+)\b/g),
+    ...fallbackText.matchAll(/\b([A-Z][A-Za-z' -]+?)\s+order\b/g),
+    ...fallbackText.matchAll(/\b(eldritch blast)\s+cantrip\b/gi),
+  ]
+    .map((match) => normalizeComparisonText(match[1].trim()))
+    .filter(Boolean);
+
+  specialNamedRequirements.forEach((required) => {
+    const hasMatch = selectedNamedOptions.some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasMatch) {
+      failures.push(`Requires ${required.replace(/\b\w/g, (char) => char.toUpperCase())}.`);
+    }
+  });
 
   return [...new Set(failures)];
 }
