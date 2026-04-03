@@ -601,6 +601,10 @@ function extendRequirementContext(
     ...context,
     selectedFeatureIds: [...context.selectedFeatureIds, ...selectedEntries.map((entry) => entry.element.id)],
     selectedFeatureNames: [...context.selectedFeatureNames, ...selectedEntries.map((entry) => entry.element.name)],
+    selectedSizeIds: [
+      ...context.selectedSizeIds,
+      ...selectedEntries.flatMap((entry) => collectGrantedIdsFromElements([entry.element], "Size")),
+    ],
     selectedProficiencyIds: [
       ...context.selectedProficiencyIds,
       ...selectedEntries.flatMap((entry) =>

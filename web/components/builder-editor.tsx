@@ -1050,12 +1050,47 @@ export function BuilderEditor({
     ],
     [selectedBackground, selectedFeatElements, selectedRace, selectedSubrace],
   );
+  const selectedSubclassNames = useMemo(
+    () =>
+      classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        if (!record || !entry?.subclassId) {
+          return [];
+        }
+
+        const selectedSubclass =
+          record.subclassSteps
+            .flatMap((step) => step.options)
+            .find((option) => option.archetype.id === entry.subclassId) ?? null;
+
+        return selectedSubclass ? [selectedSubclass.archetype.name] : [];
+      }),
+    [classRecordsByEntry, draft.classEntries],
+  );
+  const selectedSubclassIds = useMemo(
+    () =>
+      classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        if (!record || !entry?.subclassId) {
+          return [];
+        }
+
+        const selectedSubclass =
+          record.subclassSteps
+            .flatMap((step) => step.options)
+            .find((option) => option.archetype.id === entry.subclassId) ?? null;
+
+        return selectedSubclass ? [selectedSubclass.archetype.id] : [];
+      }),
+    [classRecordsByEntry, draft.classEntries],
+  );
   const selectedSizeIds = useMemo(
     () => [
       ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Size") : []),
       ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Size") : []),
+      ...collectGrantedIdsFromElements(selectedFeatElements, "Size"),
     ],
-    [selectedRace, selectedSubrace],
+    [selectedFeatElements, selectedRace, selectedSubrace],
   );
   const requirementContext = useMemo<RequirementContext>(
     () => ({
@@ -1068,12 +1103,14 @@ export function BuilderEditor({
       selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
       selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
       selectedFeatureIds: [
+        ...selectedSubclassIds,
         ...selectedRacialTraitIds,
         ...selectedBackgroundFeatureIds,
         ...selectedClassFeatureIds,
         ...selectedFeatFeatureIds,
       ],
       selectedFeatureNames: [
+        ...selectedSubclassNames,
         ...selectedRacialTraitNames,
         ...selectedBackgroundFeatureNames,
         ...selectedClassFeatureNames,
@@ -1117,6 +1154,8 @@ export function BuilderEditor({
       selectedRacialTraitNames,
       selectedSubrace,
       selectedSizeIds,
+      selectedSubclassIds,
+      selectedSubclassNames,
       spellGroups.length,
       totalCharacterLevel,
     ],
@@ -1224,6 +1263,7 @@ export function BuilderEditor({
           selectedClassIds: draft.classEntries.map((entry) => entry.classId).filter(Boolean),
           selectedClassNames: classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : [])),
           selectedFeatureIds: [
+            ...selectedSubclassIds,
             ...selectedRacialTraitIds,
             ...selectedBackgroundFeatureIds,
             ...selectedClassFeatureIds,
@@ -1231,6 +1271,7 @@ export function BuilderEditor({
             ...selectedProgressionElements.map((element) => element.id),
           ],
           selectedFeatureNames: [
+            ...selectedSubclassNames,
             ...selectedRacialTraitNames,
             ...selectedBackgroundFeatureNames,
             ...selectedClassFeatureNames,
@@ -1267,6 +1308,8 @@ export function BuilderEditor({
     selectedRace,
     selectedSizeIds,
     selectedSubrace,
+    selectedSubclassIds,
+    selectedSubclassNames,
     selectedClassFeatureNames,
     selectedLanguageNames,
     selectedProgressionElements,
