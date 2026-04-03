@@ -592,15 +592,37 @@ export function getSelectedProgressionOptionElements(
 function extendRequirementContext(
   context: RequirementContext,
   selectedEntries: SelectedProgressionOptionEntry[],
+  optionPool: Map<string, BuiltInElement>,
 ): RequirementContext {
   if (!selectedEntries.length) {
     return context;
   }
 
+  const grantedFeatureIds = selectedEntries.flatMap((entry) =>
+    [
+      ...collectGrantedIdsFromElements([entry.element], "Class Feature"),
+      ...collectGrantedIdsFromElements([entry.element], "Archetype Feature"),
+      ...collectGrantedIdsFromElements([entry.element], "Racial Trait"),
+      ...collectGrantedIdsFromElements([entry.element], "Background Feature"),
+      ...collectGrantedIdsFromElements([entry.element], "Feat Feature"),
+    ].filter(Boolean),
+  );
+  const grantedFeatureNames = grantedFeatureIds
+    .map((id) => optionPool.get(id)?.name)
+    .filter((name): name is string => Boolean(name));
+
   return {
     ...context,
-    selectedFeatureIds: [...context.selectedFeatureIds, ...selectedEntries.map((entry) => entry.element.id)],
-    selectedFeatureNames: [...context.selectedFeatureNames, ...selectedEntries.map((entry) => entry.element.name)],
+    selectedFeatureIds: [
+      ...context.selectedFeatureIds,
+      ...selectedEntries.map((entry) => entry.element.id),
+      ...grantedFeatureIds,
+    ],
+    selectedFeatureNames: [
+      ...context.selectedFeatureNames,
+      ...selectedEntries.map((entry) => entry.element.name),
+      ...grantedFeatureNames,
+    ],
     selectedSizeIds: [
       ...context.selectedSizeIds,
       ...selectedEntries.flatMap((entry) => collectGrantedIdsFromElements([entry.element], "Size")),
@@ -733,7 +755,7 @@ export function deriveProgressionChoiceGroups(args: {
   let frontier = getSelectedProgressionOptionEntries(groups, args.selections);
 
   while (frontier.length) {
-    const contextWithSelections = extendRequirementContext(args.context, frontier);
+    const contextWithSelections = extendRequirementContext(args.context, frontier, optionPool);
     const nestedGroups = frontier.flatMap((entry) =>
       buildGroupsFromFeatures({
         classEntryIndex: entry.classEntryIndex,
@@ -767,7 +789,11 @@ export function deriveProgressionChoiceGroups(args: {
     });
   }
 
-  const finalContext = extendRequirementContext(args.context, getSelectedProgressionOptionEntries(groups, args.selections));
+  const finalContext = extendRequirementContext(
+    args.context,
+    getSelectedProgressionOptionEntries(groups, args.selections),
+    optionPool,
+  );
 
   return groups.map((group) => ({
     ...group,

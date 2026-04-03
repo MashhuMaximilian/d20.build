@@ -371,6 +371,30 @@ export function getRequirementFailures(
   ) {
     failures.push("Requires proficiency with a simple weapon.");
   }
+  if (
+    /proficiency\s+(?:with|in)\s+(?:light armor|light armour)/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("light armor") || name.includes("light armour"))
+  ) {
+    failures.push("Requires proficiency with light armor.");
+  }
+  if (
+    /proficiency\s+(?:with|in)\s+(?:medium armor|medium armour)/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("medium armor") || name.includes("medium armour"))
+  ) {
+    failures.push("Requires proficiency with medium armor.");
+  }
+  if (
+    /proficiency\s+(?:with|in)\s+(?:heavy armor|heavy armour)/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("heavy armor") || name.includes("heavy armour"))
+  ) {
+    failures.push("Requires proficiency with heavy armor.");
+  }
+  if (
+    /proficiency\s+(?:with|in)\s+shields?/i.test(fallbackText) &&
+    !normalizedProficiencyNames.some((name) => name.includes("shield"))
+  ) {
+    failures.push("Requires proficiency with shields.");
+  }
 
   const languageMatches = [
     ...fallbackText.matchAll(/(?:speak|read|write|know)\s+([A-Za-z'’ -]+?)(?:\s+language)?(?=[,.;)]|$)/gi),
