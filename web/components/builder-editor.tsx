@@ -1643,7 +1643,11 @@ export function BuilderEditor({
     const validOptionIds = new Map(
       progressionGroups.map((group) => [
         group.id,
-        new Set(group.options.map((option) => option.element.id)),
+        new Set(
+          group.options
+            .filter((option) => option.requirementFailures.length === 0)
+            .map((option) => option.element.id),
+        ),
       ]),
     );
     const hasStaleSelections = Object.entries(draft.progressionSelections).some(([groupId, optionIds]) => {

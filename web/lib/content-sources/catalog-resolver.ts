@@ -32,6 +32,7 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Background Variant",
   "Class",
   "Class Feature",
+  "Companion",
   "Feat",
   "Feat Feature",
   "Language",
@@ -478,7 +479,7 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
       ),
     ),
     ...classElements.filter((element) =>
-      ["Class Feature", "Archetype Feature", "Language", "Proficiency"].includes(element.type),
+      ["Class Feature", "Archetype Feature", "Companion", "Language", "Proficiency"].includes(element.type),
     ),
     ...backgroundElements.filter((element) =>
       ["Background Feature", "Background Variant", "Language", "Proficiency"].includes(element.type),

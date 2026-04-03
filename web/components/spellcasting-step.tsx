@@ -164,6 +164,7 @@ export function SpellcastingStep({
   const previewSpell =
     sortedSpells.find((spell) => spell.id === previewId) ??
     availableSpells.find((spell) => spell.id === previewId) ??
+    (previewId ? spellsById.get(previewId) ?? null : null) ??
     (activeGroup?.grantedSpellIds[0] ? spellsById.get(activeGroup.grantedSpellIds[0]) ?? null : null);
 
   const allWarnings = getSpellValidationMessages(groups, selections);
@@ -852,11 +853,15 @@ export function SpellcastingStep({
                   <section className="catalog-selector__detailSection">
                     <span className="catalog-selector__detailLabel">Selection summary</span>
                     <ul className="catalog-selector__impactList">
-                      <li>
-                        {activeGroup.kind === "prepared"
-                          ? `Prepared ${selectedSpellIds.length} of ${activeGroup.maxSelections}`
-                          : `Selected ${selectedSpellIds.length} of ${activeGroup.maxSelections}`}
-                      </li>
+                      {activeGroup.kind === "granted" ? (
+                        <li>Granted {activeGroup.grantedSpellIds.length} spell{activeGroup.grantedSpellIds.length === 1 ? "" : "s"}.</li>
+                      ) : (
+                        <li>
+                          {activeGroup.kind === "prepared"
+                            ? `Prepared ${selectedSpellIds.length} of ${activeGroup.maxSelections}`
+                            : `Selected ${selectedSpellIds.length} of ${activeGroup.maxSelections}`}
+                        </li>
+                      )}
                       {activeGroup.spellcastingAbility ? (
                         <li>Spellcasting ability: {activeGroup.spellcastingAbility.toUpperCase()}</li>
                       ) : null}

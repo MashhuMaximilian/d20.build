@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getDetailMarkup } from "@/components/catalog-selector";
 import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
 import { formatSupportLabel, type ProgressionChoiceGroup } from "@/lib/progression/choices";
+import { cleanReadablePrerequisite } from "@/lib/progression/requirements";
 
 type ProgressionChoicesStepProps = {
   groups: ProgressionChoiceGroup[];
@@ -13,8 +14,9 @@ type ProgressionChoicesStepProps = {
 };
 
 function getOptionSummary(group: ProgressionChoiceGroup, description: string, prerequisite?: string) {
-  if (prerequisite?.trim()) {
-    return prerequisite.trim();
+  const readablePrerequisite = cleanReadablePrerequisite(prerequisite);
+  if (readablePrerequisite) {
+    return readablePrerequisite;
   }
 
   const firstSentence = description
@@ -421,7 +423,7 @@ export function ProgressionChoicesStep({
                     <h3 className="catalog-selector__detailTitle">{previewOption.element.name}</h3>
                     <p className="catalog-selector__detailMeta">
                       {previewOption.element.source}
-                      {previewOption.element.prerequisite ? ` • ${previewOption.element.prerequisite}` : ""}
+                      {previewOption.element.prerequisite ? ` • ${cleanReadablePrerequisite(previewOption.element.prerequisite)}` : ""}
                     </p>
                   </div>
 

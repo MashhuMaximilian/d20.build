@@ -165,6 +165,21 @@ function normalizeComparisonText(value: string) {
     .trim();
 }
 
+export function cleanReadablePrerequisite(value: string | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .replace(/^prerequisite:\s*/i, "")
+    .replace(
+      /\s+(Once during|When you|While you|As an action|As a bonus action|You can|You gain|You learn|During combat)\b[\s\S]*$/i,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function buildSelectedIdSet(context: RequirementContext) {
   return new Set(
     [
@@ -292,7 +307,7 @@ export function getRequirementFailures(
   prerequisite: string | undefined,
   context: RequirementContext,
 ) {
-  const readablePrerequisite = prerequisite?.trim() ?? "";
+  const readablePrerequisite = cleanReadablePrerequisite(prerequisite);
   const readableRequirements = requirements?.trim() ?? "";
   const fallbackText = [readablePrerequisite, readableRequirements].filter(Boolean).join(" ").trim();
 
@@ -433,7 +448,9 @@ export function getRequirementFailures(
     }
   });
 
-  const levelMatch = fallbackText.match(/(\d+)(?:st|nd|rd|th)-level/i);
+  const levelMatch =
+    fallbackText.match(/(\d+)(?:st|nd|rd|th)\s*-?\s*level/i) ??
+    fallbackText.match(/\blevel\s*(\d+)/i);
   if (levelMatch) {
     const minimum = Number(levelMatch[1]);
     const effectiveLevel = context.ownerClassLevel ?? context.totalLevel;
@@ -456,7 +473,9 @@ export function getRequirementFailures(
   }
 
   mentionedClasses.forEach((name) => {
-    const classLevelMatch = fallbackText.match(new RegExp(`${name}[^\\d]{0,12}(\\d+)(?:st|nd|rd|th)-level`, "i"));
+    const classLevelMatch =
+      fallbackText.match(new RegExp(`${name}[^\\d]{0,12}(\\d+)(?:st|nd|rd|th)\\s*-?\\s*level`, "i")) ??
+      fallbackText.match(new RegExp(`${name}[^\\d]{0,12}level\\s*(\\d+)`, "i"));
     if (!classLevelMatch) {
       return;
     }

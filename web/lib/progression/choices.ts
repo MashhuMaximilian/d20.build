@@ -254,6 +254,16 @@ const LANGUAGE_ELEMENTS = LANGUAGE_OPTIONS.map(([id, name, supports]) =>
   createSyntheticOptionElement("Language", id, name, ["Language", ...supports]),
 );
 
+const SYNTHETIC_OPTION_NAME_BY_ID = new Map<string, string>(
+  [
+    ...SKILL_PROFICIENCY_ELEMENTS,
+    ...TOOL_PROFICIENCY_OPTIONS,
+    ...MUSICAL_INSTRUMENT_ELEMENTS,
+    ...GAMING_SET_ELEMENTS,
+    ...LANGUAGE_ELEMENTS,
+  ].map((element) => [element.id, element.name]),
+);
+
 const SYNTHETIC_PROFICIENCY_OPTIONS = [
   ...SKILL_PROFICIENCY_ELEMENTS,
   ...TOOL_PROFICIENCY_OPTIONS,
@@ -341,9 +351,12 @@ export function formatSupportLabel(value: string | undefined) {
   const explicitIds = collectExplicitIdTokens(value);
   if (explicitIds.length) {
     const labels = explicitIds.map((id) =>
+      SYNTHETIC_OPTION_NAME_BY_ID.get(id) ??
       id
+        .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
         .replace(/^ID_PROFICIENCY_/, "")
         .replace(/^ID_LANGUAGE_/, "")
+        .replace(/^ID_/, "")
         .replace(/_/g, " ")
         .toLowerCase()
         .replace(/\b\w/g, (char) => char.toUpperCase())
