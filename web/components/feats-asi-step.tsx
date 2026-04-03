@@ -431,9 +431,20 @@ export function FeatsAsiStep({
                         <div className="feats-step__pickerColumn feats-step__pickerColumn--detail">
                           {previewFeat ? (
                             <div className="feats-step__featPreview">
-                              <span className="builder-panel__label">
-                                {selection.featId === previewFeat.id ? "Selected feat" : "Preview feat"}
-                              </span>
+                              <div className="feats-step__previewHeader">
+                                <span className="builder-panel__label">
+                                  {selection.featId === previewFeat.id ? "Selected feat" : "Preview feat"}
+                                </span>
+                                <div className="feats-step__optionBadges">
+                                  {selection.featId === previewFeat.id && previewFailures.length > 0 ? (
+                                    <span className="catalog-selector__selectedBadge catalog-selector__selectedBadge--error">
+                                      Prerequisites not met
+                                    </span>
+                                  ) : selection.featId === previewFeat.id ? (
+                                    <span className="catalog-selector__selectedBadge">Selected</span>
+                                  ) : null}
+                                </div>
+                              </div>
                               <strong className="builder-summary__name">{previewFeat.name}</strong>
                               <p className="builder-summary__meta">{previewFeat.source}</p>
                               {previewFeat.supports?.length ? (

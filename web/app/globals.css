@@ -1999,6 +1999,13 @@ a {
   min-height: 100%;
 }
 
+.feats-step__previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .backstory-step {
   gap: 18px;
 }

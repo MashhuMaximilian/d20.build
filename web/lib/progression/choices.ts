@@ -5,6 +5,7 @@ import type { BuiltInRaceRecord } from "@/lib/builtins/races";
 import type { CharacterClassEntry } from "@/lib/characters/types";
 import type { RequirementContext } from "@/lib/progression/requirements";
 import { getRequirementFailures } from "@/lib/progression/requirements";
+import { getSpellLevel } from "@/lib/progression/spellcasting";
 
 const SYNTHETIC_OPTION_SOURCE = "Core option registry";
 const SYNTHETIC_OPTION_SOURCE_URL = "internal://option-registry";
@@ -754,6 +755,18 @@ function extendRequirementContext(
     selectedSpellNames: [
       ...context.selectedSpellNames,
       ...selectedEntries.flatMap((entry) => (entry.element.type === "Spell" ? [entry.element.name] : [])),
+    ],
+    selectedCantripIds: [
+      ...context.selectedCantripIds,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Spell" && getSpellLevel(entry.element) === 0 ? [entry.element.id] : [],
+      ),
+    ],
+    selectedCantripNames: [
+      ...context.selectedCantripNames,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Spell" && getSpellLevel(entry.element) === 0 ? [entry.element.name] : [],
+      ),
     ],
   };
 }

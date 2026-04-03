@@ -55,6 +55,7 @@ import {
 } from "@/lib/progression/requirements";
 import {
   deriveSpellcastingGroups,
+  getSpellLevel,
   getSpellValidationMessages,
 } from "@/lib/progression/spellcasting";
 
@@ -1106,6 +1107,21 @@ export function BuilderEditor({
         .filter((name): name is string => Boolean(name)),
     [selectedSpellIds, spells],
   );
+  const selectedCantripIds = useMemo(
+    () =>
+      selectedSpellIds.filter((id) => {
+        const spell = spells.find((candidate) => candidate.id === id);
+        return spell ? getSpellLevel(spell) === 0 : false;
+      }),
+    [selectedSpellIds, spells],
+  );
+  const selectedCantripNames = useMemo(
+    () =>
+      selectedCantripIds
+        .map((id) => spells.find((spell) => spell.id === id)?.name)
+        .filter((name): name is string => Boolean(name)),
+    [selectedCantripIds, spells],
+  );
   const requirementContext = useMemo<RequirementContext>(
     () => ({
       effectiveAbilities,
@@ -1138,6 +1154,8 @@ export function BuilderEditor({
       selectedFeatNames: selectedFeatElements.map((feat) => feat.name),
       selectedSpellIds,
       selectedSpellNames,
+      selectedCantripIds,
+      selectedCantripNames,
       hasSpellcasting: spellGroups.length > 0 || selectedFeatElements.some((feat) => Boolean(feat.spellcasting)),
       totalLevel: totalCharacterLevel,
       classLevelsByName: Object.fromEntries(
@@ -1165,6 +1183,8 @@ export function BuilderEditor({
       selectedFeatElements,
       selectedFeatFeatureIds,
       selectedFeatFeatureNames,
+      selectedCantripIds,
+      selectedCantripNames,
       selectedSpellIds,
       selectedSpellNames,
       selectedRace,
@@ -1303,6 +1323,8 @@ export function BuilderEditor({
           selectedFeatNames,
           selectedSpellIds,
           selectedSpellNames,
+          selectedCantripIds,
+          selectedCantripNames,
           hasSpellcasting: spellGroups.length > 0,
           totalLevel: totalCharacterLevel,
           classLevelsByName,
@@ -1335,6 +1357,8 @@ export function BuilderEditor({
     selectedProgressionElements,
     selectedProficiencyNames,
     selectedProficiencyIds,
+    selectedCantripIds,
+    selectedCantripNames,
     selectedSpellIds,
     selectedSpellNames,
     selectedLanguageIds,

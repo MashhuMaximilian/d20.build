@@ -19,6 +19,8 @@ export type RequirementContext = {
   selectedFeatNames: string[];
   selectedSpellIds: string[];
   selectedSpellNames: string[];
+  selectedCantripIds: string[];
+  selectedCantripNames: string[];
   hasSpellcasting: boolean;
   totalLevel: number;
   classLevelsByName: Record<string, number>;
@@ -174,6 +176,7 @@ function buildSelectedIdSet(context: RequirementContext) {
       ...context.selectedLanguageIds,
       ...context.selectedFeatIds,
       ...context.selectedSpellIds,
+      ...context.selectedCantripIds,
     ].filter((value): value is string => Boolean(value)),
   );
 }
@@ -352,6 +355,16 @@ export function getRequirementFailures(
       ...context.selectedSpellIds.map(humanizeRequirementId),
     ].map(normalizeComparisonText),
   );
+  const selectedCantripNames = new Set(
+    [
+      ...context.selectedCantripNames,
+      ...context.selectedCantripIds.map(humanizeRequirementId),
+    ].map(normalizeComparisonText),
+  );
+
+  if (/ability to cast at least one cantrip/i.test(fallbackText) && selectedCantripNames.size === 0) {
+    failures.push("Requires the ability to cast at least one cantrip.");
+  }
 
   const proficiencyMatches = [
     ...fallbackText.matchAll(/proficiency\s+(?:with|in)\s+([A-Za-z'’ -]+?)(?:\s+skill|\s+tool|\s+tools|\s+kit|\s+language)?(?=[,.;)]|$)/gi),
@@ -499,6 +512,7 @@ export function getRequirementFailures(
 
   const selectedNamedOptions = [...context.selectedFeatureNames, ...context.selectedFeatNames].map(normalizeComparisonText);
   const selectedNamedSpells = [...selectedSpellNames];
+  const selectedNamedCantrips = [...selectedCantripNames];
   const specialNamedRequirements = [
     ...fallbackText.matchAll(/\b([A-Z][A-Za-z' -]+?)\s+patron\b/g),
     ...fallbackText.matchAll(/\b(Pact of the [A-Za-z' -]+)\b/g),
@@ -525,15 +539,56 @@ export function getRequirementFailures(
     .filter((required) => required !== "the" && required !== "a" && required !== "an");
 
   namedSpellRequirements.forEach((required) => {
-    const hasMatch = selectedNamedSpells.some(
+    const requiresCantrip = fallbackText.toLowerCase().includes(`${required} cantrip`);
+    const haystack = requiresCantrip ? selectedNamedCantrips : selectedNamedSpells;
+    const hasMatch = haystack.some(
       (name) => name === required || name.includes(required) || required.includes(name),
     );
 
     if (!hasMatch) {
       const label = required.replace(/\b\w/g, (char) => char.toUpperCase());
-      failures.push(`Requires ${label}${fallbackText.toLowerCase().includes(`${required} cantrip`) ? " cantrip" : " spell"}.`);
+      failures.push(`Requires ${label}${requiresCantrip ? " cantrip" : " spell"}.`);
     }
   });
+
+  const classFeatureResistanceMatches = [
+    ...fallbackText.matchAll(/\b([a-z]+)\s+resistance\s+from\s+a\s+class\s+feature\b/gi),
+  ];
+  classFeatureResistanceMatches.forEach((match) => {
+    const required = normalizeComparisonText(`${match[1]} resistance`);
+    const hasMatch = selectedNamedOptions.some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasMatch) {
+      failures.push(`Requires ${match[1]} resistance from a class feature.`);
+    }
+  });
+
+  const invokedAbilityMatches = [
+    ...fallbackText.matchAll(/\bability to invoke (?:a |an )?([A-Za-z' -]+)\b/gi),
+  ];
+  invokedAbilityMatches.forEach((match) => {
+    const required = normalizeComparisonText(match[1].trim());
+    const hasFeatureMatch = selectedNamedOptions.some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasFeatureMatch) {
+      failures.push(`Requires the ability to invoke ${match[1].trim()}.`);
+    }
+  });
+
+  if (/hex spell or a warlock feature that curses/i.test(fallbackText)) {
+    const hasHex = selectedNamedSpells.some((name) => name === "hex" || name.includes("hex"));
+    const hasCurseFeature = selectedNamedOptions.some(
+      (name) => name.includes("curse") || name.includes("hexblade") || name.includes("maledict"),
+    );
+
+    if (!hasHex && !hasCurseFeature) {
+      failures.push("Requires hex or a warlock feature that curses.");
+    }
+  }
 
   return [...new Set(failures)];
 }
