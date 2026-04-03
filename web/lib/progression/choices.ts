@@ -428,6 +428,98 @@ function collectOptionPool(
   );
 }
 
+function normalizeSourceKey(value: string) {
+  return normalizeToken(value).replace(/[’']/g, "'");
+}
+
+function getSourcePrecedenceScore(element: BuiltInElement) {
+  const source = normalizeSourceKey(element.source);
+
+  if (element.catalogOrigin === "built-in") {
+    return 500;
+  }
+
+  if (source.includes("system reference document") || source === "srd") {
+    return 450;
+  }
+
+  const officialSources = [
+    "player's handbook",
+    "xanathar's guide to everything",
+    "tasha's cauldron of everything",
+    "eberron: rising from the last war",
+    "mythic odysseys of theros",
+    "guildmasters' guide to ravnica",
+    "explorer's guide to wildemount",
+    "sword coast adventurer's guide",
+    "mordenkainen presents: monsters of the multiverse",
+  ];
+
+  if (officialSources.some((entry) => source.includes(entry))) {
+    return 400;
+  }
+
+  if (source.includes("unearthed arcana") || source.includes("ua")) {
+    return 200;
+  }
+
+  return 300;
+}
+
+function getOptionPreferenceScore(
+  element: BuiltInElement,
+  explicitIds: Set<string>,
+  familyTokens: string[],
+) {
+  let score = getSourcePrecedenceScore(element);
+  const optionTokens = buildElementTokenSet(element);
+
+  if (explicitIds.has(element.id)) {
+    score += 1000;
+  }
+
+  const overlapCount = familyTokens.filter((token) => optionTokens.has(token)).length;
+  score += overlapCount * 25;
+
+  if (element.catalogOrigin === "built-in") {
+    score += 50;
+  }
+
+  return score;
+}
+
+function dedupeResolvedOptions(
+  options: BuiltInElement[],
+  explicitIds: Set<string>,
+  familyTokens: string[],
+) {
+  const groups = new Map<string, BuiltInElement[]>();
+
+  options.forEach((element) => {
+    const key = [
+      normalizeToken(element.type),
+      normalizeToken(element.name),
+      normalizeToken(element.prerequisite ?? ""),
+      normalizeToken(element.requirements ?? ""),
+    ].join("|");
+
+    const current = groups.get(key) ?? [];
+    current.push(element);
+    groups.set(key, current);
+  });
+
+  return [...groups.values()].map((group) =>
+    [...group].sort(
+      (left, right) =>
+        getOptionPreferenceScore(right, explicitIds, familyTokens) -
+          getOptionPreferenceScore(left, explicitIds, familyTokens) ||
+        left.name.localeCompare(right.name) ||
+        left.source.localeCompare(right.source) ||
+        left.id.localeCompare(right.id),
+    )[0],
+  );
+}
+
 function resolveRuleOptions(
   feature: BuiltInElement,
   rule: Extract<BuiltInRule, { kind: "select" }>,
@@ -436,6 +528,7 @@ function resolveRuleOptions(
 ) {
   const allOptions = [...optionPool.values()].filter((element) => element.type === rule.type);
   const familyTokens = buildRuleFamilyTokens(feature, rule);
+  const explicitIds = new Set(collectExplicitIdTokens(rule.supports));
 
   const byChoices = rule.choices?.length
     ? rule.choices
@@ -489,8 +582,9 @@ function resolveRuleOptions(
   const resolvedOptions = [
     ...new Map([...deduped, ...registryMatches].map((element) => [element.id, element])).values(),
   ];
+  const canonicalOptions = dedupeResolvedOptions(resolvedOptions, explicitIds, familyTokens);
 
-  return resolvedOptions.map((element) => ({
+  return canonicalOptions.map((element) => ({
     element,
     requirementFailures: getRequirementFailures(element.requirements, element.prerequisite, context),
   }));
@@ -650,6 +744,16 @@ function extendRequirementContext(
       ...selectedEntries.flatMap((entry) =>
         entry.element.type === "Language" ? [entry.element.name] : [],
       ),
+    ],
+    selectedSpellIds: [
+      ...context.selectedSpellIds,
+      ...selectedEntries.flatMap((entry) =>
+        entry.element.type === "Spell" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Spell"),
+      ),
+    ],
+    selectedSpellNames: [
+      ...context.selectedSpellNames,
+      ...selectedEntries.flatMap((entry) => (entry.element.type === "Spell" ? [entry.element.name] : [])),
     ],
   };
 }

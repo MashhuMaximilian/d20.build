@@ -17,6 +17,8 @@ export type RequirementContext = {
   selectedLanguageNames: string[];
   selectedFeatIds: string[];
   selectedFeatNames: string[];
+  selectedSpellIds: string[];
+  selectedSpellNames: string[];
   hasSpellcasting: boolean;
   totalLevel: number;
   classLevelsByName: Record<string, number>;
@@ -171,6 +173,7 @@ function buildSelectedIdSet(context: RequirementContext) {
       ...context.selectedProficiencyIds,
       ...context.selectedLanguageIds,
       ...context.selectedFeatIds,
+      ...context.selectedSpellIds,
     ].filter((value): value is string => Boolean(value)),
   );
 }
@@ -343,6 +346,12 @@ export function getRequirementFailures(
       ...context.selectedLanguageIds.map(humanizeRequirementId),
     ].map(normalizeRequirementText),
   );
+  const selectedSpellNames = new Set(
+    [
+      ...context.selectedSpellNames,
+      ...context.selectedSpellIds.map(humanizeRequirementId),
+    ].map(normalizeComparisonText),
+  );
 
   const proficiencyMatches = [
     ...fallbackText.matchAll(/proficiency\s+(?:with|in)\s+([A-Za-z'’ -]+?)(?:\s+skill|\s+tool|\s+tools|\s+kit|\s+language)?(?=[,.;)]|$)/gi),
@@ -489,11 +498,11 @@ export function getRequirementFailures(
   }
 
   const selectedNamedOptions = [...context.selectedFeatureNames, ...context.selectedFeatNames].map(normalizeComparisonText);
+  const selectedNamedSpells = [...selectedSpellNames];
   const specialNamedRequirements = [
     ...fallbackText.matchAll(/\b([A-Z][A-Za-z' -]+?)\s+patron\b/g),
     ...fallbackText.matchAll(/\b(Pact of the [A-Za-z' -]+)\b/g),
     ...fallbackText.matchAll(/\b([A-Z][A-Za-z' -]+?)\s+order\b/g),
-    ...fallbackText.matchAll(/\b(eldritch blast)\s+cantrip\b/gi),
   ]
     .map((match) => normalizeComparisonText(match[1].trim()))
     .filter(Boolean);
@@ -505,6 +514,24 @@ export function getRequirementFailures(
 
     if (!hasMatch) {
       failures.push(`Requires ${required.replace(/\b\w/g, (char) => char.toUpperCase())}.`);
+    }
+  });
+
+  const namedSpellRequirements = [
+    ...fallbackText.matchAll(/\b([A-Z][A-Za-z'’ -]+?)\s+cantrip\b/g),
+    ...fallbackText.matchAll(/\b([A-Z][A-Za-z'’ -]+?)\s+spell\b/g),
+  ]
+    .map((match) => normalizeComparisonText(match[1].trim()))
+    .filter((required) => required !== "the" && required !== "a" && required !== "an");
+
+  namedSpellRequirements.forEach((required) => {
+    const hasMatch = selectedNamedSpells.some(
+      (name) => name === required || name.includes(required) || required.includes(name),
+    );
+
+    if (!hasMatch) {
+      const label = required.replace(/\b\w/g, (char) => char.toUpperCase());
+      failures.push(`Requires ${label}${fallbackText.toLowerCase().includes(`${required} cantrip`) ? " cantrip" : " spell"}.`);
     }
   });
 

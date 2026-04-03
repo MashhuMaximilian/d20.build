@@ -1092,6 +1092,20 @@ export function BuilderEditor({
     ],
     [selectedFeatElements, selectedRace, selectedSubrace],
   );
+  const selectedSpellIds = useMemo(
+    () =>
+      Object.values(draft.spellSelections)
+        .flat()
+        .filter((id, index, values): id is string => Boolean(id) && values.indexOf(id) === index),
+    [draft.spellSelections],
+  );
+  const selectedSpellNames = useMemo(
+    () =>
+      selectedSpellIds
+        .map((id) => spells.find((spell) => spell.id === id)?.name)
+        .filter((name): name is string => Boolean(name)),
+    [selectedSpellIds, spells],
+  );
   const requirementContext = useMemo<RequirementContext>(
     () => ({
       effectiveAbilities,
@@ -1122,6 +1136,8 @@ export function BuilderEditor({
       selectedLanguageNames: selectedBaseLanguageIds.map(humanizeGrantedId),
       selectedFeatIds: selectedFeatElements.map((feat) => feat.id),
       selectedFeatNames: selectedFeatElements.map((feat) => feat.name),
+      selectedSpellIds,
+      selectedSpellNames,
       hasSpellcasting: spellGroups.length > 0 || selectedFeatElements.some((feat) => Boolean(feat.spellcasting)),
       totalLevel: totalCharacterLevel,
       classLevelsByName: Object.fromEntries(
@@ -1149,6 +1165,8 @@ export function BuilderEditor({
       selectedFeatElements,
       selectedFeatFeatureIds,
       selectedFeatFeatureNames,
+      selectedSpellIds,
+      selectedSpellNames,
       selectedRace,
       selectedRacialTraitIds,
       selectedRacialTraitNames,
@@ -1283,6 +1301,8 @@ export function BuilderEditor({
           selectedLanguageNames,
           selectedFeatIds,
           selectedFeatNames,
+          selectedSpellIds,
+          selectedSpellNames,
           hasSpellcasting: spellGroups.length > 0,
           totalLevel: totalCharacterLevel,
           classLevelsByName,
@@ -1315,6 +1335,8 @@ export function BuilderEditor({
     selectedProgressionElements,
     selectedProficiencyNames,
     selectedProficiencyIds,
+    selectedSpellIds,
+    selectedSpellNames,
     selectedLanguageIds,
     spellGroups.length,
     totalCharacterLevel,
