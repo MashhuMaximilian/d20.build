@@ -82,8 +82,14 @@ export function getSpellComponents(spell: BuiltInElement) {
     parts.push("M");
   }
 
-  const material = getSetterValue(spell, "materialComponent");
-  return material ? `${parts.join(", ")} (${material})` : parts.join(", ");
+  const material = getSetterValue(spell, "materialComponent")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const cleanedMaterial =
+    material && !/^false$/i.test(material) && !/^true$/i.test(material) ? material : "";
+
+  return cleanedMaterial ? `${parts.join(", ")} (${cleanedMaterial})` : parts.join(", ");
 }
 
 export function isSpellRitual(spell: BuiltInElement) {
@@ -287,8 +293,40 @@ function getAvailableSpellIdsForRule(
     .map((spell) => spell.id);
 }
 
+function resolveSpellStatValue(
+  rule: Extract<BuiltInRule, { kind: "stat" }>,
+  resolved: Map<string, number>,
+) {
+  const value = (rule.value || "").trim();
+  if (!value) {
+    return 0;
+  }
+
+  if (/^-?\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  const referenceMatch = value.match(/^(-)?([a-z0-9:_-]+)$/i);
+  if (referenceMatch) {
+    const sign = referenceMatch[1] ? -1 : 1;
+    const referenced = resolved.get(referenceMatch[2]) ?? 0;
+    return sign * referenced;
+  }
+
+  return 0;
+}
+
 function getMaxSpellLevel(rules: BuiltInRule[], classLevel: number) {
+  const resolvedStats = new Map<string, number>();
   const counts = new Map<number, number>();
+
+  rules.forEach((rule) => {
+    if (rule.kind !== "stat" || (rule.level && rule.level > classLevel)) {
+      return;
+    }
+
+    resolvedStats.set(rule.name, (resolvedStats.get(rule.name) ?? 0) + resolveSpellStatValue(rule, resolvedStats));
+  });
 
   rules.forEach((rule) => {
     if (rule.kind !== "stat" || (rule.level && rule.level > classLevel)) {
@@ -301,7 +339,7 @@ function getMaxSpellLevel(rules: BuiltInRule[], classLevel: number) {
     }
 
     const slotLevel = Number(match[1]);
-    counts.set(slotLevel, (counts.get(slotLevel) ?? 0) + Number(rule.value || 0));
+    counts.set(slotLevel, resolvedStats.get(rule.name) ?? 0);
   });
 
   return [...counts.entries()]
@@ -478,10 +516,19 @@ function buildGroupsForSource(
         resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel),
       ),
     );
+    const normalizedSpellIds = uniqueStrings(availableSpellIds).filter((spellId) => {
+      const spell = spells.find((candidate) => candidate.id === spellId);
+      if (!spell) {
+        return false;
+      }
+
+      const spellLevel = getSpellLevel(spell);
+      return kind === "cantrip" ? spellLevel === 0 : spellLevel > 0;
+    });
 
     groups.push(
       createSelectionGroupFromRules({
-        availableSpellIds,
+        availableSpellIds: normalizedSpellIds,
         classLevel: source.currentLevel,
         description:
           kind === "cantrip"
@@ -544,6 +591,7 @@ function buildGroupsForSource(
                 matchesSpellSupport(spell, [[normalizeListKey(source.fallbackListKey)]]),
             )
             .filter((spell) => getSpellLevel(spell) <= maxSpellLevel)
+            .filter((spell) => getSpellLevel(spell) > 0)
             .map((spell) => spell.id);
 
       groups.push(

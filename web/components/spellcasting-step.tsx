@@ -265,7 +265,11 @@ export function SpellcastingStep({
             >
               <span>{group.title}</span>
               <small>
-                {group.kind === "prepared" ? `${pickedCount}/${targetCount} prepared` : `${pickedCount}/${targetCount}`}
+                {group.kind === "prepared"
+                  ? `${pickedCount}/${targetCount} prepared`
+                  : group.kind === "granted"
+                    ? `${group.grantedSpellIds.length} granted`
+                    : `${pickedCount}/${targetCount}`}
               </small>
               {groupWarnings.length ? (
                 <em className="spellcasting-step__groupTabAlert">

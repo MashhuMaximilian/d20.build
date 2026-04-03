@@ -333,6 +333,34 @@ function resolveSyntheticProficiencyLanguageOptions(
   ];
 }
 
+export function formatSupportLabel(value: string | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const explicitIds = collectExplicitIdTokens(value);
+  if (explicitIds.length) {
+    const labels = explicitIds.map((id) =>
+      id
+        .replace(/^ID_PROFICIENCY_/, "")
+        .replace(/^ID_LANGUAGE_/, "")
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+        .replace(/\bTools\b/g, "Tools")
+        .replace(/\bCant\b/g, "Cant"),
+    );
+
+    return [...new Set(labels)].join(" or ");
+  }
+
+  return value
+    .replace(/\$\(spellcasting:list\)/gi, "spell list")
+    .replace(/\$\(spellcasting:slots\)/gi, "current spell slot level")
+    .replace(/\|\|/g, " or ")
+    .replace(/\|/g, " or ");
+}
+
 function hasSupportTokenOverlap(left: string[], right: string[]) {
   if (!left.length || !right.length) {
     return false;
@@ -633,10 +661,14 @@ function buildGroupsFromFeatures(args: {
   context: RequirementContext;
 }) {
   const { classEntryIndex, ownerType, ownerLabel, entryLevel, features, optionPool, context } = args;
+  const contextForOwner =
+    classEntryIndex >= 0 && (ownerType === "class" || ownerType === "subclass" || ownerType === "nested")
+      ? { ...context, ownerClassLevel: entryLevel }
+      : context;
 
   return features.flatMap((feature) =>
     collectSelectableRules(feature, entryLevel)
-      .filter((rule) => !rule.requirements || getRequirementFailures(rule.requirements, undefined, context).length === 0)
+      .filter((rule) => !rule.requirements || getRequirementFailures(rule.requirements, undefined, contextForOwner).length === 0)
       .map((rule) => ({
         id: buildGroupId(classEntryIndex, ownerType, feature.id, rule),
         classEntryIndex,
@@ -645,14 +677,14 @@ function buildGroupsFromFeatures(args: {
         featureId: feature.id,
         featureName: feature.name,
         title: rule.name,
-        familyLabel: rule.supports ?? rule.type,
+        familyLabel: formatSupportLabel(rule.supports) || rule.type,
         optionType: rule.type,
         unlockLevel: rule.level ?? entryLevel,
         exactSelections: Math.max(1, rule.number ?? 1),
         optional: rule.optional === true,
         supportsKey: rule.supports,
         description: feature.description,
-        options: resolveRuleOptions(feature, rule, optionPool, context),
+        options: resolveRuleOptions(feature, rule, optionPool, contextForOwner),
       } satisfies ProgressionChoiceGroup)),
   );
 }
@@ -916,7 +948,13 @@ export function deriveProgressionChoiceGroups(args: {
     ...group,
     options: group.options.map((option) => ({
       ...option,
-      requirementFailures: getRequirementFailures(option.element.requirements, option.element.prerequisite, finalContext),
+      requirementFailures: getRequirementFailures(
+        option.element.requirements,
+        option.element.prerequisite,
+        group.classEntryIndex >= 0
+          ? { ...finalContext, ownerClassLevel: args.classEntries[group.classEntryIndex]?.level }
+          : finalContext,
+      ),
     })),
   }));
 }

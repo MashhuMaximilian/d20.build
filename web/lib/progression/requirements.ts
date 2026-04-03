@@ -23,6 +23,7 @@ export type RequirementContext = {
   selectedCantripNames: string[];
   hasSpellcasting: boolean;
   totalLevel: number;
+  ownerClassLevel?: number;
   classLevelsByName: Record<string, number>;
   knownRaceNames: string[];
   knownSubraceNames: string[];
@@ -433,8 +434,12 @@ export function getRequirementFailures(
   });
 
   const levelMatch = fallbackText.match(/(\d+)(?:st|nd|rd|th)-level/i);
-  if (levelMatch && context.totalLevel < Number(levelMatch[1])) {
-    failures.push(`Requires level ${levelMatch[1]} or higher.`);
+  if (levelMatch) {
+    const minimum = Number(levelMatch[1]);
+    const effectiveLevel = context.ownerClassLevel ?? context.totalLevel;
+    if (effectiveLevel < minimum) {
+      failures.push(`Requires level ${minimum} or higher.`);
+    }
   }
 
   const mentionedClasses = context.knownClassNames.filter((name) =>

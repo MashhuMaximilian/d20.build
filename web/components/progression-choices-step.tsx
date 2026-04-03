@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getDetailMarkup } from "@/components/catalog-selector";
 import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
-import type { ProgressionChoiceGroup } from "@/lib/progression/choices";
+import { formatSupportLabel, type ProgressionChoiceGroup } from "@/lib/progression/choices";
 
 type ProgressionChoicesStepProps = {
   groups: ProgressionChoiceGroup[];
@@ -249,7 +249,7 @@ export function ProgressionChoicesStep({
                   </p>
                   <ul className="catalog-selector__impactList">
                     <li>{activeGroup.optionType} family at level {activeGroup.unlockLevel}</li>
-                    {activeGroup.supportsKey ? <li>{activeGroup.supportsKey}</li> : null}
+                    {activeGroup.supportsKey ? <li>{formatSupportLabel(activeGroup.supportsKey)}</li> : null}
                   </ul>
                 </div>
               </aside>
@@ -430,7 +430,7 @@ export function ProgressionChoicesStep({
                     <ul className="catalog-selector__impactList">
                       <li>Selected {selectedIds.length} of {activeGroup.exactSelections}</li>
                       <li>{activeGroup.optionType} family at level {activeGroup.unlockLevel}</li>
-                      {activeGroup.supportsKey ? <li>{activeGroup.supportsKey}</li> : null}
+                      {activeGroup.supportsKey ? <li>{formatSupportLabel(activeGroup.supportsKey)}</li> : null}
                     </ul>
                   </section>
 
