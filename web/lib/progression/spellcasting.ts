@@ -84,8 +84,10 @@ export function getSpellComponents(spell: BuiltInElement) {
 
   const material = getSetterValue(spell, "materialComponent")
     .replace(/<set[^>]*>[\s\S]*?<\/set>/gi, " ")
-    .replace(/<set[^>]*>[\s\S]*$/gi, " ")
+    .replace(/<set[^>]*>[^<)]*\)?/gi, " ")
+    .replace(/<\/?set[^>]*>/gi, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(/\(\s*\)/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   const cleanedMaterial =

@@ -2336,6 +2336,7 @@ export function BuilderEditor({
           <section className="builder-stepPanel">
             <ProgressionChoicesStep
               groups={progressionGroups}
+              elements={progressionElements}
               selections={draft.progressionSelections}
               onSelectionChange={(groupId, optionIds) =>
                 updateDraft({

@@ -172,6 +172,7 @@ export function cleanReadablePrerequisite(value: string | undefined) {
 
   return value
     .replace(/^prerequisite:\s*/i, "")
+    .replace(/\s+Once during a (?:short|long|short or long )?rest\b[\s\S]*$/i, "")
     .replace(
       /\s+(Once during|When you|While you|As an action|As a bonus action|You can|You gain|You learn|During combat)\b[\s\S]*$/i,
       "",

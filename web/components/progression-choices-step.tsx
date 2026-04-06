@@ -4,14 +4,132 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getDetailMarkup } from "@/components/catalog-selector";
 import { sortTableRows, toggleTableSort, type TableSortState } from "@/components/table-sort";
+import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 import { formatSupportLabel, type ProgressionChoiceGroup } from "@/lib/progression/choices";
 import { cleanReadablePrerequisite } from "@/lib/progression/requirements";
 
 type ProgressionChoicesStepProps = {
+  elements: BuiltInElement[];
   groups: ProgressionChoiceGroup[];
   selections: Record<string, string[]>;
   onSelectionChange: (groupId: string, optionIds: string[]) => void;
 };
+
+function getCompanionSetter(element: BuiltInElement, name: string) {
+  return element.setters.find((setter) => setter.name === name)?.value?.trim() ?? "";
+}
+
+function getCompanionRules(element: BuiltInElement, name: string) {
+  return element.rules.filter((rule): rule is Extract<BuiltInRule, { kind: "stat" }> => rule.kind === "stat" && rule.name === name);
+}
+
+function formatCompanionRuleToken(value: string) {
+  const normalized = value.trim();
+  if (!normalized) {
+    return "";
+  }
+
+  if (/^-?\d+$/.test(normalized)) {
+    return normalized;
+  }
+
+  if (/^level:([a-z][a-z0-9_-]*)$/i.test(normalized)) {
+    const match = normalized.match(/^level:([a-z][a-z0-9_-]*)$/i);
+    return `${match?.[1]?.replace(/[_-]+/g, " ") ?? "class"} level`;
+  }
+
+  if (/^([a-z]+):modifier$/i.test(normalized)) {
+    const match = normalized.match(/^([a-z]+):modifier$/i);
+    return `${match?.[1]?.slice(0, 3).toUpperCase() ?? ""} mod`;
+  }
+
+  if (/^companion:([a-z]+):modifier$/i.test(normalized)) {
+    const match = normalized.match(/^companion:([a-z]+):modifier$/i);
+    return `${match?.[1]?.slice(0, 3).toUpperCase() ?? ""} mod`;
+  }
+
+  if (/^companion:proficiency$/i.test(normalized) || /^proficiency$/i.test(normalized)) {
+    return "PB";
+  }
+
+  return normalized.replace(/_/g, " ");
+}
+
+function formatCompanionFormula(rules: Extract<BuiltInRule, { kind: "stat" }>[]) {
+  if (!rules.length) {
+    return "";
+  }
+
+  const numericTotal = rules.reduce((sum, rule) => (/^-?\d+$/.test(rule.value) ? sum + Number(rule.value) : sum), 0);
+  const tokenCounts = new Map<string, number>();
+
+  rules
+    .filter((rule) => !/^-?\d+$/.test(rule.value))
+    .map((rule) => formatCompanionRuleToken(rule.value))
+    .filter(Boolean)
+    .forEach((token) => {
+      tokenCounts.set(token, (tokenCounts.get(token) ?? 0) + 1);
+    });
+
+  const parts: string[] = [];
+  if (numericTotal) {
+    parts.push(String(numericTotal));
+  }
+
+  [...tokenCounts.entries()].forEach(([token, count]) => {
+    parts.push(count > 1 ? `${count} × ${token}` : token);
+  });
+
+  return parts.join(" + ");
+}
+
+function parseCompanionLinkedIds(element: BuiltInElement, name: "traits" | "actions" | "reactions") {
+  return getCompanionSetter(element, name)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function parseCompanionSummary(element: BuiltInElement) {
+  const type = getCompanionSetter(element, "type");
+  const size = getCompanionSetter(element, "size");
+  const challenge = getCompanionSetter(element, "challenge");
+  const alignment = getCompanionSetter(element, "alignment");
+
+  const movementParts = [
+    ["speed", ""],
+    ["speed:fly", "fly"],
+    ["speed:swim", "swim"],
+    ["speed:climb", "climb"],
+    ["speed:burrow", "burrow"],
+  ]
+    .map(([key, label]) => {
+      const formula = formatCompanionFormula(getCompanionRules(element, `companion:${key}`));
+      if (!formula) {
+        return "";
+      }
+      return label ? `${label} ${formula} ft.` : `${formula} ft.`;
+    })
+    .filter(Boolean);
+
+  return {
+    type,
+    size,
+    challenge,
+    alignment,
+    ac: formatCompanionFormula(getCompanionRules(element, "companion:ac")),
+    hp: formatCompanionFormula(getCompanionRules(element, "companion:hp:max")),
+    speed: movementParts.join(" • "),
+    senses: getCompanionSetter(element, "senses"),
+    languages: getCompanionSetter(element, "languages"),
+    strength: getCompanionSetter(element, "strength"),
+    dexterity: getCompanionSetter(element, "dexterity"),
+    constitution: getCompanionSetter(element, "constitution"),
+    intelligence: getCompanionSetter(element, "intelligence"),
+    wisdom: getCompanionSetter(element, "wisdom"),
+    charisma: getCompanionSetter(element, "charisma"),
+  };
+}
 
 function getOptionSummary(group: ProgressionChoiceGroup, description: string, prerequisite?: string) {
   const readablePrerequisite = cleanReadablePrerequisite(prerequisite);
@@ -29,6 +147,7 @@ function getOptionSummary(group: ProgressionChoiceGroup, description: string, pr
 }
 
 export function ProgressionChoicesStep({
+  elements,
   groups,
   selections,
   onSelectionChange,
@@ -43,6 +162,7 @@ export function ProgressionChoicesStep({
     key: "name",
     direction: "asc",
   });
+  const elementsById = useMemo(() => new Map(elements.map((element) => [element.id, element])), [elements]);
 
   useEffect(() => {
     if (!groups.some((group) => group.id === activeGroupId)) {
@@ -96,6 +216,26 @@ export function ProgressionChoicesStep({
     sortedOptions.find((option) => option.element.id === previewId) ??
     activeGroup?.options.find((option) => option.element.id === previewId) ??
     null;
+  const previewCompanionSummary =
+    previewOption?.element.type === "Companion" ? parseCompanionSummary(previewOption.element) : null;
+  const previewCompanionTraits =
+    previewOption?.element.type === "Companion"
+      ? parseCompanionLinkedIds(previewOption.element, "traits")
+          .map((id) => elementsById.get(id))
+          .filter((element): element is BuiltInElement => Boolean(element))
+      : [];
+  const previewCompanionActions =
+    previewOption?.element.type === "Companion"
+      ? parseCompanionLinkedIds(previewOption.element, "actions")
+          .map((id) => elementsById.get(id))
+          .filter((element): element is BuiltInElement => Boolean(element))
+      : [];
+  const previewCompanionReactions =
+    previewOption?.element.type === "Companion"
+      ? parseCompanionLinkedIds(previewOption.element, "reactions")
+          .map((id) => elementsById.get(id))
+          .filter((element): element is BuiltInElement => Boolean(element))
+      : [];
 
   useEffect(() => {
     if (activeGroup && previewOption) {
@@ -435,6 +575,78 @@ export function ProgressionChoicesStep({
                       {activeGroup.supportsKey ? <li>{formatSupportLabel(activeGroup.supportsKey)}</li> : null}
                     </ul>
                   </section>
+
+                  {previewOption.element.type === "Companion" && previewCompanionSummary ? (
+                    <>
+                      <section className="catalog-selector__detailSection">
+                        <span className="catalog-selector__detailLabel">Stat block</span>
+                        <div className="catalog-selector__tagList">
+                          {previewCompanionSummary.size ? <span className="catalog-selector__tag">{previewCompanionSummary.size}</span> : null}
+                          {previewCompanionSummary.type ? <span className="catalog-selector__tag">{previewCompanionSummary.type}</span> : null}
+                          {previewCompanionSummary.challenge ? <span className="catalog-selector__tag">CR {previewCompanionSummary.challenge}</span> : null}
+                          {previewCompanionSummary.alignment ? <span className="catalog-selector__tag">{previewCompanionSummary.alignment}</span> : null}
+                          {previewCompanionSummary.ac ? <span className="catalog-selector__tag">AC {previewCompanionSummary.ac}</span> : null}
+                          {previewCompanionSummary.hp ? <span className="catalog-selector__tag">HP {previewCompanionSummary.hp}</span> : null}
+                          {previewCompanionSummary.speed ? <span className="catalog-selector__tag">{previewCompanionSummary.speed}</span> : null}
+                          {previewCompanionSummary.senses ? <span className="catalog-selector__tag">{previewCompanionSummary.senses}</span> : null}
+                          {previewCompanionSummary.languages ? <span className="catalog-selector__tag">{previewCompanionSummary.languages}</span> : null}
+                        </div>
+                        <ul className="catalog-selector__impactList">
+                          {previewCompanionSummary.strength ? <li>STR {previewCompanionSummary.strength}</li> : null}
+                          {previewCompanionSummary.dexterity ? <li>DEX {previewCompanionSummary.dexterity}</li> : null}
+                          {previewCompanionSummary.constitution ? <li>CON {previewCompanionSummary.constitution}</li> : null}
+                          {previewCompanionSummary.intelligence ? <li>INT {previewCompanionSummary.intelligence}</li> : null}
+                          {previewCompanionSummary.wisdom ? <li>WIS {previewCompanionSummary.wisdom}</li> : null}
+                          {previewCompanionSummary.charisma ? <li>CHA {previewCompanionSummary.charisma}</li> : null}
+                        </ul>
+                      </section>
+
+                      {previewCompanionTraits.length ? (
+                        <section className="catalog-selector__detailSection">
+                          <span className="catalog-selector__detailLabel">Traits</span>
+                          {previewCompanionTraits.map((trait) => (
+                            <div key={trait.id} className="catalog-selector__detailSubsection">
+                              <strong>{trait.name}</strong>
+                              <div
+                                className="catalog-selector__detailRichText"
+                                dangerouslySetInnerHTML={{ __html: getDetailMarkup(trait) }}
+                              />
+                            </div>
+                          ))}
+                        </section>
+                      ) : null}
+
+                      {previewCompanionActions.length ? (
+                        <section className="catalog-selector__detailSection">
+                          <span className="catalog-selector__detailLabel">Actions</span>
+                          {previewCompanionActions.map((action) => (
+                            <div key={action.id} className="catalog-selector__detailSubsection">
+                              <strong>{action.name}</strong>
+                              <div
+                                className="catalog-selector__detailRichText"
+                                dangerouslySetInnerHTML={{ __html: getDetailMarkup(action) }}
+                              />
+                            </div>
+                          ))}
+                        </section>
+                      ) : null}
+
+                      {previewCompanionReactions.length ? (
+                        <section className="catalog-selector__detailSection">
+                          <span className="catalog-selector__detailLabel">Reactions</span>
+                          {previewCompanionReactions.map((reaction) => (
+                            <div key={reaction.id} className="catalog-selector__detailSubsection">
+                              <strong>{reaction.name}</strong>
+                              <div
+                                className="catalog-selector__detailRichText"
+                                dangerouslySetInnerHTML={{ __html: getDetailMarkup(reaction) }}
+                              />
+                            </div>
+                          ))}
+                        </section>
+                      ) : null}
+                    </>
+                  ) : null}
 
                   <div
                     className="catalog-selector__detailRichText"

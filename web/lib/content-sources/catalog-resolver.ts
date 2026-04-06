@@ -33,6 +33,9 @@ const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
   "Class",
   "Class Feature",
   "Companion",
+  "Companion Trait",
+  "Companion Action",
+  "Companion Reaction",
   "Feat",
   "Feat Feature",
   "Language",
@@ -50,6 +53,7 @@ function extractPrerequisiteText(element: ImportedElement) {
   const cleanPrerequisite = (value: string) =>
     value
       .replace(/\s+/g, " ")
+      .replace(/\s+Once during a (?:short|long|short or long )?rest\b[\s\S]*$/i, "")
       .replace(
         /\s+(Once during|When you|While you|As an action|As a bonus action|You can|You gain|You learn|During combat)\b[\s\S]*$/i,
         "",
@@ -420,6 +424,52 @@ function buildBackgroundRecords(elements: BuiltInElement[]): BuiltInBackgroundRe
   });
 }
 
+function normalizeSourceKey(value: string) {
+  return value.trim().toLowerCase().replace(/[’']/g, "'");
+}
+
+function getSourcePrecedenceScore(element: BuiltInElement) {
+  const source = normalizeSourceKey(element.source);
+
+  if (source.includes("system reference document 5.2") || source.includes("srd 5.2")) {
+    return 650;
+  }
+
+  if (element.catalogOrigin === "built-in") {
+    return 600;
+  }
+
+  if (source.includes("system reference document 5.1") || source === "srd") {
+    return 550;
+  }
+
+  const officialSources = [
+    "player's handbook",
+    "xanathar's guide to everything",
+    "tasha's cauldron of everything",
+    "eberron: rising from the last war",
+    "mythic odysseys of theros",
+    "guildmasters' guide to ravnica",
+    "explorer's guide to wildemount",
+    "sword coast adventurer's guide",
+    "mordenkainen presents: monsters of the multiverse",
+    "monster manual",
+    "dungeon master's guide",
+    "fizban's treasury of dragons",
+    "bigby presents: glory of the giants",
+  ];
+
+  if (officialSources.some((entry) => source.includes(entry))) {
+    return 500;
+  }
+
+  if (source.includes("unearthed arcana") || source.includes("ua")) {
+    return 200;
+  }
+
+  return 350;
+}
+
 function dedupeElements(elements: BuiltInElement[]) {
   const byId = new Map<string, BuiltInElement>();
   elements.forEach((element) => {
@@ -430,8 +480,24 @@ function dedupeElements(elements: BuiltInElement[]) {
       return;
     }
 
-    if (existing.catalogOrigin === "built-in" && element.catalogOrigin === "imported") {
+    const existingScore = getSourcePrecedenceScore(existing);
+    const candidateScore = getSourcePrecedenceScore(element);
+
+    if (candidateScore < existingScore) {
       return;
+    }
+
+    if (candidateScore === existingScore) {
+      if (existing.catalogOrigin === "built-in" && element.catalogOrigin !== "built-in") {
+        return;
+      }
+
+      if (
+        existing.name.localeCompare(element.name) < 0 ||
+        existing.source.localeCompare(element.source) < 0
+      ) {
+        return;
+      }
     }
 
     byId.set(element.id, element);
@@ -469,7 +535,9 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
     ),
   ]);
   const companionElements = dedupeElements(
-    importedElements.filter((element) => element.type === "Companion"),
+    importedElements.filter((element) =>
+      ["Companion", "Companion Trait", "Companion Action", "Companion Reaction"].includes(element.type),
+    ),
   );
   const featElements = dedupeElements([
     ...builtInFeatElements,
@@ -486,7 +554,16 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
       ),
     ),
     ...classElements.filter((element) =>
-      ["Class Feature", "Archetype Feature", "Companion", "Language", "Proficiency"].includes(element.type),
+      [
+        "Class Feature",
+        "Archetype Feature",
+        "Companion",
+        "Companion Trait",
+        "Companion Action",
+        "Companion Reaction",
+        "Language",
+        "Proficiency",
+      ].includes(element.type),
     ),
     ...companionElements,
     ...backgroundElements.filter((element) =>
@@ -496,6 +573,9 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
       ["Feat", "Feat Feature", "Ability Score Improvement"].includes(element.type),
     ),
     ...spellElements,
+    ...companionElements.filter((element) =>
+      ["Companion Trait", "Companion Action", "Companion Reaction"].includes(element.type),
+    ),
   ]);
 
   return {
