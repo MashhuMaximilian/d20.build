@@ -580,25 +580,57 @@ export function ProgressionChoicesStep({
                     <>
                       <section className="catalog-selector__detailSection">
                         <span className="catalog-selector__detailLabel">Stat block</span>
-                        <div className="catalog-selector__tagList">
-                          {previewCompanionSummary.size ? <span className="catalog-selector__tag">{previewCompanionSummary.size}</span> : null}
-                          {previewCompanionSummary.type ? <span className="catalog-selector__tag">{previewCompanionSummary.type}</span> : null}
-                          {previewCompanionSummary.challenge ? <span className="catalog-selector__tag">CR {previewCompanionSummary.challenge}</span> : null}
-                          {previewCompanionSummary.alignment ? <span className="catalog-selector__tag">{previewCompanionSummary.alignment}</span> : null}
-                          {previewCompanionSummary.ac ? <span className="catalog-selector__tag">AC {previewCompanionSummary.ac}</span> : null}
-                          {previewCompanionSummary.hp ? <span className="catalog-selector__tag">HP {previewCompanionSummary.hp}</span> : null}
-                          {previewCompanionSummary.speed ? <span className="catalog-selector__tag">{previewCompanionSummary.speed}</span> : null}
-                          {previewCompanionSummary.senses ? <span className="catalog-selector__tag">{previewCompanionSummary.senses}</span> : null}
-                          {previewCompanionSummary.languages ? <span className="catalog-selector__tag">{previewCompanionSummary.languages}</span> : null}
+                        <div className="progression-step__companionCard">
+                          <div className="progression-step__companionIdentity">
+                            <div className="catalog-selector__tagList">
+                              {previewCompanionSummary.size ? <span className="catalog-selector__tag">{previewCompanionSummary.size}</span> : null}
+                              {previewCompanionSummary.type ? <span className="catalog-selector__tag">{previewCompanionSummary.type}</span> : null}
+                              {previewCompanionSummary.challenge ? <span className="catalog-selector__tag">CR {previewCompanionSummary.challenge}</span> : null}
+                              {previewCompanionSummary.alignment ? <span className="catalog-selector__tag">{previewCompanionSummary.alignment}</span> : null}
+                            </div>
+                          </div>
+
+                          <div className="progression-step__companionVitals">
+                            {previewCompanionSummary.ac ? (
+                              <div className="progression-step__companionVital">
+                                <span>Armor Class</span>
+                                <strong>{previewCompanionSummary.ac}</strong>
+                              </div>
+                            ) : null}
+                            {previewCompanionSummary.hp ? (
+                              <div className="progression-step__companionVital">
+                                <span>Hit Points</span>
+                                <strong>{previewCompanionSummary.hp}</strong>
+                              </div>
+                            ) : null}
+                            {previewCompanionSummary.speed ? (
+                              <div className="progression-step__companionVital progression-step__companionVital--wide">
+                                <span>Speed</span>
+                                <strong>{previewCompanionSummary.speed}</strong>
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="progression-step__companionAbilities">
+                            {previewCompanionSummary.strength ? <div className="progression-step__companionAbility"><span>STR</span><strong>{previewCompanionSummary.strength}</strong></div> : null}
+                            {previewCompanionSummary.dexterity ? <div className="progression-step__companionAbility"><span>DEX</span><strong>{previewCompanionSummary.dexterity}</strong></div> : null}
+                            {previewCompanionSummary.constitution ? <div className="progression-step__companionAbility"><span>CON</span><strong>{previewCompanionSummary.constitution}</strong></div> : null}
+                            {previewCompanionSummary.intelligence ? <div className="progression-step__companionAbility"><span>INT</span><strong>{previewCompanionSummary.intelligence}</strong></div> : null}
+                            {previewCompanionSummary.wisdom ? <div className="progression-step__companionAbility"><span>WIS</span><strong>{previewCompanionSummary.wisdom}</strong></div> : null}
+                            {previewCompanionSummary.charisma ? <div className="progression-step__companionAbility"><span>CHA</span><strong>{previewCompanionSummary.charisma}</strong></div> : null}
+                          </div>
+
+                          {previewCompanionSummary.senses || previewCompanionSummary.languages ? (
+                            <div className="progression-step__companionNotes">
+                              {previewCompanionSummary.senses ? (
+                                <p><strong>Senses.</strong> {previewCompanionSummary.senses}</p>
+                              ) : null}
+                              {previewCompanionSummary.languages ? (
+                                <p><strong>Languages.</strong> {previewCompanionSummary.languages}</p>
+                              ) : null}
+                            </div>
+                          ) : null}
                         </div>
-                        <ul className="catalog-selector__impactList">
-                          {previewCompanionSummary.strength ? <li>STR {previewCompanionSummary.strength}</li> : null}
-                          {previewCompanionSummary.dexterity ? <li>DEX {previewCompanionSummary.dexterity}</li> : null}
-                          {previewCompanionSummary.constitution ? <li>CON {previewCompanionSummary.constitution}</li> : null}
-                          {previewCompanionSummary.intelligence ? <li>INT {previewCompanionSummary.intelligence}</li> : null}
-                          {previewCompanionSummary.wisdom ? <li>WIS {previewCompanionSummary.wisdom}</li> : null}
-                          {previewCompanionSummary.charisma ? <li>CHA {previewCompanionSummary.charisma}</li> : null}
-                        </ul>
                       </section>
 
                       {previewCompanionTraits.length ? (

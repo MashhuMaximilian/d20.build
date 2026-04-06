@@ -51,7 +51,13 @@ export function escapeHtml(value: string) {
 }
 
 export function sanitizeRichHtml(markup: string) {
-  const withoutDangerousBlocks = markup
+  const normalizedMarkup = markup
+    .replace(/<span[^>]*class=(["'])[^"']*\bfeature\b[^"']*\1[^>]*>([\s\S]*?)<\/span>/gi, "<strong>$2</strong> ")
+    .replace(/<span[^>]*class=(["'])[^"']*\bflavor\b[^"']*\1[^>]*>([\s\S]*?)<\/span>/gi, "<em>$2</em>")
+    .replace(/<span[^>]*class=(["'])[^"']*\btable-column\b[^"']*\1[^>]*>([\s\S]*?)<\/span>/gi, "$2")
+    .replace(/<br\s*\/?>\s*<strong>/gi, "<br /><strong>");
+
+  const withoutDangerousBlocks = normalizedMarkup
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\/\1>/gi, "")
     .replace(/\son[a-z-]+="[^"]*"/gi, "")
@@ -99,6 +105,7 @@ export function formatPlainTextAsHtml(text: string) {
   const normalized = text
     .replace(/\r\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/([A-Z][A-Za-z'’()\/ -]{2,40}\.)(?=[A-Z][a-z])/g, "$1\n")
     .trim();
 
   if (!normalized) {
@@ -152,6 +159,58 @@ export function getDetailMarkup(item: CatalogItem | null) {
   return formatPlainTextAsHtml(item.description);
 }
 
+function getDefaultDetailView(label: string) {
+  if (label === "Race") {
+    return "reference" as const;
+  }
+
+  if (label === "Subrace" || label === "Class" || label === "Subclass") {
+    return "features" as const;
+  }
+
+  return "overview" as const;
+}
+
+function moveSectionToTop(markup: string, headingMatcher: RegExp) {
+  const headingPattern = /<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi;
+  const matches = [...markup.matchAll(headingPattern)];
+  if (!matches.length) {
+    return markup;
+  }
+
+  for (let index = 0; index < matches.length; index += 1) {
+    const match = matches[index];
+    const heading = match[0];
+    if (!headingMatcher.test(heading)) {
+      continue;
+    }
+
+    const start = match.index ?? 0;
+    const end = index + 1 < matches.length ? matches[index + 1].index ?? markup.length : markup.length;
+    const section = markup.slice(start, end);
+    return `${section}${markup.slice(0, start)}${markup.slice(end)}`;
+  }
+
+  return markup;
+}
+
+function getReferenceMarkup(item: CatalogItem | null, label: string) {
+  const markup = getDetailMarkup(item);
+  if (!markup) {
+    return "";
+  }
+
+  if (label === "Race") {
+    return moveSectionToTop(markup, />\s*[^<]*traits\s*</i);
+  }
+
+  if (label === "Class") {
+    return moveSectionToTop(markup, />\s*[^<]*class features\s*</i);
+  }
+
+  return markup;
+}
+
 export function getPreviewText(text: string) {
   const normalized = text.replace(/\s+/g, " ").trim();
 
@@ -179,7 +238,9 @@ export function CatalogSelector({
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
-  const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">("overview");
+  const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">(
+    getDefaultDetailView(label),
+  );
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [showTableFilters, setShowTableFilters] = useState(false);
@@ -345,6 +406,12 @@ export function CatalogSelector({
   }, [selectedId]);
 
   const detailMarkup = useMemo(() => getDetailMarkup(previewItem), [previewItem]);
+  const referenceMarkup = useMemo(() => getReferenceMarkup(previewItem, label), [label, previewItem]);
+
+  useEffect(() => {
+    setDetailView(getDefaultDetailView(label));
+  }, [label, previewItem?.id]);
+
   const activeFilters = [
     sourceFilter !== "all"
       ? sourceFilter === "built-in"
@@ -895,10 +962,10 @@ export function CatalogSelector({
               {detailView === "reference" ? (
                 <div className="catalog-selector__detailSection">
                   <span className="catalog-selector__sectionLabel">Reference</span>
-                  {detailMarkup ? (
+                  {referenceMarkup ? (
                     <div
                       className="catalog-selector__richText"
-                      dangerouslySetInnerHTML={{ __html: detailMarkup }}
+                      dangerouslySetInnerHTML={{ __html: referenceMarkup }}
                     />
                   ) : (
                     <p className="catalog-selector__detailMeta">{emptyMessage}</p>

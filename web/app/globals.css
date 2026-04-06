@@ -1660,6 +1660,10 @@ a {
   color: var(--accent-strong);
 }
 
+.catalog-selector__richText strong {
+  color: var(--accent-strong);
+}
+
 .catalog-selector__richText ul,
 .catalog-selector__richText ol {
   margin: 0;
@@ -1684,6 +1688,109 @@ a {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.catalog-selector__detailSubsection {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.72);
+}
+
+.catalog-selector__detailRichText {
+  display: grid;
+  gap: 10px;
+  line-height: 1.65;
+}
+
+.catalog-selector__detailRichText > * {
+  margin: 0;
+}
+
+.progression-step__companionCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(250, 243, 230, 0.92));
+}
+
+.progression-step__companionIdentity {
+  display: grid;
+  gap: 8px;
+}
+
+.progression-step__companionVitals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.progression-step__companionVital {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-top: 2px solid rgba(146, 38, 16, 0.18);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.progression-step__companionVital--wide {
+  grid-column: span 1;
+}
+
+.progression-step__companionVital span,
+.progression-step__companionAbility span {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.progression-step__companionVital strong,
+.progression-step__companionAbility strong {
+  color: var(--accent-strong);
+  font-size: 1rem;
+}
+
+.progression-step__companionAbilities {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.progression-step__companionAbility {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-top: 2px solid rgba(146, 38, 16, 0.18);
+  background: rgba(255, 255, 255, 0.42);
+  text-align: center;
+}
+
+.progression-step__companionNotes {
+  display: grid;
+  gap: 8px;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+.progression-step__companionNotes p {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .progression-step__companionAbilities {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .progression-step__companionVitals {
+    grid-template-columns: 1fr;
+  }
 }
 
 .builder-field {

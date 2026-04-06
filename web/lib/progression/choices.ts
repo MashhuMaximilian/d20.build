@@ -167,6 +167,32 @@ function humanizeIdToken(value: string) {
     .replace(/\bCant\b/g, "Cant");
 }
 
+function humanizeClauseToken(token: string) {
+  return token
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bCr\b/g, "CR");
+}
+
+function joinHumanizedAlternatives(values: string[]) {
+  if (!values.length) {
+    return "";
+  }
+
+  if (values.length === 1) {
+    return values[0];
+  }
+
+  if (values.length === 2) {
+    return `${values[0]} or ${values[1]}`;
+  }
+
+  return `${values.slice(0, -1).join(", ")}, or ${values.at(-1)}`;
+}
+
 function createSyntheticOptionElement(
   type: "Proficiency" | "Language",
   id: string,
@@ -415,6 +441,29 @@ export function formatSupportLabel(value: string | undefined) {
     );
 
     return [...new Set(labels)].join(" or ");
+  }
+
+  const clauses = splitSupportClauses(value).filter(Boolean);
+  if (clauses.length) {
+    const humanized = clauses
+      .map((clause) => {
+        const alternatives = splitSupportAlternatives(clause);
+        if (!alternatives.length) {
+          return humanizeClauseToken(clause);
+        }
+
+        const readableAlternatives = alternatives.map(humanizeClauseToken);
+        if (alternatives.every((token) => /^(?:\d+\/\d+|0)$/i.test(token))) {
+          return `CR ${joinHumanizedAlternatives(readableAlternatives)}`;
+        }
+
+        return joinHumanizedAlternatives(readableAlternatives);
+      })
+      .filter(Boolean);
+
+    if (humanized.length) {
+      return humanized.join(" • ");
+    }
   }
 
   return value
