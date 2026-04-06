@@ -12,6 +12,7 @@ import {
   queueContentSourceSync,
   toggleContentSource,
 } from "@/lib/content-sources/repository";
+import { listCachedElements } from "@/lib/content-sources/cache";
 import {
   SUGGESTED_SOURCE_INDEXES,
   type CachedSourceSummary,
@@ -23,11 +24,28 @@ type ContentSourcesSettingsProps = {
   isAuthenticated: boolean;
 };
 
+type SourceTypeCounts = Record<string, Record<string, number>>;
+
+const DIAGNOSTIC_TYPES = ["Class", "Archetype", "Race", "Sub Race"] as const;
+
+function formatTypeCounts(counts: Record<string, number> | undefined) {
+  if (!counts) {
+    return "";
+  }
+
+  return DIAGNOSTIC_TYPES.map((type) => {
+    const label =
+      type === "Archetype" ? "Subclasses" : type === "Sub Race" ? "Subraces" : `${type}s`;
+    return `${label}: ${counts[type] ?? 0}`;
+  }).join(" · ");
+}
+
 export function ContentSourcesSettings({
   isAuthenticated,
 }: ContentSourcesSettingsProps) {
   const [sources, setSources] = useState<ContentSource[]>([]);
   const [cachedSources, setCachedSources] = useState<Record<string, CachedSourceSummary>>({});
+  const [cachedTypeCounts, setCachedTypeCounts] = useState<SourceTypeCounts>({});
   const [syncRuns, setSyncRuns] = useState<SourceSyncRun[]>([]);
   const [name, setName] = useState("");
   const [indexUrl, setIndexUrl] = useState("");
@@ -47,15 +65,33 @@ export function ContentSourcesSettings({
   }
 
   async function refresh() {
-    const [nextSources, nextRuns, localCache] = await Promise.all([
+    const [nextSources, nextRuns, localCache, cachedElements] = await Promise.all([
       listContentSources(),
       listSourceSyncRuns(),
       listDeviceCachedSources(),
+      listCachedElements().catch(() => []),
     ]);
     setSources(nextSources);
     setSyncRuns(nextRuns);
     setCachedSources(
       Object.fromEntries(localCache.map((entry) => [entry.sourceId, entry])),
+    );
+    setCachedTypeCounts(
+      cachedElements.reduce<SourceTypeCounts>((accumulator, element) => {
+        const sourceId = "sourceId" in element ? String(element.sourceId) : "";
+        if (!sourceId) {
+          return accumulator;
+        }
+
+        const type = "element_type" in element ? String(element.element_type) : "";
+        if (!type) {
+          return accumulator;
+        }
+
+        accumulator[sourceId] ??= {};
+        accumulator[sourceId][type] = (accumulator[sourceId][type] ?? 0) + 1;
+        return accumulator;
+      }, {}),
     );
   }
 
@@ -274,6 +310,9 @@ export function ContentSourcesSettings({
                       ? ` · Last synced ${new Date(source.last_synced_at).toLocaleString()}`
                       : ""}
                   </span>
+                  {cachedTypeCounts[source.id] ? (
+                    <span>Cached types · {formatTypeCounts(cachedTypeCounts[source.id])}</span>
+                  ) : null}
                   {source.last_sync_error ? <span>Error: {source.last_sync_error}</span> : null}
                 </div>
                 <div className="draft-card__actions">
