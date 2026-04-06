@@ -50,6 +50,10 @@ function extractPrerequisiteText(element: ImportedElement) {
   const cleanPrerequisite = (value: string) =>
     value
       .replace(/\s+/g, " ")
+      .replace(
+        /\s+(Once during|When you|While you|As an action|As a bonus action|You can|You gain|You learn|During combat)\b[\s\S]*$/i,
+        "",
+      )
       .replace(/\b(?:As part of|You can|You may|Once per|When you)\b[\s\S]*$/i, "")
       .replace(/[.,;:]\s*$/g, "")
       .trim();
@@ -464,6 +468,9 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
       ["Background", "Background Feature", "Background Variant"].includes(element.type),
     ),
   ]);
+  const companionElements = dedupeElements(
+    importedElements.filter((element) => element.type === "Companion"),
+  );
   const featElements = dedupeElements([
     ...builtInFeatElements,
     ...importedElements.filter((element) => ["Feat"].includes(element.type)),
@@ -481,6 +488,7 @@ export async function resolveBuilderCatalogs(initialSpellElements: BuiltInElemen
     ...classElements.filter((element) =>
       ["Class Feature", "Archetype Feature", "Companion", "Language", "Proficiency"].includes(element.type),
     ),
+    ...companionElements,
     ...backgroundElements.filter((element) =>
       ["Background Feature", "Background Variant", "Language", "Proficiency"].includes(element.type),
     ),

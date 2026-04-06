@@ -104,6 +104,56 @@ function splitSupportTokens(value: string | undefined) {
     .filter(Boolean);
 }
 
+function splitSupportClauses(value: string) {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (char === "(") {
+      depth += 1;
+      current += char;
+      continue;
+    }
+
+    if (char === ")") {
+      depth = Math.max(0, depth - 1);
+      current += char;
+      continue;
+    }
+
+    if (depth === 0 && char === ",") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+}
+
+function splitSupportAlternatives(value: string) {
+  const trimmed = value.trim().replace(/^\(|\)$/g, "");
+  if (!trimmed) {
+    return [];
+  }
+
+  return trimmed
+    .split("||")
+    .map((token) => normalizeToken(token))
+    .filter(Boolean);
+}
+
 function humanizeIdToken(value: string) {
   return value
     .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
@@ -384,14 +434,58 @@ function hasSupportTokenOverlap(left: string[], right: string[]) {
 }
 
 function buildElementTokenSet(element: BuiltInElement) {
+  const setterTokens = element.setters.flatMap((setter) => {
+    if (!["type", "size", "challenge"].includes(setter.name)) {
+      return [];
+    }
+
+    return splitSupportTokens(setter.value);
+  });
+
   return new Set(
     [
       normalizeToken(element.id),
       normalizeToken(element.name),
       ...element.supports.map((support) => normalizeToken(support)),
       ...element.supports.flatMap((support) => splitSupportTokens(support)),
+      ...setterTokens,
     ].filter(Boolean),
   );
+}
+
+function resolveCompanionOptions(
+  rule: Extract<BuiltInRule, { kind: "select" }>,
+  allOptions: BuiltInElement[],
+) {
+  const explicitIds = new Set(collectExplicitIdTokens(rule.supports));
+  const familyClauses = splitSupportClauses(rule.supports ?? "").filter(Boolean);
+
+  const directExplicitMatches = allOptions.filter((element) => explicitIds.has(element.id));
+
+  const companionMatches = allOptions.filter((element) => {
+    if (explicitIds.has(element.id)) {
+      return true;
+    }
+
+    if (!familyClauses.length) {
+      return true;
+    }
+
+    const optionTokens = buildElementTokenSet(element);
+    return familyClauses.every((clause) => {
+      const alternatives = splitSupportAlternatives(clause);
+      if (alternatives.length) {
+        return alternatives.some((token) => optionTokens.has(token));
+      }
+
+      const normalizedClause = normalizeToken(clause);
+      return optionTokens.has(normalizedClause);
+    });
+  });
+
+  return [
+    ...new Map([...directExplicitMatches, ...companionMatches].map((element) => [element.id, element])).values(),
+  ];
 }
 
 function buildRuleFamilyTokens(
@@ -619,7 +713,9 @@ function resolveRuleOptions(
   const registryMatches =
     rule.type === "Proficiency" || rule.type === "Language"
       ? resolveSyntheticProficiencyLanguageOptions(rule as ProficiencyLanguageSelectRule, allOptions)
-      : [];
+      : rule.type === "Companion"
+        ? resolveCompanionOptions(rule, allOptions)
+        : [];
 
   const resolvedOptions = [
     ...new Map([...deduped, ...registryMatches].map((element) => [element.id, element])).values(),
