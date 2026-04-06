@@ -35,7 +35,13 @@ function formatTypeCounts(counts: Record<string, number> | undefined) {
 
   return DIAGNOSTIC_TYPES.map((type) => {
     const label =
-      type === "Archetype" ? "Subclasses" : type === "Sub Race" ? "Subraces" : `${type}s`;
+      type === "Class"
+        ? "Classes"
+        : type === "Archetype"
+          ? "Subclasses"
+          : type === "Sub Race"
+            ? "Subraces"
+            : `${type}s`;
     return `${label}: ${counts[type] ?? 0}`;
   }).join(" · ");
 }
