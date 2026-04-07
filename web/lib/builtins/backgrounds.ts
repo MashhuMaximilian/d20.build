@@ -26,6 +26,14 @@ function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
   return elements.map((element): BuiltInElement => ({
     ...element,
     catalogOrigin: "built-in" as const,
+    rules: element.rules.map((rule) =>
+      rule.kind === "select" && rule.type !== "List"
+        ? {
+            ...rule,
+            choices: undefined,
+          }
+        : rule,
+    ),
   }));
 }
 

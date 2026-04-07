@@ -26,7 +26,7 @@ type ContentSourcesSettingsProps = {
 
 type SourceTypeCounts = Record<string, Record<string, number>>;
 
-const DIAGNOSTIC_TYPES = ["Class", "Archetype", "Race", "Sub Race"] as const;
+const DIAGNOSTIC_TYPES = ["Class", "Archetype", "Race", "Sub Race", "Background", "Feat"] as const;
 
 function formatTypeCounts(counts: Record<string, number> | undefined) {
   if (!counts) {
@@ -41,6 +41,10 @@ function formatTypeCounts(counts: Record<string, number> | undefined) {
           ? "Subclasses"
           : type === "Sub Race"
             ? "Subraces"
+            : type === "Background"
+              ? "Backgrounds"
+              : type === "Feat"
+                ? "Feats"
             : `${type}s`;
     return `${label}: ${counts[type] ?? 0}`;
   }).join(" · ");

@@ -1539,7 +1539,7 @@ export function BuilderEditor({
         label: "Class",
         description: "Assign the primary and multiclass tracks, then check multiclass requirements before moving on.",
       },
-      ...(subclassEntryIndexes.length
+      ...(unlockedSubclassEntryIndexes.length
         ? [
             {
               id: "subclass",
@@ -1602,7 +1602,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [progressionGroups.length, selectedRace, spellGroups.length, subclassEntryIndexes.length]);
+  }, [progressionGroups.length, selectedRace, spellGroups.length, unlockedSubclassEntryIndexes.length]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -1629,14 +1629,14 @@ export function BuilderEditor({
   }, [activeClassEntryIndex, draft.classEntries.length]);
 
   useEffect(() => {
-    if (currentStep !== "subclass" || !subclassEntryIndexes.length) {
+    if (currentStep !== "subclass" || !unlockedSubclassEntryIndexes.length) {
       return;
     }
 
-    if (!subclassEntryIndexes.includes(activeClassEntryIndex)) {
-      setActiveClassEntryIndex(subclassEntryIndexes[0]);
+    if (!unlockedSubclassEntryIndexes.includes(activeClassEntryIndex)) {
+      setActiveClassEntryIndex(unlockedSubclassEntryIndexes[0]);
     }
-  }, [activeClassEntryIndex, currentStep, subclassEntryIndexes]);
+  }, [activeClassEntryIndex, currentStep, unlockedSubclassEntryIndexes]);
 
   useEffect(() => {
     const validGroupIds = new Set(progressionGroups.map((group) => group.id));
@@ -1813,7 +1813,7 @@ export function BuilderEditor({
         return warnings;
       }
       case "subclass": {
-        if (!subclassEntryIndexes.length) {
+        if (!unlockedSubclassEntryIndexes.length) {
           return [];
         }
         const warnings = unlockedSubclassEntryIndexes
@@ -1875,7 +1875,6 @@ export function BuilderEditor({
     saveValidationMessage,
     selectedRace,
     spellValidationMessages,
-    subclassEntryIndexes,
     unlockedSubclassEntryIndexes,
   ]);
 
@@ -2240,9 +2239,9 @@ export function BuilderEditor({
                 Use the class tabs to switch between subclass-bearing tracks. Save validation only requires subclasses for the tracks that are unlocked at their current class levels.
               </p>
             </div>
-            {subclassEntryIndexes.length ? (
+            {unlockedSubclassEntryIndexes.length ? (
               <div className="builder-classSlots">
-                {subclassEntryIndexes.map((index) => {
+                {unlockedSubclassEntryIndexes.map((index) => {
                   const entry = draft.classEntries[index];
                   const record = classRecordsByEntry[index];
                   const step = record?.subclassSteps[0];
@@ -2256,7 +2255,12 @@ export function BuilderEditor({
                         isUnlocked && !entry?.subclassId ? " builder-classSlot--warning" : ""
                       }`}
                       type="button"
-                      onClick={() => setActiveClassEntryIndex(index)}
+                      onClick={() => {
+                        if (!isUnlocked) {
+                          return;
+                        }
+                        setActiveClassEntryIndex(index);
+                      }}
                     >
                       <strong>{index === 0 ? "Primary" : `Multiclass ${index}`}</strong>
                       <span>{record?.class.name ?? "Choose class"}</span>
@@ -2274,13 +2278,16 @@ export function BuilderEditor({
                 <CatalogSelector
                   items={subclassItems}
                   label="Subclass"
-                  onSelect={(id) =>
+                  onSelect={(id) => {
+                    if (!unlocked) {
+                      return;
+                    }
                     updateDraft({
                       classEntries: draft.classEntries.map((entry, index) =>
                         index === activeClassEntryIndex ? { ...entry, subclassId: id } : entry,
                       ),
-                    })
-                  }
+                    });
+                  }}
                   selectedId={subclassEntry?.subclassId ?? ""}
                 />
               ) : (
