@@ -3,6 +3,7 @@ import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
 import type { CharacterClassEntry } from "@/lib/characters/types";
+import { getSourcePrecedenceScore } from "@/lib/content-sources/source-precedence";
 import type { RequirementContext } from "@/lib/progression/requirements";
 import { getRequirementFailures } from "@/lib/progression/requirements";
 import { getSpellLevel } from "@/lib/progression/spellcasting";
@@ -611,44 +612,6 @@ function collectOptionPool(
     },
     new Map(),
   );
-}
-
-function normalizeSourceKey(value: string) {
-  return normalizeToken(value).replace(/[’']/g, "'");
-}
-
-function getSourcePrecedenceScore(element: BuiltInElement) {
-  const source = normalizeSourceKey(element.source);
-
-  if (element.catalogOrigin === "built-in") {
-    return 500;
-  }
-
-  if (source.includes("system reference document") || source === "srd") {
-    return 450;
-  }
-
-  const officialSources = [
-    "player's handbook",
-    "xanathar's guide to everything",
-    "tasha's cauldron of everything",
-    "eberron: rising from the last war",
-    "mythic odysseys of theros",
-    "guildmasters' guide to ravnica",
-    "explorer's guide to wildemount",
-    "sword coast adventurer's guide",
-    "mordenkainen presents: monsters of the multiverse",
-  ];
-
-  if (officialSources.some((entry) => source.includes(entry))) {
-    return 400;
-  }
-
-  if (source.includes("unearthed arcana") || source.includes("ua")) {
-    return 200;
-  }
-
-  return 300;
 }
 
 function getOptionPreferenceScore(

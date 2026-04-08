@@ -165,6 +165,73 @@ function normalizeComparisonText(value: string) {
     .trim();
 }
 
+type AbilityRequirementGroup = {
+  abilities: AbilityKey[];
+  minimum: number;
+  mode: "all" | "any";
+};
+
+function extractAbilityRequirementGroups(value: string) {
+  const groups: AbilityRequirementGroup[] = [];
+  const consumedSpans: Array<[number, number]> = [];
+  const abilityPattern =
+    /(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)/i;
+
+  const pairWithRepeatedNumbers = new RegExp(
+    `${abilityPattern.source}\\s*(\\d{1,2})?(?:\\s+or\\s+higher)?\\s*(or|and)\\s*${abilityPattern.source}\\s*(\\d{1,2})(?:\\s+or\\s+higher)?`,
+    "gi",
+  );
+
+  for (const match of value.matchAll(pairWithRepeatedNumbers)) {
+    const leftAbility = ABILITY_NAME_MAP[match[1].toLowerCase()];
+    const rightAbility = ABILITY_NAME_MAP[match[4].toLowerCase()];
+    const minimum = Number(match[2] || match[5]);
+    const mode = match[3].toLowerCase() === "or" ? "any" : "all";
+    if (leftAbility && rightAbility && Number.isFinite(minimum)) {
+      groups.push({ abilities: [leftAbility, rightAbility], minimum, mode });
+      consumedSpans.push([match.index ?? 0, (match.index ?? 0) + match[0].length]);
+    }
+  }
+
+  const pairWithTrailingNumber = new RegExp(
+    `${abilityPattern.source}\\s*(or|and)\\s*${abilityPattern.source}\\s*(\\d{1,2})(?:\\s+or\\s+higher)?`,
+    "gi",
+  );
+
+  for (const match of value.matchAll(pairWithTrailingNumber)) {
+    const spanStart = match.index ?? 0;
+    const spanEnd = spanStart + match[0].length;
+    if (consumedSpans.some(([start, end]) => spanStart < end && spanEnd > start)) {
+      continue;
+    }
+    const leftAbility = ABILITY_NAME_MAP[match[1].toLowerCase()];
+    const rightAbility = ABILITY_NAME_MAP[match[3].toLowerCase()];
+    const minimum = Number(match[4]);
+    const mode = match[2].toLowerCase() === "or" ? "any" : "all";
+    if (leftAbility && rightAbility && Number.isFinite(minimum)) {
+      groups.push({ abilities: [leftAbility, rightAbility], minimum, mode });
+      consumedSpans.push([spanStart, spanEnd]);
+    }
+  }
+
+  const singlePattern =
+    /\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)\b[^\d]{0,10}(\d{1,2})(?:\s+or\s+higher)?/gi;
+  for (const match of value.matchAll(singlePattern)) {
+    const spanStart = match.index ?? 0;
+    const spanEnd = spanStart + match[0].length;
+    if (consumedSpans.some(([start, end]) => spanStart < end && spanEnd > start)) {
+      continue;
+    }
+    const ability = ABILITY_NAME_MAP[match[1].toLowerCase()];
+    const minimum = Number(match[2]);
+    if (ability && Number.isFinite(minimum)) {
+      groups.push({ abilities: [ability], minimum, mode: "all" });
+    }
+  }
+
+  return groups;
+}
+
 export function cleanReadablePrerequisite(value: string | undefined) {
   if (!value) {
     return "";
@@ -331,13 +398,15 @@ export function getRequirementFailures(
   const failures: string[] = [];
   const normalizedPrerequisite = fallbackText.toLowerCase();
 
-  const abilityMatches = [...fallbackText.matchAll(/\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|STR|DEX|CON|INT|WIS|CHA)\b[^\d]{0,10}(\d{1,2})/gi)];
-  abilityMatches.forEach((match) => {
-    const ability = ABILITY_NAME_MAP[match[1].toLowerCase()];
-    const minimum = Number(match[2]);
-
-    if (ability && context.effectiveAbilities[ability] < minimum) {
-      failures.push(`Requires ${ability.toUpperCase()} ${minimum}.`);
+  const abilityGroups = extractAbilityRequirementGroups(fallbackText);
+  abilityGroups.forEach((group) => {
+    const checks = group.abilities.map((ability) => context.effectiveAbilities[ability] >= group.minimum);
+    const passes = group.mode === "any" ? checks.some(Boolean) : checks.every(Boolean);
+    if (!passes) {
+      const names = group.abilities.map((ability) => ability.slice(0, 3).toUpperCase());
+      failures.push(
+        `Requires ${names.join(group.mode === "any" ? " or " : " and ")} ${group.minimum}.`,
+      );
     }
   });
 
@@ -381,6 +450,9 @@ export function getRequirementFailures(
 
   if (/ability to cast at least one cantrip/i.test(fallbackText) && selectedCantripNames.size === 0) {
     failures.push("Requires the ability to cast at least one cantrip.");
+  }
+  if (/spellcasting or pact magic feature/i.test(fallbackText) && !context.hasSpellcasting) {
+    failures.push("Requires spellcasting.");
   }
 
   const proficiencyMatches = [
@@ -506,7 +578,18 @@ export function getRequirementFailures(
     }
   }
 
-  if (/small race/i.test(fallbackText) && !context.selectedSizeIds.includes("ID_SIZE_SMALL")) {
+  const hasDwarfOrSmallRequirement = /dwarf or a small race/i.test(fallbackText);
+  if (hasDwarfOrSmallRequirement) {
+    const isDwarf = [context.selectedRaceName, context.selectedSubraceName]
+      .filter((name): name is string => Boolean(name))
+      .some((name) => normalizeRequirementText(name).includes("dwarf"));
+    const isSmall = context.selectedSizeIds.includes("ID_SIZE_SMALL");
+    if (!isDwarf && !isSmall) {
+      failures.push("Requires Dwarf or a Small race.");
+    }
+  }
+
+  if (!hasDwarfOrSmallRequirement && /small race/i.test(fallbackText) && !context.selectedSizeIds.includes("ID_SIZE_SMALL")) {
     failures.push("Requires a Small race.");
   }
   if (/medium race/i.test(fallbackText) && !context.selectedSizeIds.includes("ID_SIZE_MEDIUM")) {
@@ -613,6 +696,19 @@ export function getRequirementFailures(
     if (!hasHex && !hasCurseFeature) {
       failures.push("Requires hex or a warlock feature that curses.");
     }
+  }
+
+  if (/no other dragonmark/i.test(fallbackText)) {
+    const otherDragonmarkCount = context.selectedFeatNames.filter((name) =>
+      normalizeRequirementText(name).includes("dragonmark"),
+    ).length;
+    if (otherDragonmarkCount > 1) {
+      failures.push("Requires no other dragonmark.");
+    }
+  }
+
+  if (/firearms optional rule/i.test(fallbackText)) {
+    return [];
   }
 
   return [...new Set(failures)];

@@ -23,6 +23,7 @@ import {
   getBuiltInSrdRaceElements,
 } from "@/lib/builtins/races";
 import { listCachedElements } from "@/lib/content-sources/cache";
+import { getSourcePrecedenceScore } from "@/lib/content-sources/source-precedence";
 import type { ImportedElement } from "@/lib/content-sources/types";
 
 const SUPPORTED_ELEMENT_TYPES = new Set<BuiltInElementType>([
@@ -432,52 +433,6 @@ function buildBackgroundRecords(elements: BuiltInElement[]): BuiltInBackgroundRe
       choiceCount: background.rules.filter((rule) => rule.kind === "select" && !isNarrativeBackstorySelect(rule)).length,
     };
   });
-}
-
-function normalizeSourceKey(value: string) {
-  return value.trim().toLowerCase().replace(/[’']/g, "'");
-}
-
-function getSourcePrecedenceScore(element: BuiltInElement) {
-  const source = normalizeSourceKey(element.source);
-
-  if (source.includes("system reference document 5.2") || source.includes("srd 5.2")) {
-    return 650;
-  }
-
-  if (element.catalogOrigin === "built-in") {
-    return 600;
-  }
-
-  if (source.includes("system reference document 5.1") || source === "srd") {
-    return 550;
-  }
-
-  const officialSources = [
-    "player's handbook",
-    "xanathar's guide to everything",
-    "tasha's cauldron of everything",
-    "eberron: rising from the last war",
-    "mythic odysseys of theros",
-    "guildmasters' guide to ravnica",
-    "explorer's guide to wildemount",
-    "sword coast adventurer's guide",
-    "mordenkainen presents: monsters of the multiverse",
-    "monster manual",
-    "dungeon master's guide",
-    "fizban's treasury of dragons",
-    "bigby presents: glory of the giants",
-  ];
-
-  if (officialSources.some((entry) => source.includes(entry))) {
-    return 500;
-  }
-
-  if (source.includes("unearthed arcana") || source.includes("ua")) {
-    return 200;
-  }
-
-  return 350;
 }
 
 function dedupeElements(elements: BuiltInElement[]) {
