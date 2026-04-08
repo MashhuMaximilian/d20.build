@@ -361,6 +361,13 @@ function buildClassRecords(elements: BuiltInElement[]): BuiltInClassRecord[] {
   const archetypes = elements.filter((element) => element.type === "Archetype");
 
   return classes.map((characterClass) => {
+    const featureUnlockLevels = new Map(
+      characterClass.rules.flatMap((rule) =>
+        rule.kind === "grant" && rule.type === "Class Feature"
+          ? [[rule.id, rule.level]]
+          : [],
+      ),
+    );
     const featureIds = new Set(collectGrantedIds(characterClass.rules, "Class Feature"));
     const features = [...featureIds]
       .map((id) => elementsById.get(id))
@@ -389,8 +396,11 @@ function buildClassRecords(elements: BuiltInElement[]): BuiltInClassRecord[] {
           return {
             feature,
             label: rule.name,
-            level: rule.level,
-            timingLabel: rule.level ? `Subclass choice at level ${rule.level}` : "Subclass choice",
+            level: rule.level ?? featureUnlockLevels.get(feature.id),
+            timingLabel:
+              rule.level ?? featureUnlockLevels.get(feature.id)
+                ? `Subclass choice at level ${rule.level ?? featureUnlockLevels.get(feature.id)}`
+                : "Subclass choice",
             supportsKey: rule.supports,
             options,
           };

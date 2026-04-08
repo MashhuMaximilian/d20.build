@@ -24,6 +24,13 @@ type FeatsAsiStepProps = {
   onSelectionChange: (opportunityId: string, selection: CharacterImprovementSelection) => void;
 };
 
+type FeatSourceScope = "all" | "built-in" | "imported";
+type FeatTableSortKey = "name" | "source" | "prerequisite" | "impact";
+type FeatTableSortState = {
+  key: FeatTableSortKey;
+  direction: "asc" | "desc";
+};
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -135,6 +142,31 @@ function getDetailMarkup(feat: BuiltInElement | null) {
   return formatPlainTextAsHtml(feat.description);
 }
 
+function sourceScopeLabel(scope: FeatSourceScope) {
+  switch (scope) {
+    case "built-in":
+      return "Built-in";
+    case "imported":
+      return "Imported sources";
+    default:
+      return "All";
+  }
+}
+
+function toggleFeatTableSort(current: FeatTableSortState, key: FeatTableSortKey): FeatTableSortState {
+  if (current.key === key) {
+    return {
+      key,
+      direction: current.direction === "asc" ? "desc" : "asc",
+    };
+  }
+
+  return {
+    key,
+    direction: key === "name" ? "asc" : "desc",
+  };
+}
+
 function getEmptyAsiSelection(): CharacterImprovementSelection {
   return {
     mode: "asi",
@@ -168,6 +200,10 @@ export function FeatsAsiStep({
 }: FeatsAsiStepProps) {
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [previewIds, setPreviewIds] = useState<Record<string, string>>({});
+  const [viewModes, setViewModes] = useState<Record<string, "cards" | "table">>({});
+  const [sourceScopes, setSourceScopes] = useState<Record<string, FeatSourceScope>>({});
+  const [selectedSources, setSelectedSources] = useState<Record<string, string[]>>({});
+  const [tableSorts, setTableSorts] = useState<Record<string, FeatTableSortState>>({});
   const featOptions = useMemo(() => getAvailableFeatOptions(feats), [feats]);
 
   if (!opportunities.length) {
@@ -196,24 +232,80 @@ export function FeatsAsiStep({
           const selection = selections[opportunity.id] ?? getEmptyAsiSelection();
           const isAsi = selection.mode === "asi";
           const featQuery = queries[opportunity.id]?.trim().toLowerCase() ?? "";
-          const filteredFeats = featQuery
-            ? featOptions.filter((feat) =>
-                `${feat.name} ${feat.source} ${feat.description}`.toLowerCase().includes(featQuery),
-              )
-            : featOptions;
+          const viewMode = viewModes[opportunity.id] ?? "cards";
+          const sourceScope = sourceScopes[opportunity.id] ?? "all";
+          const selectedSourceFilters = selectedSources[opportunity.id] ?? [];
+          const tableSort = tableSorts[opportunity.id] ?? { key: "name", direction: "asc" as const };
+          const scopedFeats = featOptions.filter((feat) => {
+            if (sourceScope === "built-in") {
+              return feat.catalogOrigin === "built-in";
+            }
+            if (sourceScope === "imported") {
+              return feat.catalogOrigin === "imported";
+            }
+            return true;
+          });
+          const sourceOptions = [...new Set(scopedFeats.map((feat) => feat.source).filter(Boolean))].sort((left, right) =>
+            left.localeCompare(right),
+          );
+          const filteredFeats = scopedFeats.filter((feat) => {
+            if (
+              featQuery &&
+              !`${feat.name} ${feat.source} ${feat.description}`.toLowerCase().includes(featQuery)
+            ) {
+              return false;
+            }
+
+            if (selectedSourceFilters.length && !selectedSourceFilters.includes(feat.source)) {
+              return false;
+            }
+
+            return true;
+          });
+          const sortedFeats = [...filteredFeats].sort((left, right) => {
+            const leftFailures = featFailuresById[left.id] ?? [];
+            const rightFailures = featFailuresById[right.id] ?? [];
+            const getValue = (feat: BuiltInElement) => {
+              switch (tableSort.key) {
+                case "source":
+                  return feat.source;
+                case "prerequisite":
+                  return feat.prerequisite ?? "";
+                case "impact":
+                  return leftFailures.length === 0 ? "valid" : "invalid";
+                case "name":
+                default:
+                  return feat.name;
+              }
+            };
+
+            if (tableSort.key === "impact") {
+              const leftValue = leftFailures.length === 0 ? "0-valid" : `1-${leftFailures[0]}`;
+              const rightValue = rightFailures.length === 0 ? "0-valid" : `1-${rightFailures[0]}`;
+              return tableSort.direction === "asc"
+                ? leftValue.localeCompare(rightValue)
+                : rightValue.localeCompare(leftValue);
+            }
+
+            const leftValue = getValue(left);
+            const rightValue = getValue(right);
+            return tableSort.direction === "asc"
+              ? leftValue.localeCompare(rightValue)
+              : rightValue.localeCompare(leftValue);
+          });
           const previewId =
             previewIds[opportunity.id] ??
             selection.featId ??
-            filteredFeats[0]?.id ??
+            sortedFeats[0]?.id ??
             "";
           const selectedFeat = selection.featId
             ? featOptions.find((feat) => feat.id === selection.featId) ?? null
             : null;
           const previewFeat =
-            filteredFeats.find((feat) => feat.id === previewId) ??
+            sortedFeats.find((feat) => feat.id === previewId) ??
             featOptions.find((feat) => feat.id === previewId) ??
             selectedFeat ??
-            filteredFeats[0] ??
+            sortedFeats[0] ??
             null;
           const previewFailures = previewFeat ? featFailuresById[previewFeat.id] ?? [] : [];
           const selectedFailures = selectedFeat ? featFailuresById[selectedFeat.id] ?? [] : [];
@@ -352,9 +444,49 @@ export function FeatsAsiStep({
               ) : (
                 <div className="feats-step__featPicker">
                   {featOptions.length ? (
-                    <>
-                      <div className="feats-step__pickerLayout">
+                    <div className="feats-step__pickerLayout">
                         <div className="feats-step__pickerColumn feats-step__pickerColumn--list">
+                          <div className="catalog-selector__optionsHeader">
+                            <div className="catalog-selector__headingBlock">
+                              <span className="catalog-selector__sectionLabel">Choose feat</span>
+                            </div>
+                            <div className="catalog-selector__optionsActions">
+                              <div className="catalog-selector__viewMode">
+                                <button
+                                  className={`button button--secondary button--compact${viewMode === "cards" ? " ability-mode__tab--active" : ""}`}
+                                  type="button"
+                                  onClick={() =>
+                                    setViewModes((current) => ({
+                                      ...current,
+                                      [opportunity.id]: "cards",
+                                    }))
+                                  }
+                                >
+                                  <span className="catalog-selector__viewModeButton">
+                                    <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--workbench" aria-hidden="true" />
+                                    <span>Workbench</span>
+                                  </span>
+                                </button>
+                                <button
+                                  className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
+                                  type="button"
+                                  onClick={() =>
+                                    setViewModes((current) => ({
+                                      ...current,
+                                      [opportunity.id]: "table",
+                                    }))
+                                  }
+                                >
+                                  <span className="catalog-selector__viewModeButton">
+                                    <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--table" aria-hidden="true" />
+                                    <span>Table</span>
+                                  </span>
+                                </button>
+                              </div>
+                              <span className="catalog-selector__count">{sortedFeats.length} entries</span>
+                            </div>
+                          </div>
+
                           <label className="builder-field">
                             <span>Search feats</span>
                             <input
@@ -369,13 +501,145 @@ export function FeatsAsiStep({
                               placeholder="Search feat library"
                             />
                           </label>
-                          <div className="feats-step__listHeader">
-                            <span className="builder-panel__label">Choose feat</span>
-                            <span className="builder-summary__meta">{filteredFeats.length} entries</span>
+
+                          <div className="catalog-selector__filterGroup">
+                            <span className="catalog-selector__sectionLabel">Source</span>
+                            <div className="catalog-selector__filters">
+                              {(["all", "built-in", "imported"] as const).map((scope) => (
+                                <button
+                                  key={scope}
+                                  className={`button button--secondary button--compact${sourceScope === scope ? " ability-mode__tab--active" : ""}`}
+                                  type="button"
+                                  onClick={() => {
+                                    setSourceScopes((current) => ({
+                                      ...current,
+                                      [opportunity.id]: scope,
+                                    }));
+                                    setSelectedSources((current) => ({
+                                      ...current,
+                                      [opportunity.id]: [],
+                                    }));
+                                  }}
+                                >
+                                  {sourceScopeLabel(scope)}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <div className="feats-step__optionList" role="list">
-                            {filteredFeats.length ? (
-                              filteredFeats.map((feat) => {
+
+                          {sourceOptions.length > 1 ? (
+                            <div className="catalog-selector__filterGroup">
+                              <span className="catalog-selector__sectionLabel">Named sources</span>
+                              <div className="catalog-selector__filterTags">
+                                {sourceOptions.map((source) => (
+                                  <button
+                                    key={source}
+                                    className={`catalog-selector__filterChip${selectedSourceFilters.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedSources((current) => {
+                                        const existing = current[opportunity.id] ?? [];
+                                        return {
+                                          ...current,
+                                          [opportunity.id]: existing.includes(source)
+                                            ? existing.filter((entry) => entry !== source)
+                                            : [...existing, source],
+                                        };
+                                      })
+                                    }
+                                  >
+                                    {source}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {viewMode === "table" ? (
+                            <div className="catalog-selector__tableWrap" role="table" aria-label={`${opportunity.title} feat table`}>
+                              <div className="catalog-selector__tableHead" role="row">
+                                {([
+                                  ["name", "Name"],
+                                  ["source", "Source"],
+                                  ["prerequisite", "Prerequisite"],
+                                  ["impact", "Impact"],
+                                ] as const).map(([key, headerLabel]) => {
+                                  const active = tableSort.key === key;
+                                  return (
+                                    <button
+                                      key={key}
+                                      type="button"
+                                      role="columnheader"
+                                      aria-sort={active ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none"}
+                                      className={`catalog-selector__tableSort${active ? " is-active" : ""}`}
+                                      onClick={() =>
+                                        setTableSorts((current) => ({
+                                          ...current,
+                                          [opportunity.id]: toggleFeatTableSort(current[opportunity.id] ?? { key: "name", direction: "asc" }, key),
+                                        }))
+                                      }
+                                    >
+                                      <span>{headerLabel}</span>
+                                      <span className="catalog-selector__tableSortGlyph" aria-hidden="true">
+                                        {active ? (tableSort.direction === "asc" ? "▲" : "▼") : "↕"}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="catalog-selector__tableBody" role="rowgroup">
+                                {sortedFeats.length ? sortedFeats.map((feat) => {
+                                  const isPreview = previewFeat?.id === feat.id;
+                                  const isSelected = selection.featId === feat.id;
+                                  const failures = featFailuresById[feat.id] ?? [];
+                                  const canSelect = failures.length === 0;
+                                  const hasInvalidSelection = isSelected && failures.length > 0;
+                                  return (
+                                    <button
+                                      key={feat.id}
+                                      className={`catalog-selector__tableRow${isPreview ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
+                                      type="button"
+                                      onClick={() => {
+                                        setPreviewIds((current) => ({
+                                          ...current,
+                                          [opportunity.id]: feat.id,
+                                        }));
+                                        if (canSelect) {
+                                          onSelectionChange(opportunity.id, {
+                                            mode: "feat",
+                                            abilityBonuses: {},
+                                            featId: feat.id,
+                                            featName: feat.name,
+                                            featSource: feat.source,
+                                          });
+                                        }
+                                      }}
+                                      role="row"
+                                    >
+                                      <span className="catalog-selector__tableCell catalog-selector__tableCell--name" role="cell">
+                                        <strong>{feat.name}</strong>
+                                        {hasInvalidSelection ? (
+                                          <span className="catalog-selector__selectedBadge catalog-selector__selectedBadge--error">
+                                            Prerequisites not met
+                                          </span>
+                                        ) : isSelected ? (
+                                          <span className="catalog-selector__selectedBadge">Selected</span>
+                                        ) : null}
+                                      </span>
+                                      <span className="catalog-selector__tableCell" role="cell">{feat.source}</span>
+                                      <span className="catalog-selector__tableCell" role="cell">{feat.prerequisite ?? "—"}</span>
+                                      <span className="catalog-selector__tableCell" role="cell">
+                                        {failures.length ? failures[0] : "Valid"}
+                                      </span>
+                                    </button>
+                                  );
+                                }) : <p className="builder-summary__meta">No feats match the current filters.</p>}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="feats-step__optionList" role="list">
+                              {sortedFeats.length ? (
+                                sortedFeats.map((feat) => {
                                 const isPreview = previewFeat?.id === feat.id;
                                 const isSelected = selection.featId === feat.id;
                                 const failures = featFailuresById[feat.id] ?? [];
@@ -424,9 +688,10 @@ export function FeatsAsiStep({
                                 );
                               })
                             ) : (
-                              <p className="builder-summary__meta">No feats match the current search.</p>
+                              <p className="builder-summary__meta">No feats match the current filters.</p>
                             )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                         <div className="feats-step__pickerColumn feats-step__pickerColumn--detail">
                           {previewFeat ? (
@@ -480,7 +745,6 @@ export function FeatsAsiStep({
                           )}
                         </div>
                       </div>
-                    </>
                   ) : (
                     <p className="auth-card__status auth-card__status--error">
                       No feat catalog is currently available. Import feat sources or use the ASI option for this slot.
