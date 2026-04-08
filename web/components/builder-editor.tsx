@@ -989,6 +989,14 @@ export function BuilderEditor({
       }),
     [feats, selectedFeatElements],
   );
+  const selectedDragonmarkIds = useMemo(
+    () => [
+      ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Dragonmark") : []),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Dragonmark") : []),
+      ...collectGrantedIdsFromElements(selectedFeatElements, "Dragonmark"),
+    ],
+    [selectedFeatElements, selectedRace, selectedSubrace],
+  );
   const selectedBaseProficiencyIds = useMemo(() => {
     const raceTraitIds = new Set(selectedRacialTraitIds);
     const selectedRaceTraitElements =
@@ -1135,6 +1143,7 @@ export function BuilderEditor({
       selectedFeatureIds: [
         ...selectedSubclassIds,
         ...selectedRacialTraitIds,
+        ...selectedDragonmarkIds,
         ...selectedBackgroundFeatureIds,
         ...selectedClassFeatureIds,
         ...selectedFeatFeatureIds,
@@ -1142,6 +1151,7 @@ export function BuilderEditor({
       selectedFeatureNames: [
         ...selectedSubclassNames,
         ...selectedRacialTraitNames,
+        ...selectedDragonmarkIds.map(humanizeGrantedId),
         ...selectedBackgroundFeatureNames,
         ...selectedClassFeatureNames,
         ...selectedFeatFeatureNames,
@@ -1178,6 +1188,7 @@ export function BuilderEditor({
       selectedBackgroundFeatureNames,
       selectedClassFeatureIds,
       selectedClassFeatureNames,
+      selectedDragonmarkIds,
       selectedBaseLanguageIds,
       selectedBaseProficiencyIds,
       selectedFeatElements,
@@ -1549,6 +1560,12 @@ export function BuilderEditor({
             },
           ]
         : []),
+      {
+        id: "background",
+        kind: "background",
+        label: "Background",
+        description: "Choose the story scaffold that grants proficiencies, features, and choices.",
+      },
       ...(progressionGroups.length
         ? [
             {
@@ -1559,12 +1576,6 @@ export function BuilderEditor({
             },
           ]
         : []),
-      {
-        id: "background",
-        kind: "background",
-        label: "Background",
-        description: "Choose the story scaffold that grants proficiencies, features, and choices.",
-      },
       {
         id: "feats",
         kind: "feats",
@@ -1883,14 +1894,14 @@ export function BuilderEditor({
   const unresolvedStepWarnings = useMemo(
     () =>
       steps
-        .filter((step) => step.id !== activeStep.id)
+        .slice(0, currentStepIndex)
         .flatMap((step) =>
           getStepWarnings(step).map((warning) => ({
             step: step.label,
             message: warning,
           })),
         ),
-    [activeStep.id, getStepWarnings, steps],
+    [currentStepIndex, getStepWarnings, steps],
   );
 
   const navigationWarnings = useMemo(() => {
