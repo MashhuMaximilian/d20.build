@@ -699,10 +699,16 @@ export function getRequirementFailures(
   }
 
   if (/no other dragonmark/i.test(fallbackText)) {
+    const selectedLineageNames = [context.selectedRaceName, context.selectedSubraceName]
+      .filter((name): name is string => Boolean(name))
+      .map(normalizeRequirementText);
+    const hasDragonmarkedLineage = selectedLineageNames.some(
+      (name) => name.includes("mark of") || name.includes("dragonmark"),
+    );
     const otherDragonmarkCount = context.selectedFeatNames.filter((name) =>
       normalizeRequirementText(name).includes("dragonmark"),
     ).length;
-    if (otherDragonmarkCount > 1) {
+    if (hasDragonmarkedLineage || otherDragonmarkCount > 1) {
       failures.push("Requires no other dragonmark.");
     }
   }
