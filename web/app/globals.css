@@ -2020,6 +2020,16 @@ a {
   min-width: 0;
 }
 
+.feats-step__tableScroller {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.feats-step__tableWrap {
+  min-width: 720px;
+  max-height: 440px;
+}
+
 .feats-step__listHeader {
   display: flex;
   flex-wrap: wrap;
@@ -2030,8 +2040,8 @@ a {
 
 .feats-step__optionList {
   display: grid;
-  gap: 10px;
-  max-height: 360px;
+  gap: 8px;
+  max-height: 420px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -2040,7 +2050,7 @@ a {
   display: grid;
   gap: 4px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid rgba(146, 38, 16, 0.12);
   border-radius: 14px;
   background: rgba(255, 252, 246, 0.96);
@@ -2059,7 +2069,7 @@ a {
 
 .feats-step__option span {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .feats-step__option:hover {
@@ -2111,6 +2121,21 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.feats-step__namedSources {
+  max-height: 7.25rem;
+  overflow: hidden;
+}
+
+.feats-step__namedSources.is-expanded {
+  max-height: 12rem;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.feats-step__sourceToggle {
+  justify-self: start;
 }
 
 .backstory-step {

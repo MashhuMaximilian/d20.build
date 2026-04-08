@@ -203,6 +203,7 @@ export function FeatsAsiStep({
   const [viewModes, setViewModes] = useState<Record<string, "cards" | "table">>({});
   const [sourceScopes, setSourceScopes] = useState<Record<string, FeatSourceScope>>({});
   const [selectedSources, setSelectedSources] = useState<Record<string, string[]>>({});
+  const [expandedSourceLists, setExpandedSourceLists] = useState<Record<string, boolean>>({});
   const [tableSorts, setTableSorts] = useState<Record<string, FeatTableSortState>>({});
   const featOptions = useMemo(() => getAvailableFeatOptions(feats), [feats]);
 
@@ -248,6 +249,8 @@ export function FeatsAsiStep({
           const sourceOptions = [...new Set(scopedFeats.map((feat) => feat.source).filter(Boolean))].sort((left, right) =>
             left.localeCompare(right),
           );
+          const sourceListExpanded = expandedSourceLists[opportunity.id] ?? false;
+          const visibleSourceOptions = sourceListExpanded ? sourceOptions : sourceOptions.slice(0, 12);
           const filteredFeats = scopedFeats.filter((feat) => {
             if (
               featQuery &&
@@ -515,6 +518,10 @@ export function FeatsAsiStep({
                                       ...current,
                                       [opportunity.id]: scope,
                                     }));
+                                    setExpandedSourceLists((current) => ({
+                                      ...current,
+                                      [opportunity.id]: false,
+                                    }));
                                     setSelectedSources((current) => ({
                                       ...current,
                                       [opportunity.id]: [],
@@ -530,8 +537,8 @@ export function FeatsAsiStep({
                           {sourceOptions.length > 1 ? (
                             <div className="catalog-selector__filterGroup">
                               <span className="catalog-selector__sectionLabel">Named sources</span>
-                              <div className="catalog-selector__filterTags">
-                                {sourceOptions.map((source) => (
+                              <div className={`catalog-selector__filterTags feats-step__namedSources${sourceListExpanded ? " is-expanded" : ""}`}>
+                                {visibleSourceOptions.map((source) => (
                                   <button
                                     key={source}
                                     className={`catalog-selector__filterChip${selectedSourceFilters.includes(source) ? " catalog-selector__filterChip--active" : ""}`}
@@ -552,12 +559,27 @@ export function FeatsAsiStep({
                                   </button>
                                 ))}
                               </div>
+                              {sourceOptions.length > 12 ? (
+                                <button
+                                  className="button button--secondary button--compact feats-step__sourceToggle"
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedSourceLists((current) => ({
+                                      ...current,
+                                      [opportunity.id]: !sourceListExpanded,
+                                    }))
+                                  }
+                                >
+                                  {sourceListExpanded ? "Show fewer sources" : `Show all ${sourceOptions.length} sources`}
+                                </button>
+                              ) : null}
                             </div>
                           ) : null}
 
                           {viewMode === "table" ? (
-                            <div className="catalog-selector__tableWrap" role="table" aria-label={`${opportunity.title} feat table`}>
-                              <div className="catalog-selector__tableHead" role="row">
+                            <div className="feats-step__tableScroller">
+                              <div className="catalog-selector__tableWrap feats-step__tableWrap" role="table" aria-label={`${opportunity.title} feat table`}>
+                                <div className="catalog-selector__tableHead" role="row">
                                 {([
                                   ["name", "Name"],
                                   ["source", "Source"],
@@ -586,54 +608,55 @@ export function FeatsAsiStep({
                                     </button>
                                   );
                                 })}
-                              </div>
-                              <div className="catalog-selector__tableBody" role="rowgroup">
-                                {sortedFeats.length ? sortedFeats.map((feat) => {
-                                  const isPreview = previewFeat?.id === feat.id;
-                                  const isSelected = selection.featId === feat.id;
-                                  const failures = featFailuresById[feat.id] ?? [];
-                                  const canSelect = failures.length === 0;
-                                  const hasInvalidSelection = isSelected && failures.length > 0;
-                                  return (
-                                    <button
-                                      key={feat.id}
-                                      className={`catalog-selector__tableRow${isPreview ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
-                                      type="button"
-                                      onClick={() => {
-                                        setPreviewIds((current) => ({
-                                          ...current,
-                                          [opportunity.id]: feat.id,
-                                        }));
-                                        if (canSelect) {
-                                          onSelectionChange(opportunity.id, {
-                                            mode: "feat",
-                                            abilityBonuses: {},
-                                            featId: feat.id,
-                                            featName: feat.name,
-                                            featSource: feat.source,
-                                          });
-                                        }
-                                      }}
-                                      role="row"
-                                    >
-                                      <span className="catalog-selector__tableCell catalog-selector__tableCell--name" role="cell">
-                                        <strong>{feat.name}</strong>
-                                        {hasInvalidSelection ? (
-                                          <span className="catalog-selector__selectedBadge catalog-selector__selectedBadge--error">
-                                            Prerequisites not met
-                                          </span>
-                                        ) : isSelected ? (
-                                          <span className="catalog-selector__selectedBadge">Selected</span>
-                                        ) : null}
-                                      </span>
-                                      <span className="catalog-selector__tableCell" role="cell">{feat.source}</span>
-                                      <span className="catalog-selector__tableCell" role="cell">{feat.prerequisite ?? "—"}</span>
-                                      <span className="catalog-selector__tableCell" role="cell">
-                                        {failures.length ? failures[0] : "Valid"}
-                                      </span>
-                                    </button>
-                                  );
-                                }) : <p className="builder-summary__meta">No feats match the current filters.</p>}
+                                </div>
+                                <div className="catalog-selector__tableBody" role="rowgroup">
+                                  {sortedFeats.length ? sortedFeats.map((feat) => {
+                                    const isPreview = previewFeat?.id === feat.id;
+                                    const isSelected = selection.featId === feat.id;
+                                    const failures = featFailuresById[feat.id] ?? [];
+                                    const canSelect = failures.length === 0;
+                                    const hasInvalidSelection = isSelected && failures.length > 0;
+                                    return (
+                                      <button
+                                        key={feat.id}
+                                        className={`catalog-selector__tableRow${isPreview ? " catalog-selector__tableRow--preview" : ""}${isSelected ? " catalog-selector__tableRow--selected" : ""}`}
+                                        type="button"
+                                        onClick={() => {
+                                          setPreviewIds((current) => ({
+                                            ...current,
+                                            [opportunity.id]: feat.id,
+                                          }));
+                                          if (canSelect) {
+                                            onSelectionChange(opportunity.id, {
+                                              mode: "feat",
+                                              abilityBonuses: {},
+                                              featId: feat.id,
+                                              featName: feat.name,
+                                              featSource: feat.source,
+                                            });
+                                          }
+                                        }}
+                                        role="row"
+                                      >
+                                        <span className="catalog-selector__tableCell catalog-selector__tableCell--name" role="cell">
+                                          <strong>{feat.name}</strong>
+                                          {hasInvalidSelection ? (
+                                            <span className="catalog-selector__selectedBadge catalog-selector__selectedBadge--error">
+                                              Prerequisites not met
+                                            </span>
+                                          ) : isSelected ? (
+                                            <span className="catalog-selector__selectedBadge">Selected</span>
+                                          ) : null}
+                                        </span>
+                                        <span className="catalog-selector__tableCell" role="cell">{feat.source}</span>
+                                        <span className="catalog-selector__tableCell" role="cell">{feat.prerequisite ?? "—"}</span>
+                                        <span className="catalog-selector__tableCell" role="cell">
+                                          {failures.length ? failures[0] : "Valid"}
+                                        </span>
+                                      </button>
+                                    );
+                                  }) : <p className="builder-summary__meta">No feats match the current filters.</p>}
+                                </div>
                               </div>
                             </div>
                           ) : (
