@@ -2209,6 +2209,7 @@ export function BuilderEditor({
             </div>
             {selectedRace ? (
               <CatalogSelector
+                key={`subrace-${selectedRace.race.id}`}
                 items={subraceItems}
                 label="Subrace"
                 onSelect={(id) => updateDraft({ subraceId: id })}
