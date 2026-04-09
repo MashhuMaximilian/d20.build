@@ -352,7 +352,7 @@ function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
   return races.map((race) => {
     const subraces = elements.filter(
       (element) =>
-        (element.type === "Sub Race" || element.type === "Race Variant") &&
+        element.type === "Sub Race" &&
         supportsRaceBranch(element, race.name),
     );
 
