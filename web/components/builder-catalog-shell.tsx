@@ -29,6 +29,7 @@ export function BuilderCatalogShell({
   initialRaces,
   initialSpells,
 }: BuilderCatalogShellProps) {
+  const [isHydratingCatalogs, setIsHydratingCatalogs] = useState(true);
   const [catalogs, setCatalogs] = useState({
     backgrounds: initialBackgrounds,
     classes: initialClasses,
@@ -47,9 +48,13 @@ export function BuilderCatalogShell({
 
         if (!cancelled) {
           setCatalogs(resolved);
+          setIsHydratingCatalogs(false);
         }
       } catch {
         // Keep built-in SRD catalogs if device cache resolution fails.
+        if (!cancelled) {
+          setIsHydratingCatalogs(false);
+        }
       }
     }
 
@@ -59,6 +64,21 @@ export function BuilderCatalogShell({
       cancelled = true;
     };
   }, [initialSpells]);
+
+  if (isHydratingCatalogs) {
+    return (
+      <section className="builder-stepPanel">
+        <div className="builder-stepPanel__intro">
+          <span className="route-shell__tag">Builder</span>
+          <h2 className="route-shell__title">Loading synced catalogs</h2>
+          <p className="route-shell__copy">
+            We’re loading your built-in and cached imported content so race branches, feats, spells, and other choices
+            appear consistently from the start.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <BuilderEditor
