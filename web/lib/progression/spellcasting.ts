@@ -536,7 +536,10 @@ function buildGroupsForSource(
           level: support.level,
         })
       : "none";
-    const groupKey = [kind, normalizeListKey(rule.name), supportSignature].join("|");
+    const groupKey =
+      kind === "spellbook"
+        ? [kind, normalizeListKey(rule.name)].join("|")
+        : [kind, normalizeListKey(rule.name), supportSignature].join("|");
     const existing = grouped.get(groupKey);
     grouped.set(groupKey, {
       kind,

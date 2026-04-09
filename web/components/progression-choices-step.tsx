@@ -152,7 +152,28 @@ export function ProgressionChoicesStep({
   selections,
   onSelectionChange,
 }: ProgressionChoicesStepProps) {
-  const [activeGroupId, setActiveGroupId] = useState(groups[0]?.id ?? "");
+  const orderedGroups = useMemo(() => {
+    const getPriority = (group: ProgressionChoiceGroup) => {
+      const title = group.title.toLowerCase();
+      if (title.includes("pact boon")) {
+        return -200;
+      }
+      if (title.includes("familiar")) {
+        return -100;
+      }
+      return 0;
+    };
+
+    return [...groups].sort(
+      (left, right) =>
+        getPriority(left) - getPriority(right) ||
+        left.classEntryIndex - right.classEntryIndex ||
+        left.unlockLevel - right.unlockLevel ||
+        left.ownerLabel.localeCompare(right.ownerLabel) ||
+        left.title.localeCompare(right.title),
+    );
+  }, [groups]);
+  const [activeGroupId, setActiveGroupId] = useState(orderedGroups[0]?.id ?? "");
   const [previewIds, setPreviewIds] = useState<Record<string, string>>({});
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
@@ -165,16 +186,16 @@ export function ProgressionChoicesStep({
   const elementsById = useMemo(() => new Map(elements.map((element) => [element.id, element])), [elements]);
 
   useEffect(() => {
-    if (!groups.some((group) => group.id === activeGroupId)) {
-      setActiveGroupId(groups[0]?.id ?? "");
+    if (!orderedGroups.some((group) => group.id === activeGroupId)) {
+      setActiveGroupId(orderedGroups[0]?.id ?? "");
     }
-  }, [activeGroupId, groups]);
+  }, [activeGroupId, orderedGroups]);
 
   useEffect(() => {
     setInteractionWarning("");
   }, [activeGroupId]);
 
-  const activeGroup = groups.find((group) => group.id === activeGroupId) ?? null;
+  const activeGroup = orderedGroups.find((group) => group.id === activeGroupId) ?? null;
   const query = activeGroup ? queries[activeGroup.id]?.trim().toLowerCase() ?? "" : "";
   const filteredOptions = useMemo(
     () =>
@@ -246,7 +267,7 @@ export function ProgressionChoicesStep({
     }
   }, [activeGroup, previewOption]);
 
-  if (!groups.length) {
+  if (!orderedGroups.length) {
     return (
       <section className="builder-panel">
         <span className="builder-panel__label">Choices</span>
@@ -307,8 +328,8 @@ export function ProgressionChoicesStep({
         </p>
       </div>
 
-      <div className="spellcasting-step__groupTabs">
-        {groups.map((group) => {
+        <div className="spellcasting-step__groupTabs">
+        {orderedGroups.map((group) => {
           const pickedCount = selections[group.id]?.length ?? 0;
           return (
             <button

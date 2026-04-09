@@ -91,6 +91,8 @@ type BuilderStep = {
   classEntryIndex?: number;
 };
 
+const BASE_RACE_BRANCH_PREFIX = "__base-race__:";
+
 function rebalanceClassEntries(totalLevel: number, entries: CharacterDraft["classEntries"]) {
   const safeTotal = Math.max(1, Math.min(20, Math.floor(totalLevel || 1)));
   const normalizedEntries = entries.length
@@ -340,7 +342,33 @@ function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[]
     return [];
   }
 
-  return race.subraces.map((subrace) => {
+  const hasTrueSubraces = race.subraces.some((entry) => entry.type === "Sub Race");
+  const hasVariantBranches = race.subraces.some((entry) => entry.type === "Race Variant");
+  const items: CatalogItem[] = [];
+
+  if (hasVariantBranches && !hasTrueSubraces) {
+    items.push({
+      id: `${BASE_RACE_BRANCH_PREFIX}${race.race.id}`,
+      name: race.race.name,
+      description: race.race.description,
+      detailHtml: race.race.descriptionHtml,
+      origin: race.race.catalogOrigin,
+      source: race.race.source,
+      meta: "Base lineage",
+      summaryLines: normalizeSummaryLines([
+        getAbilityBonusSummary(race.race.rules).join(", "),
+      ]),
+      impactLines: ["Uses the base race traits without a variant branch."],
+      mechanicsLines: normalizeSummaryLines([
+        countSelectRules(race.race.rules) ? `Introduces ${countSelectRules(race.race.rules)} choice nodes` : "",
+      ]),
+      filterTags: [race.race.name],
+      detailTags: [race.race.name],
+      featureDetails: buildFeatureDetails(race.traits),
+    });
+  }
+
+  items.push(...race.subraces.map((subrace) => {
     const bonusSummary = getAbilityBonusSummary(subrace.rules);
     const grantedTraitIds = new Set(collectGrantedIds(subrace.rules, "Racial Trait"));
     const grantedTraits = race.traits.filter((trait) => grantedTraitIds.has(trait.id));
@@ -374,7 +402,27 @@ function buildSubraceCatalogItems(race: BuiltInRaceRecord | null): CatalogItem[]
       detailTags: [...bonusSummary, ...grantedTraits.slice(0, 8).map((trait) => trait.name)],
       featureDetails: buildFeatureDetails(grantedTraits),
     };
-  });
+  }));
+
+  return items;
+}
+
+function createBaseRaceBranchElement(race: BuiltInRaceRecord | null, branchId: string): BuiltInElement | null {
+  if (!race || branchId !== `${BASE_RACE_BRANCH_PREFIX}${race.race.id}`) {
+    return null;
+  }
+
+  return {
+    ...race.race,
+    id: branchId,
+    type: "Race Variant",
+    name: race.race.name,
+    supports: [...race.race.supports, race.race.name],
+    rules: [],
+    setters: [],
+    description: `Use the base ${race.race.name} traits without a variant branch.`,
+    descriptionHtml: `<p>Use the base ${race.race.name} traits without a variant branch.</p>`,
+  };
 }
 
 function buildClassCatalogItems(classes: BuiltInClassRecord[]): CatalogItem[] {
@@ -677,7 +725,10 @@ export function BuilderEditor({
     [draft.raceId, races],
   );
   const selectedSubrace = useMemo(
-    () => selectedRace?.subraces.find((entry) => entry.id === draft.subraceId) ?? null,
+    () =>
+      selectedRace?.subraces.find((entry) => entry.id === draft.subraceId) ??
+      createBaseRaceBranchElement(selectedRace, draft.subraceId) ??
+      null,
     [draft.subraceId, selectedRace],
   );
   const selectedClass = useMemo(
@@ -2188,9 +2239,14 @@ export function BuilderEditor({
               label="Race"
               onSelect={(id) => {
                 const nextRace = races.find((entry) => entry.race.id === id);
+                const hasOnlyVariantBranches = Boolean(
+                  nextRace?.subraces.some((entry) => entry.type === "Race Variant") &&
+                    !nextRace?.subraces.some((entry) => entry.type === "Sub Race"),
+                );
                 updateDraft({
                   raceId: id,
-                  subraceId: nextRace?.subraces.length === 1 ? nextRace.subraces[0].id : "",
+                  subraceId:
+                    nextRace?.subraces.length === 1 && !hasOnlyVariantBranches ? nextRace.subraces[0].id : "",
                 });
               }}
               selectedId={draft.raceId}

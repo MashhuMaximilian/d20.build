@@ -697,6 +697,9 @@ export function getRequirementFailures(
 
   namedSpellRequirements.forEach((required) => {
     const requiresCantrip = fallbackText.toLowerCase().includes(`${required} cantrip`);
+    if (requiresCantrip && required === "eldritch blast") {
+      return;
+    }
     const haystack = requiresCantrip ? selectedNamedCantrips : selectedNamedSpells;
     const hasMatch = haystack.some(
       (name) => name === required || name.includes(required) || required.includes(name),
