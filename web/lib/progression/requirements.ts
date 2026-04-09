@@ -49,6 +49,23 @@ export function normalizeRequirementText(value: string) {
   return value.trim().toLowerCase();
 }
 
+function isDragonmarkLike(value: string | undefined) {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = normalizeRequirementText(value)
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ");
+
+  return (
+    normalized.includes("dragonmark") ||
+    normalized.includes("mark of ") ||
+    /^mark /.test(normalized) ||
+    normalized.includes(" dragonmarked ")
+  );
+}
+
 export function includesNamedRequirementToken(text: string, token: string) {
   const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(^|\\W)${escaped}(?=\\W|$)`, "i").test(text);
@@ -699,19 +716,22 @@ export function getRequirementFailures(
   }
 
   if (/no other dragonmark/i.test(fallbackText)) {
-    const selectedLineageNames = [context.selectedRaceName, context.selectedSubraceName]
-      .filter((name): name is string => Boolean(name))
-      .map(normalizeRequirementText);
-    const hasDragonmarkedLineage = selectedLineageNames.some(
-      (name) => name.includes("mark of") || name.includes("dragonmark"),
-    );
-    const hasDragonmarkFeature = context.selectedFeatureIds.some((id) =>
-      normalizeRequirementText(id).includes("dragonmark"),
-    );
-    const otherDragonmarkCount = context.selectedFeatNames.filter((name) =>
-      normalizeRequirementText(name).includes("dragonmark"),
+    const selectedLineageValues = [
+      context.selectedRaceId,
+      context.selectedRaceName,
+      context.selectedSubraceId,
+      context.selectedSubraceName,
+    ].filter((value): value is string => Boolean(value));
+    const hasDragonmarkedLineage = selectedLineageValues.some(isDragonmarkLike);
+    const hasDragonmarkFeature = [
+      ...context.selectedFeatureIds,
+      ...context.selectedFeatureNames,
+    ].some(isDragonmarkLike);
+    const otherDragonmarkCount = [...context.selectedFeatIds, ...context.selectedFeatNames].filter(
+      (value) => isDragonmarkLike(value) && !/aberrant dragonmark/i.test(value),
     ).length;
-    if (hasDragonmarkedLineage || hasDragonmarkFeature || otherDragonmarkCount > 1) {
+
+    if (hasDragonmarkedLineage || hasDragonmarkFeature || otherDragonmarkCount > 0) {
       failures.push("Requires no other dragonmark.");
     }
   }
