@@ -764,6 +764,7 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
       rule.kind === "select" &&
       rule.type !== "Archetype" &&
       rule.type !== "Sub Race" &&
+      rule.type !== "Race Variant" &&
       !isNarrativeBackstoryRule(rule) &&
       !isGenericSpellcastingRule(rule) &&
       (rule.type !== "Spell" || isSpecialProgressionSpellRule(rule)) &&

@@ -108,7 +108,7 @@ export function getBuiltInSrdRaces(): BuiltInRaceRecord[] {
   return races.map((race) => {
     const subraces = elements.filter(
       (element) =>
-        element.type === "Sub Race" &&
+        (element.type === "Sub Race" || element.type === "Race Variant") &&
         supportsRaceBranch(element, race.name),
     );
 
