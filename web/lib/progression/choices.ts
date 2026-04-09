@@ -612,6 +612,11 @@ function isNarrativeBackstoryRule(rule: Extract<BuiltInRule, { kind: "select" }>
   );
 }
 
+function isOptionalAlternateSpellcastingRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
+  const combined = `${rule.name} ${rule.supports ?? ""}`.toLowerCase();
+  return combined.includes("alternate spellcasting ability");
+}
+
 function collectOptionPool(
   progressionElements: BuiltInElement[],
   feats: BuiltInElement[],
@@ -813,7 +818,7 @@ function buildGroupsFromFeatures(args: {
         optionType: rule.type,
         unlockLevel: rule.level ?? entryLevel,
         exactSelections: Math.max(1, rule.number ?? 1),
-        optional: rule.optional === true,
+        optional: rule.optional === true || isOptionalAlternateSpellcastingRule(rule),
         supportsKey: rule.supports,
         description: feature.description,
         options: resolveRuleOptions(feature, rule, optionPool, contextForOwner),

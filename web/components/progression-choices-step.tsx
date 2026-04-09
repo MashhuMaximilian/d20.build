@@ -146,6 +146,26 @@ function getOptionSummary(group: ProgressionChoiceGroup, description: string, pr
   return firstSentence || `${group.optionType} option`;
 }
 
+function getOptionalSpellcastingAbilityHint(group: ProgressionChoiceGroup | null) {
+  if (!group) {
+    return "";
+  }
+
+  const combined = `${group.title} ${group.familyLabel} ${group.featureName} ${group.description}`.toLowerCase();
+  if (!/alternate spellcasting ability/.test(combined)) {
+    return "";
+  }
+
+  const explicitDefault = group.options
+    .map((option) => option.element.description)
+    .join(" ")
+    .match(/rather than\s+(strength|dexterity|constitution|intelligence|wisdom|charisma)/i)?.[1];
+
+  return explicitDefault
+    ? `Optional. Leave this unselected to keep ${explicitDefault[0].toUpperCase()}${explicitDefault.slice(1).toLowerCase()} as the default spellcasting ability.`
+    : "Optional. Leave this unselected to keep the default spellcasting ability.";
+}
+
 export function ProgressionChoicesStep({
   elements,
   groups,
@@ -153,12 +173,7 @@ export function ProgressionChoicesStep({
   onSelectionChange,
 }: ProgressionChoicesStepProps) {
   const isOptionalSpellcastingAbilityGroup = (group: ProgressionChoiceGroup | null) =>
-    Boolean(
-      group?.optional &&
-        /spellcasting ability/i.test(
-          `${group.title} ${group.familyLabel} ${group.featureName} ${group.description}`,
-        ),
-    );
+    Boolean(getOptionalSpellcastingAbilityHint(group));
   const orderedGroups = useMemo(() => {
     const getPriority = (group: ProgressionChoiceGroup) => {
       const title = group.title.toLowerCase();
@@ -415,11 +430,13 @@ export function ProgressionChoicesStep({
                   <span className="catalog-selector__sectionLabel">Selection rule</span>
                   <strong className="catalog-selector__snapshotTitle">{activeGroup.title}</strong>
                   <p className="catalog-selector__snapshotMeta">
-                    Choose exactly {activeGroup.exactSelections} option{activeGroup.exactSelections === 1 ? "" : "s"}.
+                    {activeGroup.optional
+                      ? `Choose up to ${activeGroup.exactSelections} option${activeGroup.exactSelections === 1 ? "" : "s"}.`
+                      : `Choose exactly ${activeGroup.exactSelections} option${activeGroup.exactSelections === 1 ? "" : "s"}.`}
                   </p>
                   {isOptionalSpellcastingAbilityGroup(activeGroup) ? (
                     <p className="catalog-selector__snapshotMeta">
-                      Optional. Leave this alone to keep the default spellcasting ability.
+                      {getOptionalSpellcastingAbilityHint(activeGroup)}
                     </p>
                   ) : null}
                   <ul className="catalog-selector__impactList">

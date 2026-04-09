@@ -1533,8 +1533,29 @@ export function BuilderEditor({
     [availableFeatIds, draft.improvementSelections, featPrerequisiteFailuresById, improvementOpportunities],
   );
   const spellValidationMessages = useMemo(
-    () => getSpellValidationMessages(spellGroups, draft.spellSelections),
-    [draft.spellSelections, spellGroups],
+    () => {
+      const baseMessages = getSpellValidationMessages(spellGroups, draft.spellSelections);
+
+      const eldritchBlastDependentChoices = selectedProgressionElements.filter((element) =>
+        /eldritch blast cantrip/i.test(
+          `${element.prerequisite ?? ""} ${element.requirements ?? ""}`,
+        ),
+      );
+
+      const hasEldritchBlast =
+        selectedCantripNames.some((name) => name.toLowerCase() === "eldritch blast") ||
+        selectedSpellNames.some((name) => name.toLowerCase() === "eldritch blast");
+
+      if (eldritchBlastDependentChoices.length && !hasEldritchBlast) {
+        const names = [...new Set(eldritchBlastDependentChoices.map((element) => element.name))];
+        baseMessages.push(
+          `${names.join(", ")} requires eldritch blast to be chosen in Spellcasting.`,
+        );
+      }
+
+      return baseMessages;
+    },
+    [draft.spellSelections, selectedCantripNames, selectedProgressionElements, selectedSpellNames, spellGroups],
   );
   const pendingChoices = useMemo(() => {
     const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
