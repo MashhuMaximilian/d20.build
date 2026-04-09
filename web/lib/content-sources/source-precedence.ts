@@ -24,20 +24,21 @@ const OFFICIAL_SOURCES = [
 
 export function getSourcePrecedenceScore(element: BuiltInElement) {
   const source = normalizeSourceKey(element.source);
+  const isBuiltIn = element.catalogOrigin === "built-in";
 
   if (source.includes("system reference document 5.2") || source.includes("srd 5.2")) {
-    return 650;
+    return isBuiltIn ? 700 : 675;
   }
 
-  if (element.catalogOrigin === "built-in") {
+  if (OFFICIAL_SOURCES.some((entry) => source.includes(entry))) {
     return 600;
   }
 
   if (source.includes("system reference document 5.1") || source === "srd") {
-    return 550;
+    return isBuiltIn ? 550 : 525;
   }
 
-  if (OFFICIAL_SOURCES.some((entry) => source.includes(entry))) {
+  if (isBuiltIn) {
     return 500;
   }
 

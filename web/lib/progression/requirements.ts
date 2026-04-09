@@ -71,7 +71,7 @@ export function includesNamedRequirementToken(text: string, token: string) {
   return new RegExp(`(^|\\W)${escaped}(?=\\W|$)`, "i").test(text);
 }
 
-export function splitTopLevelRequirement(value: string, separator: "," | "||") {
+export function splitTopLevelRequirement(value: string, separator: "," | "||" | "&&") {
   const parts: string[] = [];
   let depth = 0;
   let current = "";
@@ -101,6 +101,15 @@ export function splitTopLevelRequirement(value: string, separator: "," | "||") {
     }
 
     if (separator === "||" && depth === 0 && char === "|" && next === "|") {
+      if (current.trim()) {
+        parts.push(current.trim());
+      }
+      current = "";
+      index += 1;
+      continue;
+    }
+
+    if (separator === "&&" && depth === 0 && char === "&" && next === "&") {
       if (current.trim()) {
         parts.push(current.trim());
       }
@@ -328,6 +337,22 @@ function evaluateRequirementToken(
     return null;
   }
 
+  if (normalized.includes("&&")) {
+    const results = splitTopLevelRequirement(normalized, "&&").map((part) =>
+      evaluateRequirementToken(part, context, selectedIds),
+    );
+
+    if (results.some((result) => result === false)) {
+      return false;
+    }
+
+    if (results.every((result) => result === true)) {
+      return true;
+    }
+
+    return null;
+  }
+
   const bracketMatch = normalized.match(/^\[([^:\]]+):([^\]]+)\]$/i);
   if (bracketMatch) {
     const rawKey = normalizeRequirementKey(bracketMatch[1]);
@@ -373,6 +398,7 @@ export function evaluateRequirementExpression(
   }
 
   let sawKnown = false;
+  let sawUnknown = false;
 
   for (const clause of clauses) {
     const result = evaluateRequirementToken(clause, context, selectedIds);
@@ -381,10 +407,16 @@ export function evaluateRequirementExpression(
     }
     if (result === true) {
       sawKnown = true;
+      continue;
     }
+    sawUnknown = true;
   }
 
-  return sawKnown ? true : null;
+  if (sawKnown && !sawUnknown) {
+    return true;
+  }
+
+  return null;
 }
 
 export function getRequirementFailures(

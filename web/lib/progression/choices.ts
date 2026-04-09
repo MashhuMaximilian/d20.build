@@ -643,10 +643,6 @@ function getOptionPreferenceScore(
   const overlapCount = familyTokens.filter((token) => optionTokens.has(token)).length;
   score += overlapCount * 25;
 
-  if (element.catalogOrigin === "built-in") {
-    score += 50;
-  }
-
   return score;
 }
 

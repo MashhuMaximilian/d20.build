@@ -225,7 +225,7 @@ function splitSupportAlternatives(value: string) {
   }
 
   return trimmed
-    .split("||")
+    .split(/\|\|?/)
     .map((token) => normalizeListKey(token))
     .filter(Boolean);
 }
@@ -404,6 +404,7 @@ function createSelectionGroupFromRules(args: {
   classLevel: number;
   description: string;
   kind: SpellSelectionGroupKind;
+  keySuffix?: string;
   ownerLabel: string;
   ownerType: SpellSelectionGroup["ownerType"];
   rules: Extract<BuiltInRule, { kind: "select" }>[];
@@ -427,7 +428,7 @@ function createSelectionGroupFromRules(args: {
   }, 0);
 
   return {
-    id: `${args.ownerType}:${args.ownerLabel}:${args.kind}:${args.classLevel}:${args.title}`,
+    id: `${args.ownerType}:${args.ownerLabel}:${args.kind}:${args.classLevel}:${args.title}:${args.keySuffix ?? "default"}`,
     title: args.title,
     description: args.description,
     ownerLabel: args.ownerLabel,
@@ -498,7 +499,15 @@ function buildGroupsForSource(
       rule.kind === "grant" && rule.type === "Spell" && (!rule.level || rule.level <= source.currentLevel),
   );
   const maxSpellLevel = getMaxSpellLevel(source.spellcastingRules ?? source.rules, source.currentLevel);
-  const grouped = new Map<SpellSelectionGroupKind, Extract<BuiltInRule, { kind: "select" }>[]>();
+  const grouped = new Map<
+    string,
+    {
+      kind: SpellSelectionGroupKind;
+      rules: Extract<BuiltInRule, { kind: "select" }>[];
+      title: string;
+      description: string;
+    }
+  >();
 
   selectionRules.forEach((rule) => {
     const support = resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel);
@@ -508,12 +517,38 @@ function buildGroupsForSource(
         : rule.name.toLowerCase().includes("spellbook")
           ? "spellbook"
           : "known";
-    grouped.set(kind, [...(grouped.get(kind) ?? []), rule]);
+    const title =
+      kind === "cantrip"
+        ? `${source.ownerLabel} cantrips`
+        : kind === "spellbook"
+          ? `${source.ownerLabel} spellbook`
+          : `${source.ownerLabel} spells`;
+    const description =
+      kind === "cantrip"
+        ? `Choose the ${source.ownerLabel.toLowerCase()} cantrips currently available.`
+        : kind === "spellbook"
+          ? `Add spells to ${source.ownerLabel.toLowerCase()}'s spellbook.`
+          : `Choose spells granted through ${source.ownerLabel.toLowerCase()}.`;
+    const supportSignature = support
+      ? JSON.stringify({
+          groups: support.supportGroups,
+          levelMode: support.levelMode,
+          level: support.level,
+        })
+      : "none";
+    const groupKey = [kind, normalizeListKey(rule.name), supportSignature].join("|");
+    const existing = grouped.get(groupKey);
+    grouped.set(groupKey, {
+      kind,
+      title,
+      description,
+      rules: [...(existing?.rules ?? []), rule],
+    });
   });
 
   const groups: SpellSelectionGroup[] = [];
 
-  grouped.forEach((rules, kind) => {
+  grouped.forEach(({ kind, rules, title, description }, groupKey) => {
     const availableSpellIds = rules.flatMap((rule) =>
       getAvailableSpellIdsForRule(
         spells,
@@ -534,23 +569,14 @@ function buildGroupsForSource(
       createSelectionGroupFromRules({
         availableSpellIds: normalizedSpellIds,
         classLevel: source.currentLevel,
-        description:
-          kind === "cantrip"
-            ? `Choose the ${source.ownerLabel.toLowerCase()} cantrips currently available.`
-            : kind === "spellbook"
-              ? `Add spells to ${source.ownerLabel.toLowerCase()}'s spellbook.`
-              : `Choose spells granted through ${source.ownerLabel.toLowerCase()}.`,
+        description,
         kind,
+        keySuffix: groupKey,
         ownerLabel: source.ownerLabel,
         ownerType: source.ownerType,
         rules,
         spellcastingAbility: source.spellcastingAbility,
-        title:
-          kind === "cantrip"
-            ? `${source.ownerLabel} cantrips`
-            : kind === "spellbook"
-              ? `${source.ownerLabel} spellbook`
-              : `${source.ownerLabel} spells`,
+        title,
       }),
     );
   });
