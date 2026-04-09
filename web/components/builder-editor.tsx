@@ -1314,6 +1314,7 @@ export function BuilderEditor({
           selectedFeatureIds: [
             ...selectedSubclassIds,
             ...selectedRacialTraitIds,
+            ...selectedDragonmarkIds,
             ...selectedBackgroundFeatureIds,
             ...selectedClassFeatureIds,
             ...selectedFeatFeatureIds,
@@ -1322,6 +1323,7 @@ export function BuilderEditor({
           selectedFeatureNames: [
             ...selectedSubclassNames,
             ...selectedRacialTraitNames,
+            ...selectedDragonmarkIds.map(humanizeGrantedId),
             ...selectedBackgroundFeatureNames,
             ...selectedClassFeatureNames,
             ...selectedProgressionElements.map((element) => element.name),
@@ -1358,6 +1360,7 @@ export function BuilderEditor({
     selectedClassFeatureIds,
     selectedRacialTraitIds,
     selectedRacialTraitNames,
+    selectedDragonmarkIds,
     selectedRace,
     selectedSizeIds,
     selectedSubrace,

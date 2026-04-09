@@ -171,6 +171,38 @@ function getDefaultDetailView(label: string) {
   return "overview" as const;
 }
 
+function normalizeSearchValue(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeSearchValue(value: string) {
+  return normalizeSearchValue(value).split(" ").filter(Boolean);
+}
+
+function matchesSearchText(query: string, parts: string[]) {
+  const queryTokens = tokenizeSearchValue(query);
+  if (!queryTokens.length) {
+    return true;
+  }
+
+  const haystackTokens = parts
+    .flatMap((part) => tokenizeSearchValue(part))
+    .filter(Boolean);
+
+  if (!haystackTokens.length) {
+    return false;
+  }
+
+  return queryTokens.every((queryToken) =>
+    haystackTokens.some((token) => token.startsWith(queryToken) || token.includes(queryToken)),
+  );
+}
+
 function moveSectionToTop(markup: string, headingMatcher: RegExp) {
   const headingPattern = /<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi;
   const matches = [...markup.matchAll(headingPattern)];
@@ -294,7 +326,7 @@ export function CatalogSelector({
   }, [items, sourceFilter]);
 
   const filteredItems = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = query.trim();
 
     return items.filter((item) => {
       const sourceMatches =
@@ -320,19 +352,15 @@ export function CatalogSelector({
         return true;
       }
 
-      const haystack = [
+      const searchParts = [
         item.name,
-        item.description,
         item.meta ?? "",
         item.source ?? "",
         ...(item.summaryLines ?? []),
         ...(item.impactLines ?? []),
-        ...((item.filterTags ?? []).concat(item.detailTags ?? [])),
-      ]
-        .join(" ")
-        .toLowerCase();
+      ];
 
-      return haystack.includes(normalized);
+      return matchesSearchText(normalized, searchParts);
     });
   }, [items, query, selectedSources, sourceFilter, tagFilter]);
 

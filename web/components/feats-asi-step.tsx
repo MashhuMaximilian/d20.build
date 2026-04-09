@@ -626,15 +626,16 @@ export function FeatsAsiStep({
                                             ...current,
                                             [opportunity.id]: feat.id,
                                           }));
-                                          if (canSelect) {
-                                            onSelectionChange(opportunity.id, {
-                                              mode: "feat",
-                                              abilityBonuses: {},
-                                              featId: feat.id,
-                                              featName: feat.name,
-                                              featSource: feat.source,
-                                            });
+                                          if (!canSelect) {
+                                            return;
                                           }
+                                          onSelectionChange(opportunity.id, {
+                                            mode: "feat",
+                                            abilityBonuses: {},
+                                            featId: feat.id,
+                                            featName: feat.name,
+                                            featSource: feat.source,
+                                          });
                                         }}
                                         role="row"
                                       >
@@ -678,15 +679,16 @@ export function FeatsAsiStep({
                                         ...current,
                                         [opportunity.id]: feat.id,
                                       }));
-                                      if (canSelect) {
-                                        onSelectionChange(opportunity.id, {
-                                          mode: "feat",
-                                          abilityBonuses: {},
-                                          featId: feat.id,
-                                          featName: feat.name,
-                                          featSource: feat.source,
-                                        });
+                                      if (!canSelect) {
+                                        return;
                                       }
+                                      onSelectionChange(opportunity.id, {
+                                        mode: "feat",
+                                        abilityBonuses: {},
+                                        featId: feat.id,
+                                        featName: feat.name,
+                                        featSource: feat.source,
+                                      });
                                     }}
                                   >
                                     <div className="feats-step__optionHeader">

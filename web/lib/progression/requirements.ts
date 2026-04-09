@@ -705,10 +705,13 @@ export function getRequirementFailures(
     const hasDragonmarkedLineage = selectedLineageNames.some(
       (name) => name.includes("mark of") || name.includes("dragonmark"),
     );
+    const hasDragonmarkFeature = context.selectedFeatureIds.some((id) =>
+      normalizeRequirementText(id).includes("dragonmark"),
+    );
     const otherDragonmarkCount = context.selectedFeatNames.filter((name) =>
       normalizeRequirementText(name).includes("dragonmark"),
     ).length;
-    if (hasDragonmarkedLineage || otherDragonmarkCount > 1) {
+    if (hasDragonmarkedLineage || hasDragonmarkFeature || otherDragonmarkCount > 1) {
       failures.push("Requires no other dragonmark.");
     }
   }
