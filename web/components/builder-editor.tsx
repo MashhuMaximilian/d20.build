@@ -218,6 +218,19 @@ function getAbilityBonusSummary(rules: BuiltInRule[]) {
     .map(([ability, amount]) => `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`);
 }
 
+function pluralizeGrantTypeLabel(type: string, count: number) {
+  const normalized = type.toLowerCase();
+  if (count === 1) {
+    return normalized;
+  }
+
+  if (normalized.endsWith("y")) {
+    return `${normalized.slice(0, -1)}ies`;
+  }
+
+  return `${normalized}s`;
+}
+
 function getFirstLevelGrantSummary(rules: BuiltInRule[]) {
   const counts = new Map<string, number>();
 
@@ -228,7 +241,7 @@ function getFirstLevelGrantSummary(rules: BuiltInRule[]) {
   });
 
   return [...counts.entries()]
-    .map(([type, count]) => `${count} ${type.toLowerCase()}${count === 1 ? "" : "s"}`)
+    .map(([type, count]) => `${count} ${pluralizeGrantTypeLabel(type, count)}`)
     .slice(0, 4);
 }
 
