@@ -141,6 +141,37 @@ function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string)
   return elements.flatMap((element) => collectGrantedIds(element.rules, type));
 }
 
+function collectNestedGrantedIds(
+  pool: BuiltInElement[],
+  seedIds: string[],
+  type: string,
+) {
+  const visited = new Set<string>();
+  const queue = [...seedIds];
+  const collected: string[] = [];
+
+  while (queue.length) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) {
+      continue;
+    }
+    visited.add(currentId);
+
+    const element = pool.find((candidate) => candidate.id === currentId);
+    if (!element) {
+      continue;
+    }
+
+    const direct = collectGrantedIds(element.rules, type);
+    direct.forEach((id) => {
+      collected.push(id);
+      queue.push(id);
+    });
+  }
+
+  return [...new Set(collected)];
+}
+
 function humanizeGrantedId(value: string) {
   return value
     .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
@@ -997,6 +1028,22 @@ export function BuilderEditor({
     ],
     [selectedFeatElements, selectedRace, selectedSubrace],
   );
+  const selectedGrantIds = useMemo(() => {
+    const directGrantIds = [
+      ...(selectedRace ? collectGrantedIds(selectedRace.race.rules, "Grants") : []),
+      ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Grants") : []),
+      ...collectGrantedIdsFromElements(selectedFeatElements, "Grants"),
+      ...collectNestedGrantedIds(progressionElements, selectedDragonmarkIds, "Grants"),
+    ];
+
+    return [...new Set(directGrantIds)];
+  }, [
+    progressionElements,
+    selectedDragonmarkIds,
+    selectedFeatElements,
+    selectedRace,
+    selectedSubrace,
+  ]);
   const selectedBaseProficiencyIds = useMemo(() => {
     const raceTraitIds = new Set(selectedRacialTraitIds);
     const selectedRaceTraitElements =
@@ -1144,6 +1191,7 @@ export function BuilderEditor({
         ...selectedSubclassIds,
         ...selectedRacialTraitIds,
         ...selectedDragonmarkIds,
+        ...selectedGrantIds,
         ...selectedBackgroundFeatureIds,
         ...selectedClassFeatureIds,
         ...selectedFeatFeatureIds,
@@ -1152,6 +1200,7 @@ export function BuilderEditor({
         ...selectedSubclassNames,
         ...selectedRacialTraitNames,
         ...selectedDragonmarkIds.map(humanizeGrantedId),
+        ...selectedGrantIds.map(humanizeGrantedId),
         ...selectedBackgroundFeatureNames,
         ...selectedClassFeatureNames,
         ...selectedFeatFeatureNames,
@@ -1189,6 +1238,7 @@ export function BuilderEditor({
       selectedClassFeatureIds,
       selectedClassFeatureNames,
       selectedDragonmarkIds,
+      selectedGrantIds,
       selectedBaseLanguageIds,
       selectedBaseProficiencyIds,
       selectedFeatElements,
@@ -1315,6 +1365,7 @@ export function BuilderEditor({
             ...selectedSubclassIds,
             ...selectedRacialTraitIds,
             ...selectedDragonmarkIds,
+            ...selectedGrantIds,
             ...selectedBackgroundFeatureIds,
             ...selectedClassFeatureIds,
             ...selectedFeatFeatureIds,
@@ -1324,6 +1375,7 @@ export function BuilderEditor({
             ...selectedSubclassNames,
             ...selectedRacialTraitNames,
             ...selectedDragonmarkIds.map(humanizeGrantedId),
+            ...selectedGrantIds.map(humanizeGrantedId),
             ...selectedBackgroundFeatureNames,
             ...selectedClassFeatureNames,
             ...selectedProgressionElements.map((element) => element.name),
@@ -1361,6 +1413,7 @@ export function BuilderEditor({
     selectedRacialTraitIds,
     selectedRacialTraitNames,
     selectedDragonmarkIds,
+    selectedGrantIds,
     selectedRace,
     selectedSizeIds,
     selectedSubrace,
