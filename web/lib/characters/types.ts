@@ -43,6 +43,27 @@ export type CharacterBackstory = {
   additionalFeatures: string;
 };
 
+export type CharacterCurrency = {
+  cp: number;
+  sp: number;
+  ep: number;
+  gp: number;
+  pp: number;
+};
+
+export type CharacterInventoryItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  category: string;
+  source: string;
+  sourceLabel: string;
+  equipped: boolean;
+  attunable: boolean;
+  attuned: boolean;
+  notes?: string;
+};
+
 export type CharacterDraft = {
   id: string;
   createdAt: string;
@@ -60,7 +81,10 @@ export type CharacterDraft = {
   improvementSelections: Record<string, CharacterImprovementSelection>;
   progressionSelections: Record<string, string[]>;
   spellSelections: Record<string, string[]>;
+  equipmentAcquisitionMode: "gear" | "gold";
   equipmentSelections: Record<string, string>;
+  inventoryCurrency: CharacterCurrency;
+  inventoryItems: CharacterInventoryItem[];
   backstory: CharacterBackstory;
   sourceManifest: CharacterSourceManifestEntry[];
 };
@@ -116,7 +140,16 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     improvementSelections: {},
     progressionSelections: {},
     spellSelections: {},
+    equipmentAcquisitionMode: "gear",
     equipmentSelections: {},
+    inventoryCurrency: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0,
+    },
+    inventoryItems: [],
     backstory: {
       personalityTraits: "",
       ideals: "",
@@ -216,7 +249,28 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
         Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [],
       ]),
     ),
+    equipmentAcquisitionMode: draft.equipmentAcquisitionMode === "gold" ? "gold" : "gear",
     equipmentSelections: draft.equipmentSelections ?? {},
+    inventoryCurrency: {
+      ...empty.inventoryCurrency,
+      ...(draft.inventoryCurrency ?? {}),
+    },
+    inventoryItems: Array.isArray(draft.inventoryItems)
+      ? draft.inventoryItems
+          .filter((item): item is CharacterInventoryItem => Boolean(item && typeof item.id === "string" && typeof item.name === "string"))
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: Math.max(1, Math.floor(item.quantity ?? 1)),
+            category: item.category ?? "misc",
+            source: item.source ?? "starting-fixed",
+            sourceLabel: item.sourceLabel ?? "",
+            equipped: Boolean(item.equipped),
+            attunable: Boolean(item.attunable),
+            attuned: Boolean(item.attuned) && Boolean(item.attunable),
+            notes: typeof item.notes === "string" ? item.notes : undefined,
+          }))
+      : [],
     backstory: {
       ...empty.backstory,
       ...(draft.backstory ?? {}),

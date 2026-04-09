@@ -4,17 +4,27 @@ export type EquipmentChoiceOption = {
   items: string[];
 };
 
+export type EquipmentChoiceSource = "class" | "background";
+
 export type EquipmentChoiceGroup = {
   id: string;
   title: string;
   description: string;
+  source: EquipmentChoiceSource;
   options: EquipmentChoiceOption[];
+};
+
+export type EquipmentGoldAlternative = {
+  formula: string;
+  averageGp: number;
+  notes: string[];
 };
 
 export type StartingEquipmentPlan = {
   autoItems: string[];
   choiceGroups: EquipmentChoiceGroup[];
   notes: string[];
+  goldAlternative: EquipmentGoldAlternative | null;
 };
 
 type StartingEquipmentContext = {
@@ -36,6 +46,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "fighter-armor-package",
             title: "Armor package",
             description: "Choose the fighter starting armor package.",
+            source: "class",
             options: [
               { id: "chain-mail", label: "Chain Mail", items: ["Chain Mail"] },
               {
@@ -49,6 +60,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "fighter-weapon-package",
             title: "Primary weapons",
             description: "Choose the fighter's main weapon loadout.",
+            source: "class",
             options: [
               { id: "martial-and-shield", label: "Martial Weapon + Shield", items: ["Martial Weapon", "Shield"] },
               { id: "two-martial", label: "Two Martial Weapons", items: ["Martial Weapon", "Martial Weapon"] },
@@ -58,6 +70,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "fighter-sidearm-package",
             title: "Secondary gear",
             description: "Choose the fighter's ranged or thrown backup option.",
+            source: "class",
             options: [
               { id: "crossbow", label: "Light Crossbow + 20 Bolts", items: ["Light Crossbow", "20 Bolts"] },
               { id: "handaxes", label: "Two Handaxes", items: ["Handaxe", "Handaxe"] },
@@ -67,6 +80,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "fighter-pack",
             title: "Pack",
             description: "Choose the travel pack the fighter starts with.",
+            source: "class",
             options: [
               { id: "dungeoneer", label: "Dungeoneer's Pack", items: ["Dungeoneer's Pack"] },
               { id: "explorer", label: "Explorer's Pack", items: ["Explorer's Pack"] },
@@ -74,6 +88,11 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
           },
         ],
         notes: [],
+        goldAlternative: {
+          formula: "5d4 × 10 gp",
+          averageGp: 125,
+          notes: ["Replaces the class starting gear package. Background gear is still kept in this first pass."],
+        },
       };
     case "ID_WOTC_PHB_CLASS_WIZARD":
       return {
@@ -83,6 +102,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "wizard-weapon",
             title: "Weapon",
             description: "Choose the wizard's starting weapon.",
+            source: "class",
             options: [
               { id: "quarterstaff", label: "Quarterstaff", items: ["Quarterstaff"] },
               { id: "dagger", label: "Dagger", items: ["Dagger"] },
@@ -92,6 +112,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "wizard-focus",
             title: "Spellcasting gear",
             description: "Choose the wizard's material component option.",
+            source: "class",
             options: [
               { id: "component-pouch", label: "Component Pouch", items: ["Component Pouch"] },
               { id: "arcane-focus", label: "Arcane Focus", items: ["Arcane Focus"] },
@@ -101,6 +122,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
             id: "wizard-pack",
             title: "Pack",
             description: "Choose the travel pack the wizard starts with.",
+            source: "class",
             options: [
               { id: "scholar", label: "Scholar's Pack", items: ["Scholar's Pack"] },
               { id: "explorer", label: "Explorer's Pack", items: ["Explorer's Pack"] },
@@ -108,14 +130,20 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
           },
         ],
         notes: [],
+        goldAlternative: {
+          formula: "4d4 × 10 gp",
+          averageGp: 100,
+          notes: ["Replaces the class starting gear package. Background gear is still kept in this first pass."],
+        },
       };
     case "":
-      return { autoItems: [], choiceGroups: [], notes: ["Choose a class to unlock class starting equipment."] };
+      return { autoItems: [], choiceGroups: [], notes: ["Choose a class to unlock class starting equipment."], goldAlternative: null };
     default:
       return {
         autoItems: [],
         choiceGroups: [],
         notes: ["Starting equipment is not modeled yet for this class source."],
+        goldAlternative: null,
       };
   }
 }
@@ -130,6 +158,7 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
             id: "acolyte-book",
             title: "Devotional item",
             description: "Choose the devotional item carried from temple service.",
+            source: "background",
             options: [
               { id: "prayer-book", label: "Prayer Book", items: ["Prayer Book"] },
               { id: "prayer-wheel", label: "Prayer Wheel", items: ["Prayer Wheel"] },
@@ -137,12 +166,14 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
           },
         ],
         notes: [],
+        goldAlternative: null,
       };
     case "ID_BACKGROUND_SAGE":
       return {
         autoItems: ["Bottle of Black Ink", "Quill", "Small Knife", "Letter from a Dead Colleague", "Set of Common Clothes", "Belt Pouch (10 gp)"],
         choiceGroups: [],
         notes: [],
+        goldAlternative: null,
       };
     case "ID_BACKGROUND_SOLDIER":
       return {
@@ -152,6 +183,7 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
             id: "soldier-game-set",
             title: "Memento",
             description: "Choose the game set or token carried from service.",
+            source: "background",
             options: [
               { id: "bone-dice", label: "Set of Bone Dice", items: ["Set of Bone Dice"] },
               { id: "deck-of-cards", label: "Deck of Cards", items: ["Deck of Cards"] },
@@ -159,14 +191,16 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
           },
         ],
         notes: [],
+        goldAlternative: null,
       };
     case "":
-      return { autoItems: [], choiceGroups: [], notes: ["Choose a background to unlock background starting equipment."] };
+      return { autoItems: [], choiceGroups: [], notes: ["Choose a background to unlock background starting equipment."], goldAlternative: null };
     default:
       return {
         autoItems: [],
         choiceGroups: [],
         notes: ["Starting equipment is not modeled yet for this background source."],
+        goldAlternative: null,
       };
   }
 }
@@ -179,21 +213,32 @@ export function getStartingEquipmentPlan({ classId, backgroundId }: StartingEqui
     autoItems: uniqueItems([...classPlan.autoItems, ...backgroundPlan.autoItems]),
     choiceGroups: [...classPlan.choiceGroups, ...backgroundPlan.choiceGroups],
     notes: [...classPlan.notes, ...backgroundPlan.notes].filter(Boolean),
+    goldAlternative: classPlan.goldAlternative,
   };
 }
 
 export function getMissingEquipmentChoiceCount(
   plan: StartingEquipmentPlan,
   selections: Record<string, string>,
+  mode: "gear" | "gold" = "gear",
 ) {
-  return plan.choiceGroups.filter((group) => !selections[group.id]).length;
+  return plan.choiceGroups.filter((group) => {
+    if (mode === "gold" && group.source === "class") {
+      return false;
+    }
+    return !selections[group.id];
+  }).length;
 }
 
 export function resolveStartingEquipmentItems(
   plan: StartingEquipmentPlan,
   selections: Record<string, string>,
+  mode: "gear" | "gold" = "gear",
 ) {
   const selectedItems = plan.choiceGroups.flatMap((group) => {
+    if (mode === "gold" && group.source === "class") {
+      return [];
+    }
     const choiceId = selections[group.id];
     const option = group.options.find((entry) => entry.id === choiceId);
     return option?.items ?? [];

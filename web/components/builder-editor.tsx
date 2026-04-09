@@ -34,9 +34,12 @@ import {
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
+  buildStartingInventoryFromPlan,
+  createEmptyCurrency,
+} from "@/lib/equipment/inventory";
+import {
   getMissingEquipmentChoiceCount,
   getStartingEquipmentPlan,
-  resolveStartingEquipmentItems,
 } from "@/lib/equipment/starting-equipment";
 import {
   deriveImprovementOpportunities,
@@ -807,13 +810,9 @@ export function BuilderEditor({
       }),
     [draft.backgroundId, primaryClassEntry?.classId],
   );
-  const selectedEquipmentItems = useMemo(
-    () => resolveStartingEquipmentItems(equipmentPlan, draft.equipmentSelections),
-    [draft.equipmentSelections, equipmentPlan],
-  );
   const missingEquipmentChoices = useMemo(
-    () => getMissingEquipmentChoiceCount(equipmentPlan, draft.equipmentSelections),
-    [draft.equipmentSelections, equipmentPlan],
+    () => getMissingEquipmentChoiceCount(equipmentPlan, draft.equipmentSelections, draft.equipmentAcquisitionMode),
+    [draft.equipmentAcquisitionMode, draft.equipmentSelections, equipmentPlan],
   );
 
   const racialBonuses = useMemo(() => {
@@ -1881,6 +1880,53 @@ export function BuilderEditor({
     }));
   }, [draft.spellSelections, spellGroups]);
 
+  useEffect(() => {
+    setDraft((current) => {
+      const nextInventory = buildStartingInventoryFromPlan(
+        equipmentPlan,
+        current.equipmentSelections,
+        current.equipmentAcquisitionMode,
+        current.inventoryItems,
+        createEmptyCurrency(),
+      );
+
+      const sameItems =
+        nextInventory.items.length === current.inventoryItems.length &&
+        nextInventory.items.every((item, index) => {
+          const existing = current.inventoryItems[index];
+          return (
+            existing &&
+            existing.id === item.id &&
+            existing.name === item.name &&
+            existing.quantity === item.quantity &&
+            existing.category === item.category &&
+            existing.source === item.source &&
+            existing.sourceLabel === item.sourceLabel &&
+            existing.equipped === item.equipped &&
+            existing.attunable === item.attunable &&
+            existing.attuned === item.attuned &&
+            existing.notes === item.notes
+          );
+        });
+      const sameCurrency =
+        current.inventoryCurrency.cp === nextInventory.currency.cp &&
+        current.inventoryCurrency.sp === nextInventory.currency.sp &&
+        current.inventoryCurrency.ep === nextInventory.currency.ep &&
+        current.inventoryCurrency.gp === nextInventory.currency.gp &&
+        current.inventoryCurrency.pp === nextInventory.currency.pp;
+
+      if (sameItems && sameCurrency) {
+        return current;
+      }
+
+      return {
+        ...current,
+        inventoryItems: nextInventory.items,
+        inventoryCurrency: nextInventory.currency,
+      };
+    });
+  }, [draft.equipmentAcquisitionMode, draft.equipmentSelections, equipmentPlan]);
+
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
       setStatus("");
@@ -2372,6 +2418,7 @@ export function BuilderEditor({
                       ? { ...entry, classId: id, subclassId: "" }
                       : entry,
                   ),
+                  equipmentAcquisitionMode: activeClassEntryIndex === 0 ? "gear" : draft.equipmentAcquisitionMode,
                   equipmentSelections: activeClassEntryIndex === 0 ? {} : draft.equipmentSelections,
                 })
               }
@@ -2482,7 +2529,7 @@ export function BuilderEditor({
             <CatalogSelector
               items={backgroundItems}
               label="Background"
-              onSelect={(id) => updateDraft({ backgroundId: id, equipmentSelections: {} })}
+              onSelect={(id) => updateDraft({ backgroundId: id, equipmentAcquisitionMode: "gear", equipmentSelections: {} })}
               selectedId={draft.backgroundId}
             />
           </section>
@@ -2557,21 +2604,50 @@ export function BuilderEditor({
           <section className="builder-stepPanel">
             <div className="builder-stepPanel__intro">
               <span className="route-shell__tag">Equipment</span>
-              <h2 className="route-shell__title">Choose the starting gear package</h2>
+              <h2 className="route-shell__title">Choose how the character starts carrying gear</h2>
               <p className="route-shell__copy">
-                This first pass focuses on guided starting equipment: fixed items are auto-added, and package choices are kept explicit
-                so the build stays readable.
+                Pick guided starting gear or a gold alternative where available, then review the first real inventory surface with owned,
+                equipped, and attunement-ready state.
               </p>
             </div>
             <EquipmentStep
               plan={equipmentPlan}
+              mode={draft.equipmentAcquisitionMode}
               selections={draft.equipmentSelections}
+              inventoryItems={draft.inventoryItems}
+              currency={draft.inventoryCurrency}
+              onModeChange={(mode) =>
+                updateDraft({
+                  equipmentAcquisitionMode: mode,
+                })}
               onSelect={(groupId, optionId) =>
                 updateDraft({
                   equipmentSelections: {
                     ...draft.equipmentSelections,
                     [groupId]: optionId,
                   },
+                })}
+              onToggleEquipped={(itemId) =>
+                updateDraft({
+                  inventoryItems: draft.inventoryItems.map((item) =>
+                    item.id === itemId
+                      ? {
+                          ...item,
+                          equipped: !item.equipped,
+                        }
+                      : item,
+                  ),
+                })}
+              onToggleAttuned={(itemId) =>
+                updateDraft({
+                  inventoryItems: draft.inventoryItems.map((item) =>
+                    item.id === itemId && item.attunable
+                      ? {
+                          ...item,
+                          attuned: !item.attuned,
+                        }
+                      : item,
+                  ),
                 })}
             />
           </section>
@@ -2683,7 +2759,7 @@ export function BuilderEditor({
                       : "No spell selections unlocked yet"}
                   </p>
                   <p className="builder-summary__meta">
-                    Equipment: {selectedEquipmentItems.length ? `${selectedEquipmentItems.length} starting items selected` : "Missing"}
+                    Equipment: {draft.inventoryItems.length ? `${draft.inventoryItems.length} owned starting items` : "Missing"}
                   </p>
                 </article>
               </div>
@@ -2765,10 +2841,13 @@ export function BuilderEditor({
 
               <article className="builder-review__card">
                 <span className="builder-panel__label">Starting gear</span>
-                {selectedEquipmentItems.length ? (
+                {draft.inventoryItems.length ? (
                   <ul className="equipment-step__itemList">
-                    {selectedEquipmentItems.map((item) => (
-                      <li key={item}>{item}</li>
+                    {draft.inventoryItems.map((item) => (
+                      <li key={item.id}>
+                        {item.quantity > 1 ? `${item.quantity} ` : ""}
+                        {item.name}
+                      </li>
                     ))}
                   </ul>
                 ) : (
