@@ -81,12 +81,26 @@ function resolveNestedOwnerFeatures(entry: SelectedProgressionOptionEntry, optio
 }
 
 function isImprovementRule(rule: BuiltInRule) {
+  if (rule.kind !== "select") {
+    return false;
+  }
+
+  if (rule.type === "Ability Score Improvement") {
+    return true;
+  }
+
+  const normalizedName = rule.name.toLowerCase();
+  if (
+    /ability score increase|ability score improvement/.test(normalizedName) &&
+    (rule.type === "Racial Trait" || rule.type === "Ability Score Improvement")
+  ) {
+    return true;
+  }
+
   return (
-    rule.kind === "select" &&
-    (rule.type === "Ability Score Improvement" ||
-      (rule.type === "Class Feature" &&
-        (rule.supports?.includes("Improvement Option") ||
-          rule.name.toLowerCase().includes("improvement option"))))
+    rule.type === "Class Feature" &&
+    (rule.supports?.includes("Improvement Option") ||
+      normalizedName.includes("improvement option"))
   );
 }
 
