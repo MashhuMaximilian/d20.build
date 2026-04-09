@@ -380,6 +380,11 @@ function evaluateRequirementToken(
   }
 
   if (/^ID_/i.test(normalized)) {
+    if (normalized === "ID_PHB_SPELL_ELDRITCH_BLAST") {
+      // Let invocation picks like Agonizing Blast defer this dependency until
+      // the later spellcasting step, where eldritch blast can actually be chosen.
+      return null;
+    }
     return selectedIds.has(normalized);
   }
 

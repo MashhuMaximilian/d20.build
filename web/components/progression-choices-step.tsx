@@ -152,6 +152,13 @@ export function ProgressionChoicesStep({
   selections,
   onSelectionChange,
 }: ProgressionChoicesStepProps) {
+  const isOptionalSpellcastingAbilityGroup = (group: ProgressionChoiceGroup | null) =>
+    Boolean(
+      group?.optional &&
+        /spellcasting ability/i.test(
+          `${group.title} ${group.familyLabel} ${group.featureName} ${group.description}`,
+        ),
+    );
   const orderedGroups = useMemo(() => {
     const getPriority = (group: ProgressionChoiceGroup) => {
       const title = group.title.toLowerCase();
@@ -410,6 +417,11 @@ export function ProgressionChoicesStep({
                   <p className="catalog-selector__snapshotMeta">
                     Choose exactly {activeGroup.exactSelections} option{activeGroup.exactSelections === 1 ? "" : "s"}.
                   </p>
+                  {isOptionalSpellcastingAbilityGroup(activeGroup) ? (
+                    <p className="catalog-selector__snapshotMeta">
+                      Optional. Leave this alone to keep the default spellcasting ability.
+                    </p>
+                  ) : null}
                   <ul className="catalog-selector__impactList">
                     <li>{activeGroup.optionType} family at level {activeGroup.unlockLevel}</li>
                     {activeGroup.supportsKey ? <li>{formatSupportLabel(activeGroup.supportsKey)}</li> : null}
