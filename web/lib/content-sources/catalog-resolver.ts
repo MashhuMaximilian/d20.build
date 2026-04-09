@@ -332,11 +332,28 @@ function buildRaceRecords(elements: BuiltInElement[]): BuiltInRaceRecord[] {
   const elementsById = new Map(elements.map((element) => [element.id, element]));
   const races = elements.filter((element) => element.type === "Race");
 
+  const normalizeSupportToken = (value: string) =>
+    value.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
+
+  const supportsRaceBranch = (element: BuiltInElement, raceName: string) => {
+    const normalizedRace = normalizeSupportToken(raceName);
+    const normalizedVariant = `${normalizedRace} variant`;
+
+    return element.supports.some((support) => {
+      const normalizedSupport = normalizeSupportToken(support);
+      return (
+        normalizedSupport === normalizedRace ||
+        normalizedSupport === normalizedVariant ||
+        normalizedSupport.includes(normalizedRace)
+      );
+    });
+  };
+
   return races.map((race) => {
     const subraces = elements.filter(
       (element) =>
         (element.type === "Sub Race" || element.type === "Race Variant") &&
-        element.supports.includes(race.name),
+        supportsRaceBranch(element, race.name),
     );
 
     const traitIds = new Set([
