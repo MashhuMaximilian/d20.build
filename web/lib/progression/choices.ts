@@ -982,19 +982,28 @@ export function deriveProgressionChoiceGroups(args: {
   });
 
   const raceGroups = args.activeRace
-    ? buildGroupsFromFeatures({
-        classEntryIndex: -1,
-        ownerType: "race",
-        ownerLabel: args.activeRace.race.name,
-        entryLevel: Math.max(args.context.totalLevel, 1),
-        features: [
-          args.activeRace.race,
-          ...(args.selectedSubrace ? [args.selectedSubrace] : []),
-          ...args.activeRace.traits,
-        ],
-        optionPool,
-        context: args.context,
-      })
+    ? (() => {
+        const entryLevel = Math.max(args.context.totalLevel, 1);
+        const relevantRaceTraitIds = new Set([
+          ...collectGrantedIdsAtLevel(args.activeRace.race.rules, "Racial Trait", entryLevel),
+          ...(args.selectedSubrace ? collectGrantedIdsAtLevel(args.selectedSubrace.rules, "Racial Trait", entryLevel) : []),
+        ]);
+        const relevantRaceTraits = args.activeRace.traits.filter((trait) => relevantRaceTraitIds.has(trait.id));
+
+        return buildGroupsFromFeatures({
+          classEntryIndex: -1,
+          ownerType: "race",
+          ownerLabel: args.activeRace.race.name,
+          entryLevel,
+          features: [
+            args.activeRace.race,
+            ...(args.selectedSubrace ? [args.selectedSubrace] : []),
+            ...relevantRaceTraits,
+          ],
+          optionPool,
+          context: args.context,
+        });
+      })()
     : [];
 
   const backgroundGroups = args.activeBackground
