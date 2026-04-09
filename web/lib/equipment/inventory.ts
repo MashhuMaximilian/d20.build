@@ -42,6 +42,16 @@ const CATEGORY_RULES: Array<{ match: RegExp; category: InventoryCategory }> = [
   { match: /\bpouch\b|\bgp\b|\bcoin\b/i, category: "treasure" },
 ];
 
+const EQUIPPABLE_CATEGORIES = new Set<InventoryCategory>([
+  "weapon",
+  "armor",
+  "shield",
+  "focus",
+  "instrument",
+  "tool",
+  "clothing",
+]);
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -76,6 +86,14 @@ export function getInventoryItemKey(name: string, sourceLabel: string) {
   return `${slugify(sourceLabel)}::${slugify(name)}`;
 }
 
+export function isInventoryItemEquippable(name: string, category: InventoryCategory) {
+  if (category === "tool" && !/\b(tool|dice|cards)\b/i.test(name)) {
+    return false;
+  }
+
+  return EQUIPPABLE_CATEGORIES.has(category);
+}
+
 export function createEmptyCurrency(): CharacterCurrency {
   return { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
 }
@@ -88,21 +106,30 @@ export function buildStartingInventoryFromPlan(
   plan: StartingEquipmentPlan,
   selections: Record<string, string>,
   mode: EquipmentAcquisitionMode,
+  goldOverrideGp: number | null,
   existingItems: CharacterInventoryItem[],
-  existingCurrency: CharacterCurrency,
+  removedItemIds: string[],
 ) {
   const preservedByKey = new Map(existingItems.map((item) => [item.id, item]));
+  const removed = new Set(removedItemIds);
   const items: CharacterInventoryItem[] = [];
   const currency = createEmptyCurrency();
 
   if (mode === "gold" && plan.goldAlternative) {
-    currency.gp += plan.goldAlternative.averageGp;
+    currency.gp += goldOverrideGp ?? plan.goldAlternative.averageGp;
   }
 
   const allEntries: Array<{ source: InventoryItemSource; label: string; raw: string }> = [];
 
   for (const item of plan.autoItems) {
-    allEntries.push({ source: "starting-fixed", label: "Auto-added", raw: item });
+    if (mode === "gold" && item.source === "class") {
+      continue;
+    }
+    allEntries.push({
+      source: "starting-fixed",
+      label: item.source === "class" ? "Class gear" : "Auto-added",
+      raw: item.name,
+    });
   }
 
   for (const group of plan.choiceGroups) {
@@ -131,6 +158,9 @@ export function buildStartingInventoryFromPlan(
     }
 
     const id = getInventoryItemKey(parsed.name, entry.label);
+    if (removed.has(id)) {
+      continue;
+    }
     const previous = preservedByKey.get(id);
     const category = categorizeInventoryItem(parsed.name);
     items.push({
@@ -140,6 +170,7 @@ export function buildStartingInventoryFromPlan(
       category,
       source: entry.source,
       sourceLabel: entry.label,
+      equippable: previous?.equippable ?? isInventoryItemEquippable(parsed.name, category),
       equipped: previous?.equipped ?? false,
       attunable: previous?.attunable ?? false,
       attuned: previous?.attuned ?? false,
@@ -149,13 +180,7 @@ export function buildStartingInventoryFromPlan(
 
   return {
     items,
-    currency: {
-      cp: existingCurrency.cp + currency.cp,
-      sp: existingCurrency.sp + currency.sp,
-      ep: existingCurrency.ep + currency.ep,
-      gp: existingCurrency.gp + currency.gp,
-      pp: existingCurrency.pp + currency.pp,
-    },
+    currency,
   };
 }
 

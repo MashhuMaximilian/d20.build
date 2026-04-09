@@ -4,6 +4,11 @@ export type EquipmentChoiceOption = {
   items: string[];
 };
 
+export type StartingEquipmentAutoItem = {
+  name: string;
+  source: EquipmentChoiceSource;
+};
+
 export type EquipmentChoiceSource = "class" | "background";
 
 export type EquipmentChoiceGroup = {
@@ -21,7 +26,7 @@ export type EquipmentGoldAlternative = {
 };
 
 export type StartingEquipmentPlan = {
-  autoItems: string[];
+  autoItems: StartingEquipmentAutoItem[];
   choiceGroups: EquipmentChoiceGroup[];
   notes: string[];
   goldAlternative: EquipmentGoldAlternative | null;
@@ -32,8 +37,16 @@ type StartingEquipmentContext = {
   backgroundId: string;
 };
 
-function uniqueItems(items: string[]) {
-  return [...new Set(items)];
+function uniqueItems(items: StartingEquipmentAutoItem[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = `${item.source}:${item.name}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
 }
 
 function getClassPlan(classId: string): StartingEquipmentPlan {
@@ -96,7 +109,7 @@ function getClassPlan(classId: string): StartingEquipmentPlan {
       };
     case "ID_WOTC_PHB_CLASS_WIZARD":
       return {
-        autoItems: ["Spellbook"],
+        autoItems: [{ name: "Spellbook", source: "class" }],
         choiceGroups: [
           {
             id: "wizard-weapon",
@@ -152,7 +165,13 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
   switch (backgroundId) {
     case "ID_BACKGROUND_ACOLYTE":
       return {
-        autoItems: ["Holy Symbol", "5 Sticks of Incense", "Vestments", "Set of Common Clothes", "Belt Pouch (15 gp)"],
+        autoItems: [
+          { name: "Holy Symbol", source: "background" },
+          { name: "5 Sticks of Incense", source: "background" },
+          { name: "Vestments", source: "background" },
+          { name: "Set of Common Clothes", source: "background" },
+          { name: "Belt Pouch (15 gp)", source: "background" },
+        ],
         choiceGroups: [
           {
             id: "acolyte-book",
@@ -170,14 +189,26 @@ function getBackgroundPlan(backgroundId: string): StartingEquipmentPlan {
       };
     case "ID_BACKGROUND_SAGE":
       return {
-        autoItems: ["Bottle of Black Ink", "Quill", "Small Knife", "Letter from a Dead Colleague", "Set of Common Clothes", "Belt Pouch (10 gp)"],
+        autoItems: [
+          { name: "Bottle of Black Ink", source: "background" },
+          { name: "Quill", source: "background" },
+          { name: "Small Knife", source: "background" },
+          { name: "Letter from a Dead Colleague", source: "background" },
+          { name: "Set of Common Clothes", source: "background" },
+          { name: "Belt Pouch (10 gp)", source: "background" },
+        ],
         choiceGroups: [],
         notes: [],
         goldAlternative: null,
       };
     case "ID_BACKGROUND_SOLDIER":
       return {
-        autoItems: ["Insignia of Rank", "Trophy from a Fallen Enemy", "Set of Common Clothes", "Belt Pouch (10 gp)"],
+        autoItems: [
+          { name: "Insignia of Rank", source: "background" },
+          { name: "Trophy from a Fallen Enemy", source: "background" },
+          { name: "Set of Common Clothes", source: "background" },
+          { name: "Belt Pouch (10 gp)", source: "background" },
+        ],
         choiceGroups: [
           {
             id: "soldier-game-set",
@@ -244,5 +275,9 @@ export function resolveStartingEquipmentItems(
     return option?.items ?? [];
   });
 
-  return uniqueItems([...plan.autoItems, ...selectedItems]);
+  const autoItems = plan.autoItems
+    .filter((item) => !(mode === "gold" && item.source === "class"))
+    .map((item) => item.name);
+
+  return [...new Set([...autoItems, ...selectedItems])];
 }

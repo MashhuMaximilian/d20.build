@@ -58,6 +58,7 @@ export type CharacterInventoryItem = {
   category: string;
   source: string;
   sourceLabel: string;
+  equippable: boolean;
   equipped: boolean;
   attunable: boolean;
   attuned: boolean;
@@ -82,7 +83,9 @@ export type CharacterDraft = {
   progressionSelections: Record<string, string[]>;
   spellSelections: Record<string, string[]>;
   equipmentAcquisitionMode: "gear" | "gold";
+  equipmentGoldOverrideGp: number | null;
   equipmentSelections: Record<string, string>;
+  removedInventoryItemIds: string[];
   inventoryCurrency: CharacterCurrency;
   inventoryItems: CharacterInventoryItem[];
   backstory: CharacterBackstory;
@@ -141,7 +144,9 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     progressionSelections: {},
     spellSelections: {},
     equipmentAcquisitionMode: "gear",
+    equipmentGoldOverrideGp: null,
     equipmentSelections: {},
+    removedInventoryItemIds: [],
     inventoryCurrency: {
       cp: 0,
       sp: 0,
@@ -250,7 +255,14 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
       ]),
     ),
     equipmentAcquisitionMode: draft.equipmentAcquisitionMode === "gold" ? "gold" : "gear",
+    equipmentGoldOverrideGp:
+      draft.equipmentGoldOverrideGp === null || draft.equipmentGoldOverrideGp === undefined
+        ? null
+        : Math.max(0, Math.floor(draft.equipmentGoldOverrideGp)),
     equipmentSelections: draft.equipmentSelections ?? {},
+    removedInventoryItemIds: Array.isArray(draft.removedInventoryItemIds)
+      ? draft.removedInventoryItemIds.filter((item): item is string => typeof item === "string")
+      : [],
     inventoryCurrency: {
       ...empty.inventoryCurrency,
       ...(draft.inventoryCurrency ?? {}),
@@ -265,6 +277,7 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
             category: item.category ?? "misc",
             source: item.source ?? "starting-fixed",
             sourceLabel: item.sourceLabel ?? "",
+            equippable: Boolean(item.equippable),
             equipped: Boolean(item.equipped),
             attunable: Boolean(item.attunable),
             attuned: Boolean(item.attuned) && Boolean(item.attunable),

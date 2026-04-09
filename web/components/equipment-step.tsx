@@ -10,13 +10,16 @@ import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
 type EquipmentStepProps = {
   plan: StartingEquipmentPlan;
   mode: EquipmentAcquisitionMode;
+  goldOverrideGp: number | null;
   selections: Record<string, string>;
   inventoryItems: CharacterInventoryItem[];
   currency: CharacterCurrency;
   onModeChange: (mode: EquipmentAcquisitionMode) => void;
+  onGoldOverrideChange: (value: number | null) => void;
   onSelect: (groupId: string, optionId: string) => void;
   onToggleEquipped: (itemId: string) => void;
   onToggleAttuned: (itemId: string) => void;
+  onRemoveItem: (itemId: string) => void;
 };
 
 type InventoryView = "all" | "equipped" | "attuned";
@@ -35,13 +38,16 @@ function titleCaseCategory(value: string) {
 export function EquipmentStep({
   plan,
   mode,
+  goldOverrideGp,
   selections,
   inventoryItems,
   currency,
   onModeChange,
+  onGoldOverrideChange,
   onSelect,
   onToggleEquipped,
   onToggleAttuned,
+  onRemoveItem,
 }: EquipmentStepProps) {
   const [inventoryView, setInventoryView] = useState<InventoryView>("all");
   const [inventorySearch, setInventorySearch] = useState("");
@@ -93,7 +99,24 @@ export function EquipmentStep({
             <div className="equipment-step__goldCard">
               <strong>{plan.goldAlternative.formula}</strong>
               <p className="builder-summary__meta">
-                Using the average for now: {plan.goldAlternative.averageGp} gp
+                Defaulting to the average: {plan.goldAlternative.averageGp} gp
+              </p>
+              <label className="builder-field">
+                <span className="builder-panel__label">Override starting gold</span>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  min={0}
+                  placeholder={`${plan.goldAlternative.averageGp}`}
+                  type="number"
+                  value={goldOverrideGp ?? ""}
+                  onChange={(event) =>
+                    onGoldOverrideChange(event.target.value === "" ? null : Math.max(0, Number(event.target.value)))
+                  }
+                />
+              </label>
+              <p className="builder-summary__meta">
+                Leave blank to keep the suggested average.
               </p>
               {plan.goldAlternative.notes.map((note) => (
                 <p className="builder-summary__meta" key={note}>
@@ -146,91 +169,103 @@ export function EquipmentStep({
       </div>
 
       <div className="equipment-step__layout">
-        <div className="equipment-step__groups">
-          {availableClassGroups.length ? (
-            <details className="equipment-step__accordion" open>
-              <summary className="equipment-step__accordionSummary">
-                <span>Class starting gear</span>
-                <small>{mode === "gold" ? "Skipped while using gold" : `${availableClassGroups.length} groups`}</small>
-              </summary>
-              <div className="equipment-step__accordionBody">
-                {mode === "gold" ? (
-                  <p className="builder-summary__meta">
-                    Class package choices are skipped while the gold alternative is active.
-                  </p>
-                ) : (
-                  availableClassGroups.map((group) => (
-                    <section className="equipment-step__group" key={group.id}>
-                      <div className="equipment-step__groupHeader">
-                        <span className="builder-panel__label">{group.title}</span>
-                        <p className="builder-summary__meta">{group.description}</p>
-                      </div>
-                      <div className="choice-grid">
-                        {group.options.map((option) => {
-                          const active = selections[group.id] === option.id;
-                          return (
-                            <button
-                              className={`choice-card${active ? " choice-card--active" : ""}`}
-                              key={option.id}
-                              type="button"
-                              onClick={() => onSelect(group.id, option.id)}
-                            >
-                              <strong>{option.label}</strong>
-                              <div className="equipment-step__optionItems">
-                                {option.items.map((item) => (
-                                  <span key={`${option.id}-${item}`}>{item}</span>
-                                ))}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))
-                )}
-              </div>
-            </details>
-          ) : null}
+        <details className="equipment-step__accordion equipment-step__accordion--root" open>
+          <summary className="equipment-step__accordionSummary">
+            <span>Starting gear builder</span>
+            <small>
+              {mode === "gold"
+                ? "Class gear collapsed while using gold"
+                : `${availableClassGroups.length + availableBackgroundGroups.length} sections`}
+            </small>
+          </summary>
+          <div className="equipment-step__accordionBody equipment-step__accordionBody--root">
+            <div className="equipment-step__groups">
+              {availableClassGroups.length ? (
+                <details className="equipment-step__accordion" open>
+                  <summary className="equipment-step__accordionSummary">
+                    <span>Class starting gear</span>
+                    <small>{mode === "gold" ? "Skipped while using gold" : `${availableClassGroups.length} groups`}</small>
+                  </summary>
+                  <div className="equipment-step__accordionBody">
+                    {mode === "gold" ? (
+                      <p className="builder-summary__meta">
+                        Class package choices are skipped while the gold alternative is active.
+                      </p>
+                    ) : (
+                      availableClassGroups.map((group) => (
+                        <section className="equipment-step__group" key={group.id}>
+                          <div className="equipment-step__groupHeader">
+                            <span className="builder-panel__label">{group.title}</span>
+                            <p className="builder-summary__meta">{group.description}</p>
+                          </div>
+                          <div className="choice-grid">
+                            {group.options.map((option) => {
+                              const active = selections[group.id] === option.id;
+                              return (
+                                <button
+                                  className={`choice-card${active ? " choice-card--active" : ""}`}
+                                  key={option.id}
+                                  type="button"
+                                  onClick={() => onSelect(group.id, option.id)}
+                                >
+                                  <strong>{option.label}</strong>
+                                  <div className="equipment-step__optionItems">
+                                    {option.items.map((item) => (
+                                      <span key={`${option.id}-${item}`}>{item}</span>
+                                    ))}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))
+                    )}
+                  </div>
+                </details>
+              ) : null}
 
-          {availableBackgroundGroups.length ? (
-            <details className="equipment-step__accordion" open>
-              <summary className="equipment-step__accordionSummary">
-                <span>Background gear</span>
-                <small>{availableBackgroundGroups.length} groups</small>
-              </summary>
-              <div className="equipment-step__accordionBody">
-                {availableBackgroundGroups.map((group) => (
-                  <section className="equipment-step__group" key={group.id}>
-                    <div className="equipment-step__groupHeader">
-                      <span className="builder-panel__label">{group.title}</span>
-                      <p className="builder-summary__meta">{group.description}</p>
-                    </div>
-                    <div className="choice-grid">
-                      {group.options.map((option) => {
-                        const active = selections[group.id] === option.id;
-                        return (
-                          <button
-                            className={`choice-card${active ? " choice-card--active" : ""}`}
-                            key={option.id}
-                            type="button"
-                            onClick={() => onSelect(group.id, option.id)}
-                          >
-                            <strong>{option.label}</strong>
-                            <div className="equipment-step__optionItems">
-                              {option.items.map((item) => (
-                                <span key={`${option.id}-${item}`}>{item}</span>
-                              ))}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </details>
-          ) : null}
-        </div>
+              {availableBackgroundGroups.length ? (
+                <details className="equipment-step__accordion" open>
+                  <summary className="equipment-step__accordionSummary">
+                    <span>Background gear</span>
+                    <small>{availableBackgroundGroups.length} groups</small>
+                  </summary>
+                  <div className="equipment-step__accordionBody">
+                    {availableBackgroundGroups.map((group) => (
+                      <section className="equipment-step__group" key={group.id}>
+                        <div className="equipment-step__groupHeader">
+                          <span className="builder-panel__label">{group.title}</span>
+                          <p className="builder-summary__meta">{group.description}</p>
+                        </div>
+                        <div className="choice-grid">
+                          {group.options.map((option) => {
+                            const active = selections[group.id] === option.id;
+                            return (
+                              <button
+                                className={`choice-card${active ? " choice-card--active" : ""}`}
+                                key={option.id}
+                                type="button"
+                                onClick={() => onSelect(group.id, option.id)}
+                              >
+                                <strong>{option.label}</strong>
+                                <div className="equipment-step__optionItems">
+                                  {option.items.map((item) => (
+                                    <span key={`${option.id}-${item}`}>{item}</span>
+                                  ))}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </div>
+          </div>
+        </details>
 
         <aside className="equipment-step__panel equipment-step__panel--inventory">
           <div className="equipment-step__inventoryHeader">
@@ -292,21 +327,26 @@ export function EquipmentStep({
                       <span>{titleCaseCategory(item.category)}</span>
                       <span>{item.quantity}</span>
                       <div className="equipment-step__inventoryActions">
-                        <button
-                          className={`choice-chip${item.equipped ? " choice-chip--active" : ""}`}
-                          type="button"
-                          onClick={() => onToggleEquipped(item.id)}
-                        >
-                          {item.equipped ? "Equipped" : "Equip"}
-                        </button>
-                        <button
-                          className={`choice-chip${item.attuned ? " choice-chip--active" : ""}`}
-                          type="button"
-                          disabled={!item.attunable}
-                          onClick={() => onToggleAttuned(item.id)}
-                          title={item.attunable ? undefined : "This item is not attunable."}
-                        >
-                          {item.attuned ? "Attuned" : "Attune"}
+                        {item.equippable ? (
+                          <button
+                            className={`choice-chip${item.equipped ? " choice-chip--active" : ""}`}
+                            type="button"
+                            onClick={() => onToggleEquipped(item.id)}
+                          >
+                            {item.equipped ? "Equipped" : "Equip"}
+                          </button>
+                        ) : null}
+                        {item.attunable ? (
+                          <button
+                            className={`choice-chip${item.attuned ? " choice-chip--active" : ""}`}
+                            type="button"
+                            onClick={() => onToggleAttuned(item.id)}
+                          >
+                            {item.attuned ? "Attuned" : "Attune"}
+                          </button>
+                        ) : null}
+                        <button className="choice-chip" type="button" onClick={() => onRemoveItem(item.id)}>
+                          Delete
                         </button>
                       </div>
                     </div>

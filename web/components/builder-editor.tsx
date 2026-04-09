@@ -1886,8 +1886,9 @@ export function BuilderEditor({
         equipmentPlan,
         current.equipmentSelections,
         current.equipmentAcquisitionMode,
+        current.equipmentGoldOverrideGp,
         current.inventoryItems,
-        createEmptyCurrency(),
+        current.removedInventoryItemIds,
       );
 
       const sameItems =
@@ -1902,6 +1903,7 @@ export function BuilderEditor({
             existing.category === item.category &&
             existing.source === item.source &&
             existing.sourceLabel === item.sourceLabel &&
+            existing.equippable === item.equippable &&
             existing.equipped === item.equipped &&
             existing.attunable === item.attunable &&
             existing.attuned === item.attuned &&
@@ -1925,7 +1927,7 @@ export function BuilderEditor({
         inventoryCurrency: nextInventory.currency,
       };
     });
-  }, [draft.equipmentAcquisitionMode, draft.equipmentSelections, equipmentPlan]);
+  }, [draft.equipmentAcquisitionMode, draft.equipmentGoldOverrideGp, draft.equipmentSelections, draft.removedInventoryItemIds, equipmentPlan]);
 
   function updateDraft(patch: Partial<CharacterDraft>) {
     if (status) {
@@ -2419,7 +2421,9 @@ export function BuilderEditor({
                       : entry,
                   ),
                   equipmentAcquisitionMode: activeClassEntryIndex === 0 ? "gear" : draft.equipmentAcquisitionMode,
+                  equipmentGoldOverrideGp: activeClassEntryIndex === 0 ? null : draft.equipmentGoldOverrideGp,
                   equipmentSelections: activeClassEntryIndex === 0 ? {} : draft.equipmentSelections,
+                  removedInventoryItemIds: activeClassEntryIndex === 0 ? [] : draft.removedInventoryItemIds,
                 })
               }
               selectedId={activeClassEntry?.classId ?? ""}
@@ -2529,7 +2533,14 @@ export function BuilderEditor({
             <CatalogSelector
               items={backgroundItems}
               label="Background"
-              onSelect={(id) => updateDraft({ backgroundId: id, equipmentAcquisitionMode: "gear", equipmentSelections: {} })}
+              onSelect={(id) =>
+                updateDraft({
+                  backgroundId: id,
+                  equipmentAcquisitionMode: "gear",
+                  equipmentGoldOverrideGp: null,
+                  equipmentSelections: {},
+                  removedInventoryItemIds: [],
+                })}
               selectedId={draft.backgroundId}
             />
           </section>
@@ -2613,12 +2624,19 @@ export function BuilderEditor({
             <EquipmentStep
               plan={equipmentPlan}
               mode={draft.equipmentAcquisitionMode}
+              goldOverrideGp={draft.equipmentGoldOverrideGp}
               selections={draft.equipmentSelections}
               inventoryItems={draft.inventoryItems}
               currency={draft.inventoryCurrency}
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,
+                  inventoryItems: [],
+                  inventoryCurrency: createEmptyCurrency(),
+                })}
+              onGoldOverrideChange={(value) =>
+                updateDraft({
+                  equipmentGoldOverrideGp: value,
                 })}
               onSelect={(groupId, optionId) =>
                 updateDraft({
@@ -2626,11 +2644,12 @@ export function BuilderEditor({
                     ...draft.equipmentSelections,
                     [groupId]: optionId,
                   },
+                  removedInventoryItemIds: [],
                 })}
               onToggleEquipped={(itemId) =>
                 updateDraft({
                   inventoryItems: draft.inventoryItems.map((item) =>
-                    item.id === itemId
+                    item.id === itemId && item.equippable
                       ? {
                           ...item,
                           equipped: !item.equipped,
@@ -2648,6 +2667,10 @@ export function BuilderEditor({
                         }
                       : item,
                   ),
+                })}
+              onRemoveItem={(itemId) =>
+                updateDraft({
+                  removedInventoryItemIds: [...draft.removedInventoryItemIds, itemId],
                 })}
             />
           </section>
