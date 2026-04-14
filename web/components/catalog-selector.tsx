@@ -186,6 +186,69 @@ function normalizeSearchValue(value: string) {
     .trim();
 }
 
+function scoreSearchMatch(queryTokens: string[], item: CatalogItem) {
+  if (!queryTokens.length) {
+    return 0;
+  }
+
+  const normalizedName = normalizeSearchValue(item.name);
+  const normalizedMeta = normalizeSearchValue(item.meta ?? "");
+  const normalizedSource = normalizeSearchValue(item.source ?? "");
+  const normalizedSummary = normalizeSearchValue((item.summaryLines ?? []).join(" "));
+  const normalizedImpact = normalizeSearchValue((item.impactLines ?? []).join(" "));
+  const normalizedMechanics = normalizeSearchValue((item.mechanicsLines ?? []).join(" "));
+  const normalizedDescription = normalizeSearchValue(item.description);
+  const normalizedTags = (item.filterTags ?? []).map((tag) => normalizeSearchValue(tag));
+
+  let score = 0;
+
+  queryTokens.forEach((token) => {
+    if (normalizedName === token) {
+      score += 200;
+    } else if (normalizedName.startsWith(token)) {
+      score += 120;
+    } else if (normalizedName.includes(token)) {
+      score += 80;
+    }
+
+    if (normalizedMeta === token) {
+      score += 70;
+    } else if (normalizedMeta.startsWith(token)) {
+      score += 50;
+    } else if (normalizedMeta.includes(token)) {
+      score += 35;
+    }
+
+    if (normalizedSummary.includes(token)) {
+      score += 25;
+    }
+
+    if (normalizedImpact.includes(token)) {
+      score += 15;
+    }
+
+    if (normalizedMechanics.includes(token)) {
+      score += 12;
+    }
+
+    if (normalizedSource.includes(token)) {
+      score += 8;
+    }
+
+    if (normalizedDescription.includes(token)) {
+      score += 5;
+    }
+
+    if (normalizedTags.some((tag) => tag === token)) {
+      score += 40;
+    } else if (normalizedTags.some((tag) => tag.includes(token))) {
+      score += 18;
+    }
+  });
+
+  return score;
+}
+
 function moveSectionToTop(markup: string, headingMatcher: RegExp) {
   const headingPattern = /<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi;
   const matches = [...markup.matchAll(headingPattern)];
@@ -378,9 +441,36 @@ export function CatalogSelector({
     });
   }, [items, primaryTagFilter, query, selectedSources, sourceFilter, tagFilter]);
 
+  const searchScores = useMemo(() => {
+    const queryTokens = normalizeSearchValue(query).split(" ").filter(Boolean);
+    if (!queryTokens.length) {
+      return new Map<string, number>();
+    }
+
+    return new Map(
+      filteredItems.map((item) => [item.id, scoreSearchMatch(queryTokens, item)] as const),
+    );
+  }, [filteredItems, query]);
+
   const sortedItems = useMemo(
     () =>
       sortTableRows(filteredItems, tableSort, (item, key) => {
+        if (searchScores.size) {
+          const relevance = searchScores.get(item.id) ?? 0;
+          if (relevance > 0) {
+            switch (key) {
+              case "name":
+                return 100000 - relevance;
+              case "source":
+              case "summary":
+              case "impact":
+                break;
+              default:
+                return 100000 - relevance;
+            }
+          }
+        }
+
         switch (key) {
           case "source":
             return item.source ?? "";
@@ -393,7 +483,7 @@ export function CatalogSelector({
             return item.name;
         }
       }),
-    [filteredItems, tableSort],
+    [filteredItems, searchScores, tableSort],
   );
 
   useEffect(() => {
