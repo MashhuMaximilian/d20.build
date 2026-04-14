@@ -186,29 +186,6 @@ function normalizeSearchValue(value: string) {
     .trim();
 }
 
-function tokenizeSearchValue(value: string) {
-  return normalizeSearchValue(value).split(" ").filter(Boolean);
-}
-
-function matchesSearchText(query: string, parts: string[]) {
-  const queryTokens = tokenizeSearchValue(query);
-  if (!queryTokens.length) {
-    return true;
-  }
-
-  const haystackTokens = parts
-    .flatMap((part) => tokenizeSearchValue(part))
-    .filter(Boolean);
-
-  if (!haystackTokens.length) {
-    return false;
-  }
-
-  return queryTokens.every((queryToken) =>
-    haystackTokens.some((token) => token.startsWith(queryToken) || token.includes(queryToken)),
-  );
-}
-
 function moveSectionToTop(markup: string, headingMatcher: RegExp) {
   const headingPattern = /<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi;
   const matches = [...markup.matchAll(headingPattern)];
@@ -351,22 +328,21 @@ export function CatalogSelector({
   }, [items, sourceFilter]);
 
   const filteredItems = useMemo(() => {
-    const normalized = query.trim();
+    const normalizedQuery = normalizeSearchValue(query);
+    const queryTokens = normalizedQuery.split(" ").filter(Boolean);
 
     return items.filter((item) => {
-      const sourceMatches =
-        sourceFilter === "all" ||
-        item.origin === sourceFilter;
-
-      if (!sourceMatches) {
+      if (sourceFilter !== "all" && item.origin !== sourceFilter) {
         return false;
       }
 
-      if (primaryTagFilter && !(item.filterTags ?? []).includes(primaryTagFilter)) {
+      const filterTags = item.filterTags ?? [];
+
+      if (primaryTagFilter && !filterTags.includes(primaryTagFilter)) {
         return false;
       }
 
-      if (tagFilter && !(item.filterTags ?? []).includes(tagFilter)) {
+      if (tagFilter && !filterTags.includes(tagFilter)) {
         return false;
       }
 
@@ -377,19 +353,28 @@ export function CatalogSelector({
         }
       }
 
-      if (!normalized) {
+      if (!queryTokens.length) {
         return true;
       }
 
-      const searchParts = [
-        item.name,
-        item.meta ?? "",
-        item.source ?? "",
-        ...(item.summaryLines ?? []),
-        ...(item.impactLines ?? []),
-      ];
+      const haystack = normalizeSearchValue(
+        [
+          item.name,
+          item.meta ?? "",
+          item.source ?? "",
+          ...filterTags,
+          ...(item.summaryLines ?? []),
+          ...(item.impactLines ?? []),
+          ...(item.mechanicsLines ?? []),
+          item.description,
+        ].join(" "),
+      );
 
-      return matchesSearchText(normalized, searchParts);
+      if (!haystack) {
+        return false;
+      }
+
+      return queryTokens.every((token) => haystack.includes(token));
     });
   }, [items, primaryTagFilter, query, selectedSources, sourceFilter, tagFilter]);
 
@@ -673,7 +658,11 @@ export function CatalogSelector({
                 <button
                   className={`button button--secondary button--compact${viewMode === "cards" ? " ability-mode__tab--active" : ""}`}
                   type="button"
-                  onClick={() => setViewMode("cards")}
+                  aria-pressed={viewMode === "cards"}
+                  onClick={() => {
+                    setViewMode("cards");
+                    setActivePane("list");
+                  }}
                 >
                   <span className="catalog-selector__viewModeButton">
                     <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--workbench" aria-hidden="true" />
@@ -683,7 +672,11 @@ export function CatalogSelector({
                 <button
                   className={`button button--secondary button--compact${viewMode === "table" ? " ability-mode__tab--active" : ""}`}
                   type="button"
-                  onClick={() => setViewMode("table")}
+                  aria-pressed={viewMode === "table"}
+                  onClick={() => {
+                    setViewMode("table");
+                    setActivePane("list");
+                  }}
                 >
                   <span className="catalog-selector__viewModeButton">
                     <span className="catalog-selector__viewModeGlyph catalog-selector__viewModeGlyph--table" aria-hidden="true" />
@@ -833,7 +826,7 @@ export function CatalogSelector({
           ) : null}
 
           {viewMode === "cards" ? (
-            <div className="catalog-selector__list" role="listbox" aria-label={label}>
+            <div className="catalog-selector__list" role="listbox" aria-label={label} key="cards">
               {sortedItems.length ? (
                 sortedItems.map((item) => {
                   const isPreview = item.id === previewItem?.id;
@@ -882,7 +875,7 @@ export function CatalogSelector({
               )}
             </div>
           ) : (
-            <div className="catalog-selector__tableWrap" role="table" aria-label={`${label} table`}>
+            <div className="catalog-selector__tableWrap" role="table" aria-label={`${label} table`} key="table">
               <div className="catalog-selector__tableHead" role="row">
                 {([
                   ["name", "Name"],
