@@ -1027,6 +1027,42 @@ a {
   align-items: center;
 }
 
+.equipment-step__manualGrid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.equipment-step__manualCard {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 250, 242, 0.82);
+}
+
+.equipment-step__manualRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 110px;
+  gap: 12px;
+}
+
+.equipment-step__manualActions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.equipment-step__notesInput {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.equipment-step__notesInput--tall {
+  min-height: 140px;
+}
+
 .leveling-step {
   display: grid;
   grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
@@ -2919,6 +2955,11 @@ a {
   }
 
   .equipment-step__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .equipment-step__manualGrid,
+  .equipment-step__manualRow {
     grid-template-columns: 1fr;
   }
 

@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
-import type { CharacterCurrency, CharacterInventoryItem } from "@/lib/characters/types";
+import type { CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem } from "@/lib/characters/types";
 import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
 import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
-import type { EquipmentAcquisitionMode } from "@/lib/equipment/inventory";
+import type { EquipmentAcquisitionMode, InventoryCategory } from "@/lib/equipment/inventory";
 import { getCurrencyTotalInGp, summarizeInventory } from "@/lib/equipment/inventory";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
 
@@ -17,6 +17,7 @@ type EquipmentStepProps = {
   selections: Record<string, string>;
   inventoryItems: CharacterInventoryItem[];
   currency: CharacterCurrency;
+  equipmentNotes: CharacterEquipmentNotes;
   onModeChange: (mode: EquipmentAcquisitionMode) => void;
   onGoldOverrideChange: (value: number | null) => void;
   onSelect: (groupId: string, optionId: string) => void;
@@ -24,6 +25,8 @@ type EquipmentStepProps = {
   onToggleAttuned: (itemId: string) => void;
   onRemoveItem: (itemId: string) => void;
   onAddManualItem: (entry: EquipmentCatalogEntry) => void;
+  onAddCustomItem: (input: { name: string; category: InventoryCategory; quantity: number; notes: string }) => void;
+  onEquipmentNotesChange: (notes: CharacterEquipmentNotes) => void;
 };
 
 type InventoryView = "all" | "equipped" | "attuned";
@@ -67,6 +70,23 @@ const ITEM_BROWSER_PREFERRED_TAGS = [
   "Miscellaneous",
 ];
 
+const CUSTOM_ITEM_CATEGORY_OPTIONS: Array<{ value: InventoryCategory; label: string }> = [
+  { value: "weapon", label: "Weapon" },
+  { value: "armor", label: "Armor" },
+  { value: "shield", label: "Shield" },
+  { value: "focus", label: "Focus" },
+  { value: "ammo", label: "Ammunition" },
+  { value: "tool", label: "Tool" },
+  { value: "instrument", label: "Instrument" },
+  { value: "pack", label: "Pack" },
+  { value: "clothing", label: "Clothing" },
+  { value: "book", label: "Book" },
+  { value: "holy-symbol", label: "Holy symbol" },
+  { value: "consumable", label: "Consumable" },
+  { value: "treasure", label: "Treasure" },
+  { value: "misc", label: "Miscellaneous" },
+];
+
 function getEquipmentCatalogCardId(item: EquipmentCatalogEntry) {
   return `${item.origin}::${item.sourceUrl || item.source}::${item.id}`;
 }
@@ -78,6 +98,7 @@ export function EquipmentStep({
   selections,
   inventoryItems,
   currency,
+  equipmentNotes,
   onModeChange,
   onGoldOverrideChange,
   onSelect,
@@ -85,12 +106,18 @@ export function EquipmentStep({
   onToggleAttuned,
   onRemoveItem,
   onAddManualItem,
+  onAddCustomItem,
+  onEquipmentNotesChange,
 }: EquipmentStepProps) {
   const [inventoryView, setInventoryView] = useState<InventoryView>("all");
   const [inventorySearch, setInventorySearch] = useState("");
   const [catalogItems, setCatalogItems] = useState<EquipmentCatalogEntry[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [lastAddedItemId, setLastAddedItemId] = useState("");
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemCategory, setCustomItemCategory] = useState<InventoryCategory>("misc");
+  const [customItemQuantity, setCustomItemQuantity] = useState("1");
+  const [customItemNotes, setCustomItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
 
   useEffect(() => {
@@ -172,6 +199,8 @@ export function EquipmentStep({
       }),
     [catalogItems, manualItemCounts],
   );
+
+  const parsedCustomItemQuantity = Math.max(1, Number(customItemQuantity) || 1);
 
   return (
     <div className="equipment-step">
@@ -508,6 +537,121 @@ export function EquipmentStep({
             defaultDetailView="reference"
           />
         )}
+      </section>
+
+      <section className="equipment-step__panel">
+        <div className="equipment-step__groupHeader">
+          <span className="builder-panel__label">Manual additions</span>
+          <p className="builder-summary__meta">
+            Add custom table-granted items and keep lightweight notes for extra treasure or quest items that do not belong in the catalog.
+          </p>
+        </div>
+        <div className="equipment-step__manualGrid">
+          <div className="equipment-step__manualCard">
+            <span className="builder-panel__label">Custom item</span>
+            <label className="builder-field">
+              <span className="builder-summary__meta">Item name</span>
+              <input
+                className="input"
+                placeholder="Custom shield, relic, trophy..."
+                value={customItemName}
+                onChange={(event) => setCustomItemName(event.target.value)}
+              />
+            </label>
+            <div className="equipment-step__manualRow">
+              <label className="builder-field">
+                <span className="builder-summary__meta">Category</span>
+                <select
+                  className="input"
+                  value={customItemCategory}
+                  onChange={(event) => setCustomItemCategory(event.target.value as InventoryCategory)}
+                >
+                  {CUSTOM_ITEM_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Qty</span>
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  min={1}
+                  type="number"
+                  value={customItemQuantity}
+                  onChange={(event) => setCustomItemQuantity(event.target.value)}
+                />
+              </label>
+            </div>
+            <label className="builder-field">
+              <span className="builder-summary__meta">Notes</span>
+              <textarea
+                className="input equipment-step__notesInput"
+                placeholder="Optional details, effects, provenance, or table ruling."
+                value={customItemNotes}
+                onChange={(event) => setCustomItemNotes(event.target.value)}
+              />
+            </label>
+            <div className="equipment-step__manualActions">
+              <button
+                className="button button--secondary button--compact"
+                type="button"
+                disabled={!customItemName.trim()}
+                onClick={() => {
+                  if (!customItemName.trim()) {
+                    return;
+                  }
+                  onAddCustomItem({
+                    name: customItemName.trim(),
+                    category: customItemCategory,
+                    quantity: parsedCustomItemQuantity,
+                    notes: customItemNotes.trim(),
+                  });
+                  setCustomItemName("");
+                  setCustomItemCategory("misc");
+                  setCustomItemQuantity("1");
+                  setCustomItemNotes("");
+                }}
+              >
+                Add custom item
+              </button>
+            </div>
+          </div>
+
+          <div className="equipment-step__manualCard">
+            <span className="builder-panel__label">Treasure and quest notes</span>
+            <label className="builder-field">
+              <span className="builder-summary__meta">Additional treasure</span>
+              <textarea
+                className="input equipment-step__notesInput equipment-step__notesInput--tall"
+                placeholder="Loose valuables, favors owed, future loot promises, or stash notes."
+                value={equipmentNotes.additionalTreasure}
+                onChange={(event) =>
+                  onEquipmentNotesChange({
+                    ...equipmentNotes,
+                    additionalTreasure: event.target.value,
+                  })
+                }
+              />
+            </label>
+            <label className="builder-field">
+              <span className="builder-summary__meta">Quest items</span>
+              <textarea
+                className="input equipment-step__notesInput equipment-step__notesInput--tall"
+                placeholder="Story artifacts, keys, letters, badges, and items tracked outside normal inventory."
+                value={equipmentNotes.questItems}
+                onChange={(event) =>
+                  onEquipmentNotesChange({
+                    ...equipmentNotes,
+                    questItems: event.target.value,
+                  })
+                }
+              />
+            </label>
+          </div>
+        </div>
       </section>
     </div>
   );

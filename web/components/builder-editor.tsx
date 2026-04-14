@@ -2627,6 +2627,7 @@ export function BuilderEditor({
               selections={draft.equipmentSelections}
               inventoryItems={draft.inventoryItems}
               currency={draft.inventoryCurrency}
+              equipmentNotes={draft.equipmentNotes}
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,
@@ -2715,6 +2716,50 @@ export function BuilderEditor({
                       ],
                 });
               }}
+              onAddCustomItem={({ name, category, quantity, notes }) => {
+                const normalizedName = name.trim();
+                if (!normalizedName) {
+                  return;
+                }
+
+                const itemId = `manual::custom::${normalizedName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`;
+                const existing = draft.inventoryItems.find((item) => item.id === itemId);
+
+                updateDraft({
+                  inventoryItems: existing
+                    ? draft.inventoryItems.map((item) =>
+                        item.id === itemId
+                          ? {
+                              ...item,
+                              quantity: item.quantity + quantity,
+                              notes: notes || item.notes,
+                            }
+                          : item,
+                      )
+                    : [
+                        ...draft.inventoryItems,
+                        {
+                          id: itemId,
+                          name: normalizedName,
+                          quantity,
+                          category,
+                          family: "Manual",
+                          itemType: "Item",
+                          source: "manual",
+                          sourceLabel: "Custom addition",
+                          equippable: ["weapon", "armor", "shield", "focus", "instrument", "tool", "clothing"].includes(category),
+                          equipped: false,
+                          attunable: false,
+                          attuned: false,
+                          notes: notes || undefined,
+                        },
+                      ],
+                });
+              }}
+              onEquipmentNotesChange={(notes) =>
+                updateDraft({
+                  equipmentNotes: notes,
+                })}
             />
           </section>
         );

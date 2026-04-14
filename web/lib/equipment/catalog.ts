@@ -37,6 +37,20 @@ export type EquipmentCatalogEntry = {
   mechanicsLines: string[];
 };
 
+function isMagicLikeEntry(input: {
+  elementType: string;
+  category?: string;
+  subtype?: string;
+  rarity?: string;
+}) {
+  return (
+    input.elementType === "Magic Item" ||
+    Boolean(input.rarity) ||
+    input.category?.toLowerCase().includes("magic") ||
+    input.subtype?.toLowerCase().includes("magic")
+  );
+}
+
 const ITEM_ELEMENT_TYPES = new Set(["Item", "Weapon", "Armor", "Magic Item"]);
 
 function cleanValue(value?: string | null) {
@@ -112,7 +126,7 @@ function familyFromEntry(input: {
   const rarity = input.rarity?.toLowerCase() ?? "";
   const name = input.name.toLowerCase();
 
-  if (input.elementType === "Magic Item" || rarity) {
+  if (isMagicLikeEntry(input)) {
     if (category.includes("wondrous") || subtype.includes("wondrous")) {
       return "Wondrous Items";
     }
@@ -322,7 +336,10 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
     category.replace(/-/g, " "),
     item.type,
     rarity ? `Rarity: ${rarity}` : "Mundane",
+    isMagicLikeEntry({ elementType: item.type, category: rawCategory, subtype: rawSubtype, rarity }) ? "Magic Item" : "Mundane",
+    equippable ? "Can equip" : "",
     attunable ? "Attunement" : "",
+    attunable ? "Can attune" : "",
   ].filter(Boolean);
   const detailTags = [
     family,
@@ -454,7 +471,10 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
     category.replace(/-/g, " "),
     element.element_type,
     rarity ? `Rarity: ${rarity}` : "Mundane",
+    isMagicLikeEntry({ elementType: element.element_type, category: rawCategory, subtype: rawSubtype, rarity }) ? "Magic Item" : "Mundane",
+    equippable ? "Can equip" : "",
     attunable ? "Attunement" : "",
+    attunable ? "Can attune" : "",
   ].filter(Boolean);
   const detailTags = [
     family,
@@ -535,7 +555,39 @@ export async function getMergedEquipmentCatalog() {
     importedById.set(item.id, item);
   });
 
-  return [...builtInById.values(), ...importedById.values()].sort(
+  const deduped = new Map<string, EquipmentCatalogEntry>();
+
+  function scoreEntry(entry: EquipmentCatalogEntry) {
+    return [
+      entry.origin === "imported" ? 12 : 0,
+      entry.mechanicsLines.length,
+      entry.detailTags.length,
+      entry.description.trim().length > 0 ? 2 : 0,
+      entry.detailHtml?.trim().length ? 4 : 0,
+    ].reduce((sum, value) => sum + value, 0);
+  }
+
+  function getEntrySignature(entry: EquipmentCatalogEntry) {
+    return [
+      entry.name.trim().toLowerCase(),
+      entry.source.trim().toLowerCase(),
+      entry.elementType.trim().toLowerCase(),
+      entry.family.trim().toLowerCase(),
+      entry.rawCategory?.trim().toLowerCase() ?? "",
+      entry.rawSubtype?.trim().toLowerCase() ?? "",
+      entry.rarity?.trim().toLowerCase() ?? "",
+    ].join("::");
+  }
+
+  [...builtInById.values(), ...importedById.values()].forEach((entry) => {
+    const signature = getEntrySignature(entry);
+    const existing = deduped.get(signature);
+    if (!existing || scoreEntry(entry) > scoreEntry(existing)) {
+      deduped.set(signature, entry);
+    }
+  });
+
+  return [...deduped.values()].sort(
     (left, right) => left.name.localeCompare(right.name) || left.source.localeCompare(right.source),
   );
 }

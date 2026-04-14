@@ -51,6 +51,11 @@ export type CharacterCurrency = {
   pp: number;
 };
 
+export type CharacterEquipmentNotes = {
+  additionalTreasure: string;
+  questItems: string;
+};
+
 export type CharacterInventoryItem = {
   id: string;
   name: string;
@@ -97,6 +102,7 @@ export type CharacterDraft = {
   removedInventoryItemIds: string[];
   inventoryCurrency: CharacterCurrency;
   inventoryItems: CharacterInventoryItem[];
+  equipmentNotes: CharacterEquipmentNotes;
   backstory: CharacterBackstory;
   sourceManifest: CharacterSourceManifestEntry[];
 };
@@ -164,6 +170,10 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       pp: 0,
     },
     inventoryItems: [],
+    equipmentNotes: {
+      additionalTreasure: "",
+      questItems: "",
+    },
     backstory: {
       personalityTraits: "",
       ideals: "",
@@ -302,6 +312,10 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
             detailHtml: typeof item.detailHtml === "string" ? item.detailHtml : undefined,
           }))
       : [],
+    equipmentNotes: {
+      ...empty.equipmentNotes,
+      ...(draft.equipmentNotes ?? {}),
+    },
     backstory: {
       ...empty.backstory,
       ...(draft.backstory ?? {}),
