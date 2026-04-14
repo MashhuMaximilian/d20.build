@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
+import { MarkdownEditor } from "@/components/markdown-editor";
 import type { CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem } from "@/lib/characters/types";
 import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
 import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
@@ -113,7 +114,6 @@ export function EquipmentStep({
   const [inventorySearch, setInventorySearch] = useState("");
   const [catalogItems, setCatalogItems] = useState<EquipmentCatalogEntry[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
-  const [lastAddedItemId, setLastAddedItemId] = useState("");
   const [customItemName, setCustomItemName] = useState("");
   const [customItemCategory, setCustomItemCategory] = useState<InventoryCategory>("misc");
   const [customItemQuantity, setCustomItemQuantity] = useState("1");
@@ -526,12 +526,11 @@ export function EquipmentStep({
               if (!entry) {
                 return;
               }
-              setLastAddedItemId(itemId);
               onAddManualItem(entry);
             }}
             onSelect={() => {}}
             preferredTags={ITEM_BROWSER_PREFERRED_TAGS}
-            selectedId={lastAddedItemId}
+            selectedId=""
             tagSectionLabel="Item type"
             tagLimit={24}
             defaultDetailView="reference"
@@ -624,28 +623,30 @@ export function EquipmentStep({
             <span className="builder-panel__label">Treasure and quest notes</span>
             <label className="builder-field">
               <span className="builder-summary__meta">Additional treasure</span>
-              <textarea
-                className="input equipment-step__notesInput equipment-step__notesInput--tall"
+              <MarkdownEditor
+                compact
                 placeholder="Loose valuables, favors owed, future loot promises, or stash notes."
+                slashContext="Additional treasure"
                 value={equipmentNotes.additionalTreasure}
-                onChange={(event) =>
+                onChange={(value) =>
                   onEquipmentNotesChange({
                     ...equipmentNotes,
-                    additionalTreasure: event.target.value,
+                    additionalTreasure: value,
                   })
                 }
               />
             </label>
             <label className="builder-field">
               <span className="builder-summary__meta">Quest items</span>
-              <textarea
-                className="input equipment-step__notesInput equipment-step__notesInput--tall"
+              <MarkdownEditor
+                compact
                 placeholder="Story artifacts, keys, letters, badges, and items tracked outside normal inventory."
+                slashContext="Quest items"
                 value={equipmentNotes.questItems}
-                onChange={(event) =>
+                onChange={(value) =>
                   onEquipmentNotesChange({
                     ...equipmentNotes,
-                    questItems: event.target.value,
+                    questItems: value,
                   })
                 }
               />

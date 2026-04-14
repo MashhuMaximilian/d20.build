@@ -1063,6 +1063,14 @@ a {
   min-height: 140px;
 }
 
+.equipment-step__manualCard .markdown-editor {
+  width: 100%;
+}
+
+.equipment-step__manualCard .markdown-editor__surface .bn-editor {
+  min-height: 148px;
+}
+
 .leveling-step {
   display: grid;
   grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);

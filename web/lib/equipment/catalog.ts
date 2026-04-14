@@ -227,6 +227,7 @@ function humanizeSupportTag(tag: string) {
   return tag
     .replace(/^ID_INTERNAL_/, "")
     .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^INTERNAL_/, "")
     .replace(/^WEAPON_CATEGORY_/, "")
     .replace(/^WEAPON_PROPERTY_/, "")
     .replace(/^WEAPON_GROUP_/, "")
@@ -235,6 +236,56 @@ function humanizeSupportTag(tag: string) {
     .replaceAll("_", " ")
     .toLowerCase()
     .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function humanizeMultiValue(value: string) {
+  return value
+    .split(/\s*(?:,|\|\|)\s*/g)
+    .map((entry) => cleanValue(entry))
+    .filter((entry): entry is string => Boolean(entry))
+    .map(humanizeSupportTag)
+    .join(", ");
+}
+
+function getWeaponBaseDetails(value: string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  const parts = value
+    .split(/\s*(?:,|\|\|)\s*/g)
+    .map((entry) => cleanValue(entry))
+    .filter((entry): entry is string => Boolean(entry));
+
+  const weaponGroups = parts
+    .filter((entry) => entry.includes("WEAPON_GROUP"))
+    .map(humanizeSupportTag);
+  const damageTypes = parts
+    .filter((entry) => entry.includes("DAMAGE_TYPE"))
+    .map(humanizeSupportTag);
+  const remainder = parts
+    .filter((entry) => !entry.includes("WEAPON_GROUP") && !entry.includes("DAMAGE_TYPE"))
+    .map(humanizeSupportTag);
+
+  return [
+    weaponGroups.length ? `Base weapon group: ${weaponGroups.join(", ")}` : "",
+    damageTypes.length ? `Damage type: ${damageTypes.join(", ")}` : "",
+    remainder.length ? `Base weapon: ${remainder.join(", ")}` : "",
+  ].filter(Boolean);
+}
+
+function getArmorBaseDetails(value: string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  const normalized = value.trim();
+  if (normalized === "Shield") {
+    return ["Base armor: Shield"];
+  }
+
+  const humanized = humanizeMultiValue(normalized);
+  return humanized ? [`Base armor: ${humanized}`] : [];
 }
 
 function getPropertyLines(supports: string[]) {
@@ -250,9 +301,11 @@ function getPropertyLines(supports: string[]) {
 
 function getMechanicalBreakdown(input: {
   elementType: string;
+  name?: string;
   setters: SetterEntry[];
   supports: string[];
   rawCategory?: string;
+  rawSubtype?: string;
   rarity?: string;
   cost?: string;
   weight?: string;
@@ -267,26 +320,50 @@ function getMechanicalBreakdown(input: {
         .join(" / ")
     : "";
   const rangeLine = getFirstSetterValue(input.setters, "range");
+  const versatileLine = getFirstSetterValue(input.setters, "versatile");
   const enhancementLine = getFirstSetterValue(input.setters, "enhancement");
   const weaponBase = getFirstSetterValue(input.setters, "weapon");
   const armorBase = getFirstSetterValue(input.setters, "armor");
+  const armorClass = getFirstSetterValue(input.setters, "armorClass");
   const keywords = getFirstSetterValue(input.setters, "keywords");
   const properties = getPropertyLines(input.supports);
+  const weaponBaseDetails = getWeaponBaseDetails(weaponBase);
+  const armorBaseDetails = getArmorBaseDetails(armorBase);
+  const isShield =
+    input.rawSubtype?.toLowerCase().includes("shield") ||
+    armorBase === "Shield" ||
+    armorBase?.includes("ARMOR_GROUP_SHIELD") ||
+    input.name?.toLowerCase().includes("shield");
+  const attunementLine =
+    input.attunement?.toLowerCase() === "true"
+      ? "Attunement: Required"
+      : input.attunement
+        ? `Attunement: ${input.attunement}`
+        : "";
+  const shieldBonusLine = isShield && armorClass ? `Base AC bonus: ${armorClass}` : "";
+  const shieldEnhancementLine =
+    isShield && enhancementLine ? `Additional AC bonus: +${enhancementLine}` : "";
+  const armorEnhancementLine =
+    !isShield && armorBase && enhancementLine ? `Armor bonus: +${enhancementLine}` : "";
 
   return [
     input.rawCategory ? `Category: ${input.rawCategory}` : "",
     damageLine ? `Damage: ${damageLine}` : "",
+    versatileLine ? `Versatile: ${versatileLine}` : "",
     rangeLine ? `Range: ${rangeLine}` : "",
-    enhancementLine ? `Enhancement: +${enhancementLine}` : "",
-    weaponBase ? `Base weapon: ${weaponBase}` : "",
-    armorBase ? `Base armor: ${humanizeSupportTag(armorBase)}` : "",
+    !isShield && enhancementLine ? `Enhancement: +${enhancementLine}` : "",
+    ...weaponBaseDetails,
+    ...armorBaseDetails,
+    shieldBonusLine,
+    shieldEnhancementLine,
+    armorEnhancementLine,
     keywords ? `Keywords: ${keywords}` : "",
     ...properties,
     input.rarity ? `Rarity: ${input.rarity}` : "Mundane",
     input.cost ? `Cost: ${input.cost}` : "",
     input.weight ? `Weight: ${input.weight}` : "",
     input.slot ? `Slot: ${input.slot}` : "",
-    input.attunement ? `Attunement: ${input.attunement}` : "",
+    attunementLine,
     input.elementType ? `Item type: ${input.elementType}` : "",
   ].filter(Boolean);
 }
@@ -358,9 +435,11 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
   ].filter(Boolean);
   const mechanicsLines = getMechanicalBreakdown({
     elementType: item.type,
+    name: item.name,
     setters: item.setters,
     supports: [...item.supports],
     rawCategory,
+    rawSubtype,
     rarity,
     cost,
     weight,
@@ -487,11 +566,13 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
   ].filter(Boolean);
   const mechanicsLines = getMechanicalBreakdown({
     elementType: element.element_type,
+    name: element.name,
     setters: setterEntries,
     supports: Array.isArray(element.supports)
       ? element.supports.filter((entry): entry is string => typeof entry === "string")
       : [],
     rawCategory,
+    rawSubtype,
     rarity,
     cost,
     weight,

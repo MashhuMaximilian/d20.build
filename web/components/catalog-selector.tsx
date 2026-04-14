@@ -531,7 +531,7 @@ export function CatalogSelector({
       return;
     }
 
-    if (selectedId && selectedId !== previewId) {
+    if (!actionMode && selectedId && selectedId !== previewId) {
       setPreviewId(selectedId);
       return;
     }
@@ -539,7 +539,7 @@ export function CatalogSelector({
     if (!previewItem && sortedItems[0]) {
       setPreviewId(sortedItems[0].id);
     }
-  }, [items, previewId, previewItem, selectedId, sortedItems]);
+  }, [actionMode, items, previewId, previewItem, selectedId, sortedItems]);
 
   useEffect(() => {
     if (selectedId) {
