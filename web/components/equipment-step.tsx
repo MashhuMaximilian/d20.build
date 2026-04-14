@@ -67,6 +67,10 @@ const ITEM_BROWSER_PREFERRED_TAGS = [
   "Miscellaneous",
 ];
 
+function getEquipmentCatalogCardId(item: EquipmentCatalogEntry) {
+  return `${item.origin}::${item.sourceUrl || item.source}::${item.id}`;
+}
+
 export function EquipmentStep({
   plan,
   mode,
@@ -149,7 +153,7 @@ export function EquipmentStep({
       catalogItems.map((item) => {
         const ownedCount = manualItemCounts.get(item.id) ?? 0;
         return {
-          id: item.id,
+          id: getEquipmentCatalogCardId(item),
           name: item.name,
           description: item.description,
           detailHtml: item.detailHtml,
@@ -489,7 +493,7 @@ export function EquipmentStep({
             items={itemCatalogCards}
             label="Item"
             onAction={(itemId) => {
-              const entry = catalogItems.find((item) => item.id === itemId);
+              const entry = catalogItems.find((item) => getEquipmentCatalogCardId(item) === itemId);
               if (!entry) {
                 return;
               }
