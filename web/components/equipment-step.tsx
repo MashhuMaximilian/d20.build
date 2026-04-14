@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import type { CharacterCurrency, CharacterInventoryItem } from "@/lib/characters/types";
+import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
+import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
 import type { EquipmentAcquisitionMode } from "@/lib/equipment/inventory";
 import { getCurrencyTotalInGp, summarizeInventory } from "@/lib/equipment/inventory";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
@@ -20,6 +23,7 @@ type EquipmentStepProps = {
   onToggleEquipped: (itemId: string) => void;
   onToggleAttuned: (itemId: string) => void;
   onRemoveItem: (itemId: string) => void;
+  onAddManualItem: (entry: EquipmentCatalogEntry) => void;
 };
 
 type InventoryView = "all" | "equipped" | "attuned";
@@ -48,10 +52,39 @@ export function EquipmentStep({
   onToggleEquipped,
   onToggleAttuned,
   onRemoveItem,
+  onAddManualItem,
 }: EquipmentStepProps) {
   const [inventoryView, setInventoryView] = useState<InventoryView>("all");
   const [inventorySearch, setInventorySearch] = useState("");
+  const [catalogItems, setCatalogItems] = useState<EquipmentCatalogEntry[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [lastAddedItemId, setLastAddedItemId] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCatalog() {
+      setCatalogLoading(true);
+      try {
+        const entries = await getMergedEquipmentCatalog();
+        if (!active) {
+          return;
+        }
+        setCatalogItems(entries);
+      } finally {
+        if (active) {
+          setCatalogLoading(false);
+        }
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const visibleInventoryItems = useMemo(() => {
     const query = inventorySearch.trim().toLowerCase();
@@ -71,6 +104,50 @@ export function EquipmentStep({
 
   const availableClassGroups = plan.choiceGroups.filter((group) => group.source === "class");
   const availableBackgroundGroups = plan.choiceGroups.filter((group) => group.source === "background");
+
+  const manualItemCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    inventoryItems.forEach((item) => {
+      if (item.source !== "manual") {
+        return;
+      }
+      counts.set(item.id.replace(/^manual::/, ""), item.quantity);
+    });
+    return counts;
+  }, [inventoryItems]);
+
+  const itemCatalogCards = useMemo<CatalogItem[]>(
+    () =>
+      catalogItems.map((item) => {
+        const ownedCount = manualItemCounts.get(item.id) ?? 0;
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          detailHtml: item.detailHtml,
+          meta: item.family,
+          origin: item.origin,
+          source: item.source,
+          filterTags: item.filterTags,
+          detailTags: item.detailTags,
+          summaryLines: item.summaryLines,
+          impactLines: [
+            ownedCount ? `Owned ${ownedCount}` : "Not owned",
+            ...item.impactLines,
+          ],
+          mechanicsLines: [
+            item.elementType,
+            item.rawCategory ? `Category: ${item.rawCategory}` : "",
+            item.rarity ? `Rarity: ${item.rarity}` : "",
+            item.cost ? `Cost: ${item.cost}` : "",
+            item.weight ? `Weight: ${item.weight}` : "",
+            item.slot ? `Slot: ${item.slot}` : "",
+            item.attunement ? `Attunement: ${item.attunement}` : "",
+          ].filter(Boolean),
+        };
+      }),
+    [catalogItems, manualItemCounts],
+  );
 
   return (
     <div className="equipment-step">
@@ -359,6 +436,35 @@ export function EquipmentStep({
           </div>
         </aside>
       </div>
+
+      <section className="equipment-step__panel">
+        <div className="equipment-step__groupHeader">
+          <span className="builder-panel__label">Item browser</span>
+          <p className="builder-summary__meta">
+            Browse mundane gear, magic items, wondrous items, and imported equipment sources, then add what your table grants.
+          </p>
+        </div>
+        {catalogLoading ? (
+          <p className="builder-summary__meta">Loading item catalog…</p>
+        ) : (
+          <CatalogSelector
+            actionLabel="Add to inventory"
+            emptyMessage="No matching equipment entries."
+            items={itemCatalogCards}
+            label="Item"
+            onAction={(itemId) => {
+              const entry = catalogItems.find((item) => item.id === itemId);
+              if (!entry) {
+                return;
+              }
+              setLastAddedItemId(itemId);
+              onAddManualItem(entry);
+            }}
+            onSelect={() => {}}
+            selectedId={lastAddedItemId}
+          />
+        )}
+      </section>
     </div>
   );
 }

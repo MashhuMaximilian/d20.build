@@ -56,13 +56,22 @@ export type CharacterInventoryItem = {
   name: string;
   quantity: number;
   category: string;
+  family?: string;
+  itemType?: string;
   source: string;
   sourceLabel: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  rarity?: string;
+  cost?: string;
+  weight?: string;
+  slot?: string;
   equippable: boolean;
   equipped: boolean;
   attunable: boolean;
   attuned: boolean;
   notes?: string;
+  detailHtml?: string;
 };
 
 export type CharacterDraft = {
@@ -275,13 +284,22 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
             name: item.name,
             quantity: Math.max(1, Math.floor(item.quantity ?? 1)),
             category: item.category ?? "misc",
+            family: typeof item.family === "string" ? item.family : undefined,
+            itemType: typeof item.itemType === "string" ? item.itemType : undefined,
             source: item.source ?? "starting-fixed",
             sourceLabel: item.sourceLabel ?? "",
+            sourceName: typeof item.sourceName === "string" ? item.sourceName : undefined,
+            sourceUrl: typeof item.sourceUrl === "string" ? item.sourceUrl : undefined,
+            rarity: typeof item.rarity === "string" ? item.rarity : undefined,
+            cost: typeof item.cost === "string" ? item.cost : undefined,
+            weight: typeof item.weight === "string" ? item.weight : undefined,
+            slot: typeof item.slot === "string" ? item.slot : undefined,
             equippable: Boolean(item.equippable),
             equipped: Boolean(item.equipped),
             attunable: Boolean(item.attunable),
             attuned: Boolean(item.attuned) && Boolean(item.attunable),
             notes: typeof item.notes === "string" ? item.notes : undefined,
+            detailHtml: typeof item.detailHtml === "string" ? item.detailHtml : undefined,
           }))
       : [],
     backstory: {

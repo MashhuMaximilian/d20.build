@@ -34,9 +34,11 @@ function getSourceFilterLabel(item: CatalogItem) {
 }
 
 type CatalogSelectorProps = {
+  actionLabel?: string;
   emptyMessage?: string;
   items: CatalogItem[];
   label: string;
+  onAction?: (id: string) => void;
   onSelect: (id: string) => void;
   selectedId: string;
 };
@@ -259,12 +261,15 @@ export function getPreviewText(text: string) {
 }
 
 export function CatalogSelector({
+  actionLabel,
   emptyMessage = "No matching entries.",
   items,
   label,
+  onAction,
   onSelect,
   selectedId,
 }: CatalogSelectorProps) {
+  const actionMode = typeof onAction === "function";
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "built-in" | "imported">("all");
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
@@ -766,7 +771,9 @@ export function CatalogSelector({
                       type="button"
                       onClick={() => {
                         setPreviewId(item.id);
-                        onSelect(item.id);
+                        if (!actionMode) {
+                          onSelect(item.id);
+                        }
                         setActivePane("detail");
                       }}
                     >
@@ -840,7 +847,9 @@ export function CatalogSelector({
                         type="button"
                         onClick={() => {
                           setPreviewId(item.id);
-                          onSelect(item.id);
+                          if (!actionMode) {
+                            onSelect(item.id);
+                          }
                           setActivePane("detail");
                         }}
                       >
@@ -876,6 +885,17 @@ export function CatalogSelector({
                 <h3 className="catalog-selector__detailTitle">{previewItem.name}</h3>
                 {previewItem.source ? (
                   <p className="catalog-selector__detailMeta">Source: {previewItem.source}</p>
+                ) : null}
+                {actionMode && actionLabel ? (
+                  <div className="catalog-selector__detailActions">
+                    <button
+                      className="button button--primary button--compact"
+                      type="button"
+                      onClick={() => onAction?.(previewItem.id)}
+                    >
+                      {actionLabel}
+                    </button>
+                  </div>
                 ) : null}
               </div>
 

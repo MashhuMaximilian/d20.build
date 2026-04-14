@@ -35,7 +35,6 @@ import {
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
   buildStartingInventoryFromPlan,
-  createEmptyCurrency,
 } from "@/lib/equipment/inventory";
 import {
   getMissingEquipmentChoiceCount,
@@ -2631,8 +2630,6 @@ export function BuilderEditor({
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,
-                  inventoryItems: [],
-                  inventoryCurrency: createEmptyCurrency(),
                 })}
               onGoldOverrideChange={(value) =>
                 updateDraft({
@@ -2669,9 +2666,55 @@ export function BuilderEditor({
                   ),
                 })}
               onRemoveItem={(itemId) =>
+                updateDraft(
+                  draft.inventoryItems.some((item) => item.id === itemId && item.source === "manual")
+                    ? {
+                        inventoryItems: draft.inventoryItems.filter((item) => item.id !== itemId),
+                      }
+                    : {
+                        removedInventoryItemIds: [...draft.removedInventoryItemIds, itemId],
+                      },
+                )}
+              onAddManualItem={(entry) => {
+                const itemId = `manual::${entry.id}`;
+                const existing = draft.inventoryItems.find((item) => item.id === itemId);
+
                 updateDraft({
-                  removedInventoryItemIds: [...draft.removedInventoryItemIds, itemId],
-                })}
+                  inventoryItems: existing
+                    ? draft.inventoryItems.map((item) =>
+                        item.id === itemId
+                          ? {
+                              ...item,
+                              quantity: item.quantity + 1,
+                            }
+                          : item,
+                      )
+                    : [
+                        ...draft.inventoryItems,
+                        {
+                          id: itemId,
+                          name: entry.name,
+                          quantity: 1,
+                          category: entry.category,
+                          family: entry.family,
+                          itemType: entry.elementType,
+                          source: "manual",
+                          sourceLabel: "Manual addition",
+                          sourceName: entry.source,
+                          sourceUrl: entry.sourceUrl,
+                          rarity: entry.rarity,
+                          cost: entry.cost,
+                          weight: entry.weight,
+                          slot: entry.slot,
+                          equippable: entry.equippable,
+                          equipped: false,
+                          attunable: entry.attunable,
+                          attuned: false,
+                          detailHtml: entry.detailHtml,
+                        },
+                      ],
+                });
+              }}
             />
           </section>
         );

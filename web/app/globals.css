@@ -1198,6 +1198,13 @@ a {
   gap: 6px;
 }
 
+.catalog-selector__detailActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .catalog-selector__headingBlock {
   display: grid;
   gap: 8px;

@@ -20,6 +20,7 @@ export type InventoryCategory =
   | "misc";
 
 export type InventoryItemSource = "class" | "background" | "starting-fixed" | "starting-choice" | "gold";
+export type InventoryItemSourceKind = InventoryItemSource | "manual";
 
 type ParsedItem = {
   name: string;
@@ -82,6 +83,22 @@ export function categorizeInventoryItem(name: string): InventoryCategory {
   return rule?.category ?? "misc";
 }
 
+export function isInventoryItemAttunable(
+  attunement?: string | null,
+  rarity?: string | null,
+  name?: string,
+) {
+  if (attunement && attunement.trim()) {
+    return true;
+  }
+
+  if (!name) {
+    return false;
+  }
+
+  return /\brequires attunement\b/i.test(name) || /\battunement\b/i.test(rarity ?? "");
+}
+
 export function getInventoryItemKey(name: string, sourceLabel: string) {
   return `${slugify(sourceLabel)}::${slugify(name)}`;
 }
@@ -114,6 +131,9 @@ export function buildStartingInventoryFromPlan(
   const removed = new Set(removedItemIds);
   const items: CharacterInventoryItem[] = [];
   const currency = createEmptyCurrency();
+  const manualItems = existingItems.filter(
+    (item) => item.source === "manual" || item.source === "gold",
+  );
 
   if (mode === "gold" && plan.goldAlternative) {
     currency.gp += goldOverrideGp ?? plan.goldAlternative.averageGp;
@@ -170,12 +190,29 @@ export function buildStartingInventoryFromPlan(
       category,
       source: entry.source,
       sourceLabel: entry.label,
+      sourceName: previous?.sourceName,
+      sourceUrl: previous?.sourceUrl,
+      rarity: previous?.rarity,
+      cost: previous?.cost,
+      weight: previous?.weight,
+      slot: previous?.slot,
+      family: previous?.family,
+      itemType: previous?.itemType,
       equippable: previous?.equippable ?? isInventoryItemEquippable(parsed.name, category),
       equipped: previous?.equipped ?? false,
       attunable: previous?.attunable ?? false,
       attuned: previous?.attuned ?? false,
       notes: previous?.notes,
+      detailHtml: previous?.detailHtml,
     });
+  }
+
+  for (const item of manualItems) {
+    if (removed.has(item.id)) {
+      continue;
+    }
+
+    items.push(item);
   }
 
   return {
