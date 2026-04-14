@@ -16,12 +16,20 @@ export type BuiltInItemElement = {
   weight?: string;
   slot?: string;
   attunement?: string;
+  setters: {
+    name: string;
+    value: string;
+    type?: string;
+    modifier?: string;
+    alt?: string;
+  }[];
 };
 
 export function getBuiltInSrdItems(): BuiltInItemElement[] {
   return BUILT_IN_SRD_ITEM_ELEMENTS.map((item) => ({
     ...item,
     supports: [...item.supports],
+    setters: item.setters.map((setter) => ({ ...setter })),
   })) as BuiltInItemElement[];
 }
 

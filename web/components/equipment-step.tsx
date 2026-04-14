@@ -39,6 +39,34 @@ function titleCaseCategory(value: string) {
   return value.replace(/-/g, " ").replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
+const ITEM_BROWSER_PREFERRED_TAGS = [
+  "Adventuring Gear",
+  "Treasure",
+  "Equipment Packs",
+  "Tools",
+  "Musical Instruments",
+  "Armor",
+  "Magic Armor",
+  "Weapons",
+  "Magic Weapons",
+  "Ammunition",
+  "Spellcasting Focus",
+  "Wondrous Items",
+  "Supernatural Gifts",
+  "Staffs",
+  "Rods",
+  "Wands",
+  "Rings",
+  "Potions",
+  "Poison",
+  "Scrolls",
+  "Mounts & Vehicles",
+  "Alchemical Formulas",
+  "Reagents",
+  "Explosives",
+  "Miscellaneous",
+];
+
 export function EquipmentStep({
   plan,
   mode,
@@ -135,15 +163,7 @@ export function EquipmentStep({
             ownedCount ? `Owned ${ownedCount}` : "Not owned",
             ...item.impactLines,
           ],
-          mechanicsLines: [
-            item.elementType,
-            item.rawCategory ? `Category: ${item.rawCategory}` : "",
-            item.rarity ? `Rarity: ${item.rarity}` : "",
-            item.cost ? `Cost: ${item.cost}` : "",
-            item.weight ? `Weight: ${item.weight}` : "",
-            item.slot ? `Slot: ${item.slot}` : "",
-            item.attunement ? `Attunement: ${item.attunement}` : "",
-          ].filter(Boolean),
+          mechanicsLines: item.mechanicsLines,
         };
       }),
     [catalogItems, manualItemCounts],
@@ -151,8 +171,14 @@ export function EquipmentStep({
 
   return (
     <div className="equipment-step">
-      <div className="equipment-step__hero">
-        <section className="equipment-step__panel equipment-step__panel--mode">
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Acquisition and snapshot</span>
+          <small>{mode === "gold" ? "Gold flow active" : "Starting gear flow active"}</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
+          <div className="equipment-step__hero">
+            <section className="equipment-step__panel equipment-step__panel--mode">
           <span className="builder-panel__label">Acquisition mode</span>
           <div className="equipment-step__modeToggle">
             <button
@@ -206,9 +232,9 @@ export function EquipmentStep({
               Use guided starting gear to keep class and background packages explicit.
             </p>
           )}
-        </section>
+            </section>
 
-        <section className="equipment-step__panel equipment-step__panel--summary">
+            <section className="equipment-step__panel equipment-step__panel--summary">
           <span className="builder-panel__label">Inventory snapshot</span>
           <div className="equipment-step__stats">
             <article className="equipment-step__statCard">
@@ -242,11 +268,19 @@ export function EquipmentStep({
               ))}
             </div>
           ) : null}
-        </section>
-      </div>
+            </section>
+          </div>
+        </div>
+      </details>
 
-      <div className="equipment-step__layout">
-        <details className="equipment-step__accordion equipment-step__accordion--root" open>
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Starting gear and owned inventory</span>
+          <small>{summary.uniqueItems} owned entries</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
+          <div className="equipment-step__layout">
+            <details className="equipment-step__accordion equipment-step__accordion--root" open>
           <summary className="equipment-step__accordionSummary">
             <span>Starting gear builder</span>
             <small>
@@ -342,9 +376,9 @@ export function EquipmentStep({
               ) : null}
             </div>
           </div>
-        </details>
+            </details>
 
-        <aside className="equipment-step__panel equipment-step__panel--inventory">
+            <aside className="equipment-step__panel equipment-step__panel--inventory">
           <div className="equipment-step__inventoryHeader">
             <div>
               <span className="builder-panel__label">Inventory</span>
@@ -434,8 +468,10 @@ export function EquipmentStep({
               </div>
             </div>
           </div>
-        </aside>
-      </div>
+            </aside>
+          </div>
+        </div>
+      </details>
 
       <section className="equipment-step__panel">
         <div className="equipment-step__groupHeader">
@@ -461,7 +497,11 @@ export function EquipmentStep({
               onAddManualItem(entry);
             }}
             onSelect={() => {}}
+            preferredTags={ITEM_BROWSER_PREFERRED_TAGS}
             selectedId={lastAddedItemId}
+            tagSectionLabel="Item type"
+            tagLimit={24}
+            defaultDetailView="reference"
           />
         )}
       </section>

@@ -14,7 +14,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ACID_VIAL",
@@ -31,7 +49,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ADAMANTINE_ARMOR",
@@ -50,7 +86,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "medium, heavy"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "armor",
+        "value": "(ID_INTERNAL_ARMOR_GROUP_MEDIUM||ID_INTERNAL_ARMOR_GROUP_HEAVY),!Hide"
+      },
+      {
+        "name": "name-format",
+        "value": "Adamantine {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_AIRSHIP",
@@ -69,7 +139,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "20000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ALCHEMISTS_FIRE_FLASK",
@@ -86,7 +174,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_ALCHEMISTS_SUPPLIES",
@@ -103,7 +209,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "8 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "8 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_ALCHEMISTS_SUPPLIES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ALCHEMY_JUG",
@@ -120,7 +248,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "12 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "12 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_ALEXANDRITE",
@@ -137,7 +287,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_AMBER",
@@ -154,7 +326,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "100",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "100"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_AMETHYST",
@@ -171,7 +365,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "100",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "100"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMMUNITION_1",
@@ -188,7 +404,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ammunition"
+      },
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMMUNITION_2",
@@ -205,7 +447,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ammunition"
+      },
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMMUNITION_3",
@@ -222,7 +490,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ammunition"
+      },
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_AMULET",
@@ -239,7 +533,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "container",
+        "value": "Holy Symbol"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMULET_OF_HEALTH",
@@ -256,7 +572,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "constitution"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMULET_OF_PROOF_AGAINST_DETECTION_AND_LOCATION",
@@ -273,7 +623,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "divination, scry"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_AMULET_OF_THE_PLANES",
@@ -290,7 +674,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "necklace"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ANIMATED_SHIELD",
@@ -307,7 +725,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_ANSTRUTH_HARP",
@@ -324,7 +772,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_ANTIMATTER_RIFLE",
@@ -346,7 +828,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "10 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "120/360"
+      },
+      {
+        "name": "damage",
+        "value": "6d8",
+        "type": "necrotic"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_FUTURISTIC_FIREARMS_ANTIMATTER_RIFLE"
+      },
+      {
+        "name": "reload",
+        "value": "2"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ANTITOXIN_VIAL",
@@ -363,7 +880,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_APPARATUS_OF_KWALISH",
@@ -380,7 +915,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "500 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "500 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_AQUAMARINE",
@@ -397,7 +954,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_INVULNERABILITY",
@@ -414,7 +993,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "plate"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "armor",
+        "value": "Plate"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_ACID",
@@ -431,7 +1044,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "acid"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Acid Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_COLD",
@@ -448,7 +1099,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cold"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Cold Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_FIRE",
@@ -465,7 +1154,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "fire"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Fire Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_FORCE",
@@ -482,7 +1209,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "force"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Force Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_LIGHTNING",
@@ -499,7 +1264,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "lightning"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Lightning Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_NECROTIC",
@@ -516,7 +1319,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "necrotic"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Necrotic Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_POISON",
@@ -533,7 +1374,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Poison Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_PSYCHIC",
@@ -550,7 +1429,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "psychic"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Psychic Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_RADIANT",
@@ -567,7 +1484,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "radiant"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Radiant Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_RESISTANCE_THUNDER",
@@ -584,7 +1539,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "thunder"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Thunder Resistance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_OF_VULNERABILITY",
@@ -601,7 +1594,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "plate, resistance"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "cursed",
+        "value": "true"
+      },
+      {
+        "name": "armor",
+        "value": "Plate"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_1",
@@ -618,7 +1649,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_2",
@@ -635,7 +1700,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARMOR_3",
@@ -652,7 +1751,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "strength",
+        "value": "<set name=\"stealth\" />\n\t\t\t<set name=\"supports\" />\n\t\t\t<set name=\"enhancement\">3"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT|ID_INTERNAL_ARMOR_GROUP_MEDIUM|ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ARROW",
@@ -669,7 +1802,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1/20 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1/20 lb."
+      },
+      {
+        "name": "type",
+        "value": "Ammunition"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARROW_OF_SLAYING",
@@ -686,7 +1841,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "arrow"
+      },
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ARROWCATCHING_SHIELD",
@@ -703,7 +1880,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_ASSASSINS_BLOOD",
@@ -720,7 +1927,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "150",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,ingest"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "150"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_AZURITE",
@@ -737,7 +1966,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BACKPACK",
@@ -754,7 +2005,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_BEANS",
@@ -771,7 +2036,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_DEVOURING",
@@ -788,7 +2075,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "extradimensional"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_HOLDING",
@@ -805,7 +2118,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "15 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "15 lb."
+      },
+      {
+        "name": "stash",
+        "value": "true"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_TRICKS_GRAY",
@@ -822,7 +2161,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_TRICKS_RUST",
@@ -839,7 +2200,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BAG_OF_TRICKS_TAN",
@@ -856,7 +2239,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_BAGPIPES",
@@ -875,7 +2280,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "6 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "6 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_BAGPIPES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BALLBEARINGS",
@@ -892,7 +2323,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BANDED_AGATE",
@@ -909,7 +2358,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BARDING",
@@ -926,7 +2397,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BARREL",
@@ -943,7 +2428,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "70 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "70 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BASKET",
@@ -960,7 +2459,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "4",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "4"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_BATTLEAXE",
@@ -982,7 +2495,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "slashing"
+      },
+      {
+        "name": "versatile",
+        "value": "1d10"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_BATTLEAXE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BEAD_OF_FORCE",
@@ -999,7 +2543,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BEDROLL",
@@ -1016,7 +2582,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "7 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_8",
@@ -1033,7 +2617,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gold"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BELL",
@@ -1050,7 +2656,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_CLOUD_GIANT_STRENGTH",
@@ -1067,7 +2691,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_DWARVENKIND",
@@ -1084,7 +2742,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "constitution, persuasion"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_FIRE_GIANT_STRENGTH",
@@ -1101,7 +2793,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_FROST_GIANT_STRENGTH",
@@ -1118,7 +2844,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_HILL_GIANT_STRENGTH",
@@ -1135,7 +2895,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "strength"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_STONE_GIANT_STRENGTH",
@@ -1152,7 +2946,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BELT_OF_STORM_GIANT_STRENGTH",
@@ -1169,7 +2997,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "waist",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "waist"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BERSERKER_AXE",
@@ -1186,7 +3048,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any axe"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "cursed",
+        "value": "true"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_AXES"
+      },
+      {
+        "name": "name-format",
+        "value": "Berserker {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BIT_AND_BRIDLE",
@@ -1203,7 +3103,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLACK_OPAL",
@@ -1220,7 +3134,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1000",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "1000"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLACK_PEARL",
@@ -1237,7 +3173,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLACK_SAPPHIRE",
@@ -1254,7 +3212,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5000",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "5000"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_5",
@@ -1271,7 +3251,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,silver"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BLANKET",
@@ -1288,7 +3290,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_HEALTH",
@@ -1305,7 +3325,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_MAGIC_RESISTANCE",
@@ -1322,7 +3356,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_PROTECTION",
@@ -1339,7 +3387,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_UNDERSTANDING",
@@ -1356,7 +3418,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_VALHALLA",
@@ -1373,7 +3449,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_WEAPON_ENHANCEMENT",
@@ -1390,7 +3480,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BLESSING_OF_WOUND_CLOSURE",
@@ -1407,7 +3511,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Blessing"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BLOCKANDTACKLE",
@@ -1424,7 +3542,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLOODSTONE",
@@ -1441,7 +3577,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_BLOWGUN",
@@ -1463,7 +3621,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "25/100"
+      },
+      {
+        "name": "damage",
+        "value": "1",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_BLOWGUN"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BLOWGUNNEEDLE",
@@ -1480,7 +3669,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1/50 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1/50 lb."
+      },
+      {
+        "name": "type",
+        "value": "Ammunition"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLUE_QUARTZ",
@@ -1497,7 +3708,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLUE_SAPPHIRE",
@@ -1514,7 +3747,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1000",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "1000"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_BLUE_SPINEL",
@@ -1531,7 +3786,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_BOMB",
@@ -1548,7 +3825,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "150",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "150"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BOOK",
@@ -1565,7 +3860,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_COMBAT_PROWESS",
@@ -1582,7 +3895,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_DIMENSIONAL_TRAVEL",
@@ -1599,7 +3926,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_FATE",
@@ -1616,7 +3957,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_FORTITUDE",
@@ -1633,7 +3988,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_HIGH_MAGIC",
@@ -1650,7 +4019,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_IMMORTALITY",
@@ -1667,7 +4050,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_INVINCIBILITY",
@@ -1684,7 +4081,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_IRRESISTIBLE_OFFENSE",
@@ -1701,7 +4112,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_LUCK",
@@ -1718,7 +4143,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_MAGIC_RESISTANCE",
@@ -1735,7 +4174,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_PEERLESS_AIM",
@@ -1752,7 +4205,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_PERFECT_HEALTH",
@@ -1769,7 +4236,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_PLANAR_TRAVEL",
@@ -1786,7 +4267,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_QUICK_CASTING",
@@ -1803,7 +4298,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_RECOVERY",
@@ -1820,7 +4329,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_RESILIENCE",
@@ -1837,7 +4360,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_SKILL_PROFICIENCY",
@@ -1854,7 +4391,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_SPEED",
@@ -1871,7 +4422,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_SPELL_MASTERY",
@@ -1888,7 +4453,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_SPELL_RECALL",
@@ -1905,7 +4484,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_THE_FIRE_SOUL",
@@ -1922,7 +4515,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_THE_NIGHT_SPIRIT",
@@ -1939,7 +4546,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_THE_STORMBORN",
@@ -1956,7 +4577,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_THE_UNFETTERED",
@@ -1973,7 +4608,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_TRUESIGHT",
@@ -1990,7 +4639,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOON_OF_UNDETECTABILITY",
@@ -2007,7 +4670,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Epic Boon"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOOTS_OF_ELVENKIND",
@@ -2024,7 +4701,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "stealth"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOOTS_OF_LEVITATION",
@@ -2041,7 +4748,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOOTS_OF_SPEED",
@@ -2058,7 +4795,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOOTS_OF_STRIDING_AND_SPRINGING",
@@ -2075,7 +4842,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "speed, jump"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOOTS_OF_THE_WINTERLANDS",
@@ -2092,7 +4893,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "resistance, cold"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_6",
@@ -2109,7 +4944,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gold,amethysts"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BOTTLE_GLASS",
@@ -2126,7 +4983,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BOWL_OF_COMMANDING_WATER_ELEMENTALS",
@@ -2143,7 +5018,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_9",
@@ -2160,7 +5061,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,turquoise"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BRACERS_OF_ARCHERY",
@@ -2177,7 +5100,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "arms",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "longbow, shortbow, ranged, damage"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "arms"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BRACERS_OF_DEFENSE",
@@ -2194,7 +5151,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "arms",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "armor"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "arms"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_8",
@@ -2211,7 +5202,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,jade"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BRAZIER_OF_COMMANDING_FIRE_ELEMENTALS",
@@ -2228,7 +5241,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_MEDIUM_BREASTPLATE",
@@ -2247,7 +5286,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "400",
     "weight": "20 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "400"
+      },
+      {
+        "name": "weight",
+        "value": "20 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Medium"
+      },
+      {
+        "name": "armorClass",
+        "value": "14 + Dex modifier (max 2)"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_BREASTPLATE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_BREWERS_SUPPLIES",
@@ -2264,7 +5333,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "9 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "9 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_BREWERS_SUPPLIES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_5",
@@ -2281,7 +5372,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BROOCH_OF_SHIELDING",
@@ -2298,7 +5411,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "resistance, force, immunity"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_BROOM_OF_FLYING",
@@ -2315,7 +5462,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "fly"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_BUCKET",
@@ -2332,7 +5505,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_BULLET",
@@ -2349,7 +5540,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "3",
     "weight": "1/5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "3"
+      },
+      {
+        "name": "weight",
+        "value": "1/5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_BULLET_MODERN",
@@ -2366,7 +5575,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1/10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1/10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_BURGLARS_PACK",
@@ -2383,7 +5610,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "16",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "16"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_BURNT_OTHUR_FUMES",
@@ -2400,7 +5641,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "500",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,inhale"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "500"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_CALLIGRAPHERS_SUPPLIES",
@@ -2417,7 +5680,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_CALLIGRAPHERS_SUPPLIES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CALTROPS_BAGOF20",
@@ -2434,7 +5719,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CAMEL",
@@ -2451,7 +5754,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_CANAITH_MANDOLIN",
@@ -2468,7 +5789,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CANDLE",
@@ -2485,7 +5840,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CANDLE_OF_INVOCATION",
@@ -2502,7 +5875,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CAP_OF_WATER_BREATHING",
@@ -2519,7 +5922,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CAPE_OF_THE_MOUNTEBANK",
@@ -2536,7 +5965,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "teleport"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CARNELIAN",
@@ -2553,7 +6012,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_CARPENTERS_TOOLS",
@@ -2570,7 +6051,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "8",
     "weight": "6 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "8"
+      },
+      {
+        "name": "weight",
+        "value": "6 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_CARPENTERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CARPET_OF_FLYING",
@@ -2587,7 +6090,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CARRIAGE",
@@ -2604,7 +6133,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "100",
     "weight": "600 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "100"
+      },
+      {
+        "name": "weight",
+        "value": "600 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_CARRION_CRAWLER_MUCUS",
@@ -2621,7 +6168,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "200",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,contact"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "200"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CART",
@@ -2638,7 +6207,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "200 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "200 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_CARTOGRAPHERS_TOOLS",
@@ -2655,7 +6242,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "6 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "6 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_CARTOGRAPHERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_2",
@@ -2672,7 +6281,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CASE_CROSSBOWBOLT",
@@ -2689,7 +6320,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CASE_MAPORSCROLL",
@@ -2706,7 +6351,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CENSER_OF_CONTROLLING_AIR_ELEMENTALS",
@@ -2723,7 +6382,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CHAIN_10FEET",
@@ -2740,7 +6425,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_HEAVY_CHAIN_MAIL",
@@ -2759,7 +6462,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "75",
     "weight": "55 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "75"
+      },
+      {
+        "name": "weight",
+        "value": "55 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Heavy"
+      },
+      {
+        "name": "strength",
+        "value": "13"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "16"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_CHAIN_MAIL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_MEDIUM_CHAIN_SHIRT",
@@ -2778,7 +6519,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "20 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "20 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Medium"
+      },
+      {
+        "name": "armorClass",
+        "value": "13 + Dex modifier (max 2)"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_CHAIN_SHIRT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CHALCEDONY",
@@ -2795,7 +6566,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CHALK_1PIECE",
@@ -2812,7 +6605,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CHARIOT",
@@ -2829,7 +6640,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "100 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "100 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_ANIMAL_CONJURING",
@@ -2846,7 +6675,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_DARKVISION",
@@ -2863,7 +6706,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_FEATHER_FALLING",
@@ -2880,7 +6737,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_HEROISM",
@@ -2897,7 +6768,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_RESTORATION",
@@ -2914,7 +6799,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      },
+      {
+        "name": "charges",
+        "value": "6"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_THE_SLAYER",
@@ -2931,7 +6834,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHARM_OF_VITALITY",
@@ -2948,7 +6865,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "gift",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Supernatural Gifts"
+      },
+      {
+        "name": "type",
+        "value": "Charm"
+      },
+      {
+        "name": "slot",
+        "value": "gift"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CHEST",
@@ -2965,7 +6896,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "25 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "25 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_6",
@@ -2982,7 +6927,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gold"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CHIME_OF_OPENING",
@@ -2999,7 +6966,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CHRYSOBERYL",
@@ -3016,7 +7009,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CHRYSOPRASE",
@@ -3033,7 +7048,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CIRCLET_OF_BLASTING",
@@ -3050,7 +7087,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "fire"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CITRINE",
@@ -3067,7 +7134,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_CLI_LYRE",
@@ -3084,7 +7173,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CLIMBERSKIT",
@@ -3101,7 +7224,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "12 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "12 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_ARACHNIDA",
@@ -3118,7 +7259,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "resistance, poison"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_DISPLACEMENT",
@@ -3135,7 +7310,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_ELVENKIND",
@@ -3152,7 +7361,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak, elvenkind, perception, stealth"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_INVISIBILITY",
@@ -3169,7 +7412,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_PROTECTION",
@@ -3186,7 +7463,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak, armor, saving throw"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_THE_BAT",
@@ -3203,7 +7514,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "stealth, fly"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CLOAK_OF_THE_MANTA_RAY",
@@ -3220,7 +7565,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "speed, swim"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_4",
@@ -3237,7 +7612,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CLOTHES_COMMON",
@@ -3254,7 +7651,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CLOTHES_COSTUME",
@@ -3271,7 +7682,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CLOTHES_FINE",
@@ -3288,7 +7713,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "6 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CLOTHES_TRAVELERS",
@@ -3305,7 +7744,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_CLUB",
@@ -3327,7 +7780,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_CLUB"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_COBBLERS_TOOLS",
@@ -3344,7 +7824,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_COBBLERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_COMPONENTPOUCH",
@@ -3361,7 +7863,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_COOKS_UTENSILS",
@@ -3378,7 +7894,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "8 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "8 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_COOKS_UTENSILS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_6",
@@ -3395,7 +7933,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,silver"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_CORAL",
@@ -3412,7 +7972,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CROSSBOWBOLT",
@@ -3429,7 +8011,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1/20 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1/20 lb."
+      },
+      {
+        "name": "type",
+        "value": "Ammunition"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_CROSSBOW_HAND",
@@ -3453,7 +8057,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "75",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "75"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "30/120"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_CROSSBOW_HAND"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_CROSSBOW_HEAVY",
@@ -3478,7 +8113,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "18 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "18 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "100/400"
+      },
+      {
+        "name": "damage",
+        "value": "1d10",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_CROSSBOW_HEAVY"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_CROSSBOW_LIGHT",
@@ -3502,7 +8168,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "5 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "80/320"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_CROSSBOW_LIGHT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CROWBAR",
@@ -3519,7 +8216,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_CRYSTAL",
@@ -3536,7 +8251,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "container",
+        "value": "Arcane Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CRYSTAL_BALL",
@@ -3553,7 +8290,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scry"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CRYSTAL_BALL_OF_MIND_READING",
@@ -3570,7 +8337,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scry"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CRYSTAL_BALL_OF_TELEPATHY",
@@ -3587,7 +8384,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scry"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CRYSTAL_BALL_OF_TRUE_SEEING",
@@ -3604,7 +8431,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scry"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CUBE_OF_FORCE",
@@ -3621,7 +8478,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "36"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_CUBIC_GATE",
@@ -3638,7 +8525,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "planar"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DAERNS_INSTANT_FORTRESS",
@@ -3655,7 +8572,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_DAGGER",
@@ -3678,7 +8617,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_DAGGER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DAGGER_OF_VENOM",
@@ -3695,7 +8665,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "dagger"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "Dagger"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DANCING_SWORD",
@@ -3712,7 +8712,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "name-format",
+        "value": "Dancing {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_DART",
@@ -3734,7 +8768,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1/4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1/4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_DART"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DECANTER_OF_ENDLESS_WATER",
@@ -3751,7 +8816,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DECK_OF_ILLUSIONS",
@@ -3768,7 +8855,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DECK_OF_MANY_THINGS",
@@ -3785,7 +8894,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DEFENDER",
@@ -3802,7 +8937,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DEMON_ARMOR",
@@ -3819,7 +8988,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "plate"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "cursed",
+        "value": "true"
+      },
+      {
+        "name": "armor",
+        "value": "Plate"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_DIAMOND",
@@ -3836,7 +9047,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5000",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "5000"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_DICE_SET",
@@ -3853,7 +9086,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "game, gaming set"
+      },
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Gaming Set"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_GAMING_SET_PROFICIENCY_DICE_SET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DIMENSIONAL_SHACKLES",
@@ -3870,7 +9129,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_DIPLOMATS_PACK",
@@ -3887,7 +9172,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "39",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "39"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_DISGUISE_KIT",
@@ -3904,7 +9203,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "3 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "3 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_DISGUISE_KIT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_DONKEY",
@@ -3921,7 +9242,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "8",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "8"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_DOSS_LUTE",
@@ -3938,7 +9277,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_BLACK",
@@ -3955,7 +9328,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, acid"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_BLUE",
@@ -3972,7 +9383,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, lightning"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_BRASS",
@@ -3989,7 +9438,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, fire"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_BRONZE",
@@ -4006,7 +9493,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, lightning"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_COPPER",
@@ -4023,7 +9548,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, acid"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_GOLD",
@@ -4040,7 +9603,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, fire"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_GREEN",
@@ -4057,7 +9658,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, poison"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_RED",
@@ -4074,7 +9713,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, fire"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_SILVER",
@@ -4091,7 +9768,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, cold"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SCALE_MAIL_WHITE",
@@ -4108,7 +9823,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scale, cold"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Scale Mail"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRAGON_SLAYER",
@@ -4125,7 +9878,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_DRAGONCHESS_SET",
@@ -4142,7 +9925,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "game, gaming set"
+      },
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Gaming Set"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_GAMING_SET_PROFICIENCY_DRAGONCHESS_SET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DRIFTGLOBE",
@@ -4159,7 +9968,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "daylight"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_DROW_POISON",
@@ -4176,7 +10011,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "200",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,injure,injury"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "200"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_DRUM",
@@ -4195,7 +10052,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "6",
     "weight": "3 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "6"
+      },
+      {
+        "name": "weight",
+        "value": "3 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_DRUM"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_DULCIMER",
@@ -4214,7 +10097,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "10 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_DULCIMER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_DUNGEONEERS_PACK",
@@ -4231,7 +10140,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "12",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "12"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DUST_OF_DISAPPEARANCE",
@@ -4248,7 +10171,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "invisible"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DUST_OF_DRYNESS",
@@ -4265,7 +10214,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DUST_OF_SNEEZING_AND_CHOKING",
@@ -4282,7 +10253,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DWARVEN_PLATE",
@@ -4299,7 +10292,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "plate"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Plate"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_DWARVEN_THROWER",
@@ -4318,7 +10341,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "warhammer, dwarf"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "Warhammer"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_DYNAMITE",
@@ -4335,7 +10392,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EFREETI_BOTTLE",
@@ -4352,7 +10427,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EFREETI_CHAIN",
@@ -4369,7 +10470,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "chain"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "armor",
+        "value": "Chain Mail"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_7",
@@ -4386,7 +10521,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object, pearl"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELEMENTAL_GEM_AIR",
@@ -4403,7 +10560,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELEMENTAL_GEM_EARTH",
@@ -4420,7 +10603,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELEMENTAL_GEM_FIRE",
@@ -4437,7 +10646,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELEMENTAL_GEM_WATER",
@@ -4454,7 +10689,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ELEPHANT",
@@ -4471,7 +10732,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "200",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "200"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELIXIR_OF_HEALTH",
@@ -4488,7 +10767,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "disease"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ELVEN_CHAIN",
@@ -4505,7 +10810,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "chain, shirt"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Chain Shirt"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "name-format",
+        "value": "Elven {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_EMBLEM",
@@ -4522,7 +10865,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "container",
+        "value": "Holy Symbol"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_5",
@@ -4539,7 +10904,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_9",
@@ -4556,7 +10943,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,silk"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_EMERALD",
@@ -4573,7 +10982,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ENERGY_CELL",
@@ -4590,7 +11021,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 oz.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 oz."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_7",
@@ -4607,7 +11056,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_ENTERTAINERS_PACK",
@@ -4624,7 +11095,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "40",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "40"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_ESSENCE_OF_ETHER",
@@ -4641,7 +11126,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "300",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,inhale"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "300"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EVERSMOKING_BOTTLE",
@@ -4658,7 +11165,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_EXPLORERS_PACK",
@@ -4675,7 +11204,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_EYE_AGATE",
@@ -4692,7 +11235,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_9",
@@ -4709,7 +11274,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,sapphire,moonstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EYES_OF_CHARMING",
@@ -4726,7 +11313,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EYES_OF_MINUTE_SEEING",
@@ -4743,7 +11364,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "investigation"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_EYES_OF_THE_EAGLE",
@@ -4760,7 +11411,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "perception"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_FEED_PER_DAY",
@@ -4777,7 +11462,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_BRONZE_GRIFFON",
@@ -4794,7 +11497,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_EBONY_FLY",
@@ -4811,7 +11536,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_GOLDEN_LIONS",
@@ -4828,7 +11579,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_IVORY_GOATS",
@@ -4845,7 +11622,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "24"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_MARBLE_ELEPHANT",
@@ -4862,7 +11669,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_OBSIDIAN_STEED",
@@ -4879,7 +11712,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_ONYX_DOG",
@@ -4896,7 +11755,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_SERPENTINE_OWL",
@@ -4913,7 +11798,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FIGURINE_OF_WONDROUS_POWER_SILVER_RAVEN",
@@ -4930,7 +11841,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_1",
@@ -4947,7 +11880,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,fire opal"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_FIRE_OPAL",
@@ -4964,7 +11919,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_FISHINGTACKLE",
@@ -4981,7 +11958,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_FLAIL",
@@ -5001,7 +11996,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_FLAIL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FLAME_TONGUE",
@@ -5018,7 +12040,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "fire, damage"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_FLASKORTANKARD",
@@ -5035,7 +12087,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_FLUTE",
@@ -5054,7 +12124,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_FLUTE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_FOCHLUCAN_BANDORE",
@@ -5071,7 +12167,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FOLDING_BOAT",
@@ -5088,7 +12218,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_FORGERY_KIT",
@@ -5105,7 +12261,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_FORGERY_KIT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_FROST_BRAND",
@@ -5122,7 +12300,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_GALLEY",
@@ -5139,7 +12347,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "30000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_GARNET",
@@ -5156,7 +12382,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GAUNTLETS_OF_OGRE_POWER",
@@ -5173,7 +12421,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "hands",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "strength"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "hands"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GEM_OF_BRIGHTNESS",
@@ -5190,7 +12472,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "blinded"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "50"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GEM_OF_SEEING",
@@ -5207,7 +12519,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "vision, truesight"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GIANT_SLAYER",
@@ -5224,7 +12570,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "axe, sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS||ID_INTERNAL_WEAPON_GROUP_AXES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_GLAIVE",
@@ -5247,7 +12623,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "6 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "1d10",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_GLAIVE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GLAMOURED_STUDDED_LEATHER",
@@ -5264,7 +12667,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "studded, leather"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "armor",
+        "value": "Studded Leather"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_GLASSBLOWERS_TOOLS",
@@ -5281,7 +12718,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_GLASSBLOWERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GLOVES_OF_MISSILE_SNARING",
@@ -5298,7 +12757,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "hands",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "reaction"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "hands"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GLOVES_OF_SWIMMING_AND_CLIMBING",
@@ -5315,7 +12808,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "hands",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "athletics"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "hands"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GLOVES_OF_THIEVERY",
@@ -5332,7 +12859,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "hands",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sleight of hand"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "hands"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_GOGGLES_OF_NIGHT",
@@ -5349,7 +12906,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "darkvision"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_10",
@@ -5366,7 +12953,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,electrum"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_3",
@@ -5383,7 +12992,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_8",
@@ -5400,7 +13031,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,aquamarines"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_4",
@@ -5417,7 +13070,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,emeralds"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_5",
@@ -5434,7 +13109,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_4",
@@ -5451,7 +13148,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_5",
@@ -5468,7 +13187,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_10",
@@ -5485,7 +13226,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,portrait"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_7",
@@ -5502,7 +13265,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_1",
@@ -5519,7 +13304,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,bloodstones"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_3",
@@ -5536,7 +13343,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,ruby"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_GRAPPLINGHOOK",
@@ -5553,7 +13382,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_GREATAXE",
@@ -5576,7 +13423,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "7 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "1d12",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_GREATAXE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_GREATCLUB",
@@ -5598,7 +13472,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "10 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_GREATCLUB"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_GREATSWORD",
@@ -5621,7 +13522,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "6 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "2d6",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_GREATSWORD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GRENADE_LAUNCHER",
@@ -5638,7 +13566,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "7 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GRENADE_FRAGMENTATION",
@@ -5655,7 +13601,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GRENADE_SMOKE",
@@ -5672,7 +13636,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GUNPOWDER_KEG",
@@ -5689,7 +13671,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "20 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "20 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GUNPOWDER_POWDER_HORN",
@@ -5706,7 +13706,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "35",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Explosives"
+      },
+      {
+        "name": "cost",
+        "value": "35"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_HALBERD",
@@ -5729,7 +13747,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "6 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "1d10",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_HALBERD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_MEDIUM_HALF_PLATE",
@@ -5748,7 +13793,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "40 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "weight",
+        "value": "40 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Medium"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "15 + Dex modifier (max 2)"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_HALF_PLATE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HAMMER",
@@ -5765,7 +13844,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HAMMER_OF_THUNDERBOLTS",
@@ -5782,7 +13879,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "maul"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_MAULS"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HAMMER_SLEDGE",
@@ -5799,7 +13934,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_HANDAXE",
@@ -5822,7 +13975,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_HANDAXE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_3",
@@ -5839,7 +14023,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,ivory,zircon gems"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HAT_OF_DISGUISE",
@@ -5856,7 +14062,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HEADBAND_OF_INTELLECT",
@@ -5873,7 +14109,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "intelligence"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HEALERSKIT",
@@ -5890,7 +14160,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HELM_OF_BRILLIANCE",
@@ -5907,7 +14195,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "radiant"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HELM_OF_COMPREHENDING_LANGUAGES",
@@ -5924,7 +14246,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HELM_OF_TELEPATHY",
@@ -5941,7 +14289,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HELM_OF_TELEPORTATION",
@@ -5958,7 +14336,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "head",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "teleport"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "head"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_HEMATITE",
@@ -5975,7 +14391,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_HERBALISM_KIT",
@@ -5992,7 +14430,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "3 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "3 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_HERBALISM_KIT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HEWARDS_HANDY_HAVERSACK",
@@ -6009,7 +14469,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_MEDIUM_HIDE_ARMOR",
@@ -6028,7 +14514,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "12 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "12 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Medium"
+      },
+      {
+        "name": "armorClass",
+        "value": "12 + Dex modifier (max 2)"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_HIDE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HOLY_AVENGER",
@@ -6045,7 +14561,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword, paladin"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HOLYWATER_FLASK",
@@ -6062,7 +14612,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_HORN",
@@ -6081,7 +14649,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "3",
     "weight": "2 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "3"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_HORN"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORN_OF_BLASTING",
@@ -6098,7 +14692,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "thunder"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORN_OF_VALHALLA_BRASS",
@@ -6115,7 +14735,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORN_OF_VALHALLA_BRONZE",
@@ -6132,7 +14778,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORN_OF_VALHALLA_IRON",
@@ -6149,7 +14821,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORN_OF_VALHALLA_SILVER",
@@ -6166,7 +14864,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HORSE_DRAFT",
@@ -6183,7 +14907,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HORSE_RIDING",
@@ -6200,7 +14942,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "75",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "75"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORSESHOES_OF_A_ZEPHYR",
@@ -6217,7 +14977,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mount"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_HORSESHOES_OF_SPEED",
@@ -6234,7 +15020,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mount"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HOURGLASS",
@@ -6251,7 +15063,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_HUNTINGTRAP",
@@ -6268,7 +15098,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "25 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "25 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IMMOVABLE_ROD",
@@ -6285,7 +15133,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_INK_1OUNCEBOTTLE",
@@ -6302,7 +15176,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_INKPEN",
@@ -6319,7 +15211,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_ABSORPTION",
@@ -6336,7 +15246,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_AGILITY",
@@ -6353,7 +15293,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "dexterity"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_AWARENESS",
@@ -6370,7 +15340,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "surprised"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_FORTITUDE",
@@ -6387,7 +15387,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "constitution"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_GREATER_ABSORPTION",
@@ -6404,7 +15434,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "misc",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ioun"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_INSIGHT",
@@ -6421,7 +15485,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "wisdom"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_INTELLECT",
@@ -6438,7 +15532,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "intelligence"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_LEADERSHIP",
@@ -6455,7 +15579,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "charisma"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_MASTERY",
@@ -6472,7 +15626,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "proficiency"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_PROTECTION",
@@ -6489,7 +15673,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "armor"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_REGENERATION",
@@ -6506,7 +15720,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_RESERVE",
@@ -6523,7 +15767,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_STRENGTH",
@@ -6540,7 +15814,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "strength"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IOUN_STONE_SUSTENANCE",
@@ -6557,7 +15861,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IRON_BANDS_OF_BILARRO",
@@ -6574,7 +15908,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_IRON_FLASK",
@@ -6591,7 +15951,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_2",
@@ -6608,7 +15994,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_JACINTH",
@@ -6625,7 +16033,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_JADE",
@@ -6642,7 +16072,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_7",
@@ -6659,7 +16111,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gold"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_JASPER",
@@ -6676,7 +16150,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_JAVELIN",
@@ -6697,7 +16193,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "30/120"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_JAVELIN"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_JAVELIN_OF_LIGHTNING",
@@ -6714,7 +16241,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "javelin"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "weapon",
+        "value": "Javelin"
+      },
+      {
+        "name": "name-format",
+        "value": "Javelin of Lightning"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_JET",
@@ -6731,7 +16288,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_6",
@@ -6748,7 +16327,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_1",
@@ -6765,7 +16366,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_7500GP_2",
@@ -6782,7 +16405,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "7500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "7500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_JEWELERS_TOOLS",
@@ -6799,7 +16444,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "2 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_JEWELERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_JUGORPITCHER",
@@ -6816,7 +16483,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_KEELBOAT",
@@ -6833,7 +16518,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "3000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "3000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_KEOGHTOMS_OINTMENT",
@@ -6850,7 +16553,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing, disease"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LADDER_10_FOOT",
@@ -6867,7 +16596,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "25 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "25 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LAMP",
@@ -6884,7 +16631,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_LANCE",
@@ -6907,7 +16672,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "6 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d12",
+        "type": "piercing"
+      },
+      {
+        "name": "versatile",
+        "value": "1d12"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_LANCE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_LANTERN_OF_REVEALING",
@@ -6924,7 +16720,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "light, invisible"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LANTERN_BULLSEYE",
@@ -6941,7 +16763,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LANTERN_HOODED",
@@ -6958,7 +16798,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_LAPIS_LAZULI",
@@ -6975,7 +16833,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_LASER_PISTOL",
@@ -6996,7 +16876,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "40/120"
+      },
+      {
+        "name": "damage",
+        "value": "3d6",
+        "type": "radiant"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_FUTURISTIC_FIREARMS_LASTER_PISTOL"
+      },
+      {
+        "name": "reload",
+        "value": "50"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_LASER_RIFLE",
@@ -7018,7 +16933,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "7 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "100/300"
+      },
+      {
+        "name": "damage",
+        "value": "3d8",
+        "type": "radiant"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_FUTURISTIC_FIREARMS_LASER_RIFLE"
+      },
+      {
+        "name": "reload",
+        "value": "30"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_LIGHT_LEATHER",
@@ -7037,7 +16987,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "10 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Light"
+      },
+      {
+        "name": "armorClass",
+        "value": "11 + Dex modifier"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_LEATHER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_LEATHERWORKERS_TOOLS",
@@ -7054,7 +17034,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_LEATHERWORKERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_LIGHTHAMMER",
@@ -7077,7 +17079,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_LIGHT_HAMMER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LOCK",
@@ -7094,7 +17127,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_LONGBOW",
@@ -7118,7 +17169,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "2 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "150/600"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_LONGBOW"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_LONGSHIP",
@@ -7135,7 +17217,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "10000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_LONGSWORD",
@@ -7157,7 +17257,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "slashing"
+      },
+      {
+        "name": "versatile",
+        "value": "1d10"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_LONGSWORD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_LUCK_BLADE",
@@ -7174,7 +17305,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "charges",
+        "value": "1d4-1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_LUTE",
@@ -7193,7 +17362,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "35",
     "weight": "2 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "35"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_LUTE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_LYRE",
@@ -7212,7 +17407,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "2 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_LYRE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_MACFUIRMIDH_CITTERN",
@@ -7229,7 +17450,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_MACE",
@@ -7250,7 +17505,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_MACE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MACE_OF_DISRUPTION",
@@ -7267,7 +17549,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mace"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_MACES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MACE_OF_SMITING",
@@ -7284,7 +17596,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mace"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_MACES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MACE_OF_TERROR",
@@ -7301,7 +17643,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mace"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_MACES"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MAGNIFYINGGLASS",
@@ -7318,7 +17694,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "100",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "100"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_MALACHITE",
@@ -7335,7 +17729,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_MALICE",
@@ -7352,7 +17768,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,inhale"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MANACLES",
@@ -7369,7 +17807,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "6 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANTLE_OF_SPELL_RESISTANCE",
@@ -7386,7 +17842,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "saving throw"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_BODILY_HEALTH",
@@ -7403,7 +17893,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "constitution"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_CLAY_GOLEMS",
@@ -7420,7 +17940,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_FLESH_GOLEMS",
@@ -7437,7 +17979,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_GAINFUL_EXERCISE",
@@ -7454,7 +18018,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "strength"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_IRON_GOLEMS",
@@ -7471,7 +18065,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_QUICKNESS_OF_ACTION",
@@ -7488,7 +18104,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "dexterity"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MANUAL_OF_STONE_GOLEMS",
@@ -7505,7 +18151,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MARINERS_ARMOR",
@@ -7522,7 +18190,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_LIGHT||ID_INTERNAL_ARMOR_GROUP_MEDIUM||ID_INTERNAL_ARMOR_GROUP_HEAVY"
+      },
+      {
+        "name": "name-format",
+        "value": "Mariner’s {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_MASONS_TOOLS",
@@ -7539,7 +18237,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "8 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "8 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_MASONS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_2",
@@ -7556,7 +18276,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MASTIFF",
@@ -7573,7 +18315,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_MAUL",
@@ -7596,7 +18356,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "10 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "2d6",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_MAUL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MEDALLION_OF_THOUGHTS",
@@ -7613,7 +18400,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MESSKIT",
@@ -7630,7 +18451,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_MIDNIGHT_TEARS",
@@ -7647,7 +18486,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1500",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,ingest"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "1500"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MIRROR_OF_LIFE_TRAPPING",
@@ -7664,7 +18525,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "50 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "extradimensional"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "50 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MIRROR_STEEL",
@@ -7681,7 +18568,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_MITHRAL_ARMOR",
@@ -7698,7 +18603,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "medium, heavy"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "armor",
+        "value": "(ID_INTERNAL_ARMOR_GROUP_MEDIUM||ID_INTERNAL_ARMOR_GROUP_HEAVY),!Hide"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_MOONSTONE",
@@ -7715,7 +18650,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_MORNINGSTAR",
@@ -7735,7 +18692,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_MORNINGSTAR"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_MOSS_AGATE",
@@ -7752,7 +18736,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_MULE",
@@ -7769,7 +18775,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "8",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "8"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_MUSKET",
@@ -7792,7 +18816,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "500",
     "weight": "10 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "500"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "40/120"
+      },
+      {
+        "name": "damage",
+        "value": "1d12",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_RENAISSANCE_FIREARMS_MUSKET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_NAVIGATORS_TOOLS",
@@ -7809,7 +18864,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "2 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_NAVIGATORS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_NECKLACE_OF_ADAPTATION",
@@ -7826,7 +18903,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_NECKLACE_OF_FIREBALLS",
@@ -7843,7 +18950,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_NECKLACE_OF_PRAYER_BEADS",
@@ -7860,7 +18997,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cleric, druid, or paladin"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_NET",
@@ -7882,7 +19053,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "5/15"
+      },
+      {
+        "name": "damage",
+        "value": "—"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_NET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_NINE_LIVES_STEALER",
@@ -7899,7 +19100,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "charges",
+        "value": "1d8+1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_NOLZURS_MARVELOUS_PIGMENTS",
@@ -7916,7 +19155,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_OATHBOW",
@@ -7933,7 +19194,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "longbow"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "Longbow"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_OBSIDIAN",
@@ -7950,7 +19241,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_9",
@@ -7967,7 +19280,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gold"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_OIL_FLASK",
@@ -7984,7 +19319,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_OIL_OF_ETHEREALNESS",
@@ -8001,7 +19354,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_OIL_OF_SHARPNESS",
@@ -8018,7 +19397,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_OIL_OF_SLIPPERINESS",
@@ -8035,7 +19440,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_OIL_OF_TAGGIT",
@@ -8052,7 +19483,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "400",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,contact"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "400"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_INSTRUMENT_OF_THE_BARDS_OLLAMH_HARP",
@@ -8069,7 +19522,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_ONYX",
@@ -8086,7 +19573,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_OPAL",
@@ -8103,7 +19612,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ORB",
@@ -8120,7 +19651,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "container",
+        "value": "Arcane Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_LIGHT_PADDED",
@@ -8139,7 +19692,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "8 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "8 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Light"
+      },
+      {
+        "name": "armorClass",
+        "value": "11 + Dex modifier"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_PADDED"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_10",
@@ -8156,7 +19743,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_PAINTERS_SUPPLIES",
@@ -8173,7 +19782,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_PAINTERS_SUPPLIES"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_PALE_TINCTURE",
@@ -8190,7 +19821,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,ingest"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_PANFLUTE",
@@ -8209,7 +19862,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "12",
     "weight": "2 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "12"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_PAN_FLUTE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PAPER_ONESHEET",
@@ -8226,7 +19905,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PARCHMENT_ONESHEET",
@@ -8243,7 +19940,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_PEARL",
@@ -8260,7 +19975,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_10",
@@ -8277,7 +20014,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,pearls"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PEARL_OF_POWER",
@@ -8294,7 +20053,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "spellcaster"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PERFUME_VIAL",
@@ -8311,7 +20100,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PERIAPT_OF_HEALTH",
@@ -8328,7 +20135,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "disease"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PERIAPT_OF_PROOF_AGAINST_POISON",
@@ -8345,7 +20182,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "resistance, immunity"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PERIAPT_OF_WOUND_CLOSURE",
@@ -8362,7 +20229,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_PERIDOT",
@@ -8379,7 +20280,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PHILTER_OF_LOVE",
@@ -8396,7 +20319,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PICK_MINERS",
@@ -8413,7 +20358,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_PIKE",
@@ -8436,7 +20399,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "18 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "18 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "damage",
+        "value": "1d10",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_PIKE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PIPES_OF_HAUNTING",
@@ -8453,7 +20443,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "wind"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PIPES_OF_THE_SEWERS",
@@ -8470,7 +20490,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "wind"
+      },
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_PISTOL",
@@ -8492,7 +20546,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "30/90"
+      },
+      {
+        "name": "damage",
+        "value": "1d10",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_RENAISSANCE_FIREARMS_PISTOL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_PISTOL_AUTOMATIC",
@@ -8514,7 +20599,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "50/150"
+      },
+      {
+        "name": "damage",
+        "value": "2d6",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_MODERN_FIREARMS_PISTOL_AUTOMATIC"
+      },
+      {
+        "name": "reload",
+        "value": "15"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PITON",
@@ -8531,7 +20651,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1/4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1/4 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_HEAVY_PLATE",
@@ -8550,7 +20688,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1500",
     "weight": "65 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "1500"
+      },
+      {
+        "name": "weight",
+        "value": "65 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Heavy"
+      },
+      {
+        "name": "strength",
+        "value": "15"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "18"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_PLATE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PLATE_ARMOR_OF_ETHEREALNESS",
@@ -8567,7 +20743,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "body",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "plate"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "armor",
+        "value": "Plate"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_4",
@@ -8584,7 +20794,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,sapphire"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_PLAYING_CARD_SET",
@@ -8601,7 +20833,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "game, gaming set, cards"
+      },
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Gaming Set"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_GAMING_SET_PROFICIENCY_PLAYING_CARD_SET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_POISON_BASIC_VIAL",
@@ -8618,7 +20876,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "100",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "100"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_POISONERS_KIT",
@@ -8635,7 +20911,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "2 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "2 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_POISONERS_KIT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_POLE_10_FOOT",
@@ -8652,7 +20950,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "7 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_PONY",
@@ -8669,7 +20985,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_PORTABLE_HOLE",
@@ -8686,7 +21020,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "extradimensional"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_POT_IRON",
@@ -8703,7 +21063,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_ANIMAL_FRIENDSHIP",
@@ -8720,7 +21098,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_CLAIRVOYANCE",
@@ -8737,7 +21137,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_CLIMBING",
@@ -8754,7 +21176,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Common"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_CLOUD_GIANT_STRENGTH",
@@ -8771,7 +21215,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_DIMINUTION",
@@ -8788,7 +21254,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_FIRE_BREATH",
@@ -8805,7 +21293,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_FIRE_GIANT_STRENGTH",
@@ -8822,7 +21332,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_FLYING",
@@ -8839,7 +21371,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_FROST_GIANT_STRENGTH",
@@ -8856,7 +21410,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_GASEOUS_FORM",
@@ -8873,7 +21449,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_GREATER_HEALING",
@@ -8890,7 +21488,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_GROWTH",
@@ -8907,7 +21531,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_HEALING",
@@ -8924,7 +21570,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Common"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_POTIONOFHEALING",
@@ -8941,7 +21617,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_HEROISM",
@@ -8958,7 +21652,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_HILL_GIANT_STRENGTH",
@@ -8975,7 +21691,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_INVISIBILITY",
@@ -8992,7 +21730,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_INVULNERABILITY",
@@ -9009,7 +21769,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "resistance"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_LONGEVITY",
@@ -9026,7 +21812,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_MIND_READING",
@@ -9043,7 +21851,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_POISON",
@@ -9060,7 +21890,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_ACID",
@@ -9077,7 +21929,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_COLD",
@@ -9094,7 +21968,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_FIRE",
@@ -9111,7 +22007,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_FORCE",
@@ -9128,7 +22046,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_LIGHTNING",
@@ -9145,7 +22085,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_NECROTIC",
@@ -9162,7 +22124,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_POISON",
@@ -9179,7 +22163,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_PSYCHIC",
@@ -9196,7 +22202,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_RADIANT",
@@ -9213,7 +22241,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_RESISTANCE_THUNDER",
@@ -9230,7 +22280,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_SPEED",
@@ -9247,7 +22319,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_STONE_GIANT_STRENGTH",
@@ -9264,7 +22358,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_STORM_GIANT_STRENGTH",
@@ -9281,7 +22397,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_SUPERIOR_HEALING",
@@ -9298,7 +22436,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_SUPREME_HEALING",
@@ -9315,7 +22479,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "healing"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_VITALITY",
@@ -9332,7 +22522,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "disease, poison"
+      },
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_POTION_OF_WATER_BREATHING",
@@ -9349,7 +22565,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Potions"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "type",
+        "value": "Potion"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_POTTERS_TOOLS",
@@ -9366,7 +22604,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "3 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "3 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_POTTERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_POUCH",
@@ -9383,7 +22643,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_PRIESTS_PACK",
@@ -9400,7 +22674,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "19",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "19"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_PURPLE_WORM_POISON",
@@ -9417,7 +22705,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2000",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,injure,injury"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "2000"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_QUAALS_FEATHER_TOKEN",
@@ -9434,7 +22744,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_QUARTERSTAFF",
@@ -9455,7 +22791,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "versatile",
+        "value": "1d8"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_QUARTERSTAFF"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_QUARTZ",
@@ -9472,7 +22839,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_QUIVER",
@@ -9489,7 +22878,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_QUIVER_OF_EHLONNA",
@@ -9506,7 +22909,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ammunition"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_RAM_PORTABLE",
@@ -9523,7 +22952,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "4",
     "weight": "35 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "4"
+      },
+      {
+        "name": "weight",
+        "value": "35 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_RAPIER",
@@ -9545,7 +22988,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_RAPIER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_RATIONS_1DAY",
@@ -9562,7 +23032,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_RELIQUARY",
@@ -9579,7 +23067,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "container",
+        "value": "Holy Symbol"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_REVOLVER",
@@ -9601,7 +23111,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "40/120"
+      },
+      {
+        "name": "damage",
+        "value": "2d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_MODERN_FIREARMS_REVOLVER"
+      },
+      {
+        "name": "reload",
+        "value": "6"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_RHODOCHROSITE",
@@ -9618,7 +23163,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_RIFLE_AUTOMATIC",
@@ -9642,7 +23209,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "8 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "8 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "80/240"
+      },
+      {
+        "name": "damage",
+        "value": "2d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_MODERN_FIREARMS_RIFLE"
+      },
+      {
+        "name": "reload",
+        "value": "30"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_RIFLE_HUNTING",
@@ -9665,7 +23267,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "8 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "8 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "80/240"
+      },
+      {
+        "name": "damage",
+        "value": "2d10",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_MODERN_FIREARMS_RIFLE"
+      },
+      {
+        "name": "reload",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_HEAVY_RING_MAIL",
@@ -9684,7 +23321,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "40 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "40 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Heavy"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "14"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_RING_MAIL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_AIR_ELEMENTAL_COMMAND",
@@ -9701,7 +23372,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_ANIMAL_INFLUENCE",
@@ -9718,7 +23415,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_DJINNI_SUMMONING",
@@ -9735,7 +23454,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_EARTH_ELEMENTAL_COMMAND",
@@ -9752,7 +23493,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_EVASION",
@@ -9769,7 +23536,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_FEATHER_FALLING",
@@ -9786,7 +23579,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_FIRE_ELEMENTAL_COMMAND",
@@ -9803,7 +23618,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_FREE_ACTION",
@@ -9820,7 +23661,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_INVISIBILITY",
@@ -9837,7 +23700,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_JUMPING",
@@ -9854,7 +23739,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "equippable",
+        "value": "true"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_MIND_SHIELDING",
@@ -9871,7 +23782,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_PROTECTION",
@@ -9888,7 +23821,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_REGENERATION",
@@ -9905,7 +23860,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_ACID",
@@ -9922,7 +23899,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_COLD",
@@ -9939,7 +23938,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_FIRE",
@@ -9956,7 +23977,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_FORCE",
@@ -9973,7 +24016,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_LIGHTNING",
@@ -9990,7 +24055,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_NECROTIC",
@@ -10007,7 +24094,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_POISON",
@@ -10024,7 +24133,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_PSYCHIC",
@@ -10041,7 +24172,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_RADIANT",
@@ -10058,7 +24211,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_RESISTANCE_THUNDER",
@@ -10075,7 +24250,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_SHOOTING_STARS",
@@ -10092,7 +24289,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "charges",
+        "value": "6"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_SPELL_STORING",
@@ -10109,7 +24332,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_SPELL_TURNING",
@@ -10126,7 +24371,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_SWIMMING",
@@ -10143,7 +24410,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_TELEKINESIS",
@@ -10160,7 +24445,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_THE_RAM",
@@ -10177,7 +24484,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_THREE_WISHES",
@@ -10194,7 +24527,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_WARMTH",
@@ -10211,7 +24566,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_WATER_ELEMENTAL_COMMAND",
@@ -10228,7 +24605,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_WATER_WALKING",
@@ -10245,7 +24648,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_RING_OF_XRAY_VISION",
@@ -10262,7 +24683,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "",
     "weight": "",
     "slot": "ring",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Rings"
+      },
+      {
+        "name": "type",
+        "value": "Ring"
+      },
+      {
+        "name": "slot",
+        "value": "ring"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROBE_OF_EYES",
@@ -10279,7 +24722,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "darkvision, perception, invisible"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROBE_OF_SCINTILLATING_COLORS",
@@ -10296,7 +24773,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROBE_OF_STARS",
@@ -10313,7 +24828,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak, saving throw, astral plane"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROBE_OF_THE_ARCHMAGI",
@@ -10330,7 +24879,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak, sorcerer, warlock, wizard, armor, saving throw"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROBE_OF_USEFUL_ITEMS",
@@ -10347,7 +24930,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ROBES",
@@ -10364,7 +24973,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "4 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ROD",
@@ -10381,7 +25004,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "container",
+        "value": "Arcane Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_ABSORPTION",
@@ -10398,7 +25043,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_ALERTNESS",
@@ -10415,7 +25090,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_LORDLY_MIGHT",
@@ -10432,7 +25137,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "weapon",
+        "value": "Mace"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_RESURRECTION",
@@ -10449,7 +25192,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cleric, druid, paladin"
+      },
+      {
+        "name": "category",
+        "value": "Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "5"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_RULERSHIP",
@@ -10466,7 +25247,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "charm"
+      },
+      {
+        "name": "category",
+        "value": "Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_SECURITY",
@@ -10483,7 +25298,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_THE_PACT_KEEPER_1",
@@ -10500,7 +25341,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "warlock"
+      },
+      {
+        "name": "category",
+        "value": "Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_THE_PACT_KEEPER_2",
@@ -10517,7 +25396,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "warlock"
+      },
+      {
+        "name": "category",
+        "value": "Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROD_OF_THE_PACT_KEEPER_3",
@@ -10534,7 +25451,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "warlock"
+      },
+      {
+        "name": "category",
+        "value": "Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROPE_OF_CLIMBING",
@@ -10551,7 +25506,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_ROPE_OF_ENTANGLEMENT",
@@ -10568,7 +25545,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ROPE_HEMPEN_50FEET",
@@ -10585,7 +25584,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "10 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "10 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ROPE_SILK_50FEET",
@@ -10602,7 +25619,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_ROWBOAT",
@@ -10619,7 +25654,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_RUBY",
@@ -10636,7 +25689,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SACK",
@@ -10653,7 +25728,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SADDLE_OF_THE_CAVALIER",
@@ -10670,7 +25759,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "mount"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SADDLE_EXOTIC",
@@ -10687,7 +25802,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "60",
     "weight": "40 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "60"
+      },
+      {
+        "name": "weight",
+        "value": "40 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SADDLE_MILITARY",
@@ -10704,7 +25833,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "30 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "30 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SADDLE_PACK",
@@ -10721,7 +25864,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "15 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "15 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SADDLE_RIDING",
@@ -10738,7 +25895,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "25 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "25 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SADDLEBAGS",
@@ -10755,7 +25926,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "4",
     "weight": "8 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "4"
+      },
+      {
+        "name": "weight",
+        "value": "8 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SAILING_SHIP",
@@ -10772,7 +25957,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "10000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_SARDONYX",
@@ -10789,7 +25992,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_MEDIUM_SCALE_MAIL",
@@ -10808,7 +26033,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "45 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "45 lb."
+      },
+      {
+        "name": "armor",
+        "value": "Medium"
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "14 + Dex modifier (max 2)"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_SCALE_MAIL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SCALE_MERCHANTS",
@@ -10825,7 +26084,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCARAB_OF_PROTECTION",
@@ -10842,7 +26119,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "saving throw, necromancy"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "12"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ITEM_SCHOLARS_PACK",
@@ -10859,7 +26170,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "40",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Equipment Packs"
+      },
+      {
+        "name": "cost",
+        "value": "40"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SCIMITAR",
@@ -10882,7 +26207,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SCIMITAR"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCIMITAR_OF_SPEED",
@@ -10899,7 +26251,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "scimitar"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "weapon",
+        "value": "Scimitar"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION",
@@ -10916,7 +26302,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_ABERRATIONS",
@@ -10933,7 +26345,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_BEASTS",
@@ -10950,7 +26388,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_CELESTIALS",
@@ -10967,7 +26431,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_ELEMENTALS",
@@ -10984,7 +26474,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_FEY",
@@ -11001,7 +26517,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_FIENDS",
@@ -11018,7 +26560,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_PLANTS",
@@ -11035,7 +26603,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SCROLL_OF_PROTECTION_UNDEAD",
@@ -11052,7 +26646,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SEALINGWAX",
@@ -11069,7 +26689,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SENDING_STONES",
@@ -11086,7 +26724,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SENTINEL_SHIELD",
@@ -11103,7 +26763,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_SERPENT_VENOM",
@@ -11120,7 +26806,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "200",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,injure,injury"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "200"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_SHAWM",
@@ -11139,7 +26847,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "1 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "1 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_SHAWM"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_GEAR_SHIELD",
@@ -11158,7 +26892,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "6 lb.",
     "slot": "onehand,secondary",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "6 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand,secondary"
+      },
+      {
+        "name": "type",
+        "value": "Shield"
+      },
+      {
+        "name": "armor",
+        "value": "Shield"
+      },
+      {
+        "name": "armorClass",
+        "value": "+2"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SHIELD_OF_MISSILE_ATTRACTION",
@@ -11175,7 +26943,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "cursed",
+        "value": "true"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SHIELD_1",
@@ -11192,7 +26994,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SHIELD_2",
@@ -11209,7 +27045,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SHIELD_3",
@@ -11226,7 +27096,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SHORTBOW",
@@ -11249,7 +27153,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "2 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "80/320"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SHORTBOW"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SHORTSWORD",
@@ -11272,7 +27207,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SHORTSWORD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_WEAPON_SHOTGUN",
@@ -11295,7 +27257,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "7 lb.",
     "slot": "twohand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "7 lb."
+      },
+      {
+        "name": "slot",
+        "value": "twohand"
+      },
+      {
+        "name": "range",
+        "value": "30/90"
+      },
+      {
+        "name": "damage",
+        "value": "2d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_WOTC_DMG_PROFICIENCY_WEAPON_MODERN_FIREARMS_SHOTGUN"
+      },
+      {
+        "name": "reload",
+        "value": "2"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SHOVEL",
@@ -11312,7 +27309,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SICKLE",
@@ -11333,7 +27348,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SICKLE"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SIGNALWHISTLE",
@@ -11350,7 +27392,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SIGNETRING",
@@ -11367,7 +27427,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_2500GP_3",
@@ -11384,7 +27462,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,moonstones"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_6",
@@ -11401,7 +27501,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object, gold embroidery"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_8",
@@ -11418,7 +27540,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_1",
@@ -11435,7 +27579,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,moonstones"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_1",
@@ -11452,7 +27618,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_4",
@@ -11469,7 +27657,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,gemstone,pendant"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_750GP_2",
@@ -11486,7 +27696,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "750",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object, jet"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "750"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SLED",
@@ -11503,7 +27735,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "300 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "300 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SLING",
@@ -11524,7 +27774,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "30/120"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SLING"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SLINGBULLET",
@@ -11541,7 +27822,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "75/1000 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Ammunition"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "75/1000 lb."
+      },
+      {
+        "name": "type",
+        "value": "Ammunition"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SLIPPERS_OF_SPIDER_CLIMBING",
@@ -11558,7 +27861,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_3",
@@ -11575,7 +27908,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_25GP_8",
@@ -11592,7 +27947,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object,wooden"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_SMITHS_TOOLS",
@@ -11609,7 +27986,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "20",
     "weight": "8 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "20"
+      },
+      {
+        "name": "weight",
+        "value": "8 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_SMITHS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SOAP",
@@ -11626,7 +28025,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SOVEREIGN_GLUE",
@@ -11643,7 +28060,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_SPEAR",
@@ -11666,7 +28109,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "versatile",
+        "value": "1d8"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_SPEAR"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_1ST_LEVEL",
@@ -11683,7 +28161,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Common"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_2ND_LEVEL",
@@ -11700,7 +28204,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_3RD_LEVEL",
@@ -11717,7 +28247,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "500",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "500"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_4TH_LEVEL",
@@ -11734,7 +28290,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2500",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "2500"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_5TH_LEVEL",
@@ -11751,7 +28333,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "5000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_6TH_LEVEL",
@@ -11768,7 +28376,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "15000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_7TH_LEVEL",
@@ -11785,7 +28419,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "25000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_8TH_LEVEL",
@@ -11802,7 +28462,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "50000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_9TH_LEVEL",
@@ -11819,7 +28505,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "250000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELL_SCROLL_CANTRIP",
@@ -11836,7 +28548,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Scrolls"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Scroll"
+      },
+      {
+        "name": "rarity",
+        "value": "Common"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SPELLBOOK",
@@ -11853,7 +28591,21 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "3 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPELLGUARD_SHIELD",
@@ -11870,7 +28622,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "shield"
+      },
+      {
+        "name": "category",
+        "value": "Magic Armor"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Armor"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "armor",
+        "value": "ID_INTERNAL_ARMOR_GROUP_SHIELD"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SPHERE_OF_ANNIHILATION",
@@ -11887,7 +28669,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SPIKES_IRON_10",
@@ -11904,7 +28708,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_SPINEL",
@@ -11921,7 +28743,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_HEAVY_SPLINT",
@@ -11940,7 +28784,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "200",
     "weight": "60 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "200"
+      },
+      {
+        "name": "weight",
+        "value": "60 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Heavy"
+      },
+      {
+        "name": "strength",
+        "value": "15"
+      },
+      {
+        "name": "stealth",
+        "value": "Disadvantage"
+      },
+      {
+        "name": "armorClass",
+        "value": "17"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_SPLINT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SPRIGOFMISTLETOE",
@@ -11957,7 +28839,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "container",
+        "value": "Druidic Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_SPYGLASS",
@@ -11974,7 +28878,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1000",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1000"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_STABLING",
@@ -11991,7 +28913,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_STAFF",
@@ -12008,7 +28948,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "container",
+        "value": "Arcane Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_CHARMING",
@@ -12025,7 +28987,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard, cleric, druid, sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_FIRE",
@@ -12042,7 +29046,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "druid, sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_FROST",
@@ -12059,7 +29105,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "druid, sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_HEALING",
@@ -12076,7 +29164,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard, cleric, druid"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_POWER",
@@ -12093,7 +29223,53 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "charges",
+        "value": "20"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_STRIKING",
@@ -12110,7 +29286,53 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "damage, force"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_SWARMING_INSECTS",
@@ -12127,7 +29349,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "bard, cleric, druid, sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_THE_ADDER",
@@ -12144,7 +29408,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cleric, druid, warlock"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_THE_MAGI",
@@ -12161,7 +29463,53 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sorcerer, warlock, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "charges",
+        "value": "50"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_THE_PYTHON",
@@ -12178,7 +29526,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cleric, druid, warlock"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_THE_WOODLANDS",
@@ -12195,7 +29581,53 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "druid"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "charges",
+        "value": "10"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_THUNDER_AND_LIGHTNING",
@@ -12212,7 +29644,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STAFF_OF_WITHERING",
@@ -12229,7 +29699,49 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cleric, druid, warlock"
+      },
+      {
+        "name": "category",
+        "value": "Staffs"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "weapon",
+        "value": "Quarterstaff"
+      },
+      {
+        "name": "type",
+        "value": "Staff"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_STAR_ROSE_QUARTZ",
@@ -12246,7 +29758,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_STAR_RUBY",
@@ -12263,7 +29797,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_STAR_SAPPHIRE",
@@ -12280,7 +29836,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STONE_OF_CONTROLLING_EARTH_ELEMENTALS",
@@ -12297,7 +29875,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "summon"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_STONE_OF_GOOD_LUCK",
@@ -12314,7 +29918,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "ability, saving throw"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_STRING_10FEET",
@@ -12331,7 +29965,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_ARMOR_LIGHT_STUDDED_LEATHER",
@@ -12350,7 +30002,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "45",
     "weight": "13 lb.",
     "slot": "body",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Armor"
+      },
+      {
+        "name": "cost",
+        "value": "45"
+      },
+      {
+        "name": "weight",
+        "value": "13 lb."
+      },
+      {
+        "name": "slot",
+        "value": "body"
+      },
+      {
+        "name": "armor",
+        "value": "Light"
+      },
+      {
+        "name": "armorClass",
+        "value": "12 + Dex modifier"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_ARMOR_PROFICIENCY_STUDDED_LEATHER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SUN_BLADE",
@@ -12367,7 +30049,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "longsword,radiant"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "weapon",
+        "value": "Longsword"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SWORD_OF_ANSWERING",
@@ -12384,7 +30100,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "longsword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "Longsword"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SWORD_OF_LIFE_STEALING",
@@ -12401,7 +30151,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Life Stealing"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SWORD_OF_SHARPNESS",
@@ -12418,7 +30202,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS,ID_INTERNAL_DAMAGE_TYPE_SLASHING"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Sharpness"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SWORD_OF_VENGEANCE",
@@ -12435,7 +30253,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Vengeance"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_SWORD_OF_WOUNDING",
@@ -12452,7 +30308,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "any sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Wounding"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TALISMAN_OF_PURE_GOOD",
@@ -12469,7 +30359,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "alignment, radiant"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TALISMAN_OF_THE_SPHERE",
@@ -12486,7 +30414,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "annihilation"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TALISMAN_OF_ULTIMATE_EVIL",
@@ -12503,7 +30465,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "neck",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "alignment, necrotic"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "neck"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "charges",
+        "value": "6"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TENT_TWOPERSON",
@@ -12520,7 +30520,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "20 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "20 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TENTACLE_ROD",
@@ -12537,7 +30555,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Rods"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "type",
+        "value": "Rod"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_THIEVES_TOOLS",
@@ -12554,7 +30602,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25",
     "weight": "1 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "25"
+      },
+      {
+        "name": "weight",
+        "value": "1 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_THIEVES_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_THREE_DRAGON_ANTE_SET",
@@ -12571,7 +30641,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "game, gaming set, cards"
+      },
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Gaming Set"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_GAMING_SET_PROFICIENCY_THREE_DRAGON_ANTE_SET"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_TIGER_EYE",
@@ -12588,7 +30684,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TINDERBOX",
@@ -12605,7 +30723,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_TINKERS_TOOLS",
@@ -12622,7 +30758,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "10 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "weight",
+        "value": "10 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_TINKERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TOME_OF_CLEAR_THOUGHT",
@@ -12639,7 +30797,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "intelligence"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TOME_OF_LEADERSHIP_AND_INFLUENCE",
@@ -12656,7 +30844,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "charisma"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TOME_OF_THE_STILLED_TONGUE",
@@ -12673,7 +30891,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "spellbook, arcane focus, wizard"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TOME_OF_UNDERSTANDING",
@@ -12690,7 +30938,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "5 lb.",
     "slot": "misc",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "wisdom"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "slot",
+        "value": "misc"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_TOPAZ",
@@ -12707,7 +30985,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TORCH",
@@ -12724,7 +31024,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_TORPOR",
@@ -12741,7 +31059,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "600",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,ingest"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "600"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOTEM",
@@ -12758,7 +31098,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "container",
+        "value": "Druidic Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_TOURMALINE",
@@ -12775,7 +31137,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_TRIDENT",
@@ -12797,7 +31181,42 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "range",
+        "value": "20/60"
+      },
+      {
+        "name": "damage",
+        "value": "1d6",
+        "type": "piercing"
+      },
+      {
+        "name": "versatile",
+        "value": "1d8"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_TRIDENT"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_TRIDENT_OF_FISH_COMMAND",
@@ -12814,7 +31233,45 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "trident"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "weapon",
+        "value": "Trident"
+      },
+      {
+        "name": "name-format",
+        "value": "Trident of Fish Command"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_TRUTH_SERUM",
@@ -12831,7 +31288,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "150",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,ingest"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "150"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_TURQUOISE",
@@ -12848,7 +31327,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_UNIVERSAL_SOLVENT",
@@ -12865,7 +31366,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": ""
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_VIAL",
@@ -12882,7 +31413,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_VICIOUS_WEAPON",
@@ -12899,7 +31448,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "<set name=\"category\">Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_MELEE||ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_RANGED||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_MELEE||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_RANGED"
+      },
+      {
+        "name": "name-format",
+        "value": "Vicious {{parent}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_SRD_INSTRUMENT_VIOL",
@@ -12918,7 +31493,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "30",
     "weight": "1 lbs.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Musical Instruments"
+      },
+      {
+        "name": "cost",
+        "value": "30"
+      },
+      {
+        "name": "weight",
+        "value": "1 lbs."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_VIOL"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_VORPAL_SWORD",
@@ -12935,7 +31536,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "sword"
+      },
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_GROUP_SWORDS, ID_INTERNAL_DAMAGE_TYPE_SLASHING"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WAGON",
@@ -12952,7 +31587,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "35",
     "weight": "400 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "35"
+      },
+      {
+        "name": "weight",
+        "value": "400 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WAND",
@@ -12969,7 +31622,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "container",
+        "value": "Arcane Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_BINDING",
@@ -12986,7 +31661,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_ENEMY_DETECTION",
@@ -13003,7 +31712,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_FEAR",
@@ -13020,7 +31763,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_FIREBALLS",
@@ -13037,7 +31814,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_LIGHTNING_BOLTS",
@@ -13054,7 +31865,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_MAGIC_DETECTION",
@@ -13071,7 +31916,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_MAGIC_MISSILES",
@@ -13088,7 +31963,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_PARALYSIS",
@@ -13105,7 +32010,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_POLYMORPH",
@@ -13122,7 +32061,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_SECRETS",
@@ -13139,7 +32112,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_THE_WAR_MAGE_1",
@@ -13156,7 +32159,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_THE_WAR_MAGE_2",
@@ -13173,7 +32210,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_THE_WAR_MAGE_3",
@@ -13190,7 +32261,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_WEB",
@@ -13207,7 +32312,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WAND_OF_WONDER",
@@ -13224,7 +32363,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wands"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wand"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "charges",
+        "value": "7"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_WAR_PICK",
@@ -13244,7 +32417,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "piercing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_WAR_PICK"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_WARHAMMER",
@@ -13266,7 +32466,38 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "15",
     "weight": "2 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "15"
+      },
+      {
+        "name": "weight",
+        "value": "2 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d8",
+        "type": "bludgeoning"
+      },
+      {
+        "name": "versatile",
+        "value": "1d10"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_WARHAMMER"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WARHORSE",
@@ -13283,7 +32514,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "400",
     "weight": "—",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "400"
+      },
+      {
+        "name": "weight",
+        "value": "—"
+      },
+      {
+        "name": "type",
+        "value": "Mount"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WARSHIP",
@@ -13300,7 +32549,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "25000",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Mounts & Vehicles"
+      },
+      {
+        "name": "cost",
+        "value": "25000"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Vehicle"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WATERSKIN",
@@ -13317,7 +32584,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "5 lb. (full)",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "5 lb. (full)"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WEAPON_OF_WARNING",
@@ -13334,7 +32619,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_MELEE||ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_RANGED||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_MELEE||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_RANGED"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} of Warning"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WEAPON_1",
@@ -13351,7 +32666,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      },
+      {
+        "name": "enhancement",
+        "value": "1"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_MELEE||ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_RANGED||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_MELEE||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_RANGED"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WEAPON_2",
@@ -13368,7 +32713,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "2"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_MELEE||ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_RANGED||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_MELEE||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_RANGED"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WEAPON_3",
@@ -13385,7 +32760,37 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Magic Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "type",
+        "value": "Weapon"
+      },
+      {
+        "name": "rarity",
+        "value": "Very Rare"
+      },
+      {
+        "name": "enhancement",
+        "value": "3"
+      },
+      {
+        "name": "weapon",
+        "value": "ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_MELEE||ID_INTERNAL_WEAPON_CATEGORY_SIMPLE_RANGED||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_MELEE||ID_INTERNAL_WEAPON_CATEGORY_MARTIAL_RANGED"
+      },
+      {
+        "name": "name-format",
+        "value": "{{parent}} +{{enhancement}}"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_WEAVERS_TOOLS",
@@ -13402,7 +32807,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_WEAVERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WELL_OF_MANY_WORLDS",
@@ -13419,7 +32846,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "planar, portal"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Legendary"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_ART_OBJECT_250GP_7",
@@ -13436,7 +32889,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "250",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "art object"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "250"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WHETSTONE",
@@ -13453,7 +32928,25 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "1 lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Adventuring Gear"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_WEAPON_WHIP",
@@ -13475,7 +32968,34 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "2",
     "weight": "3 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Weapons"
+      },
+      {
+        "name": "cost",
+        "value": "2"
+      },
+      {
+        "name": "weight",
+        "value": "3 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "damage",
+        "value": "1d4",
+        "type": "slashing"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_WEAPON_PROFICIENCY_WHIP"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WIND_FAN",
@@ -13492,7 +33012,33 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WINGED_BOOTS",
@@ -13509,7 +33055,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "feet",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "fly"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "feet"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Uncommon"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_MAGIC_ITEM_WINGS_OF_FLYING",
@@ -13526,7 +33106,41 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "0",
     "weight": "0 lb.",
     "slot": "shoulders",
-    "attunement": "true"
+    "attunement": "true",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "cloak, fly"
+      },
+      {
+        "name": "category",
+        "value": "Wondrous Items"
+      },
+      {
+        "name": "cost",
+        "value": "0"
+      },
+      {
+        "name": "weight",
+        "value": "0 lb."
+      },
+      {
+        "name": "slot",
+        "value": "shoulders"
+      },
+      {
+        "name": "type",
+        "value": "Wondrous Item"
+      },
+      {
+        "name": "attunement",
+        "value": "true"
+      },
+      {
+        "name": "rarity",
+        "value": "Rare"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_TOOL_WOODCARVERS_TOOLS",
@@ -13543,7 +33157,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1",
     "weight": "5 lbs.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Tools"
+      },
+      {
+        "name": "cost",
+        "value": "1"
+      },
+      {
+        "name": "weight",
+        "value": "5 lbs."
+      },
+      {
+        "name": "type",
+        "value": "Tool"
+      },
+      {
+        "name": "proficiency",
+        "value": "ID_PROFICIENCY_TOOL_PROFICIENCY_WOODCARVERS_TOOLS"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_WOODENSTAFF",
@@ -13560,7 +33196,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "5",
     "weight": "4 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "5"
+      },
+      {
+        "name": "weight",
+        "value": "4 lb."
+      },
+      {
+        "name": "container",
+        "value": "Druidic Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_POISON_WYVERN_POISON",
@@ -13577,7 +33235,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "1200",
     "weight": "½ lb.",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "poison,injure,injury"
+      },
+      {
+        "name": "category",
+        "value": "Poison"
+      },
+      {
+        "name": "cost",
+        "value": "1200"
+      },
+      {
+        "name": "weight",
+        "value": "½ lb."
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_YELLOW_SAPPHIRE",
@@ -13594,7 +33274,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_PHB_ITEM_YEWWAND",
@@ -13611,7 +33313,29 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "10",
     "weight": "1 lb.",
     "slot": "onehand",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "category",
+        "value": "Spellcasting Focus"
+      },
+      {
+        "name": "cost",
+        "value": "10"
+      },
+      {
+        "name": "weight",
+        "value": "1 lb."
+      },
+      {
+        "name": "container",
+        "value": "Druidic Focus"
+      },
+      {
+        "name": "slot",
+        "value": "onehand"
+      }
+    ]
   },
   {
     "id": "ID_WOTC_DMG_ITEM_GEMSTONE_ZIRCON",
@@ -13628,6 +33352,28 @@ export const BUILT_IN_SRD_ITEM_ELEMENTS = [
     "cost": "50",
     "weight": "",
     "slot": "",
-    "attunement": ""
+    "attunement": "",
+    "setters": [
+      {
+        "name": "keywords",
+        "value": "gemstone"
+      },
+      {
+        "name": "category",
+        "value": "Treasure"
+      },
+      {
+        "name": "cost",
+        "value": "50"
+      },
+      {
+        "name": "stackable",
+        "value": "true"
+      },
+      {
+        "name": "valuable",
+        "value": "true"
+      }
+    ]
   }
 ] as const;

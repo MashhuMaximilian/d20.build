@@ -128,6 +128,7 @@ function parseElements(sourceUrl, xml) {
       weight: setterMap.weight ?? "",
       slot: setterMap.slot ?? "",
       attunement: setterMap.attunement ?? "",
+      setters,
     });
   }
 

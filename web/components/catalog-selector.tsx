@@ -35,12 +35,16 @@ function getSourceFilterLabel(item: CatalogItem) {
 
 type CatalogSelectorProps = {
   actionLabel?: string;
+  defaultDetailView?: "overview" | "mechanics" | "features" | "reference";
   emptyMessage?: string;
   items: CatalogItem[];
   label: string;
   onAction?: (id: string) => void;
   onSelect: (id: string) => void;
+  preferredTags?: string[];
   selectedId: string;
+  tagSectionLabel?: string;
+  tagLimit?: number;
 };
 
 export function escapeHtml(value: string) {
@@ -262,12 +266,16 @@ export function getPreviewText(text: string) {
 
 export function CatalogSelector({
   actionLabel,
+  defaultDetailView,
   emptyMessage = "No matching entries.",
   items,
   label,
   onAction,
   onSelect,
+  preferredTags = [],
   selectedId,
+  tagSectionLabel = "Filter by tags",
+  tagLimit = 12,
 }: CatalogSelectorProps) {
   const actionMode = typeof onAction === "function";
   const [query, setQuery] = useState("");
@@ -276,7 +284,7 @@ export function CatalogSelector({
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">(
-    getDefaultDetailView(label),
+    defaultDetailView ?? getDefaultDetailView(label),
   );
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -305,13 +313,14 @@ export function CatalogSelector({
     const abilityTags = sorted
       .map(([tag]) => tag)
       .filter((tag) => /^[+-]\d+\s[A-Z]{3,}$/.test(tag));
+    const prioritized = preferredTags.filter((tag) => counts.has(tag) && !abilityTags.includes(tag));
     const remaining = sorted
       .map(([tag]) => tag)
-      .filter((tag) => !abilityTags.includes(tag))
-      .slice(0, Math.max(0, 12 - abilityTags.length));
+      .filter((tag) => !abilityTags.includes(tag) && !prioritized.includes(tag))
+      .slice(0, Math.max(0, tagLimit - abilityTags.length - prioritized.length));
 
-    return [...abilityTags, ...remaining];
-  }, [items, sourceFilter]);
+    return [...abilityTags, ...prioritized, ...remaining];
+  }, [items, preferredTags, sourceFilter, tagLimit]);
 
   const sourceOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -442,8 +451,8 @@ export function CatalogSelector({
   const referenceMarkup = useMemo(() => getReferenceMarkup(previewItem, label), [label, previewItem]);
 
   useEffect(() => {
-    setDetailView(getDefaultDetailView(label));
-  }, [label, previewItem?.id]);
+    setDetailView(defaultDetailView ?? getDefaultDetailView(label));
+  }, [defaultDetailView, label, previewItem?.id]);
 
   const activeFilters = [
     sourceFilter !== "all"
@@ -568,7 +577,7 @@ export function CatalogSelector({
 
             {tagOptions.length ? (
               <div className="catalog-selector__filterGroup">
-                <span className="catalog-selector__sectionLabel">Filter by tags</span>
+                <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                 <div className="catalog-selector__filterTags">
                   {tagOptions.map((tag) => (
                     <button
@@ -726,7 +735,7 @@ export function CatalogSelector({
 
                     {tagOptions.length ? (
                       <div className="catalog-selector__filterGroup catalog-selector__tableTags">
-                        <span className="catalog-selector__sectionLabel">Tags</span>
+                        <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                         <div className="catalog-selector__filterTags">
                           {tagOptions.map((tag) => (
                             <button

@@ -34,6 +34,7 @@ export type EquipmentCatalogEntry = {
   detailTags: string[];
   summaryLines: string[];
   impactLines: string[];
+  mechanicsLines: string[];
 };
 
 const ITEM_ELEMENT_TYPES = new Set(["Item", "Weapon", "Armor", "Magic Item"]);
@@ -41,6 +42,14 @@ const ITEM_ELEMENT_TYPES = new Set(["Item", "Weapon", "Armor", "Magic Item"]);
 function cleanValue(value?: string | null) {
   return value?.trim() || undefined;
 }
+
+type SetterEntry = {
+  name: string;
+  value: string;
+  type?: string;
+  modifier?: string;
+  alt?: string;
+};
 
 function categoryFromText(value: string | undefined, fallbackName: string) {
   if (!value) {
@@ -183,6 +192,111 @@ function familyFromEntry(input: {
   return "Miscellaneous";
 }
 
+function getSetterEntriesMap(setters: SetterEntry[]) {
+  const grouped = new Map<string, SetterEntry[]>();
+  setters.forEach((setter) => {
+    if (!setter.name) {
+      return;
+    }
+    const current = grouped.get(setter.name) ?? [];
+    current.push(setter);
+    grouped.set(setter.name, current);
+  });
+  return grouped;
+}
+
+function getFirstSetterValue(setters: SetterEntry[], name: string) {
+  return cleanValue(setters.find((setter) => setter.name === name)?.value);
+}
+
+function humanizeSupportTag(tag: string) {
+  return tag
+    .replace(/^ID_INTERNAL_/, "")
+    .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^WEAPON_CATEGORY_/, "")
+    .replace(/^WEAPON_PROPERTY_/, "")
+    .replace(/^WEAPON_GROUP_/, "")
+    .replace(/^DAMAGE_TYPE_/, "")
+    .replace(/^ARMOR_GROUP_/, "")
+    .replaceAll("_", " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function getPropertyLines(supports: string[]) {
+  return supports
+    .filter(
+      (tag) =>
+        tag.includes("WEAPON_PROPERTY") ||
+        tag.includes("WEAPON_CATEGORY") ||
+        tag.includes("DAMAGE_TYPE"),
+    )
+    .map(humanizeSupportTag);
+}
+
+function getMechanicalBreakdown(input: {
+  elementType: string;
+  setters: SetterEntry[];
+  supports: string[];
+  rawCategory?: string;
+  rarity?: string;
+  cost?: string;
+  weight?: string;
+  slot?: string;
+  attunement?: string;
+}) {
+  const grouped = getSetterEntriesMap(input.setters);
+  const damageEntries = grouped.get("damage") ?? [];
+  const damageLine = damageEntries.length
+    ? damageEntries
+        .map((entry) => `${entry.value}${entry.type ? ` ${entry.type}` : ""}`.trim())
+        .join(" / ")
+    : "";
+  const rangeLine = getFirstSetterValue(input.setters, "range");
+  const enhancementLine = getFirstSetterValue(input.setters, "enhancement");
+  const weaponBase = getFirstSetterValue(input.setters, "weapon");
+  const armorBase = getFirstSetterValue(input.setters, "armor");
+  const keywords = getFirstSetterValue(input.setters, "keywords");
+  const properties = getPropertyLines(input.supports);
+
+  return [
+    input.rawCategory ? `Category: ${input.rawCategory}` : "",
+    damageLine ? `Damage: ${damageLine}` : "",
+    rangeLine ? `Range: ${rangeLine}` : "",
+    enhancementLine ? `Enhancement: +${enhancementLine}` : "",
+    weaponBase ? `Base weapon: ${weaponBase}` : "",
+    armorBase ? `Base armor: ${humanizeSupportTag(armorBase)}` : "",
+    keywords ? `Keywords: ${keywords}` : "",
+    ...properties,
+    input.rarity ? `Rarity: ${input.rarity}` : "Mundane",
+    input.cost ? `Cost: ${input.cost}` : "",
+    input.weight ? `Weight: ${input.weight}` : "",
+    input.slot ? `Slot: ${input.slot}` : "",
+    input.attunement ? `Attunement: ${input.attunement}` : "",
+    input.elementType ? `Item type: ${input.elementType}` : "",
+  ].filter(Boolean);
+}
+
+function getReferenceMarkup(input: {
+  descriptionHtml?: string;
+  description: string;
+  mechanicsLines: string[];
+}) {
+  const mechanicsMarkup = input.mechanicsLines.length
+    ? `<ul>${input.mechanicsLines.map((line) => `<li>${line}</li>`).join("")}</ul>`
+    : "";
+
+  if (input.descriptionHtml?.trim()) {
+    return `${mechanicsMarkup}${input.descriptionHtml}`;
+  }
+
+  if (input.description.trim()) {
+    return `${mechanicsMarkup}<p>${input.description}</p>`;
+  }
+
+  return mechanicsMarkup;
+}
+
 function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
   const rawCategory = cleanValue(item.category);
   const rawSubtype = cleanValue(item.subtype);
@@ -203,6 +317,8 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
   const attunable = isInventoryItemAttunable(attunement, rarity, item.name);
   const filterTags = [
     family,
+    rawCategory || "",
+    rawSubtype || "",
     category.replace(/-/g, " "),
     item.type,
     rarity ? `Rarity: ${rarity}` : "Mundane",
@@ -223,6 +339,17 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
     attunable ? "Can attune" : "",
     rarity ? `Magic: ${rarity}` : "Mundane gear",
   ].filter(Boolean);
+  const mechanicsLines = getMechanicalBreakdown({
+    elementType: item.type,
+    setters: item.setters,
+    supports: [...item.supports],
+    rawCategory,
+    rarity,
+    cost,
+    weight,
+    slot,
+    attunement,
+  });
 
   return {
     id: item.id,
@@ -232,7 +359,11 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
     source: item.source,
     sourceUrl: item.sourceUrl,
     description: item.description,
-    detailHtml: item.descriptionHtml,
+    detailHtml: getReferenceMarkup({
+      descriptionHtml: item.descriptionHtml,
+      description: item.description,
+      mechanicsLines,
+    }),
     category,
     family,
     rawCategory,
@@ -248,6 +379,7 @@ function normalizeBuiltInItem(item: BuiltInItemElement): EquipmentCatalogEntry {
     detailTags,
     summaryLines,
     impactLines,
+    mechanicsLines,
   };
 }
 
@@ -268,11 +400,35 @@ function getImportedSetterMap(element: ImportedElement) {
   return Object.fromEntries(entries);
 }
 
+function getImportedSetterEntries(element: ImportedElement): SetterEntry[] {
+  return Array.isArray(element.setters)
+    ? element.setters.flatMap((setter) => {
+        if (!setter || typeof setter !== "object") {
+          return [];
+        }
+        const candidate = setter as Record<string, unknown>;
+        if (typeof candidate.name !== "string" || typeof candidate.value !== "string") {
+          return [];
+        }
+        return [
+          {
+            name: candidate.name,
+            value: candidate.value,
+            type: typeof candidate.type === "string" ? candidate.type : undefined,
+            modifier: typeof candidate.modifier === "string" ? candidate.modifier : undefined,
+            alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+          } satisfies SetterEntry,
+        ];
+      })
+    : [];
+}
+
 function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry | null {
   if (!ITEM_ELEMENT_TYPES.has(element.element_type)) {
     return null;
   }
 
+  const setterEntries = getImportedSetterEntries(element);
   const setters = getImportedSetterMap(element);
   const rawCategory = cleanValue(setters.category);
   const rawSubtype = cleanValue(setters.type);
@@ -293,6 +449,8 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
   const attunable = isInventoryItemAttunable(attunement, rarity, element.name);
   const filterTags = [
     family,
+    rawCategory || "",
+    rawSubtype || "",
     category.replace(/-/g, " "),
     element.element_type,
     rarity ? `Rarity: ${rarity}` : "Mundane",
@@ -307,6 +465,19 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
     weight ? `Weight: ${weight}` : "",
     attunable ? "Requires attunement" : "",
   ].filter(Boolean);
+  const mechanicsLines = getMechanicalBreakdown({
+    elementType: element.element_type,
+    setters: setterEntries,
+    supports: Array.isArray(element.supports)
+      ? element.supports.filter((entry): entry is string => typeof entry === "string")
+      : [],
+    rawCategory,
+    rarity,
+    cost,
+    weight,
+    slot,
+    attunement,
+  });
 
   return {
     id: element.element_id,
@@ -316,7 +487,11 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
     source: element.source_name ?? "Imported source",
     sourceUrl: element.source_url,
     description: element.description_text ?? "",
-    detailHtml: element.description_html ?? undefined,
+    detailHtml: getReferenceMarkup({
+      descriptionHtml: element.description_html ?? undefined,
+      description: element.description_text ?? "",
+      mechanicsLines,
+    }),
     category,
     family,
     rawCategory,
@@ -336,6 +511,7 @@ function normalizeImportedItem(element: ImportedElement): EquipmentCatalogEntry 
       attunable ? "Can attune" : "",
       rarity ? `Magic: ${rarity}` : "Mundane gear",
     ].filter(Boolean),
+    mechanicsLines,
   };
 }
 
@@ -349,11 +525,17 @@ export async function getMergedEquipmentCatalog() {
     .filter((item): item is EquipmentCatalogEntry => Boolean(item));
 
   const builtIn = getBuiltInEquipmentCatalog();
-  const byId = new Map<string, EquipmentCatalogEntry>();
-
-  [...builtIn, ...imported].forEach((item) => {
-    byId.set(item.id, item);
+  const builtInById = new Map<string, EquipmentCatalogEntry>();
+  builtIn.forEach((item) => {
+    builtInById.set(item.id, item);
   });
 
-  return [...byId.values()].sort((left, right) => left.name.localeCompare(right.name) || left.source.localeCompare(right.source));
+  const importedById = new Map<string, EquipmentCatalogEntry>();
+  imported.forEach((item) => {
+    importedById.set(item.id, item);
+  });
+
+  return [...builtInById.values(), ...importedById.values()].sort(
+    (left, right) => left.name.localeCompare(right.name) || left.source.localeCompare(right.source),
+  );
 }
