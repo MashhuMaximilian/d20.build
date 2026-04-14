@@ -818,6 +818,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
   gap: 18px;
+  align-items: start;
 }
 
 .equipment-step__panel,
