@@ -281,6 +281,7 @@ export function CatalogSelector({
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "built-in" | "imported">("all");
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [primaryTagFilter, setPrimaryTagFilter] = useState<string | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">(
@@ -322,6 +323,16 @@ export function CatalogSelector({
     return [...abilityTags, ...prioritized, ...remaining];
   }, [items, preferredTags, sourceFilter, tagLimit]);
 
+  const primaryTagOptions = useMemo(
+    () => preferredTags.filter((tag) => tagOptions.includes(tag)),
+    [preferredTags, tagOptions],
+  );
+
+  const secondaryTagOptions = useMemo(
+    () => tagOptions.filter((tag) => !primaryTagOptions.includes(tag)),
+    [primaryTagOptions, tagOptions],
+  );
+
   const sourceOptions = useMemo(() => {
     const counts = new Map<string, number>();
 
@@ -351,6 +362,10 @@ export function CatalogSelector({
         return false;
       }
 
+      if (primaryTagFilter && !(item.filterTags ?? []).includes(primaryTagFilter)) {
+        return false;
+      }
+
       if (tagFilter && !(item.filterTags ?? []).includes(tagFilter)) {
         return false;
       }
@@ -376,7 +391,7 @@ export function CatalogSelector({
 
       return matchesSearchText(normalized, searchParts);
     });
-  }, [items, query, selectedSources, sourceFilter, tagFilter]);
+  }, [items, primaryTagFilter, query, selectedSources, sourceFilter, tagFilter]);
 
   const sortedItems = useMemo(
     () =>
@@ -401,10 +416,20 @@ export function CatalogSelector({
       return;
     }
 
-    if (!tagOptions.includes(tagFilter)) {
+    if (!secondaryTagOptions.includes(tagFilter) && !primaryTagOptions.includes(tagFilter)) {
       setTagFilter(null);
     }
-  }, [tagFilter, tagOptions]);
+  }, [primaryTagOptions, secondaryTagOptions, tagFilter]);
+
+  useEffect(() => {
+    if (!primaryTagFilter) {
+      return;
+    }
+
+    if (!primaryTagOptions.includes(primaryTagFilter)) {
+      setPrimaryTagFilter(null);
+    }
+  }, [primaryTagFilter, primaryTagOptions]);
 
   useEffect(() => {
     if (!selectedSources.length) {
@@ -460,6 +485,7 @@ export function CatalogSelector({
         ? "Built-in SRD"
         : "Imported sources"
       : "",
+    primaryTagFilter ?? "",
     ...selectedSources,
     tagFilter ?? "",
     query ? `Search: ${query}` : "",
@@ -520,6 +546,7 @@ export function CatalogSelector({
                   type="button"
                   onClick={() => {
                     setSourceFilter("all");
+                    setPrimaryTagFilter(null);
                     setTagFilter(null);
                     setSelectedSources([]);
                   }}
@@ -531,6 +558,7 @@ export function CatalogSelector({
                   type="button"
                   onClick={() => {
                     setSourceFilter("built-in");
+                    setPrimaryTagFilter(null);
                     setTagFilter(null);
                     setSelectedSources([]);
                   }}
@@ -542,6 +570,7 @@ export function CatalogSelector({
                   type="button"
                   onClick={() => {
                     setSourceFilter("imported");
+                    setPrimaryTagFilter(null);
                     setTagFilter(null);
                     setSelectedSources([]);
                   }}
@@ -575,11 +604,29 @@ export function CatalogSelector({
               </div>
             ) : null}
 
-            {tagOptions.length ? (
+            {primaryTagOptions.length ? (
               <div className="catalog-selector__filterGroup">
                 <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                 <div className="catalog-selector__filterTags">
-                  {tagOptions.map((tag) => (
+                  {primaryTagOptions.map((tag) => (
+                    <button
+                      key={tag}
+                      className={`catalog-selector__filterChip${primaryTagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
+                      type="button"
+                      onClick={() => setPrimaryTagFilter((current) => (current === tag ? null : tag))}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {secondaryTagOptions.length ? (
+              <div className="catalog-selector__filterGroup">
+                <span className="catalog-selector__sectionLabel">Extra filters</span>
+                <div className="catalog-selector__filterTags">
+                  {secondaryTagOptions.map((tag) => (
                     <button
                       key={tag}
                       className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
@@ -649,6 +696,7 @@ export function CatalogSelector({
                   className="button button--secondary button--compact"
                   type="button"
                   onClick={() => {
+                    setPrimaryTagFilter(null);
                     setTagFilter(null);
                     setSourceFilter("all");
                     setSelectedSources([]);
@@ -685,6 +733,7 @@ export function CatalogSelector({
                             type="button"
                             onClick={() => {
                               setSourceFilter(option);
+                              setPrimaryTagFilter(null);
                               setTagFilter(null);
                               setSelectedSources([]);
                             }}
@@ -733,11 +782,29 @@ export function CatalogSelector({
                       </div>
                     ) : null}
 
-                    {tagOptions.length ? (
+                    {primaryTagOptions.length ? (
                       <div className="catalog-selector__filterGroup catalog-selector__tableTags">
                         <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                         <div className="catalog-selector__filterTags">
-                          {tagOptions.map((tag) => (
+                          {primaryTagOptions.map((tag) => (
+                            <button
+                              key={tag}
+                              className={`catalog-selector__filterChip${primaryTagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              onClick={() => setPrimaryTagFilter((current) => (current === tag ? null : tag))}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {secondaryTagOptions.length ? (
+                      <div className="catalog-selector__filterGroup catalog-selector__tableTags">
+                        <span className="catalog-selector__sectionLabel">Extra filters</span>
+                        <div className="catalog-selector__filterTags">
+                          {secondaryTagOptions.map((tag) => (
                             <button
                               key={tag}
                               className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
