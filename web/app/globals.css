@@ -939,6 +939,7 @@ a {
 
 .equipment-step__accordion--root {
   grid-column: 1 / 2;
+  align-self: start;
 }
 
 .equipment-step__accordionBody--root {
@@ -951,6 +952,10 @@ a {
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
+}
+
+.equipment-step__panel--inventory {
+  align-self: start;
 }
 
 .equipment-step__inventoryTableWrap {

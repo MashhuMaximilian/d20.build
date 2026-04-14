@@ -77,6 +77,48 @@ function uniqueItems(items: StartingEquipmentAutoItem[]) {
 
 function getClassPlan(classId: string): StartingEquipmentPlan {
   switch (classId) {
+    case "ID_WOTC_ERLW_CLASS_ARTIFICER":
+      return {
+        autoItems: [auto("Thieves' Tools", "class"), auto("Dungeoneer's Pack", "class")],
+        choiceGroups: [
+          group(
+            "artificer-armor",
+            "Armor",
+            "Choose the artificer's starting armor.",
+            "class",
+            [
+              option("studded-leather", "Studded Leather Armor", ["Studded Leather Armor"]),
+              option("scale-mail", "Scale Mail", ["Scale Mail"]),
+            ],
+          ),
+          group(
+            "artificer-ranged",
+            "Ranged option",
+            "Choose the artificer's starting ranged loadout.",
+            "class",
+            [
+              option("crossbow", "Light Crossbow + 20 Bolts", ["Light Crossbow", "20 Bolts"]),
+              option("simple-weapon", "Simple Weapon", ["Simple Weapon"]),
+            ],
+          ),
+          group(
+            "artificer-tools",
+            "Artisan's tools",
+            "Choose the artisan's tools the artificer begins with.",
+            "class",
+            [option("artisan-tools", "Artisan's Tools", ["Artisan's Tools"])],
+          ),
+          group(
+            "artificer-sidearm",
+            "Backup weapon",
+            "Choose the second simple weapon carried alongside the artificer's tools.",
+            "class",
+            [option("simple-weapon", "Simple Weapon", ["Simple Weapon"])],
+          ),
+        ],
+        notes: [],
+        goldAlternative: classGoldAlternative("5d4 × 10 gp", 125),
+      };
     case "ID_WOTC_PHB_CLASS_BARBARIAN":
       return {
         autoItems: [auto("Explorer's Pack", "class"), auto("4 Javelins", "class")],
