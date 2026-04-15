@@ -2641,6 +2641,7 @@ export function BuilderEditor({
               inventoryItems={draft.inventoryItems}
               currency={draft.inventoryCurrency}
               equipmentNotes={draft.equipmentNotes}
+              effectiveAbilities={effectiveAbilities}
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,

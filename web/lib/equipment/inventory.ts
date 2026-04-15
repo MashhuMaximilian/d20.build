@@ -1,4 +1,4 @@
-import type { CharacterCurrency, CharacterInventoryItem } from "@/lib/characters/types";
+import type { AbilityKey, CharacterCurrency, CharacterInventoryItem } from "@/lib/characters/types";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
 
 export type EquipmentAcquisitionMode = "gear" | "gold";
@@ -62,6 +62,15 @@ export type BaseWeaponOption = {
   group: "axes" | "bows" | "crossbows" | "daggers" | "hammers" | "polearms" | "swords" | "weapons";
 };
 
+export type BaseArmorRule = {
+  id: string;
+  name: string;
+  match: RegExp;
+  baseAc: number;
+  dexMode: "none" | "full" | "max2";
+  strengthRequirement?: number;
+};
+
 export const BASE_WEAPON_OPTIONS: BaseWeaponOption[] = [
   { id: "club", name: "Club", damage: "1d4 bludgeoning", group: "weapons" },
   { id: "dagger", name: "Dagger", damage: "1d4 piercing", group: "daggers" },
@@ -97,6 +106,25 @@ export const BASE_WEAPON_OPTIONS: BaseWeaponOption[] = [
   { id: "heavy-crossbow", name: "Heavy Crossbow", damage: "1d10 piercing", group: "crossbows" },
   { id: "hand-crossbow", name: "Hand Crossbow", damage: "1d6 piercing", group: "crossbows" },
 ];
+
+export const BASE_ARMOR_RULES: BaseArmorRule[] = [
+  { id: "padded", name: "Padded Armor", match: /\bpadded\b/i, baseAc: 11, dexMode: "full" },
+  { id: "studded-leather", name: "Studded Leather Armor", match: /\bstudded leather\b/i, baseAc: 12, dexMode: "full" },
+  { id: "leather", name: "Leather Armor", match: /\bleather armor\b|\bleather\b/i, baseAc: 11, dexMode: "full" },
+  { id: "hide", name: "Hide Armor", match: /\bhide\b/i, baseAc: 12, dexMode: "max2" },
+  { id: "chain-shirt", name: "Chain Shirt", match: /\bchain shirt\b/i, baseAc: 13, dexMode: "max2" },
+  { id: "scale-mail", name: "Scale Mail", match: /\bscale mail\b/i, baseAc: 14, dexMode: "max2" },
+  { id: "breastplate", name: "Breastplate", match: /\bbreastplate\b/i, baseAc: 14, dexMode: "max2" },
+  { id: "half-plate", name: "Half Plate", match: /\bhalf plate\b/i, baseAc: 15, dexMode: "max2" },
+  { id: "ring-mail", name: "Ring Mail", match: /\bring mail\b/i, baseAc: 14, dexMode: "none" },
+  { id: "chain-mail", name: "Chain Mail", match: /\bchain mail\b/i, baseAc: 16, dexMode: "none", strengthRequirement: 13 },
+  { id: "splint", name: "Splint Armor", match: /\bsplint\b/i, baseAc: 17, dexMode: "none", strengthRequirement: 15 },
+  { id: "plate", name: "Plate Armor", match: /\bplate armor\b|\bplate\b/i, baseAc: 18, dexMode: "none", strengthRequirement: 15 },
+];
+
+type InventoryEffectContext = {
+  abilities?: Partial<Record<AbilityKey, number>>;
+};
 
 function slugify(value: string) {
   return value
@@ -212,6 +240,37 @@ export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryIte
   }
 
   return BASE_WEAPON_OPTIONS.filter((option) => groups.has(option.group));
+}
+
+export function needsBaseWeaponResolution(item: CharacterInventoryItem) {
+  return isWeaponLike(item) && !item.damage && !item.baseDamage && getBaseWeaponOptionsForInventoryItem(item).length > 0;
+}
+
+function getAbilityModifier(score?: number) {
+  if (!Number.isFinite(score)) {
+    return 0;
+  }
+
+  return Math.floor(((score ?? 10) - 10) / 2);
+}
+
+function formatModifier(value: number) {
+  return value >= 0 ? `+${value}` : `${value}`;
+}
+
+function getBaseArmorRule(item: CharacterInventoryItem) {
+  const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""}`.toLowerCase();
+  return BASE_ARMOR_RULES.find((rule) => rule.match.test(haystack));
+}
+
+function getArmorDexContribution(rule: BaseArmorRule, dexModifier: number) {
+  if (rule.dexMode === "none") {
+    return 0;
+  }
+  if (rule.dexMode === "max2") {
+    return Math.min(dexModifier, 2);
+  }
+  return dexModifier;
 }
 
 export function createEmptyCurrency(): CharacterCurrency {
@@ -345,7 +404,7 @@ export function summarizeInventory(items: CharacterInventoryItem[]) {
   };
 }
 
-function getArmorShieldAcLine(item: CharacterInventoryItem) {
+function getArmorShieldAcLine(item: CharacterInventoryItem, context: InventoryEffectContext) {
   if (!item.equipped || !["armor", "shield"].includes(item.category)) {
     return "";
   }
@@ -361,9 +420,26 @@ function getArmorShieldAcLine(item: CharacterInventoryItem) {
   }
 
   const enhancement = inferItemEnhancementBonus(item);
-  return enhancement
-    ? `${item.name}: +${enhancement} armor bonus while equipped`
-    : `${item.name}: armor equipped; final AC formula resolves on the sheet`;
+  const armorRule = getBaseArmorRule(item);
+  if (!armorRule) {
+    return enhancement
+      ? `${item.name}: +${enhancement} armor bonus while equipped`
+      : `${item.name}: armor equipped; base armor formula unresolved`;
+  }
+
+  const dexModifier = getAbilityModifier(context.abilities?.dexterity);
+  const dexContribution = getArmorDexContribution(armorRule, dexModifier);
+  const armorAc = armorRule.baseAc + dexContribution + enhancement;
+  const dexText =
+    armorRule.dexMode === "none"
+      ? ""
+      : armorRule.dexMode === "max2"
+        ? `, Dex ${formatModifier(dexContribution)} max 2`
+        : `, Dex ${formatModifier(dexContribution)}`;
+  const magicText = enhancement ? `, +${enhancement} magic` : "";
+  const strengthText = armorRule.strengthRequirement ? `, Str ${armorRule.strengthRequirement} recommended` : "";
+
+  return `${item.name}: AC ${armorAc} while equipped (${armorRule.name}: ${armorRule.baseAc}${dexText}${magicText}${strengthText})`;
 }
 
 function getWeaponEffectLine(item: CharacterInventoryItem) {
@@ -387,20 +463,85 @@ function getWeaponEffectLine(item: CharacterInventoryItem) {
   return pieces.join(": ");
 }
 
-export function getInventoryEffectSummary(items: CharacterInventoryItem[]) {
+function stripMarkup(value?: string) {
+  return (value ?? "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isItemEffectActive(item: CharacterInventoryItem) {
+  if (!item.equippable) {
+    return true;
+  }
+  if (!item.equipped) {
+    return false;
+  }
+  return !item.attunable || item.attuned;
+}
+
+function getItemGrantLines(item: CharacterInventoryItem) {
+  if (!isItemEffectActive(item)) {
+    return [];
+  }
+
+  const text = stripMarkup(`${item.name}. ${item.detailHtml ?? ""} ${item.notes ?? ""}`);
+  const normalized = text.toLowerCase();
+  const lines: string[] = [];
+
+  if (/\bheadband of intellect\b/.test(normalized)) {
+    lines.push(`${item.name}: sets Intelligence to 19 while active unless already higher.`);
+  } else if (/\bamulet of health\b/.test(normalized)) {
+    lines.push(`${item.name}: sets Constitution to 19 while active unless already higher.`);
+  } else if (/\bgauntlets of ogre power\b/.test(normalized)) {
+    lines.push(`${item.name}: sets Strength to 19 while active unless already higher.`);
+  } else if (/\bbelt of .*giant strength\b/.test(normalized)) {
+    lines.push(`${item.name}: sets Strength by giant type; choose/record the exact variant before final sheet/PDF.`);
+  } else if (/\bstrength score changes to\b/.test(normalized)) {
+    lines.push(`${item.name}: changes Strength while active; exact value needs item-specific resolution.`);
+  }
+
+  if (/\bgain proficiency\b|\byou are proficient\b|\bproficiency in\b/.test(normalized)) {
+    lines.push(`${item.name}: grants or changes proficiency while active; M4.4 will expose this as a manual/equipment grant.`);
+  }
+
+  if (/\byou can cast\b|\bcast the\b|\bgain the effect of (?:the )?[a-z]/.test(normalized)) {
+    lines.push(`${item.name}: grants spellcasting or a spell-like effect while active; M4.4 will expose this as an additional spell/effect grant.`);
+  }
+
+  if (/\bincrease one of your ability scores\b|\bability score increases\b|\bscore increases by\b/.test(normalized)) {
+    lines.push(`${item.name}: grants an ability-score change; M4.4 will expose this as an additional ASI/effect grant.`);
+  }
+
+  return lines;
+}
+
+export function getInventoryEffectSummary(items: CharacterInventoryItem[], context: InventoryEffectContext = {}) {
   const attunedItems = items.filter((item) => item.attuned);
   const equippedItems = items.filter((item) => item.equipped);
-  const acLines = items.map(getArmorShieldAcLine).filter(Boolean);
+  const equippedArmor = equippedItems.filter((item) => item.category === "armor");
+  const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
+  const acLines = items.map((item) => getArmorShieldAcLine(item, context)).filter(Boolean);
   const weaponLines = items.map(getWeaponEffectLine).filter(Boolean);
+  const itemGrantLines = items.flatMap(getItemGrantLines);
   const warnings = [
     attunedItems.length > ATTUNEMENT_LIMIT
       ? `Attunement limit exceeded: ${attunedItems.length}/${ATTUNEMENT_LIMIT}.`
+      : "",
+    attunedItems.length >= ATTUNEMENT_LIMIT
+      ? `Attunement slots full: ${attunedItems.length}/${ATTUNEMENT_LIMIT}. Unattune an item before attuning another.`
+      : "",
+    equippedArmor.length > 1
+      ? `Multiple armor entries are equipped: ${equippedArmor.map((item) => item.name).join(", ")}. The sheet should use one armor formula.`
+      : "",
+    equippedShields.length > 1
+      ? `Multiple shields are equipped: ${equippedShields.map((item) => item.name).join(", ")}. Check with your table before stacking shield bonuses.`
       : "",
     ...items
       .filter((item) => item.equipped && item.attunable && !item.attuned)
       .map((item) => `${item.name} is equipped but not attuned; its attunement-gated effects should stay inactive.`),
     ...items
-      .filter((item) => item.equipped && isWeaponLike(item) && !item.damage && !item.baseDamage)
+      .filter((item) => item.equipped && needsBaseWeaponResolution(item))
       .map((item) => `${item.name} needs a base weapon or damage value before sheet/PDF attack rows can be complete.`),
   ].filter(Boolean);
 
@@ -410,6 +551,7 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[]) {
     equippedCount: equippedItems.length,
     acLines,
     weaponLines,
+    itemGrantLines,
     warnings,
   };
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import { MarkdownEditor } from "@/components/markdown-editor";
-import type { CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem } from "@/lib/characters/types";
+import type { AbilityKey, CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem } from "@/lib/characters/types";
 import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
 import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
 import type { EquipmentAcquisitionMode, InventoryCategory } from "@/lib/equipment/inventory";
@@ -13,6 +13,7 @@ import {
   getBaseWeaponOptionsForInventoryItem,
   getCurrencyTotalInGp,
   getInventoryEffectSummary,
+  needsBaseWeaponResolution,
   summarizeInventory,
 } from "@/lib/equipment/inventory";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
@@ -25,6 +26,7 @@ type EquipmentStepProps = {
   inventoryItems: CharacterInventoryItem[];
   currency: CharacterCurrency;
   equipmentNotes: CharacterEquipmentNotes;
+  effectiveAbilities: Record<AbilityKey, number>;
   onModeChange: (mode: EquipmentAcquisitionMode) => void;
   onGoldOverrideChange: (value: number | null) => void;
   onSelect: (groupId: string, optionId: string) => void;
@@ -71,6 +73,10 @@ function formatCurrency(currency: CharacterCurrency) {
 
 function titleCaseCategory(value: string) {
   return value.replace(/-/g, " ").replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function isGenericDamage(value?: string) {
+  return /\buses the chosen\b|\bchosen .*damage die\b/i.test(value ?? "");
 }
 
 const ITEM_BROWSER_PREFERRED_TAGS = [
@@ -130,6 +136,7 @@ export function EquipmentStep({
   inventoryItems,
   currency,
   equipmentNotes,
+  effectiveAbilities,
   onModeChange,
   onGoldOverrideChange,
   onSelect,
@@ -163,7 +170,10 @@ export function EquipmentStep({
   const [editingItemDamage, setEditingItemDamage] = useState("");
   const [editingItemNotes, setEditingItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
-  const effectSummary = useMemo(() => getInventoryEffectSummary(inventoryItems), [inventoryItems]);
+  const effectSummary = useMemo(
+    () => getInventoryEffectSummary(inventoryItems, { abilities: effectiveAbilities }),
+    [effectiveAbilities, inventoryItems],
+  );
 
   useEffect(() => {
     let active = true;
@@ -363,13 +373,19 @@ export function EquipmentStep({
           </div>
           <div className="equipment-step__effects">
             <span className="builder-panel__label">Equipment effects</span>
-            {effectSummary.acLines.length || effectSummary.weaponLines.length || effectSummary.warnings.length ? (
+            {effectSummary.acLines.length ||
+            effectSummary.weaponLines.length ||
+            effectSummary.itemGrantLines.length ||
+            effectSummary.warnings.length ? (
               <ul className="equipment-step__effectList">
                 {effectSummary.acLines.map((line) => (
                   <li key={`ac-${line}`}>{line}</li>
                 ))}
                 {effectSummary.weaponLines.map((line) => (
                   <li key={`weapon-${line}`}>{line}</li>
+                ))}
+                {effectSummary.itemGrantLines.map((line) => (
+                  <li key={`grant-${line}`}>{line}</li>
                 ))}
                 {effectSummary.warnings.map((line) => (
                   <li className="equipment-step__effectWarning" key={`warning-${line}`}>
@@ -561,6 +577,10 @@ export function EquipmentStep({
                 {visibleInventoryItems.length ? (
                   visibleInventoryItems.map((item) => {
                     const baseWeaponOptions = getBaseWeaponOptionsForInventoryItem(item);
+                    const baseWeaponRequired =
+                      baseWeaponOptions.length > 0 &&
+                      !editingItemBaseId &&
+                      (needsBaseWeaponResolution(item) || isGenericDamage(editingItemDamage));
                     const attunementBlocked =
                       item.attunable &&
                       !item.attuned &&
@@ -595,6 +615,11 @@ export function EquipmentStep({
                             {item.attuned ? "Attuned" : "Attune"}
                           </button>
                         ) : null}
+                        {attunementBlocked ? (
+                          <span className="equipment-step__actionWarning">
+                            Limit {effectSummary.attunedCount}/{effectSummary.attunementLimit}
+                          </span>
+                        ) : null}
                         {item.source === "manual" ? (
                           <button className="choice-chip" type="button" onClick={() => startEditingItem(item)}>
                             Edit
@@ -606,7 +631,7 @@ export function EquipmentStep({
                       </div>
                       {item.attackBonus || item.baseItemName || item.baseDamage || item.damage || item.notes ? (
                         <div className="equipment-step__inventoryNote">
-                          {item.attackBonus ? <span>Hit/damage bonus: {item.attackBonus}</span> : null}
+                          {item.attackBonus ? <span>Modifier: {item.attackBonus}</span> : null}
                           {item.baseItemName ? <span>Base: {item.baseItemName}</span> : null}
                           {item.baseDamage ? <span>Base damage: {item.baseDamage}</span> : null}
                           {item.damage ? <span>Damage: {item.damage}</span> : null}
@@ -652,7 +677,7 @@ export function EquipmentStep({
                               </select>
                             </label>
                             <label className="builder-field">
-                              <span className="builder-summary__meta">Hit / damage modifier</span>
+                              <span className="builder-summary__meta">Modifier</span>
                               <input
                                 className="input"
                                 placeholder="+1, +2..."
@@ -661,18 +686,11 @@ export function EquipmentStep({
                               />
                             </label>
                           </div>
-                          <label className="builder-field">
-                            <span className="builder-summary__meta">Damage</span>
-                            <input
-                              className="input"
-                              placeholder="1d8 slashing, +1d6 fire..."
-                              value={editingItemDamage}
-                              onChange={(event) => setEditingItemDamage(event.target.value)}
-                            />
-                          </label>
                           {baseWeaponOptions.length ? (
                             <label className="builder-field">
-                              <span className="builder-summary__meta">Base weapon for sheet/PDF damage</span>
+                              <span className="builder-summary__meta">
+                                Base weapon for sheet/PDF damage{baseWeaponRequired ? " (required)" : ""}
+                              </span>
                               <select
                                 className="input"
                                 value={editingItemBaseId}
@@ -681,7 +699,7 @@ export function EquipmentStep({
                                   setEditingItemBaseId(option?.id ?? "");
                                   setEditingItemBaseName(option?.name ?? "");
                                   setEditingItemBaseDamage(option?.damage ?? "");
-                                  if (option && (!editingItemDamage || editingItemDamage === editingItemBaseDamage)) {
+                                  if (option && (!editingItemDamage || editingItemDamage === editingItemBaseDamage || isGenericDamage(editingItemDamage))) {
                                     setEditingItemDamage(option.damage);
                                   }
                                 }}
@@ -693,8 +711,22 @@ export function EquipmentStep({
                                   </option>
                                 ))}
                               </select>
+                              {baseWeaponRequired ? (
+                                <span className="builder-summary__meta builder-summary__meta--warning">
+                                  Pick the underlying weapon so attacks and PDF damage can resolve.
+                                </span>
+                              ) : null}
                             </label>
                           ) : null}
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Damage</span>
+                            <input
+                              className="input"
+                              placeholder="1d8 slashing, +1d6 fire..."
+                              value={editingItemDamage}
+                              onChange={(event) => setEditingItemDamage(event.target.value)}
+                            />
+                          </label>
                           <label className="builder-field">
                             <span className="builder-summary__meta">Notes</span>
                             <MarkdownEditor
@@ -709,9 +741,9 @@ export function EquipmentStep({
                             <button
                               className="button button--secondary button--compact"
                               type="button"
-                              disabled={!editingItemName.trim()}
+                              disabled={!editingItemName.trim() || baseWeaponRequired}
                               onClick={() => {
-                                if (!editingItemName.trim()) {
+                                if (!editingItemName.trim() || baseWeaponRequired) {
                                   return;
                                 }
                                 onUpdateItem(item.id, {
@@ -834,7 +866,7 @@ export function EquipmentStep({
             </div>
             <div className="equipment-step__manualRow equipment-step__manualRow--balanced">
               <label className="builder-field">
-                <span className="builder-summary__meta">Hit / damage modifier</span>
+                <span className="builder-summary__meta">Modifier</span>
                 <input
                   className="input"
                   placeholder="+1, +2, advantage, table ruling..."
@@ -842,15 +874,7 @@ export function EquipmentStep({
                   onChange={(event) => setCustomItemAttackBonus(event.target.value)}
                 />
               </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Damage</span>
-                <input
-                  className="input"
-                  placeholder="1d8 slashing, +1d6 fire..."
-                  value={customItemDamage}
-                  onChange={(event) => setCustomItemDamage(event.target.value)}
-                />
-              </label>
+              <span aria-hidden="true" />
             </div>
             {customItemCategory === "weapon" ? (
               <label className="builder-field">
@@ -875,6 +899,15 @@ export function EquipmentStep({
                 </select>
               </label>
             ) : null}
+            <label className="builder-field">
+              <span className="builder-summary__meta">Damage</span>
+              <input
+                className="input"
+                placeholder="1d8 slashing, +1d6 fire..."
+                value={customItemDamage}
+                onChange={(event) => setCustomItemDamage(event.target.value)}
+              />
+            </label>
             <label className="builder-field">
               <span className="builder-summary__meta">Notes</span>
               <MarkdownEditor
