@@ -288,6 +288,56 @@ function getArmorBaseDetails(value: string | undefined) {
   return humanized ? [`Base armor: ${humanized}`] : [];
 }
 
+function getWeaponBaseDamageHint(input: {
+  name?: string;
+  weaponBase?: string;
+  keywords?: string;
+}) {
+  const haystack = [input.name, input.weaponBase, input.keywords].filter(Boolean).join(" ").toLowerCase();
+
+  if (/\blongsword\b/.test(haystack)) {
+    return "Base damage: Longsword 1d8 slashing (versatile 1d10)";
+  }
+
+  if (/\bshortsword\b/.test(haystack)) {
+    return "Base damage: Shortsword 1d6 piercing";
+  }
+
+  if (/\bgreatsword\b/.test(haystack)) {
+    return "Base damage: Greatsword 2d6 slashing";
+  }
+
+  if (/\brapier\b/.test(haystack)) {
+    return "Base damage: Rapier 1d8 piercing";
+  }
+
+  if (/\bscimitar\b/.test(haystack)) {
+    return "Base damage: Scimitar 1d6 slashing";
+  }
+
+  if (/\bdagger\b/.test(haystack)) {
+    return "Base damage: Dagger 1d4 piercing";
+  }
+
+  if (/\bweapon_group_swords\b|\bswords\b|\bsword\b/.test(haystack)) {
+    return "Base damage: Uses the chosen sword's damage die";
+  }
+
+  if (/\bweapon_group_axes\b|\baxe\b/.test(haystack)) {
+    return "Base damage: Uses the chosen axe's damage die";
+  }
+
+  if (/\bweapon_group_bows\b|\bbow\b/.test(haystack)) {
+    return "Base damage: Uses the chosen bow's damage die";
+  }
+
+  if (/\bweapon\b/.test(haystack)) {
+    return "Base damage: Uses the chosen base weapon's damage die";
+  }
+
+  return "";
+}
+
 function getPropertyLines(supports: string[]) {
   return supports
     .filter(
@@ -329,6 +379,13 @@ function getMechanicalBreakdown(input: {
   const properties = getPropertyLines(input.supports);
   const weaponBaseDetails = getWeaponBaseDetails(weaponBase);
   const armorBaseDetails = getArmorBaseDetails(armorBase);
+  const baseDamageHint = damageLine
+    ? ""
+    : getWeaponBaseDamageHint({
+        name: input.name,
+        weaponBase,
+        keywords,
+      });
   const isShield =
     input.rawSubtype?.toLowerCase().includes("shield") ||
     armorBase === "Shield" ||
@@ -349,6 +406,7 @@ function getMechanicalBreakdown(input: {
   return [
     input.rawCategory ? `Category: ${input.rawCategory}` : "",
     damageLine ? `Damage: ${damageLine}` : "",
+    baseDamageHint,
     versatileLine ? `Versatile: ${versatileLine}` : "",
     rangeLine ? `Range: ${rangeLine}` : "",
     !isShield && enhancementLine ? `Enhancement: +${enhancementLine}` : "",

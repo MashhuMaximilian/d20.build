@@ -542,6 +542,12 @@ a {
   color: var(--accent);
 }
 
+.builder-panel__headerRow .builder-panel__label,
+.equipment-step__inventoryHeader .builder-panel__label {
+  display: block;
+  margin-bottom: 6px;
+}
+
 .builder-summary__name {
   font-size: 1.6rem;
   line-height: 1.1;
@@ -1069,6 +1075,22 @@ a {
 
 .equipment-step__manualCard .markdown-editor__surface .bn-editor {
   min-height: 148px;
+}
+
+.equipment-step__inventoryNote {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.equipment-step__inventoryNote span {
+  padding: 3px 8px;
+  border: 1px solid rgba(146, 38, 16, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 248, 236, 0.85);
 }
 
 .leveling-step {

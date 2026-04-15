@@ -75,6 +75,8 @@ export type CharacterInventoryItem = {
   equipped: boolean;
   attunable: boolean;
   attuned: boolean;
+  attackBonus?: string;
+  damage?: string;
   notes?: string;
   detailHtml?: string;
 };
@@ -308,6 +310,8 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
             equipped: Boolean(item.equipped),
             attunable: Boolean(item.attunable),
             attuned: Boolean(item.attuned) && Boolean(item.attunable),
+            attackBonus: typeof item.attackBonus === "string" ? item.attackBonus : undefined,
+            damage: typeof item.damage === "string" ? item.damage : undefined,
             notes: typeof item.notes === "string" ? item.notes : undefined,
             detailHtml: typeof item.detailHtml === "string" ? item.detailHtml : undefined,
           }))

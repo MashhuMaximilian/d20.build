@@ -26,7 +26,14 @@ type EquipmentStepProps = {
   onToggleAttuned: (itemId: string) => void;
   onRemoveItem: (itemId: string) => void;
   onAddManualItem: (entry: EquipmentCatalogEntry) => void;
-  onAddCustomItem: (input: { name: string; category: InventoryCategory; quantity: number; notes: string }) => void;
+  onAddCustomItem: (input: {
+    name: string;
+    category: InventoryCategory;
+    quantity: number;
+    attackBonus: string;
+    damage: string;
+    notes: string;
+  }) => void;
   onEquipmentNotesChange: (notes: CharacterEquipmentNotes) => void;
 };
 
@@ -117,6 +124,8 @@ export function EquipmentStep({
   const [customItemName, setCustomItemName] = useState("");
   const [customItemCategory, setCustomItemCategory] = useState<InventoryCategory>("misc");
   const [customItemQuantity, setCustomItemQuantity] = useState("1");
+  const [customItemAttackBonus, setCustomItemAttackBonus] = useState("");
+  const [customItemDamage, setCustomItemDamage] = useState("");
   const [customItemNotes, setCustomItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
 
@@ -469,8 +478,8 @@ export function EquipmentStep({
                         <span>{item.sourceLabel}</span>
                       </div>
                       <span>{titleCaseCategory(item.category)}</span>
-                      <span>{item.quantity}</span>
-                      <div className="equipment-step__inventoryActions">
+                        <span>{item.quantity}</span>
+                        <div className="equipment-step__inventoryActions">
                         {item.equippable ? (
                           <button
                             className={`choice-chip${item.equipped ? " choice-chip--active" : ""}`}
@@ -493,6 +502,13 @@ export function EquipmentStep({
                           Delete
                         </button>
                       </div>
+                      {item.attackBonus || item.damage || item.notes ? (
+                        <div className="equipment-step__inventoryNote">
+                          {item.attackBonus ? <span>Hit/damage bonus: {item.attackBonus}</span> : null}
+                          {item.damage ? <span>Damage: {item.damage}</span> : null}
+                          {item.notes ? <span>{item.notes}</span> : null}
+                        </div>
+                      ) : null}
                     </div>
                   ))
                 ) : (
@@ -584,13 +600,34 @@ export function EquipmentStep({
                 />
               </label>
             </div>
+            <div className="equipment-step__manualRow">
+              <label className="builder-field">
+                <span className="builder-summary__meta">Hit / damage modifier</span>
+                <input
+                  className="input"
+                  placeholder="+1, +2, advantage, table ruling..."
+                  value={customItemAttackBonus}
+                  onChange={(event) => setCustomItemAttackBonus(event.target.value)}
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Damage</span>
+                <input
+                  className="input"
+                  placeholder="1d8 slashing, +1d6 fire..."
+                  value={customItemDamage}
+                  onChange={(event) => setCustomItemDamage(event.target.value)}
+                />
+              </label>
+            </div>
             <label className="builder-field">
               <span className="builder-summary__meta">Notes</span>
-              <textarea
-                className="input equipment-step__notesInput"
+              <MarkdownEditor
+                compact
                 placeholder="Optional details, effects, provenance, or table ruling."
+                slashContext="Custom item notes"
                 value={customItemNotes}
-                onChange={(event) => setCustomItemNotes(event.target.value)}
+                onChange={setCustomItemNotes}
               />
             </label>
             <div className="equipment-step__manualActions">
@@ -606,11 +643,15 @@ export function EquipmentStep({
                     name: customItemName.trim(),
                     category: customItemCategory,
                     quantity: parsedCustomItemQuantity,
+                    attackBonus: customItemAttackBonus.trim(),
+                    damage: customItemDamage.trim(),
                     notes: customItemNotes.trim(),
                   });
                   setCustomItemName("");
                   setCustomItemCategory("misc");
                   setCustomItemQuantity("1");
+                  setCustomItemAttackBonus("");
+                  setCustomItemDamage("");
                   setCustomItemNotes("");
                 }}
               >

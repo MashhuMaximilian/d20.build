@@ -183,6 +183,7 @@ export function MarkdownEditor({
           lastLoadedMarkdown.current = markdown;
           onChange(markdown);
         }}
+        sideMenu={false}
         slashMenu={false}
         theme={DND_THEME}
       >

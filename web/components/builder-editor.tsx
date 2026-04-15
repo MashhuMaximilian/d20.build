@@ -2716,7 +2716,7 @@ export function BuilderEditor({
                       ],
                 });
               }}
-              onAddCustomItem={({ name, category, quantity, notes }) => {
+              onAddCustomItem={({ name, category, quantity, attackBonus, damage, notes }) => {
                 const normalizedName = name.trim();
                 if (!normalizedName) {
                   return;
@@ -2732,6 +2732,8 @@ export function BuilderEditor({
                           ? {
                               ...item,
                               quantity: item.quantity + quantity,
+                              attackBonus: attackBonus || item.attackBonus,
+                              damage: damage || item.damage,
                               notes: notes || item.notes,
                             }
                           : item,
@@ -2751,6 +2753,8 @@ export function BuilderEditor({
                           equipped: false,
                           attunable: false,
                           attuned: false,
+                          attackBonus: attackBonus || undefined,
+                          damage: damage || undefined,
                           notes: notes || undefined,
                         },
                       ],

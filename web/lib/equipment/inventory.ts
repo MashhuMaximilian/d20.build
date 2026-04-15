@@ -202,6 +202,8 @@ export function buildStartingInventoryFromPlan(
       equipped: previous?.equipped ?? false,
       attunable: previous?.attunable ?? false,
       attuned: previous?.attuned ?? false,
+      attackBonus: previous?.attackBonus,
+      damage: previous?.damage,
       notes: previous?.notes,
       detailHtml: previous?.detailHtml,
     });
