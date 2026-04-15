@@ -71,14 +71,14 @@ function categoryFromText(value: string | undefined, fallbackName: string) {
   }
 
   const normalized = value.toLowerCase();
+  if (normalized.includes("shield") || /\bshield\b/i.test(fallbackName)) {
+    return "shield";
+  }
   if (normalized.includes("weapon")) {
     return "weapon";
   }
   if (normalized.includes("armor")) {
     return "armor";
-  }
-  if (normalized.includes("shield")) {
-    return "shield";
   }
   if (normalized.includes("instrument")) {
     return "instrument";

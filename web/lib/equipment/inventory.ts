@@ -519,7 +519,7 @@ function getItemGrantLines(item: CharacterInventoryItem) {
 export function getInventoryEffectSummary(items: CharacterInventoryItem[], context: InventoryEffectContext = {}) {
   const attunedItems = items.filter((item) => item.attuned);
   const equippedItems = items.filter((item) => item.equipped);
-  const equippedArmor = equippedItems.filter((item) => item.category === "armor");
+  const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
   const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
   const acLines = items.map((item) => getArmorShieldAcLine(item, context)).filter(Boolean);
   const weaponLines = items.map(getWeaponEffectLine).filter(Boolean);

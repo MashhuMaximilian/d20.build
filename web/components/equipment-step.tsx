@@ -79,6 +79,14 @@ function isGenericDamage(value?: string) {
   return /\buses the chosen\b|\bchosen .*damage die\b/i.test(value ?? "");
 }
 
+function needsBaseWeaponChoice(item: CharacterInventoryItem) {
+  return (
+    getBaseWeaponOptionsForInventoryItem(item).length > 0 &&
+    !item.baseItemId &&
+    (needsBaseWeaponResolution(item) || isGenericDamage(item.damage))
+  );
+}
+
 const ITEM_BROWSER_PREFERRED_TAGS = [
   "Adventuring Gear",
   "Treasure",
@@ -234,6 +242,7 @@ export function EquipmentStep({
     () =>
       catalogItems.map((item) => {
         const ownedCount = manualItemCounts.get(item.id) ?? 0;
+        const needsBaseWeapon = item.mechanicsLines.some((line) => isGenericDamage(line));
         return {
           id: getEquipmentCatalogCardId(item),
           name: item.name,
@@ -247,8 +256,9 @@ export function EquipmentStep({
           summaryLines: item.summaryLines,
           impactLines: [
             ownedCount ? `Owned ${ownedCount}` : "Not owned",
+            needsBaseWeapon ? "Needs base weapon after adding" : "",
             ...item.impactLines,
-          ],
+          ].filter(Boolean),
           mechanicsLines: item.mechanicsLines,
         };
       }),
@@ -258,6 +268,15 @@ export function EquipmentStep({
   const parsedCustomItemQuantity = Math.max(1, Number(customItemQuantity) || 1);
   const parsedEditingItemQuantity = Math.max(1, Number(editingItemQuantity) || 1);
   const selectedCustomBaseWeapon = BASE_WEAPON_OPTIONS.find((option) => option.id === customItemBaseId);
+  const currentEquipmentWarnings = useMemo(
+    () => [
+      ...inventoryItems
+        .filter(needsBaseWeaponChoice)
+        .map((item) => `${item.name} needs a base weapon choice before sheet/PDF attack rows can be complete.`),
+      ...effectSummary.warnings,
+    ],
+    [effectSummary.warnings, inventoryItems],
+  );
 
   function startEditingItem(item: CharacterInventoryItem) {
     setEditingItemId(item.id);
@@ -421,21 +440,14 @@ export function EquipmentStep({
 
       <details className="equipment-step__accordion equipment-step__accordion--wide" open>
         <summary className="equipment-step__accordionSummary">
-          <span>Starting gear and owned inventory</span>
-          <small>{summary.uniqueItems} owned entries</small>
+          <span>Starting gear builder</span>
+          <small>
+            {mode === "gold"
+              ? "Class gear collapsed while using gold"
+              : `${availableClassGroups.length + availableBackgroundGroups.length} sections`}
+          </small>
         </summary>
         <div className="equipment-step__accordionBody">
-          <div className="equipment-step__layout">
-            <details className="equipment-step__accordion equipment-step__accordion--root" open>
-          <summary className="equipment-step__accordionSummary">
-            <span>Starting gear builder</span>
-            <small>
-              {mode === "gold"
-                ? "Class gear collapsed while using gold"
-                : `${availableClassGroups.length + availableBackgroundGroups.length} sections`}
-            </small>
-          </summary>
-          <div className="equipment-step__accordionBody equipment-step__accordionBody--root">
             <div className="equipment-step__groups">
               {availableClassGroups.length ? (
                 <details className="equipment-step__accordion" open>
@@ -521,10 +533,16 @@ export function EquipmentStep({
                 </details>
               ) : null}
             </div>
-          </div>
-            </details>
+        </div>
+      </details>
 
-            <aside className="equipment-step__panel equipment-step__panel--inventory">
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Owned inventory</span>
+          <small>{summary.uniqueItems} owned entries</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
+          <aside className="equipment-step__panel equipment-step__panel--inventory">
           <div className="equipment-step__inventoryHeader">
             <div>
               <span className="builder-panel__label">Inventory</span>
@@ -555,6 +573,17 @@ export function EquipmentStep({
             </div>
           </div>
 
+          {currentEquipmentWarnings.length ? (
+            <div className="equipment-step__localWarnings" role="status">
+              <span className="builder-panel__label">Inventory attention</span>
+              <ul>
+                {currentEquipmentWarnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
           <label className="builder-field">
             <span className="builder-panel__label">Search inventory</span>
             <input
@@ -580,7 +609,7 @@ export function EquipmentStep({
                     const baseWeaponRequired =
                       baseWeaponOptions.length > 0 &&
                       !editingItemBaseId &&
-                      (needsBaseWeaponResolution(item) || isGenericDamage(editingItemDamage));
+                      (needsBaseWeaponResolution(item) || isGenericDamage(editingItemDamage) || isGenericDamage(item.damage));
                     const attunementBlocked =
                       item.attunable &&
                       !item.attuned &&
@@ -597,22 +626,25 @@ export function EquipmentStep({
                         <div className="equipment-step__inventoryActions">
                         {item.equippable ? (
                           <button
-                            className={`choice-chip${item.equipped ? " choice-chip--active" : ""}`}
+                            aria-label={item.equipped ? `Unequip ${item.name}` : `Equip ${item.name}`}
+                            className={`choice-chip equipment-step__iconButton${item.equipped ? " choice-chip--active" : ""}`}
+                            title={item.equipped ? "Unequip" : "Equip"}
                             type="button"
                             onClick={() => onToggleEquipped(item.id)}
                           >
-                            {item.equipped ? "Equipped" : "Equip"}
+                            {item.equipped ? "✓" : "□"}
                           </button>
                         ) : null}
                         {item.attunable ? (
                           <button
-                            className={`choice-chip${item.attuned ? " choice-chip--active" : ""}`}
+                            aria-label={item.attuned ? `Unattune ${item.name}` : `Attune ${item.name}`}
+                            className={`choice-chip equipment-step__iconButton${item.attuned ? " choice-chip--active" : ""}`}
                             type="button"
                             disabled={attunementBlocked}
                             onClick={() => onToggleAttuned(item.id)}
-                            title={attunementBlocked ? `Attunement limit is ${effectSummary.attunementLimit}.` : undefined}
+                            title={attunementBlocked ? `Attunement limit is ${effectSummary.attunementLimit}.` : item.attuned ? "Unattune" : "Attune"}
                           >
-                            {item.attuned ? "Attuned" : "Attune"}
+                            {item.attuned ? "✦" : "◇"}
                           </button>
                         ) : null}
                         {attunementBlocked ? (
@@ -621,12 +653,24 @@ export function EquipmentStep({
                           </span>
                         ) : null}
                         {item.source === "manual" ? (
-                          <button className="choice-chip" type="button" onClick={() => startEditingItem(item)}>
-                            Edit
+                          <button
+                            aria-label={`Edit ${item.name}`}
+                            className="choice-chip equipment-step__iconButton"
+                            title="Edit"
+                            type="button"
+                            onClick={() => startEditingItem(item)}
+                          >
+                            ✎
                           </button>
                         ) : null}
-                        <button className="choice-chip" type="button" onClick={() => onRemoveItem(item.id)}>
-                          Delete
+                        <button
+                          aria-label={`Delete ${item.name}`}
+                          className="choice-chip equipment-step__iconButton"
+                          title="Delete"
+                          type="button"
+                          onClick={() => onRemoveItem(item.id)}
+                        >
+                          ×
                         </button>
                       </div>
                       {item.attackBonus || item.baseItemName || item.baseDamage || item.damage || item.notes ? (
@@ -782,10 +826,15 @@ export function EquipmentStep({
             </div>
           </div>
             </aside>
-          </div>
         </div>
       </details>
 
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Item browser</span>
+          <small>{itemCatalogCards.length} entries</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
       <section className="equipment-step__panel">
         <div className="equipment-step__groupHeader">
           <span className="builder-panel__label">Item browser</span>
@@ -817,7 +866,15 @@ export function EquipmentStep({
           />
         )}
       </section>
+        </div>
+      </details>
 
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Manual additions</span>
+          <small>Items, notes, and DM grants</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
       <section className="equipment-step__panel">
         <div className="equipment-step__groupHeader">
           <span className="builder-panel__label">Manual additions</span>
@@ -987,6 +1044,117 @@ export function EquipmentStep({
           </div>
         </div>
       </section>
+        </div>
+      </details>
+
+      <details className="equipment-step__accordion equipment-step__accordion--wide" open>
+        <summary className="equipment-step__accordionSummary">
+          <span>Manual / DM-granted extras</span>
+          <small>Capture now, propagate in M4.4</small>
+        </summary>
+        <div className="equipment-step__accordionBody">
+          <section className="equipment-step__panel">
+            <div className="equipment-step__groupHeader">
+              <span className="builder-panel__label">Additional build grants</span>
+              <p className="builder-summary__meta">
+                Use these for table rulings, item effects, boons, downtime rewards, or homebrew grants. These are saved now; the next M4.4 pass wires them into the same resolver surfaces as normal choices.
+              </p>
+            </div>
+            <div className="equipment-step__grantGrid">
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional spells</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="Example: fire bolt cantrip from a boon, once-per-day misty step from an item..."
+                  slashContext="Additional spells"
+                  value={equipmentNotes.additionalSpells}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalSpells: value,
+                    })
+                  }
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional proficiencies</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="Skills, tools, weapons, armor, saves, expertise, or conditional proficiencies."
+                  slashContext="Additional proficiencies"
+                  value={equipmentNotes.additionalProficiencies}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalProficiencies: value,
+                    })
+                  }
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional languages</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="Granted, learned, temporary, or campaign-specific languages."
+                  slashContext="Additional languages"
+                  value={equipmentNotes.additionalLanguages}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalLanguages: value,
+                    })
+                  }
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional feats</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="Bonus feats, feat-like boons, or DM-approved exceptions."
+                  slashContext="Additional feats"
+                  value={equipmentNotes.additionalFeats}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalFeats: value,
+                    })
+                  }
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional features</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="Blessings, charms, curses, faction benefits, custom class features, or item traits."
+                  slashContext="Additional features"
+                  value={equipmentNotes.additionalFeatures}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalFeatures: value,
+                    })
+                  }
+                />
+              </label>
+              <label className="builder-field">
+                <span className="builder-summary__meta">Additional ASIs / ability changes</span>
+                <MarkdownEditor
+                  compact
+                  placeholder="+1 Wisdom from training, set Strength to 19 while attuned, temporary penalties..."
+                  slashContext="Additional ability scores"
+                  value={equipmentNotes.additionalAbilityScores}
+                  onChange={(value) =>
+                    onEquipmentNotesChange({
+                      ...equipmentNotes,
+                      additionalAbilityScores: value,
+                    })
+                  }
+                />
+              </label>
+            </div>
+          </section>
+        </div>
+      </details>
     </div>
   );
 }

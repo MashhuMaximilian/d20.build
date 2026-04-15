@@ -54,6 +54,12 @@ export type CharacterCurrency = {
 export type CharacterEquipmentNotes = {
   additionalTreasure: string;
   questItems: string;
+  additionalSpells: string;
+  additionalProficiencies: string;
+  additionalLanguages: string;
+  additionalFeats: string;
+  additionalFeatures: string;
+  additionalAbilityScores: string;
 };
 
 export type CharacterInventoryItem = {
@@ -178,6 +184,12 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     equipmentNotes: {
       additionalTreasure: "",
       questItems: "",
+      additionalSpells: "",
+      additionalProficiencies: "",
+      additionalLanguages: "",
+      additionalFeats: "",
+      additionalFeatures: "",
+      additionalAbilityScores: "",
     },
     backstory: {
       personalityTraits: "",
@@ -298,7 +310,7 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
             id: item.id,
             name: item.name,
             quantity: Math.max(1, Math.floor(item.quantity ?? 1)),
-            category: item.category ?? "misc",
+            category: item.category === "armor" && /\bshield\b/i.test(item.name) ? "shield" : item.category ?? "misc",
             family: typeof item.family === "string" ? item.family : undefined,
             itemType: typeof item.itemType === "string" ? item.itemType : undefined,
             source: item.source ?? "starting-fixed",

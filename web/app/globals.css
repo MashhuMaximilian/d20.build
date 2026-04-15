@@ -1048,6 +1048,13 @@ a {
   align-items: center;
 }
 
+.equipment-step__iconButton {
+  min-width: 44px;
+  padding-inline: 14px;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
 .equipment-step__actionWarning {
   width: 100%;
   color: var(--accent-strong);
@@ -1056,10 +1063,36 @@ a {
   text-align: right;
 }
 
+.equipment-step__localWarnings {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.22);
+  border-radius: 16px;
+  background: rgba(146, 38, 16, 0.07);
+  color: var(--accent-strong);
+}
+
+.equipment-step__localWarnings ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .equipment-step__manualGrid {
   display: grid;
   grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
   gap: 18px;
+  align-items: start;
+}
+
+.equipment-step__grantGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 16px;
   align-items: start;
 }
 
@@ -1102,6 +1135,10 @@ a {
 
 .equipment-step__manualCard .markdown-editor__surface .bn-editor {
   min-height: 148px;
+}
+
+.equipment-step__grantGrid .markdown-editor__surface .bn-editor {
+  min-height: 128px;
 }
 
 .equipment-step__inventoryNote {
@@ -3031,6 +3068,7 @@ a {
   }
 
   .equipment-step__manualGrid,
+  .equipment-step__grantGrid,
   .equipment-step__manualRow {
     grid-template-columns: 1fr;
   }
