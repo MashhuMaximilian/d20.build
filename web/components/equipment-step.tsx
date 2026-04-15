@@ -30,6 +30,10 @@ type EquipmentStepProps = {
   equipmentNotes: CharacterEquipmentNotes;
   effectiveAbilities: Record<AbilityKey, number>;
   attunementLimit: number;
+  equipmentProficiencies: {
+    armor: string[];
+    weapons: string[];
+  };
   onModeChange: (mode: EquipmentAcquisitionMode) => void;
   onGoldOverrideChange: (value: number | null) => void;
   onSelect: (groupId: string, optionId: string) => void;
@@ -190,6 +194,7 @@ export function EquipmentStep({
   equipmentNotes,
   effectiveAbilities,
   attunementLimit,
+  equipmentProficiencies,
   onModeChange,
   onGoldOverrideChange,
   onSelect,
@@ -224,8 +229,14 @@ export function EquipmentStep({
   const [editingItemNotes, setEditingItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems, attunementLimit), [attunementLimit, inventoryItems]);
   const effectSummary = useMemo(
-    () => getInventoryEffectSummary(inventoryItems, { abilities: effectiveAbilities, attunementLimit }),
-    [attunementLimit, effectiveAbilities, inventoryItems],
+    () =>
+      getInventoryEffectSummary(inventoryItems, {
+        abilities: effectiveAbilities,
+        attunementLimit,
+        armorProficiencies: equipmentProficiencies.armor,
+        weaponProficiencies: equipmentProficiencies.weapons,
+      }),
+    [attunementLimit, effectiveAbilities, equipmentProficiencies, inventoryItems],
   );
 
   useEffect(() => {
@@ -300,9 +311,9 @@ export function EquipmentStep({
           detailTags: item.detailTags,
           summaryLines: item.summaryLines,
           impactLines: [
+            item.attunable ? "Requires attunement" : "",
             ownedCount ? `Owned ${ownedCount}` : "Not owned",
             needsBaseWeapon ? "Needs base weapon after adding" : "",
-            item.attunable ? "Requires attunement" : "",
             ...item.impactLines,
           ].filter(Boolean),
           mechanicsLines: item.mechanicsLines,
@@ -673,25 +684,25 @@ export function EquipmentStep({
                           <button
                             aria-label={item.equipped ? `Unequip ${item.name}` : `Equip ${item.name}`}
                             className={`choice-chip equipment-step__actionButton${item.equipped ? " choice-chip--active" : ""}`}
+                            data-label={item.equipped ? "Unequip" : "Equip"}
                             title={item.equipped ? "Unequip" : "Equip"}
                             type="button"
                             onClick={() => onToggleEquipped(item.id)}
                           >
-                            <span aria-hidden="true">{item.equipped ? "✓" : "□"}</span>
-                            <span>{item.equipped ? "Equipped" : "Equip"}</span>
+                            <span aria-hidden="true">{item.equipped ? "⚔" : "♙"}</span>
                           </button>
                         ) : null}
                         {item.attunable ? (
                           <button
                             aria-label={item.attuned ? `Unattune ${item.name}` : `Attune ${item.name}`}
                             className={`choice-chip equipment-step__actionButton${item.attuned ? " choice-chip--active" : ""}`}
+                            data-label={attunementBlocked ? `Attunement limit ${effectSummary.attunedCount}/${effectSummary.attunementLimit}` : item.attuned ? "Unattune" : "Attune"}
                             type="button"
                             disabled={attunementBlocked}
                             onClick={() => onToggleAttuned(item.id)}
                             title={attunementBlocked ? `Attunement limit is ${effectSummary.attunementLimit}.` : item.attuned ? "Unattune" : "Attune"}
                           >
-                            <span aria-hidden="true">{item.attuned ? "✦" : "◇"}</span>
-                            <span>{item.attuned ? "Attuned" : "Attune"}</span>
+                            <span aria-hidden="true">{item.attuned ? "🔗" : "♢"}</span>
                           </button>
                         ) : null}
                         {attunementBlocked ? (
@@ -703,23 +714,23 @@ export function EquipmentStep({
                           <button
                             aria-label={`Edit ${item.name}`}
                             className="choice-chip equipment-step__actionButton"
+                            data-label="Edit"
                             title="Edit"
                             type="button"
                             onClick={() => startEditingItem(item)}
                           >
                             <span aria-hidden="true">✎</span>
-                            <span>Edit</span>
                           </button>
                         ) : null}
                         <button
                           aria-label={`Delete ${item.name}`}
                           className="choice-chip equipment-step__actionButton"
+                          data-label="Delete"
                           title="Delete"
                           type="button"
                           onClick={() => onRemoveItem(item.id)}
                         >
                           <span aria-hidden="true">×</span>
-                          <span>Delete</span>
                         </button>
                       </div>
                       {item.attackBonus || item.baseItemName || item.baseDamage || item.damage || item.notes ? (

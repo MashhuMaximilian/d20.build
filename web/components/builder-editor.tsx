@@ -86,6 +86,60 @@ function getCatalogAttackBonus(lines: string[]) {
   return enhancement || armorBonus || shieldBonus;
 }
 
+function getClassEquipmentProficiencies(classNames: string[]) {
+  const armor = new Set<string>();
+  const weapons = new Set<string>();
+
+  classNames.forEach((className) => {
+    const normalized = className.toLowerCase();
+
+    if (/(fighter|paladin)/.test(normalized)) {
+      ["light", "medium", "heavy", "shield"].forEach((entry) => armor.add(entry));
+      weapons.add("simple");
+      weapons.add("martial");
+      return;
+    }
+
+    if (/(barbarian|cleric|druid|ranger|artificer)/.test(normalized)) {
+      ["light", "medium", "shield"].forEach((entry) => armor.add(entry));
+      weapons.add("simple");
+      if (/(barbarian|ranger)/.test(normalized)) {
+        weapons.add("martial");
+      }
+      return;
+    }
+
+    if (/(bard|rogue|warlock)/.test(normalized)) {
+      armor.add("light");
+      weapons.add("simple");
+      if (/(bard|rogue)/.test(normalized)) {
+        ["hand-crossbow", "longsword", "rapier", "shortsword"].forEach((entry) => weapons.add(entry));
+      }
+      return;
+    }
+
+    if (/monk/.test(normalized)) {
+      weapons.add("simple");
+      weapons.add("shortsword");
+      return;
+    }
+
+    if (/wizard/.test(normalized)) {
+      ["dagger", "light-crossbow", "quarterstaff"].forEach((entry) => weapons.add(entry));
+      return;
+    }
+
+    if (/sorcerer/.test(normalized)) {
+      ["dagger", "light-crossbow"].forEach((entry) => weapons.add(entry));
+    }
+  });
+
+  return {
+    armor: [...armor],
+    weapons: [...weapons],
+  };
+}
+
 type BuilderStepId =
   | "foundation"
   | "race"
@@ -818,6 +872,32 @@ export function BuilderEditor({
       }),
     [draft.improvementSelections, feats],
   );
+  const equipmentProficiencies = useMemo(() => {
+    const classNames = classRecordsByEntry.flatMap((record) => (record ? [record.class.name] : []));
+    const base = getClassEquipmentProficiencies(classNames);
+    const armor = new Set(base.armor);
+    const weapons = new Set(base.weapons);
+    const featNames = selectedFeatElements.map((feat) => feat.name.toLowerCase());
+
+    if (featNames.some((name) => name.includes("lightly armored"))) {
+      armor.add("light");
+    }
+    if (featNames.some((name) => name.includes("moderately armored"))) {
+      armor.add("medium");
+      armor.add("shield");
+    }
+    if (featNames.some((name) => name.includes("heavily armored"))) {
+      armor.add("heavy");
+    }
+    if (featNames.some((name) => name.includes("weapon master"))) {
+      weapons.add("manual weapon grant");
+    }
+
+    return {
+      armor: [...armor],
+      weapons: [...weapons],
+    };
+  }, [classRecordsByEntry, selectedFeatElements]);
   const availableFeatIds = useMemo(
     () => new Set(feats.map((feat) => feat.id)),
     [feats],
@@ -955,8 +1035,10 @@ export function BuilderEditor({
       getInventoryEffectSummary(draft.inventoryItems, {
         abilities: effectiveAbilities,
         attunementLimit,
+        armorProficiencies: equipmentProficiencies.armor,
+        weaponProficiencies: equipmentProficiencies.weapons,
       }),
-    [attunementLimit, draft.inventoryItems, effectiveAbilities],
+    [attunementLimit, draft.inventoryItems, effectiveAbilities, equipmentProficiencies],
   );
   const equipmentValidationMessages = useMemo(() => {
     const blockingEffectWarnings = equipmentEffectSummary.warnings.filter(
@@ -2687,6 +2769,7 @@ export function BuilderEditor({
               equipmentNotes={draft.equipmentNotes}
               effectiveAbilities={effectiveAbilities}
               attunementLimit={attunementLimit}
+              equipmentProficiencies={equipmentProficiencies}
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,
@@ -3181,7 +3264,7 @@ export function BuilderEditor({
           <div className={`builder-navigation__summary${navigationWarnings.length ? " builder-navigation__summary--warning" : ""}`}>
             <strong>{activeStep.label}</strong>
             <p>{activeStep.description}</p>
-            {showNavigationWarnings && navigationWarnings.length ? (
+            {(showNavigationWarnings || activeStep.kind === "equipment") && navigationWarnings.length ? (
               <div className="builder-navigation__warningList">
                 {navigationWarnings.map((warning) => (
                   <p className="auth-card__status auth-card__status--error builder-navigation__warningItem" key={warning}>

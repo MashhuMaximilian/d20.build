@@ -1021,7 +1021,7 @@ export function CatalogSelector({
                           {(item.summaryLines?.[0] || item.meta || "—").slice(0, 120)}
                         </span>
                         <span className="catalog-selector__tableCell">
-                          {(item.impactLines?.[0] || "—").slice(0, 120)}
+                          {(item.impactLines?.slice(0, 2).join(" • ") || "—").slice(0, 140)}
                         </span>
                       </button>
                     );

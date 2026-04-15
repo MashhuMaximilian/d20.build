@@ -68,6 +68,7 @@ export type BaseArmorRule = {
   match: RegExp;
   baseAc: number;
   dexMode: "none" | "full" | "max2";
+  armorType: "light" | "medium" | "heavy";
   strengthRequirement?: number;
 };
 
@@ -108,23 +109,25 @@ export const BASE_WEAPON_OPTIONS: BaseWeaponOption[] = [
 ];
 
 export const BASE_ARMOR_RULES: BaseArmorRule[] = [
-  { id: "padded", name: "Padded Armor", match: /\bpadded\b/i, baseAc: 11, dexMode: "full" },
-  { id: "studded-leather", name: "Studded Leather Armor", match: /\bstudded leather\b/i, baseAc: 12, dexMode: "full" },
-  { id: "leather", name: "Leather Armor", match: /\bleather armor\b|\bleather\b/i, baseAc: 11, dexMode: "full" },
-  { id: "hide", name: "Hide Armor", match: /\bhide\b/i, baseAc: 12, dexMode: "max2" },
-  { id: "chain-shirt", name: "Chain Shirt", match: /\bchain shirt\b/i, baseAc: 13, dexMode: "max2" },
-  { id: "scale-mail", name: "Scale Mail", match: /\bscale mail\b/i, baseAc: 14, dexMode: "max2" },
-  { id: "breastplate", name: "Breastplate", match: /\bbreastplate\b/i, baseAc: 14, dexMode: "max2" },
-  { id: "half-plate", name: "Half Plate", match: /\bhalf plate\b/i, baseAc: 15, dexMode: "max2" },
-  { id: "ring-mail", name: "Ring Mail", match: /\bring mail\b/i, baseAc: 14, dexMode: "none" },
-  { id: "chain-mail", name: "Chain Mail", match: /\bchain mail\b/i, baseAc: 16, dexMode: "none", strengthRequirement: 13 },
-  { id: "splint", name: "Splint Armor", match: /\bsplint\b/i, baseAc: 17, dexMode: "none", strengthRequirement: 15 },
-  { id: "plate", name: "Plate Armor", match: /\bplate armor\b|\bplate\b/i, baseAc: 18, dexMode: "none", strengthRequirement: 15 },
+  { id: "padded", name: "Padded Armor", match: /\bpadded\b/i, baseAc: 11, dexMode: "full", armorType: "light" },
+  { id: "studded-leather", name: "Studded Leather Armor", match: /\bstudded leather\b/i, baseAc: 12, dexMode: "full", armorType: "light" },
+  { id: "leather", name: "Leather Armor", match: /\bleather armor\b|\bleather\b/i, baseAc: 11, dexMode: "full", armorType: "light" },
+  { id: "hide", name: "Hide Armor", match: /\bhide\b/i, baseAc: 12, dexMode: "max2", armorType: "medium" },
+  { id: "chain-shirt", name: "Chain Shirt", match: /\bchain shirt\b/i, baseAc: 13, dexMode: "max2", armorType: "medium" },
+  { id: "scale-mail", name: "Scale Mail", match: /\bscale mail\b/i, baseAc: 14, dexMode: "max2", armorType: "medium" },
+  { id: "breastplate", name: "Breastplate", match: /\bbreastplate\b/i, baseAc: 14, dexMode: "max2", armorType: "medium" },
+  { id: "half-plate", name: "Half Plate", match: /\bhalf plate\b/i, baseAc: 15, dexMode: "max2", armorType: "medium" },
+  { id: "ring-mail", name: "Ring Mail", match: /\bring mail\b/i, baseAc: 14, dexMode: "none", armorType: "heavy" },
+  { id: "chain-mail", name: "Chain Mail", match: /\bchain mail\b/i, baseAc: 16, dexMode: "none", armorType: "heavy", strengthRequirement: 13 },
+  { id: "splint", name: "Splint Armor", match: /\bsplint\b/i, baseAc: 17, dexMode: "none", armorType: "heavy", strengthRequirement: 15 },
+  { id: "plate", name: "Plate Armor", match: /\bplate armor\b|\bplate\b/i, baseAc: 18, dexMode: "none", armorType: "heavy", strengthRequirement: 15 },
 ];
 
 type InventoryEffectContext = {
   abilities?: Partial<Record<AbilityKey, number>>;
   attunementLimit?: number;
+  armorProficiencies?: string[];
+  weaponProficiencies?: string[];
 };
 
 function slugify(value: string) {
@@ -274,6 +277,47 @@ function formatModifier(value: number) {
 function getBaseArmorRule(item: CharacterInventoryItem) {
   const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""}`.toLowerCase();
   return BASE_ARMOR_RULES.find((rule) => rule.match.test(haystack));
+}
+
+function getArmorProficiencyRequirement(item: CharacterInventoryItem) {
+  if (item.category === "shield" || /\bshield\b/i.test(item.name)) {
+    return "shield";
+  }
+
+  return getBaseArmorRule(item)?.armorType ?? "";
+}
+
+const MARTIAL_WEAPON_IDS = new Set([
+  "battleaxe",
+  "flail",
+  "glaive",
+  "greataxe",
+  "greatsword",
+  "halberd",
+  "lance",
+  "longbow",
+  "longsword",
+  "maul",
+  "morningstar",
+  "pike",
+  "rapier",
+  "scimitar",
+  "shortsword",
+  "trident",
+  "war-pick",
+  "warhammer",
+  "whip",
+  "hand-crossbow",
+  "heavy-crossbow",
+]);
+
+function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {
+  if (!isWeaponLike(item)) {
+    return "";
+  }
+
+  const baseId = item.baseItemId || BASE_WEAPON_OPTIONS.find((option) => item.name.toLowerCase().includes(option.name.toLowerCase()))?.id;
+  return baseId && MARTIAL_WEAPON_IDS.has(baseId) ? "martial" : "simple";
 }
 
 function getArmorDexContribution(rule: BaseArmorRule, dexModifier: number) {
@@ -484,13 +528,16 @@ function stripMarkup(value?: string) {
 }
 
 function isItemEffectActive(item: CharacterInventoryItem) {
+  if (item.attunable) {
+    return item.attuned;
+  }
   if (!item.equippable) {
     return true;
   }
   if (!item.equipped) {
     return false;
   }
-  return !item.attunable || item.attuned;
+  return true;
 }
 
 function getItemGrantLines(item: CharacterInventoryItem) {
@@ -531,6 +578,8 @@ function getItemGrantLines(item: CharacterInventoryItem) {
 
 export function getInventoryEffectSummary(items: CharacterInventoryItem[], context: InventoryEffectContext = {}) {
   const attunementLimit = context.attunementLimit ?? ATTUNEMENT_LIMIT;
+  const armorProficiencies = new Set(context.armorProficiencies ?? []);
+  const weaponProficiencies = new Set(context.weaponProficiencies ?? []);
   const attunedItems = items.filter((item) => item.attuned);
   const equippedItems = items.filter((item) => item.equipped);
   const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
@@ -557,6 +606,24 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
     ...items
       .filter((item) => item.equipped && needsBaseWeaponChoice(item))
       .map((item) => `${item.name} needs a base weapon or damage value before sheet/PDF attack rows can be complete.`),
+    ...items
+      .filter((item) => item.equipped)
+      .map((item) => {
+        const requirement = getArmorProficiencyRequirement(item);
+        if (!requirement || armorProficiencies.has(requirement)) {
+          return "";
+        }
+        return `${item.name} is equipped but ${requirement === "shield" ? "shield" : `${requirement} armor`} proficiency is not currently detected.`;
+      }),
+    ...items
+      .filter((item) => item.equipped)
+      .map((item) => {
+        const requirement = getWeaponProficiencyRequirement(item);
+        if (!requirement || weaponProficiencies.has(requirement) || (item.baseItemId ? weaponProficiencies.has(item.baseItemId) : false)) {
+          return "";
+        }
+        return `${item.name} is equipped but ${requirement} weapon proficiency is not currently detected.`;
+      }),
   ].filter(Boolean);
 
   return {
