@@ -20,6 +20,7 @@ import {
   getBaseWeaponOptionsForInventoryItem,
   getCurrencyTotalInGp,
   getInventoryEffectSummary,
+  getWeaponProficiencyTierForText,
   isGenericDamageValue,
   needsBaseWeaponChoice,
   needsBaseWeaponResolution,
@@ -102,6 +103,8 @@ const ITEM_BROWSER_PREFERRED_TAGS = [
   "Armor",
   "Magic Armor",
   "Weapons",
+  "Simple Weapons",
+  "Martial Weapons",
   "Magic Weapons",
   "Requires attunement",
   "Ammunition",
@@ -315,6 +318,17 @@ export function EquipmentStep({
       catalogItems.map((item) => {
         const ownedCount = manualItemCounts.get(item.id) ?? 0;
         const needsBaseWeapon = item.mechanicsLines.some((line) => isGenericDamageValue(line));
+        const weaponTier = getWeaponProficiencyTierForText(
+          [item.name, item.family, item.rawCategory, item.rawSubtype, ...item.mechanicsLines].filter(Boolean).join(" "),
+        );
+        const weaponTierTag =
+          item.category === "weapon" || /weapon/i.test(`${item.family} ${item.rawCategory} ${item.rawSubtype}`)
+            ? weaponTier === "martial"
+              ? "Martial Weapons"
+              : weaponTier === "simple"
+                ? "Simple Weapons"
+                : ""
+            : "";
         return {
           id: getEquipmentCatalogCardId(item),
           name: item.name,
@@ -323,7 +337,7 @@ export function EquipmentStep({
           meta: item.family,
           origin: item.origin,
           source: item.source,
-          filterTags: item.filterTags,
+          filterTags: [...item.filterTags, weaponTierTag].filter(Boolean),
           detailTags: item.detailTags,
           summaryLines: item.summaryLines,
           impactLines: [

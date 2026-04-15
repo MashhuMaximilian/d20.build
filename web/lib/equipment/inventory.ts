@@ -315,6 +315,29 @@ const MARTIAL_WEAPON_IDS = new Set([
   "heavy-crossbow",
 ]);
 
+export function getWeaponProficiencyTierForText(value: string) {
+  const normalized = value.toLowerCase().replace(/[-_]+/g, " ");
+  const baseOption = BASE_WEAPON_OPTIONS.find((option) => {
+    const optionName = option.name.toLowerCase();
+    const optionId = option.id.replace(/-/g, " ");
+    return new RegExp(`\\b${optionName.replace(/\s+/g, "\\s+")}\\b`, "i").test(normalized) || normalized.includes(optionId);
+  });
+
+  if (baseOption) {
+    return MARTIAL_WEAPON_IDS.has(baseOption.id) ? "martial" : "simple";
+  }
+
+  if (/\b(?:sword|rapier|longbow|heavy crossbow|hand crossbow|battleaxe|greataxe|maul|halberd|glaive|lance|pike|warhammer|war pick|whip)\b/i.test(normalized)) {
+    return "martial";
+  }
+
+  if (/\b(?:club|dagger|greatclub|handaxe|javelin|light hammer|mace|quarterstaff|sickle|spear|shortbow|light crossbow)\b/i.test(normalized)) {
+    return "simple";
+  }
+
+  return "";
+}
+
 function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {
   if (!isWeaponLike(item)) {
     return "";
@@ -322,8 +345,8 @@ function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {
 
   const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""} ${item.baseItemName ?? ""}`.toLowerCase();
   const baseId = item.baseItemId || BASE_WEAPON_OPTIONS.find((option) => haystack.includes(option.name.toLowerCase()))?.id;
-  if (!baseId && /\bsword|rapier|longbow|heavy crossbow|hand crossbow|battleaxe|greataxe|maul|halberd|glaive|lance|pike|warhammer|war pick|whip\b/i.test(haystack)) {
-    return "martial";
+  if (!baseId) {
+    return getWeaponProficiencyTierForText(haystack) || "simple";
   }
   return baseId && MARTIAL_WEAPON_IDS.has(baseId) ? "martial" : "simple";
 }

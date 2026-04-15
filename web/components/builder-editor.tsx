@@ -37,6 +37,7 @@ import {
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
   ATTUNEMENT_LIMIT,
+  BASE_WEAPON_OPTIONS,
   buildStartingInventoryFromPlan,
   getInventoryEffectSummary,
   needsBaseWeaponChoice,
@@ -86,6 +87,35 @@ function getCatalogAttackBonus(lines: string[]) {
   const armorBonus = getCatalogMechanicValue(lines, "Armor bonus");
   const shieldBonus = getCatalogMechanicValue(lines, "Additional AC bonus");
   return enhancement || armorBonus || shieldBonus;
+}
+
+function getDiceDamageText(value: string) {
+  return value.match(/\d+d\d+(?:\s+[a-z]+)?(?:\s*\([^)]*\))?/i)?.[0]?.trim() ?? "";
+}
+
+function getCatalogBaseWeaponDetails(lines: string[]) {
+  const baseWeapon = getCatalogMechanicValue(lines, "Base weapon");
+  const baseDamage = getCatalogMechanicValue(lines, "Base damage");
+  const haystack = `${baseWeapon} ${baseDamage}`.toLowerCase();
+  const baseOption = BASE_WEAPON_OPTIONS.find((option) => {
+    const name = option.name.toLowerCase();
+    const id = option.id.replace(/-/g, " ");
+    return new RegExp(`\\b${name.replace(/\s+/g, "\\s+")}\\b`, "i").test(haystack) || haystack.includes(id);
+  });
+
+  if (!baseOption) {
+    return {
+      baseItemId: "",
+      baseItemName: baseWeapon && !/^uses the chosen/i.test(baseWeapon) ? baseWeapon : "",
+      baseDamage: getDiceDamageText(baseDamage),
+    };
+  }
+
+  return {
+    baseItemId: baseOption.id,
+    baseItemName: baseOption.name,
+    baseDamage: getDiceDamageText(baseDamage) || baseOption.damage,
+  };
 }
 
 function getClassEquipmentProficiencies(classNames: string[]) {
@@ -3165,7 +3195,9 @@ export function BuilderEditor({
                 const itemId = `manual::${entry.id}`;
                 const existing = draft.inventoryItems.find((item) => item.id === itemId);
                 const attackBonus = getCatalogAttackBonus(entry.mechanicsLines);
-                const damage = getCatalogMechanicValue(entry.mechanicsLines, "Damage");
+                const baseWeaponDetails = getCatalogBaseWeaponDetails(entry.mechanicsLines);
+                const catalogDamage = getCatalogMechanicValue(entry.mechanicsLines, "Damage");
+                const damage = getDiceDamageText(catalogDamage) || baseWeaponDetails.baseDamage || catalogDamage;
 
                 updateDraft({
                   inventoryItems: existing
@@ -3174,6 +3206,11 @@ export function BuilderEditor({
                           ? {
                               ...item,
                               quantity: item.quantity + 1,
+                              attackBonus: item.attackBonus || attackBonus || undefined,
+                              baseItemId: item.baseItemId || baseWeaponDetails.baseItemId || undefined,
+                              baseItemName: item.baseItemName || baseWeaponDetails.baseItemName || undefined,
+                              baseDamage: item.baseDamage || baseWeaponDetails.baseDamage || undefined,
+                              damage: item.damage || damage || undefined,
                             }
                           : item,
                       )
@@ -3199,6 +3236,9 @@ export function BuilderEditor({
                           attunable: entry.attunable,
                           attuned: false,
                           attackBonus: attackBonus || undefined,
+                          baseItemId: baseWeaponDetails.baseItemId || undefined,
+                          baseItemName: baseWeaponDetails.baseItemName || undefined,
+                          baseDamage: baseWeaponDetails.baseDamage || undefined,
                           damage: damage || undefined,
                           detailHtml: entry.detailHtml,
                         },
