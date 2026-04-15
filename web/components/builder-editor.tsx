@@ -34,6 +34,7 @@ import {
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
+  ATTUNEMENT_LIMIT,
   buildStartingInventoryFromPlan,
 } from "@/lib/equipment/inventory";
 import {
@@ -70,6 +71,18 @@ type BuilderEditorProps = {
   races: BuiltInRaceRecord[];
   spells: BuiltInElement[];
 };
+
+function getCatalogMechanicValue(lines: string[], label: string) {
+  const prefix = `${label}:`;
+  return lines.find((line) => line.startsWith(prefix))?.slice(prefix.length).trim() ?? "";
+}
+
+function getCatalogAttackBonus(lines: string[]) {
+  const enhancement = getCatalogMechanicValue(lines, "Enhancement");
+  const armorBonus = getCatalogMechanicValue(lines, "Armor bonus");
+  const shieldBonus = getCatalogMechanicValue(lines, "Additional AC bonus");
+  return enhancement || armorBonus || shieldBonus;
+}
 
 type BuilderStepId =
   | "foundation"
@@ -2657,14 +2670,21 @@ export function BuilderEditor({
                 })}
               onToggleAttuned={(itemId) =>
                 updateDraft({
-                  inventoryItems: draft.inventoryItems.map((item) =>
-                    item.id === itemId && item.attunable
-                      ? {
-                          ...item,
-                          attuned: !item.attuned,
-                        }
-                      : item,
-                  ),
+                  inventoryItems: draft.inventoryItems.map((item) => {
+                    if (item.id !== itemId || !item.attunable) {
+                      return item;
+                    }
+
+                    const currentAttunedCount = draft.inventoryItems.filter((candidate) => candidate.attuned).length;
+                    if (!item.attuned && currentAttunedCount >= ATTUNEMENT_LIMIT) {
+                      return item;
+                    }
+
+                    return {
+                      ...item,
+                      attuned: !item.attuned,
+                    };
+                  }),
                 })}
               onRemoveItem={(itemId) =>
                 updateDraft(
@@ -2686,6 +2706,9 @@ export function BuilderEditor({
                           quantity: patch.quantity,
                           category: patch.category,
                           attackBonus: patch.attackBonus || undefined,
+                          baseItemId: patch.baseItemId || undefined,
+                          baseItemName: patch.baseItemName || undefined,
+                          baseDamage: patch.baseDamage || undefined,
                           damage: patch.damage || undefined,
                           notes: patch.notes || undefined,
                           equippable: ["weapon", "armor", "shield", "focus", "instrument", "tool", "clothing"].includes(patch.category),
@@ -2699,6 +2722,8 @@ export function BuilderEditor({
               onAddManualItem={(entry) => {
                 const itemId = `manual::${entry.id}`;
                 const existing = draft.inventoryItems.find((item) => item.id === itemId);
+                const attackBonus = getCatalogAttackBonus(entry.mechanicsLines);
+                const damage = getCatalogMechanicValue(entry.mechanicsLines, "Damage");
 
                 updateDraft({
                   inventoryItems: existing
@@ -2731,12 +2756,14 @@ export function BuilderEditor({
                           equipped: false,
                           attunable: entry.attunable,
                           attuned: false,
+                          attackBonus: attackBonus || undefined,
+                          damage: damage || undefined,
                           detailHtml: entry.detailHtml,
                         },
                       ],
                 });
               }}
-              onAddCustomItem={({ name, category, quantity, attackBonus, damage, notes }) => {
+              onAddCustomItem={({ name, category, quantity, attackBonus, baseItemId, baseItemName, baseDamage, damage, notes }) => {
                 const normalizedName = name.trim();
                 if (!normalizedName) {
                   return;
@@ -2753,6 +2780,9 @@ export function BuilderEditor({
                               ...item,
                               quantity: item.quantity + quantity,
                               attackBonus: attackBonus || item.attackBonus,
+                              baseItemId: baseItemId || item.baseItemId,
+                              baseItemName: baseItemName || item.baseItemName,
+                              baseDamage: baseDamage || item.baseDamage,
                               damage: damage || item.damage,
                               notes: notes || item.notes,
                             }
@@ -2774,6 +2804,9 @@ export function BuilderEditor({
                           attunable: false,
                           attuned: false,
                           attackBonus: attackBonus || undefined,
+                          baseItemId: baseItemId || undefined,
+                          baseItemName: baseItemName || undefined,
+                          baseDamage: baseDamage || undefined,
                           damage: damage || undefined,
                           notes: notes || undefined,
                         },

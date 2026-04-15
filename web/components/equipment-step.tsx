@@ -8,7 +8,13 @@ import type { CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem
 import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
 import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
 import type { EquipmentAcquisitionMode, InventoryCategory } from "@/lib/equipment/inventory";
-import { getCurrencyTotalInGp, summarizeInventory } from "@/lib/equipment/inventory";
+import {
+  BASE_WEAPON_OPTIONS,
+  getBaseWeaponOptionsForInventoryItem,
+  getCurrencyTotalInGp,
+  getInventoryEffectSummary,
+  summarizeInventory,
+} from "@/lib/equipment/inventory";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
 
 type EquipmentStepProps = {
@@ -32,6 +38,9 @@ type EquipmentStepProps = {
       category: InventoryCategory;
       quantity: number;
       attackBonus: string;
+      baseItemId: string;
+      baseItemName: string;
+      baseDamage: string;
       damage: string;
       notes: string;
     },
@@ -42,6 +51,9 @@ type EquipmentStepProps = {
     category: InventoryCategory;
     quantity: number;
     attackBonus: string;
+    baseItemId: string;
+    baseItemName: string;
+    baseDamage: string;
     damage: string;
     notes: string;
   }) => void;
@@ -137,6 +149,7 @@ export function EquipmentStep({
   const [customItemCategory, setCustomItemCategory] = useState<InventoryCategory>("misc");
   const [customItemQuantity, setCustomItemQuantity] = useState("1");
   const [customItemAttackBonus, setCustomItemAttackBonus] = useState("");
+  const [customItemBaseId, setCustomItemBaseId] = useState("");
   const [customItemDamage, setCustomItemDamage] = useState("");
   const [customItemNotes, setCustomItemNotes] = useState("");
   const [editingItemId, setEditingItemId] = useState("");
@@ -144,9 +157,13 @@ export function EquipmentStep({
   const [editingItemCategory, setEditingItemCategory] = useState<InventoryCategory>("misc");
   const [editingItemQuantity, setEditingItemQuantity] = useState("1");
   const [editingItemAttackBonus, setEditingItemAttackBonus] = useState("");
+  const [editingItemBaseId, setEditingItemBaseId] = useState("");
+  const [editingItemBaseName, setEditingItemBaseName] = useState("");
+  const [editingItemBaseDamage, setEditingItemBaseDamage] = useState("");
   const [editingItemDamage, setEditingItemDamage] = useState("");
   const [editingItemNotes, setEditingItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
+  const effectSummary = useMemo(() => getInventoryEffectSummary(inventoryItems), [inventoryItems]);
 
   useEffect(() => {
     let active = true;
@@ -230,6 +247,7 @@ export function EquipmentStep({
 
   const parsedCustomItemQuantity = Math.max(1, Number(customItemQuantity) || 1);
   const parsedEditingItemQuantity = Math.max(1, Number(editingItemQuantity) || 1);
+  const selectedCustomBaseWeapon = BASE_WEAPON_OPTIONS.find((option) => option.id === customItemBaseId);
 
   function startEditingItem(item: CharacterInventoryItem) {
     setEditingItemId(item.id);
@@ -237,6 +255,9 @@ export function EquipmentStep({
     setEditingItemCategory((item.category as InventoryCategory) ?? "misc");
     setEditingItemQuantity(String(item.quantity || 1));
     setEditingItemAttackBonus(item.attackBonus ?? "");
+    setEditingItemBaseId(item.baseItemId ?? "");
+    setEditingItemBaseName(item.baseItemName ?? "");
+    setEditingItemBaseDamage(item.baseDamage ?? "");
     setEditingItemDamage(item.damage ?? "");
     setEditingItemNotes(item.notes ?? "");
   }
@@ -247,6 +268,9 @@ export function EquipmentStep({
     setEditingItemCategory("misc");
     setEditingItemQuantity("1");
     setEditingItemAttackBonus("");
+    setEditingItemBaseId("");
+    setEditingItemBaseName("");
+    setEditingItemBaseDamage("");
     setEditingItemDamage("");
     setEditingItemNotes("");
   }
@@ -332,8 +356,32 @@ export function EquipmentStep({
             <article className="equipment-step__statCard">
               <span className="builder-panel__label">Attuned</span>
               <strong>{summary.attuned}</strong>
-              <span>{summary.attunable} attunable</span>
+              <span>
+                {summary.attunable} attunable, limit {summary.attunementLimit}
+              </span>
             </article>
+          </div>
+          <div className="equipment-step__effects">
+            <span className="builder-panel__label">Equipment effects</span>
+            {effectSummary.acLines.length || effectSummary.weaponLines.length || effectSummary.warnings.length ? (
+              <ul className="equipment-step__effectList">
+                {effectSummary.acLines.map((line) => (
+                  <li key={`ac-${line}`}>{line}</li>
+                ))}
+                {effectSummary.weaponLines.map((line) => (
+                  <li key={`weapon-${line}`}>{line}</li>
+                ))}
+                {effectSummary.warnings.map((line) => (
+                  <li className="equipment-step__effectWarning" key={`warning-${line}`}>
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="builder-summary__meta">
+                Equip gear to preview AC, weapon, and attunement-sensitive effects.
+              </p>
+            )}
           </div>
           <div className="equipment-step__currency">
             <span className="builder-panel__label">Currency</span>
@@ -511,7 +559,14 @@ export function EquipmentStep({
               </div>
               <div className="equipment-step__inventoryBody">
                 {visibleInventoryItems.length ? (
-                  visibleInventoryItems.map((item) => (
+                  visibleInventoryItems.map((item) => {
+                    const baseWeaponOptions = getBaseWeaponOptionsForInventoryItem(item);
+                    const attunementBlocked =
+                      item.attunable &&
+                      !item.attuned &&
+                      effectSummary.attunedCount >= effectSummary.attunementLimit;
+
+                    return (
                     <div className="equipment-step__inventoryRow" key={item.id}>
                       <div className="equipment-step__inventoryName">
                         <strong>{item.name}</strong>
@@ -533,7 +588,9 @@ export function EquipmentStep({
                           <button
                             className={`choice-chip${item.attuned ? " choice-chip--active" : ""}`}
                             type="button"
+                            disabled={attunementBlocked}
                             onClick={() => onToggleAttuned(item.id)}
+                            title={attunementBlocked ? `Attunement limit is ${effectSummary.attunementLimit}.` : undefined}
                           >
                             {item.attuned ? "Attuned" : "Attune"}
                           </button>
@@ -547,9 +604,11 @@ export function EquipmentStep({
                           Delete
                         </button>
                       </div>
-                      {item.attackBonus || item.damage || item.notes ? (
+                      {item.attackBonus || item.baseItemName || item.baseDamage || item.damage || item.notes ? (
                         <div className="equipment-step__inventoryNote">
                           {item.attackBonus ? <span>Hit/damage bonus: {item.attackBonus}</span> : null}
+                          {item.baseItemName ? <span>Base: {item.baseItemName}</span> : null}
+                          {item.baseDamage ? <span>Base damage: {item.baseDamage}</span> : null}
                           {item.damage ? <span>Damage: {item.damage}</span> : null}
                           {item.notes ? <span>{item.notes}</span> : null}
                         </div>
@@ -611,6 +670,31 @@ export function EquipmentStep({
                               onChange={(event) => setEditingItemDamage(event.target.value)}
                             />
                           </label>
+                          {baseWeaponOptions.length ? (
+                            <label className="builder-field">
+                              <span className="builder-summary__meta">Base weapon for sheet/PDF damage</span>
+                              <select
+                                className="input"
+                                value={editingItemBaseId}
+                                onChange={(event) => {
+                                  const option = baseWeaponOptions.find((candidate) => candidate.id === event.target.value);
+                                  setEditingItemBaseId(option?.id ?? "");
+                                  setEditingItemBaseName(option?.name ?? "");
+                                  setEditingItemBaseDamage(option?.damage ?? "");
+                                  if (option && (!editingItemDamage || editingItemDamage === editingItemBaseDamage)) {
+                                    setEditingItemDamage(option.damage);
+                                  }
+                                }}
+                              >
+                                <option value="">Choose base weapon...</option>
+                                {baseWeaponOptions.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.name} - {option.damage}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          ) : null}
                           <label className="builder-field">
                             <span className="builder-summary__meta">Notes</span>
                             <MarkdownEditor
@@ -635,6 +719,9 @@ export function EquipmentStep({
                                   category: editingItemCategory,
                                   quantity: parsedEditingItemQuantity,
                                   attackBonus: editingItemAttackBonus.trim(),
+                                  baseItemId: editingItemBaseId,
+                                  baseItemName: editingItemBaseName,
+                                  baseDamage: editingItemBaseDamage,
                                   damage: editingItemDamage.trim(),
                                   notes: editingItemNotes.trim(),
                                 });
@@ -654,7 +741,8 @@ export function EquipmentStep({
                         </div>
                       ) : null}
                     </div>
-                  ))
+                  );
+                })
                 ) : (
                   <p className="builder-summary__meta">No inventory entries match the current view.</p>
                 )}
@@ -764,6 +852,29 @@ export function EquipmentStep({
                 />
               </label>
             </div>
+            {customItemCategory === "weapon" ? (
+              <label className="builder-field">
+                <span className="builder-summary__meta">Base weapon for sheet/PDF damage</span>
+                <select
+                  className="input"
+                  value={customItemBaseId}
+                  onChange={(event) => {
+                    const option = BASE_WEAPON_OPTIONS.find((candidate) => candidate.id === event.target.value);
+                    setCustomItemBaseId(option?.id ?? "");
+                    if (option && !customItemDamage) {
+                      setCustomItemDamage(option.damage);
+                    }
+                  }}
+                >
+                  <option value="">Choose base weapon...</option>
+                  {BASE_WEAPON_OPTIONS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name} - {option.damage}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label className="builder-field">
               <span className="builder-summary__meta">Notes</span>
               <MarkdownEditor
@@ -788,6 +899,9 @@ export function EquipmentStep({
                     category: customItemCategory,
                     quantity: parsedCustomItemQuantity,
                     attackBonus: customItemAttackBonus.trim(),
+                    baseItemId: selectedCustomBaseWeapon?.id ?? "",
+                    baseItemName: selectedCustomBaseWeapon?.name ?? "",
+                    baseDamage: selectedCustomBaseWeapon?.damage ?? "",
                     damage: customItemDamage.trim(),
                     notes: customItemNotes.trim(),
                   });
@@ -795,6 +909,7 @@ export function EquipmentStep({
                   setCustomItemCategory("misc");
                   setCustomItemQuantity("1");
                   setCustomItemAttackBonus("");
+                  setCustomItemBaseId("");
                   setCustomItemDamage("");
                   setCustomItemNotes("");
                 }}

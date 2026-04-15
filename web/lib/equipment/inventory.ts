@@ -53,6 +53,51 @@ const EQUIPPABLE_CATEGORIES = new Set<InventoryCategory>([
   "clothing",
 ]);
 
+export const ATTUNEMENT_LIMIT = 3;
+
+export type BaseWeaponOption = {
+  id: string;
+  name: string;
+  damage: string;
+  group: "axes" | "bows" | "crossbows" | "daggers" | "hammers" | "polearms" | "swords" | "weapons";
+};
+
+export const BASE_WEAPON_OPTIONS: BaseWeaponOption[] = [
+  { id: "club", name: "Club", damage: "1d4 bludgeoning", group: "weapons" },
+  { id: "dagger", name: "Dagger", damage: "1d4 piercing", group: "daggers" },
+  { id: "greatclub", name: "Greatclub", damage: "1d8 bludgeoning", group: "weapons" },
+  { id: "handaxe", name: "Handaxe", damage: "1d6 slashing", group: "axes" },
+  { id: "javelin", name: "Javelin", damage: "1d6 piercing", group: "weapons" },
+  { id: "light-hammer", name: "Light Hammer", damage: "1d4 bludgeoning", group: "hammers" },
+  { id: "mace", name: "Mace", damage: "1d6 bludgeoning", group: "weapons" },
+  { id: "quarterstaff", name: "Quarterstaff", damage: "1d6 bludgeoning", group: "weapons" },
+  { id: "sickle", name: "Sickle", damage: "1d4 slashing", group: "weapons" },
+  { id: "spear", name: "Spear", damage: "1d6 piercing", group: "polearms" },
+  { id: "battleaxe", name: "Battleaxe", damage: "1d8 slashing", group: "axes" },
+  { id: "flail", name: "Flail", damage: "1d8 bludgeoning", group: "weapons" },
+  { id: "glaive", name: "Glaive", damage: "1d10 slashing", group: "polearms" },
+  { id: "greataxe", name: "Greataxe", damage: "1d12 slashing", group: "axes" },
+  { id: "greatsword", name: "Greatsword", damage: "2d6 slashing", group: "swords" },
+  { id: "halberd", name: "Halberd", damage: "1d10 slashing", group: "polearms" },
+  { id: "lance", name: "Lance", damage: "1d12 piercing", group: "polearms" },
+  { id: "longsword", name: "Longsword", damage: "1d8 slashing", group: "swords" },
+  { id: "maul", name: "Maul", damage: "2d6 bludgeoning", group: "hammers" },
+  { id: "morningstar", name: "Morningstar", damage: "1d8 piercing", group: "weapons" },
+  { id: "pike", name: "Pike", damage: "1d10 piercing", group: "polearms" },
+  { id: "rapier", name: "Rapier", damage: "1d8 piercing", group: "swords" },
+  { id: "scimitar", name: "Scimitar", damage: "1d6 slashing", group: "swords" },
+  { id: "shortsword", name: "Shortsword", damage: "1d6 piercing", group: "swords" },
+  { id: "trident", name: "Trident", damage: "1d6 piercing", group: "polearms" },
+  { id: "war-pick", name: "War Pick", damage: "1d8 piercing", group: "weapons" },
+  { id: "warhammer", name: "Warhammer", damage: "1d8 bludgeoning", group: "hammers" },
+  { id: "whip", name: "Whip", damage: "1d4 slashing", group: "weapons" },
+  { id: "shortbow", name: "Shortbow", damage: "1d6 piercing", group: "bows" },
+  { id: "longbow", name: "Longbow", damage: "1d8 piercing", group: "bows" },
+  { id: "light-crossbow", name: "Light Crossbow", damage: "1d8 piercing", group: "crossbows" },
+  { id: "heavy-crossbow", name: "Heavy Crossbow", damage: "1d10 piercing", group: "crossbows" },
+  { id: "hand-crossbow", name: "Hand Crossbow", damage: "1d6 piercing", group: "crossbows" },
+];
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -109,6 +154,64 @@ export function isInventoryItemEquippable(name: string, category: InventoryCateg
   }
 
   return EQUIPPABLE_CATEGORIES.has(category);
+}
+
+function parseNumericBonus(value?: string) {
+  const match = value?.match(/\+?\s*(\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
+export function inferItemEnhancementBonus(item: Pick<CharacterInventoryItem, "name" | "attackBonus">) {
+  return parseNumericBonus(item.attackBonus) || parseNumericBonus(item.name.match(/,\s*\+(\d+)/)?.[0]);
+}
+
+function isWeaponLike(item: CharacterInventoryItem) {
+  return (
+    item.category === "weapon" ||
+    item.family?.toLowerCase().includes("magic weapon") ||
+    /\b(weapon|sword|blade|axe|bow|crossbow|dagger|hammer|staff|mace|spear|lance|pike|glaive|halberd|whip)\b/i.test(item.name)
+  );
+}
+
+export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryItem) {
+  if (!isWeaponLike(item)) {
+    return [];
+  }
+
+  const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""} ${item.damage ?? ""}`.toLowerCase();
+  const groups = new Set<BaseWeaponOption["group"]>();
+
+  if (/\b(sword|blade|scimitar|rapier)\b/.test(haystack)) {
+    groups.add("swords");
+  }
+  if (/\baxe\b/.test(haystack)) {
+    groups.add("axes");
+  }
+  if (/\bbow\b/.test(haystack)) {
+    groups.add("bows");
+  }
+  if (/\bcrossbow\b/.test(haystack)) {
+    groups.add("crossbows");
+  }
+  if (/\bdagger\b/.test(haystack)) {
+    groups.add("daggers");
+  }
+  if (/\bhammer|maul\b/.test(haystack)) {
+    groups.add("hammers");
+  }
+  if (/\bstaff|spear|lance|pike|glaive|halberd\b/.test(haystack)) {
+    groups.add("polearms");
+  }
+
+  if (!groups.size) {
+    groups.add("weapons");
+    groups.add("swords");
+    groups.add("axes");
+    groups.add("bows");
+    groups.add("crossbows");
+  }
+
+  return BASE_WEAPON_OPTIONS.filter((option) => groups.has(option.group));
 }
 
 export function createEmptyCurrency(): CharacterCurrency {
@@ -203,6 +306,9 @@ export function buildStartingInventoryFromPlan(
       attunable: previous?.attunable ?? false,
       attuned: previous?.attuned ?? false,
       attackBonus: previous?.attackBonus,
+      baseItemId: previous?.baseItemId,
+      baseItemName: previous?.baseItemName,
+      baseDamage: previous?.baseDamage,
       damage: previous?.damage,
       notes: previous?.notes,
       detailHtml: previous?.detailHtml,
@@ -234,5 +340,76 @@ export function summarizeInventory(items: CharacterInventoryItem[]) {
     equipped,
     attuned,
     attunable,
+    attunementLimit: ATTUNEMENT_LIMIT,
+    attunementOverLimit: Math.max(0, attuned - ATTUNEMENT_LIMIT),
+  };
+}
+
+function getArmorShieldAcLine(item: CharacterInventoryItem) {
+  if (!item.equipped || !["armor", "shield"].includes(item.category)) {
+    return "";
+  }
+
+  if (item.attunable && !item.attuned) {
+    return `${item.name}: equipped, attunement required before magic effects apply`;
+  }
+
+  if (item.category === "shield" || /\bshield\b/i.test(item.name)) {
+    const enhancement = inferItemEnhancementBonus(item);
+    const total = 2 + enhancement;
+    return `${item.name}: +${total} AC while equipped${enhancement ? ` (+2 shield, +${enhancement} magic)` : ""}`;
+  }
+
+  const enhancement = inferItemEnhancementBonus(item);
+  return enhancement
+    ? `${item.name}: +${enhancement} armor bonus while equipped`
+    : `${item.name}: armor equipped; final AC formula resolves on the sheet`;
+}
+
+function getWeaponEffectLine(item: CharacterInventoryItem) {
+  if (!item.equipped || !isWeaponLike(item)) {
+    return "";
+  }
+
+  if (item.attunable && !item.attuned) {
+    return `${item.name}: equipped, attunement required before magic effects apply`;
+  }
+
+  const enhancement = inferItemEnhancementBonus(item);
+  const baseName = item.baseItemName ? ` (${item.baseItemName})` : "";
+  const damage = item.damage || item.baseDamage;
+  const pieces = [
+    `${item.name}${baseName}`,
+    enhancement ? `+${enhancement} attack/damage` : "",
+    damage ? damage : "damage die unresolved",
+  ].filter(Boolean);
+
+  return pieces.join(": ");
+}
+
+export function getInventoryEffectSummary(items: CharacterInventoryItem[]) {
+  const attunedItems = items.filter((item) => item.attuned);
+  const equippedItems = items.filter((item) => item.equipped);
+  const acLines = items.map(getArmorShieldAcLine).filter(Boolean);
+  const weaponLines = items.map(getWeaponEffectLine).filter(Boolean);
+  const warnings = [
+    attunedItems.length > ATTUNEMENT_LIMIT
+      ? `Attunement limit exceeded: ${attunedItems.length}/${ATTUNEMENT_LIMIT}.`
+      : "",
+    ...items
+      .filter((item) => item.equipped && item.attunable && !item.attuned)
+      .map((item) => `${item.name} is equipped but not attuned; its attunement-gated effects should stay inactive.`),
+    ...items
+      .filter((item) => item.equipped && isWeaponLike(item) && !item.damage && !item.baseDamage)
+      .map((item) => `${item.name} needs a base weapon or damage value before sheet/PDF attack rows can be complete.`),
+  ].filter(Boolean);
+
+  return {
+    attunementLimit: ATTUNEMENT_LIMIT,
+    attunedCount: attunedItems.length,
+    equippedCount: equippedItems.length,
+    acLines,
+    weaponLines,
+    warnings,
   };
 }

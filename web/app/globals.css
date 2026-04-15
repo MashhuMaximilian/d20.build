@@ -869,7 +869,8 @@ a {
 }
 
 .equipment-step__statCard,
-.equipment-step__currency {
+.equipment-step__currency,
+.equipment-step__effects {
   display: grid;
   gap: 4px;
   padding: 14px;
@@ -945,6 +946,20 @@ a {
 .equipment-step__notes {
   display: grid;
   gap: 8px;
+}
+
+.equipment-step__effectList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.equipment-step__effectWarning {
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .equipment-step__accordion--root {
