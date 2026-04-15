@@ -247,7 +247,11 @@ export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryIte
 }
 
 export function needsBaseWeaponResolution(item: CharacterInventoryItem) {
-  return isWeaponLike(item) && !item.damage && !item.baseDamage && getBaseWeaponOptionsForInventoryItem(item).length > 0;
+  return (
+    isWeaponLike(item) &&
+    !/\d+d\d+/i.test(`${item.damage ?? ""} ${item.baseDamage ?? ""}`) &&
+    getBaseWeaponOptionsForInventoryItem(item).length > 0
+  );
 }
 
 export function isGenericDamageValue(value?: string) {
@@ -316,7 +320,11 @@ function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {
     return "";
   }
 
-  const baseId = item.baseItemId || BASE_WEAPON_OPTIONS.find((option) => item.name.toLowerCase().includes(option.name.toLowerCase()))?.id;
+  const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""} ${item.baseItemName ?? ""}`.toLowerCase();
+  const baseId = item.baseItemId || BASE_WEAPON_OPTIONS.find((option) => haystack.includes(option.name.toLowerCase()))?.id;
+  if (!baseId && /\bsword|rapier|longbow|heavy crossbow|hand crossbow|battleaxe|greataxe|maul|halberd|glaive|lance|pike|warhammer|war pick|whip\b/i.test(haystack)) {
+    return "martial";
+  }
   return baseId && MARTIAL_WEAPON_IDS.has(baseId) ? "martial" : "simple";
 }
 

@@ -1053,10 +1053,12 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 38px;
-  padding: 8px 12px;
-  font-size: 1.05rem;
+  width: 40px;
+  min-width: 40px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
@@ -1166,9 +1168,60 @@ a {
 
 .equipment-step__grantBody {
   display: grid;
-  gap: 8px;
+  gap: 14px;
   color: var(--muted);
   line-height: 1.45;
+}
+
+.equipment-step__additionalInventory {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 18px;
+  background: rgba(146, 38, 16, 0.045);
+}
+
+.equipment-step__additionalInventory > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.equipment-step__grantChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.equipment-step__grantChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(100%, 520px);
+  padding: 8px 10px 8px 12px;
+  border: 1px solid rgba(146, 38, 16, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.88);
+}
+
+.equipment-step__grantChip > span {
+  display: grid;
+  gap: 2px;
+}
+
+.equipment-step__grantChip small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1;
+}
+
+.equipment-step__asiGrantEditor {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) 120px auto;
+  gap: 12px;
+  align-items: end;
 }
 
 .equipment-step__legacyGrant {
@@ -3153,7 +3206,8 @@ a {
 
   .equipment-step__manualGrid,
   .equipment-step__grantGrid,
-  .equipment-step__manualRow {
+  .equipment-step__manualRow,
+  .equipment-step__asiGrantEditor {
     grid-template-columns: 1fr;
   }
 

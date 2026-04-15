@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector";
 import { MarkdownEditor } from "@/components/markdown-editor";
-import type { AbilityKey, CharacterCurrency, CharacterEquipmentNotes, CharacterInventoryItem } from "@/lib/characters/types";
+import type {
+  AbilityKey,
+  CharacterCurrency,
+  CharacterEquipmentNotes,
+  CharacterInventoryItem,
+  CharacterManualGrant,
+  CharacterManualGrantKind,
+} from "@/lib/characters/types";
 import type { EquipmentCatalogEntry } from "@/lib/equipment/catalog";
 import { getMergedEquipmentCatalog } from "@/lib/equipment/catalog";
 import type { EquipmentAcquisitionMode, InventoryCategory } from "@/lib/equipment/inventory";
@@ -28,6 +35,8 @@ type EquipmentStepProps = {
   inventoryItems: CharacterInventoryItem[];
   currency: CharacterCurrency;
   equipmentNotes: CharacterEquipmentNotes;
+  manualGrants: CharacterManualGrant[];
+  manualGrantCatalogs: Record<Exclude<CharacterManualGrantKind, "asi">, CatalogItem[]>;
   effectiveAbilities: Record<AbilityKey, number>;
   attunementLimit: number;
   equipmentProficiencies: {
@@ -67,6 +76,8 @@ type EquipmentStepProps = {
     notes: string;
   }) => void;
   onEquipmentNotesChange: (notes: CharacterEquipmentNotes) => void;
+  onAddManualGrant: (grant: CharacterManualGrant) => void;
+  onRemoveManualGrant: (grantId: string) => void;
 };
 
 type InventoryView = "all" | "equipped" | "attuned";
@@ -129,54 +140,52 @@ const CUSTOM_ITEM_CATEGORY_OPTIONS: Array<{ value: InventoryCategory; label: str
 ];
 
 const DM_GRANT_ROWS: Array<{
-  key: keyof Pick<
-    CharacterEquipmentNotes,
-    | "additionalSpells"
-    | "additionalProficiencies"
-    | "additionalLanguages"
-    | "additionalFeats"
-    | "additionalFeatures"
-    | "additionalAbilityScores"
-  >;
+  kind: CharacterManualGrantKind;
   title: string;
   description: string;
-  nextSurface: string;
+  pickerLabel: string;
+  preferredTags?: string[];
 }> = [
   {
-    key: "additionalSpells",
+    kind: "spell",
     title: "Additional spells",
     description: "DM-granted spells, item spells, boons, and table exceptions.",
-    nextSurface: "Spell picker with cantrip/leveled filters and source-aware detail preview.",
+    pickerLabel: "Additional spell",
+    preferredTags: ["Cantrip", "Level 1", "Level 2", "Level 3", "Level 4", "Level 5", "Level 6", "Level 7", "Level 8", "Level 9"],
   },
   {
-    key: "additionalProficiencies",
+    kind: "proficiency",
     title: "Additional proficiencies",
     description: "Skills, tools, weapons, armor, saves, expertise, and conditional proficiencies.",
-    nextSurface: "Proficiency picker using the same family resolver as class, race, and background choices.",
+    pickerLabel: "Additional proficiency",
+    preferredTags: ["Skill", "Tool", "Armor", "Weapon", "Saving Throw", "Expertise"],
   },
   {
-    key: "additionalLanguages",
+    kind: "language",
     title: "Additional languages",
     description: "Learned, granted, temporary, or campaign-specific languages.",
-    nextSurface: "Language picker with custom-language support for table-specific settings.",
+    pickerLabel: "Additional language",
+    preferredTags: ["Standard", "Exotic", "Campaign"],
   },
   {
-    key: "additionalFeats",
+    kind: "feat",
     title: "Additional feats",
     description: "Bonus feats, feat-like boons, and DM-approved prerequisite exceptions.",
-    nextSurface: "Feat browser with prerequisites, source filters, and explicit manual-grant provenance.",
+    pickerLabel: "Additional feat",
+    preferredTags: ["Feat", "Ability Score Improvement", "Spellcasting", "Proficiency"],
   },
   {
-    key: "additionalFeatures",
+    kind: "feature",
     title: "Additional features",
     description: "Blessings, charms, curses, faction benefits, custom class features, and item traits.",
-    nextSurface: "Feature browser plus custom feature cards that flow into review/sheet/PDF.",
+    pickerLabel: "Additional feature",
+    preferredTags: ["Class Feature", "Archetype Feature", "Racial Trait", "Background Feature", "Feat Feature"],
   },
   {
-    key: "additionalAbilityScores",
+    kind: "asi",
     title: "Additional ASIs / ability changes",
     description: "Permanent ASIs, temporary score setters, penalties, and training rewards.",
-    nextSurface: "ASI editor that distinguishes score increases, set-to values, and conditional effects.",
+    pickerLabel: "Additional ASI",
   },
 ];
 
@@ -192,6 +201,8 @@ export function EquipmentStep({
   inventoryItems,
   currency,
   equipmentNotes,
+  manualGrants,
+  manualGrantCatalogs,
   effectiveAbilities,
   attunementLimit,
   equipmentProficiencies,
@@ -205,6 +216,8 @@ export function EquipmentStep({
   onAddManualItem,
   onAddCustomItem,
   onEquipmentNotesChange,
+  onAddManualGrant,
+  onRemoveManualGrant,
 }: EquipmentStepProps) {
   const [inventoryView, setInventoryView] = useState<InventoryView>("all");
   const [inventorySearch, setInventorySearch] = useState("");
@@ -227,6 +240,9 @@ export function EquipmentStep({
   const [editingItemBaseDamage, setEditingItemBaseDamage] = useState("");
   const [editingItemDamage, setEditingItemDamage] = useState("");
   const [editingItemNotes, setEditingItemNotes] = useState("");
+  const [manualAsiAbility, setManualAsiAbility] = useState<AbilityKey>("strength");
+  const [manualAsiMode, setManualAsiMode] = useState<"increase" | "set">("increase");
+  const [manualAsiAmount, setManualAsiAmount] = useState("1");
   const summary = useMemo(() => summarizeInventory(inventoryItems, attunementLimit), [attunementLimit, inventoryItems]);
   const effectSummary = useMemo(
     () =>
@@ -1115,34 +1131,153 @@ export function EquipmentStep({
       <details className="equipment-step__accordion equipment-step__accordion--wide" open>
         <summary className="equipment-step__accordionSummary">
           <span>Manual / DM-granted extras</span>
-          <small>M4.4 picker surface</small>
+          <small>{manualGrants.length ? `${manualGrants.length} active grants` : "No active grants"}</small>
         </summary>
         <div className="equipment-step__accordionBody">
           <section className="equipment-step__panel">
             <div className="equipment-step__groupHeader">
               <span className="builder-panel__label">Additional build grants</span>
               <p className="builder-summary__meta">
-                These grants should be selected from proper catalogs, not typed as loose notes. This card is now the M4.4 landing zone: each row gets a workbench/table picker, and selected grants will live in a separate additional-inventory list that is always active unless deleted.
+                Add DM-approved spells, proficiencies, languages, feats, features, and ability changes from unrestricted catalogs.
+                These are always active manual grants, kept separate from carried inventory, and can only be removed here.
               </p>
+            </div>
+            <div className="equipment-step__additionalInventory">
+              <div>
+                <span className="builder-panel__label">Additional inventory</span>
+                <strong>{manualGrants.length ? `${manualGrants.length} active grant${manualGrants.length === 1 ? "" : "s"}` : "No active grants"}</strong>
+              </div>
+              {manualGrants.length ? (
+                <div className="equipment-step__grantChips">
+                  {manualGrants.map((grant) => (
+                    <span className="equipment-step__grantChip" key={grant.id}>
+                      <span>
+                        <strong>{grant.name}</strong>
+                        <small>{grant.kind}{grant.source ? ` • ${grant.source}` : ""}</small>
+                      </span>
+                      <button
+                        aria-label={`Delete ${grant.name}`}
+                        className="choice-chip equipment-step__actionButton"
+                        data-label="Delete"
+                        title="Delete"
+                        type="button"
+                        onClick={() => onRemoveManualGrant(grant.id)}
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="builder-summary__meta">No manual grants yet. Open a row below and add exactly what the DM allowed.</p>
+              )}
             </div>
             <div className="equipment-step__grantRows">
               {DM_GRANT_ROWS.map((row) => {
-                const legacyValue = equipmentNotes[row.key]?.trim();
+                const rowGrants = manualGrants.filter((grant) => grant.kind === row.kind);
+                const catalogItems = row.kind === "asi" ? [] : manualGrantCatalogs[row.kind];
                 return (
-                  <details className="equipment-step__grantRow" key={row.key}>
+                  <details className="equipment-step__grantRow" key={row.kind}>
                     <summary className="equipment-step__grantSummary">
                       <span>{row.title}</span>
-                      <small>{legacyValue ? "Legacy note saved" : "No additions yet"}</small>
+                      <small>{rowGrants.length ? `${rowGrants.length} added` : "No additions yet"}</small>
                     </summary>
                     <div className="equipment-step__grantBody">
                       <p>{row.description}</p>
-                      <p className="builder-summary__meta">{row.nextSurface}</p>
-                      {legacyValue ? (
-                        <div className="equipment-step__legacyGrant">
-                          <span className="builder-panel__label">Existing placeholder note</span>
-                          <p>{legacyValue}</p>
+                      {row.kind === "asi" ? (
+                        <div className="equipment-step__asiGrantEditor">
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Ability</span>
+                            <select
+                              className="input"
+                              value={manualAsiAbility}
+                              onChange={(event) => setManualAsiAbility(event.target.value as AbilityKey)}
+                            >
+                              <option value="strength">Strength</option>
+                              <option value="dexterity">Dexterity</option>
+                              <option value="constitution">Constitution</option>
+                              <option value="intelligence">Intelligence</option>
+                              <option value="wisdom">Wisdom</option>
+                              <option value="charisma">Charisma</option>
+                            </select>
+                          </label>
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Mode</span>
+                            <select
+                              className="input"
+                              value={manualAsiMode}
+                              onChange={(event) => setManualAsiMode(event.target.value as "increase" | "set")}
+                            >
+                              <option value="increase">Increase score</option>
+                              <option value="set">Set score to</option>
+                            </select>
+                          </label>
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Amount</span>
+                            <input
+                              className="input"
+                              inputMode="numeric"
+                              type="number"
+                              value={manualAsiAmount}
+                              onChange={(event) => setManualAsiAmount(event.target.value)}
+                            />
+                          </label>
+                          <button
+                            className="button button--secondary button--compact"
+                            type="button"
+                            onClick={() => {
+                              const amount = Number(manualAsiAmount);
+                              if (!Number.isFinite(amount)) {
+                                return;
+                              }
+                              const abilityLabel = manualAsiAbility.charAt(0).toUpperCase() + manualAsiAbility.slice(1);
+                              const modeLabel = manualAsiMode === "set" ? "set to" : "increase";
+                              const id = `manual-grant::asi::${manualAsiMode}::${manualAsiAbility}::${Math.floor(amount)}::${Date.now()}`;
+                              onAddManualGrant({
+                                id,
+                                kind: "asi",
+                                name: `${abilityLabel} ${modeLabel} ${Math.floor(amount)}`,
+                                source: "Manual / DM grant",
+                                ability: manualAsiAbility,
+                                mode: manualAsiMode,
+                                amount: Math.floor(amount),
+                                note: "Manual ability change; unrestricted DM grant.",
+                              });
+                            }}
+                          >
+                            Add ASI grant
+                          </button>
                         </div>
-                      ) : null}
+                      ) : (
+                        <CatalogSelector
+                          actionLabel="Add grant"
+                          defaultDetailView="reference"
+                          emptyMessage={`No ${row.title.toLowerCase()} entries found.`}
+                          items={catalogItems}
+                          label={row.pickerLabel}
+                          onAction={(id) => {
+                            const item = catalogItems.find((candidate) => candidate.id === id);
+                            if (!item) {
+                              return;
+                            }
+                            onAddManualGrant({
+                              id: `manual-grant::${row.kind}::${item.id}`,
+                              kind: row.kind,
+                              refId: item.id,
+                              name: item.name,
+                              source: item.source,
+                              description: item.description,
+                              detailHtml: item.detailHtml,
+                              note: "Manual / DM grant; unrestricted by normal build prerequisites.",
+                            });
+                          }}
+                          onSelect={() => {}}
+                          preferredTags={row.preferredTags ?? []}
+                          selectedId=""
+                          tagSectionLabel={row.kind === "feature" ? "Feature type" : "Grant type"}
+                          tagLimit={18}
+                        />
+                      )}
                     </div>
                   </details>
                 );

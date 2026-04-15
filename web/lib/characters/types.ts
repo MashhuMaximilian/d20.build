@@ -62,6 +62,22 @@ export type CharacterEquipmentNotes = {
   additionalAbilityScores: string;
 };
 
+export type CharacterManualGrantKind = "spell" | "proficiency" | "language" | "feat" | "feature" | "asi";
+
+export type CharacterManualGrant = {
+  id: string;
+  kind: CharacterManualGrantKind;
+  refId?: string;
+  name: string;
+  source?: string;
+  description?: string;
+  detailHtml?: string;
+  ability?: AbilityKey;
+  mode?: "increase" | "set";
+  amount?: number;
+  note?: string;
+};
+
 export type CharacterInventoryItem = {
   id: string;
   name: string;
@@ -114,6 +130,7 @@ export type CharacterDraft = {
   inventoryCurrency: CharacterCurrency;
   inventoryItems: CharacterInventoryItem[];
   equipmentNotes: CharacterEquipmentNotes;
+  manualGrants: CharacterManualGrant[];
   backstory: CharacterBackstory;
   sourceManifest: CharacterSourceManifestEntry[];
 };
@@ -191,6 +208,7 @@ export function createEmptyCharacterDraft(): CharacterDraft {
       additionalFeatures: "",
       additionalAbilityScores: "",
     },
+    manualGrants: [],
     backstory: {
       personalityTraits: "",
       ideals: "",
@@ -338,6 +356,28 @@ export function normalizeCharacterDraft(draft: CharacterDraft | LegacyCharacterD
       ...empty.equipmentNotes,
       ...(draft.equipmentNotes ?? {}),
     },
+    manualGrants: Array.isArray(draft.manualGrants)
+      ? draft.manualGrants
+          .filter((grant): grant is CharacterManualGrant => Boolean(grant && typeof grant.id === "string" && typeof grant.name === "string"))
+          .map((grant) => ({
+            id: grant.id,
+            kind: ["spell", "proficiency", "language", "feat", "feature", "asi"].includes(grant.kind)
+              ? grant.kind
+              : "feature",
+            refId: typeof grant.refId === "string" ? grant.refId : undefined,
+            name: grant.name,
+            source: typeof grant.source === "string" ? grant.source : undefined,
+            description: typeof grant.description === "string" ? grant.description : undefined,
+            detailHtml: typeof grant.detailHtml === "string" ? grant.detailHtml : undefined,
+            ability: ABILITY_KEYS.includes(grant.ability as AbilityKey) ? grant.ability : undefined,
+            mode: grant.mode === "set" ? "set" : grant.mode === "increase" ? "increase" : undefined,
+            amount:
+              typeof grant.amount === "number" && Number.isFinite(grant.amount)
+                ? Math.max(-30, Math.min(30, Math.floor(grant.amount)))
+                : undefined,
+            note: typeof grant.note === "string" ? grant.note : undefined,
+          }))
+      : [],
     backstory: {
       ...empty.backstory,
       ...(draft.backstory ?? {}),

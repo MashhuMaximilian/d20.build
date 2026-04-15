@@ -31,6 +31,8 @@ import {
   type AbilityKey,
   type CharacterDraft,
   type CharacterImprovementSelection,
+  type CharacterManualGrant,
+  type CharacterManualGrantKind,
 } from "@/lib/characters/types";
 import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
@@ -163,6 +165,136 @@ type BuilderStep = {
 };
 
 const BASE_RACE_BRANCH_PREFIX = "__base-race__:";
+
+const MANUAL_PROFICIENCY_CATALOG: CatalogItem[] = [
+  ...[
+    "Acrobatics",
+    "Animal Handling",
+    "Arcana",
+    "Athletics",
+    "Deception",
+    "History",
+    "Insight",
+    "Intimidation",
+    "Investigation",
+    "Medicine",
+    "Nature",
+    "Perception",
+    "Performance",
+    "Persuasion",
+    "Religion",
+    "Sleight of Hand",
+    "Stealth",
+    "Survival",
+  ].map((name) => ({
+    id: `manual-prof-skill-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name,
+    description: `Manual proficiency grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Skill",
+    filterTags: ["Skill", "Proficiency"],
+    summaryLines: ["Skill proficiency"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Proficiency: ${name}`],
+  })),
+  ...["Light Armor", "Medium Armor", "Heavy Armor", "Shields"].map((name) => ({
+    id: `manual-prof-armor-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name,
+    description: `Manual armor proficiency grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Armor",
+    filterTags: ["Armor", "Proficiency"],
+    summaryLines: ["Armor proficiency"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Armor proficiency: ${name}`],
+  })),
+  ...["Simple Weapons", "Martial Weapons"].map((name) => ({
+    id: `manual-prof-weapon-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name,
+    description: `Manual weapon proficiency grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Weapon",
+    filterTags: ["Weapon", "Proficiency"],
+    summaryLines: ["Weapon proficiency"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Weapon proficiency: ${name}`],
+  })),
+  ...[
+    "Alchemist's Supplies",
+    "Brewer's Supplies",
+    "Calligrapher's Supplies",
+    "Carpenter's Tools",
+    "Cartographer's Tools",
+    "Cobbler's Tools",
+    "Cook's Utensils",
+    "Disguise Kit",
+    "Forgery Kit",
+    "Gaming Set",
+    "Glassblower's Tools",
+    "Herbalism Kit",
+    "Jeweler's Tools",
+    "Leatherworker's Tools",
+    "Mason's Tools",
+    "Musical Instrument",
+    "Navigator's Tools",
+    "Painter's Supplies",
+    "Poisoner's Kit",
+    "Potter's Tools",
+    "Smith's Tools",
+    "Thieves' Tools",
+    "Tinker's Tools",
+    "Vehicles (Land)",
+    "Vehicles (Water)",
+    "Weaver's Tools",
+    "Woodcarver's Tools",
+  ].map((name) => ({
+    id: `manual-prof-tool-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name,
+    description: `Manual tool proficiency grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Tool",
+    filterTags: ["Tool", "Proficiency"],
+    summaryLines: ["Tool proficiency"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Tool proficiency: ${name}`],
+  })),
+];
+
+const MANUAL_LANGUAGE_CATALOG: CatalogItem[] = [
+  ...["Common", "Dwarvish", "Elvish", "Giant", "Gnomish", "Goblin", "Halfling", "Orc"].map((name) => ({
+    id: `manual-language-${name.toLowerCase()}`,
+    name,
+    description: `Manual language grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Standard language",
+    filterTags: ["Standard", "Language"],
+    summaryLines: ["Standard language"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Language: ${name}`],
+  })),
+  ...["Abyssal", "Celestial", "Draconic", "Deep Speech", "Infernal", "Primordial", "Sylvan", "Undercommon"].map((name) => ({
+    id: `manual-language-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name,
+    description: `Manual language grant for ${name}.`,
+    source: "Manual / DM grant",
+    meta: "Exotic language",
+    filterTags: ["Exotic", "Language"],
+    summaryLines: ["Exotic language"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: [`Language: ${name}`],
+  })),
+  {
+    id: "manual-language-custom",
+    name: "Custom / campaign language",
+    description: "Use this placeholder for a table-specific language and rename it later in review/sheet work.",
+    source: "Manual / DM grant",
+    meta: "Campaign language",
+    filterTags: ["Campaign", "Language"],
+    summaryLines: ["Campaign language"],
+    impactLines: ["Always active manual grant"],
+    mechanicsLines: ["Language: Custom"],
+  },
+];
 
 function rebalanceClassEntries(totalLevel: number, entries: CharacterDraft["classEntries"]) {
   const safeTotal = Math.max(1, Math.min(20, Math.floor(totalLevel || 1)));
@@ -659,6 +791,108 @@ function buildBackgroundCatalogItems(backgrounds: BuiltInBackgroundRecord[]): Ca
   }));
 }
 
+function elementToManualGrantCatalogItem(element: BuiltInElement, fallbackMeta: string = element.type): CatalogItem {
+  const statSummary = getAbilityBonusSummary(element.rules);
+  const grants = getFirstLevelGrantSummary(element.rules);
+
+  return {
+    id: element.id,
+    name: element.name,
+    description: element.description,
+    detailHtml: element.descriptionHtml,
+    origin: element.catalogOrigin,
+    source: element.source,
+    meta: fallbackMeta,
+    summaryLines: normalizeSummaryLines([
+      element.prerequisite ? `Prerequisite: ${element.prerequisite}` : "",
+      ...statSummary,
+      ...grants,
+    ]),
+    impactLines: normalizeSummaryLines([
+      "Manual / DM grant",
+      element.prerequisite ? "Prerequisites ignored in this manual-grant surface" : "",
+      ...grants,
+    ]),
+    mechanicsLines: normalizeSummaryLines([
+      element.type,
+      element.requirements ? `Requirements: ${element.requirements}` : "",
+      element.prerequisite ? `Prerequisite: ${element.prerequisite}` : "",
+      ...statSummary,
+      ...grants,
+    ]),
+    filterTags: normalizeSummaryLines([
+      element.type,
+      element.source,
+      ...statSummary,
+      ...element.supports.slice(0, 8),
+    ]),
+    detailTags: normalizeSummaryLines([
+      element.type,
+      element.source,
+      ...statSummary,
+    ]),
+  };
+}
+
+function dedupeCatalogItems(items: CatalogItem[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.id || `${item.name}::${item.source ?? ""}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildManualGrantCatalogs(args: {
+  backgrounds: BuiltInBackgroundRecord[];
+  classes: BuiltInClassRecord[];
+  feats: BuiltInElement[];
+  progressionElements: BuiltInElement[];
+  races: BuiltInRaceRecord[];
+  spells: BuiltInElement[];
+}): Record<Exclude<CharacterManualGrantKind, "asi">, CatalogItem[]> {
+  const featureElements = [
+    ...args.progressionElements.filter((element) =>
+      ["Class Feature", "Archetype Feature", "Racial Trait", "Background Feature", "Feat Feature", "Companion Trait", "Companion Action", "Companion Reaction"].includes(element.type),
+    ),
+    ...args.races.flatMap((race) => [race.race, ...race.subraces, ...race.traits]),
+    ...args.classes.flatMap((classRecord) => [
+      classRecord.class,
+      ...classRecord.features,
+      ...classRecord.subclassSteps.flatMap((step) => step.options.flatMap((option) => [option.archetype, ...option.features])),
+    ]),
+    ...args.backgrounds.flatMap((background) => [background.background, ...background.features]),
+    ...args.feats.flatMap((feat) => {
+      const grantedIds = new Set(collectGrantedIds(feat.rules, "Feat Feature"));
+      return args.feats.filter((candidate) => grantedIds.has(candidate.id));
+    }),
+  ];
+
+  return {
+    spell: dedupeCatalogItems(
+      args.spells.map((spell) => {
+        const level = getSpellLevel(spell);
+        return {
+          ...elementToManualGrantCatalogItem(spell, level === 0 ? "Cantrip" : `Level ${level} spell`),
+          filterTags: [
+            level === 0 ? "Cantrip" : `Level ${level}`,
+            spell.source,
+            ...spell.supports.slice(0, 8),
+          ],
+          summaryLines: [level === 0 ? "Cantrip" : `Level ${level}`],
+        };
+      }),
+    ),
+    proficiency: MANUAL_PROFICIENCY_CATALOG,
+    language: MANUAL_LANGUAGE_CATALOG,
+    feat: dedupeCatalogItems(args.feats.map((feat) => elementToManualGrantCatalogItem(feat, "Feat"))),
+    feature: dedupeCatalogItems(featureElements.map((feature) => elementToManualGrantCatalogItem(feature, feature.type))),
+  };
+}
+
 function addAbilityBonusMaps(...maps: Array<Record<AbilityKey, number>>) {
   return ABILITY_KEYS.reduce<Record<AbilityKey, number>>(
     (totals, ability) => {
@@ -878,6 +1112,9 @@ export function BuilderEditor({
     const armor = new Set(base.armor);
     const weapons = new Set(base.weapons);
     const featNames = selectedFeatElements.map((feat) => feat.name.toLowerCase());
+    const manualProficiencyNames = draft.manualGrants
+      .filter((grant) => grant.kind === "proficiency")
+      .map((grant) => grant.name.toLowerCase());
 
     if (featNames.some((name) => name.includes("lightly armored"))) {
       armor.add("light");
@@ -892,12 +1129,30 @@ export function BuilderEditor({
     if (featNames.some((name) => name.includes("weapon master"))) {
       weapons.add("manual weapon grant");
     }
+    if (manualProficiencyNames.some((name) => name.includes("light armor"))) {
+      armor.add("light");
+    }
+    if (manualProficiencyNames.some((name) => name.includes("medium armor"))) {
+      armor.add("medium");
+    }
+    if (manualProficiencyNames.some((name) => name.includes("heavy armor"))) {
+      armor.add("heavy");
+    }
+    if (manualProficiencyNames.some((name) => name.includes("shield"))) {
+      armor.add("shield");
+    }
+    if (manualProficiencyNames.some((name) => name.includes("simple weapon"))) {
+      weapons.add("simple");
+    }
+    if (manualProficiencyNames.some((name) => name.includes("martial weapon"))) {
+      weapons.add("martial");
+    }
 
     return {
       armor: [...armor],
       weapons: [...weapons],
     };
-  }, [classRecordsByEntry, selectedFeatElements]);
+  }, [classRecordsByEntry, draft.manualGrants, selectedFeatElements]);
   const availableFeatIds = useMemo(
     () => new Set(feats.map((feat) => feat.id)),
     [feats],
@@ -958,6 +1213,26 @@ export function BuilderEditor({
     () => collectStatBonusesFromElements(selectedFeatElements),
     [selectedFeatElements],
   );
+  const manualAbilityBonuses = useMemo(
+    () =>
+      draft.manualGrants.reduce<Record<AbilityKey, number>>(
+        (totals, grant) => {
+          if (grant.kind === "asi" && grant.mode === "increase" && grant.ability && Number.isFinite(grant.amount)) {
+            totals[grant.ability] += grant.amount ?? 0;
+          }
+          return totals;
+        },
+        {
+          strength: 0,
+          dexterity: 0,
+          constitution: 0,
+          intelligence: 0,
+          wisdom: 0,
+          charisma: 0,
+        },
+      ),
+    [draft.manualGrants],
+  );
   const ancestryImprovementBonuses = useMemo(
     () =>
       getImprovementBonuses(
@@ -1012,8 +1287,9 @@ export function BuilderEditor({
             charisma: 0,
           },
         ),
+        manualAbilityBonuses,
       ),
-    [improvementBonuses, racialBonuses, selectedFeatBonuses],
+    [improvementBonuses, manualAbilityBonuses, racialBonuses, selectedFeatBonuses],
   );
   const effectiveAbilities = useMemo(
     () =>
@@ -1079,6 +1355,7 @@ export function BuilderEditor({
       const ancestryChoiceBonus = ancestryImprovementBonuses[ability] ?? 0;
       const asiBonus = classImprovementBonuses[ability] ?? 0;
       const featBonus = selectedFeatBonuses[ability] ?? 0;
+      const manualBonus = manualAbilityBonuses[ability] ?? 0;
 
       if (racialBonus) {
         parts.push(`Ancestry ${racialBonus >= 0 ? "+" : ""}${racialBonus}`);
@@ -1100,13 +1377,17 @@ export function BuilderEditor({
         parts.push(`Feat ${featBonus >= 0 ? "+" : ""}${featBonus}`);
       }
 
+      if (manualBonus) {
+        parts.push(`Manual grant ${manualBonus >= 0 ? "+" : ""}${manualBonus}`);
+      }
+
       if (parts.length) {
         breakdown[ability] = parts;
       }
     });
 
     return breakdown;
-  }, [ancestryImprovementBonuses, classImprovementBonuses, draft.useTashasCustomizedOrigin, racialBonuses, selectedFeatBonuses]);
+  }, [ancestryImprovementBonuses, classImprovementBonuses, draft.useTashasCustomizedOrigin, manualAbilityBonuses, racialBonuses, selectedFeatBonuses]);
 
   const selectedRacialTraitNames = useMemo(() => {
     if (!selectedRace) {
@@ -1766,6 +2047,18 @@ export function BuilderEditor({
   const subraceItems = useMemo(() => buildSubraceCatalogItems(selectedRace), [selectedRace]);
   const classItems = useMemo(() => buildClassCatalogItems(classes), [classes]);
   const backgroundItems = useMemo(() => buildBackgroundCatalogItems(backgrounds), [backgrounds]);
+  const manualGrantCatalogs = useMemo(
+    () =>
+      buildManualGrantCatalogs({
+        backgrounds,
+        classes,
+        feats,
+        progressionElements,
+        races,
+        spells,
+      }),
+    [backgrounds, classes, feats, progressionElements, races, spells],
+  );
   const completionChecklist = useMemo(
     () =>
       buildCompletionChecklist(draft, {
@@ -1792,6 +2085,24 @@ export function BuilderEditor({
         levelingValidationMessage,
       }),
     [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, progressionValidationMessages, selectedRace, spellGroups.length, spellValidationMessages],
+  );
+  const manualGrantsByKind = useMemo(
+    () =>
+      draft.manualGrants.reduce<Record<CharacterManualGrantKind, CharacterManualGrant[]>>(
+        (groups, grant) => {
+          groups[grant.kind].push(grant);
+          return groups;
+        },
+        {
+          spell: [],
+          proficiency: [],
+          language: [],
+          feat: [],
+          feature: [],
+          asi: [],
+        },
+      ),
+    [draft.manualGrants],
   );
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -2767,6 +3078,8 @@ export function BuilderEditor({
               inventoryItems={draft.inventoryItems}
               currency={draft.inventoryCurrency}
               equipmentNotes={draft.equipmentNotes}
+              manualGrants={draft.manualGrants}
+              manualGrantCatalogs={manualGrantCatalogs}
               effectiveAbilities={effectiveAbilities}
               attunementLimit={attunementLimit}
               equipmentProficiencies={equipmentProficiencies}
@@ -2945,6 +3258,22 @@ export function BuilderEditor({
               onEquipmentNotesChange={(notes) =>
                 updateDraft({
                   equipmentNotes: notes,
+                })}
+              onAddManualGrant={(grant) => {
+                const normalizedGrant: CharacterManualGrant = {
+                  ...grant,
+                  id: grant.id || `manual-grant::${grant.kind}::${grant.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+                };
+
+                updateDraft({
+                  manualGrants: draft.manualGrants.some((existing) => existing.id === normalizedGrant.id)
+                    ? draft.manualGrants
+                    : [...draft.manualGrants, normalizedGrant],
+                });
+              }}
+              onRemoveManualGrant={(grantId) =>
+                updateDraft({
+                  manualGrants: draft.manualGrants.filter((grant) => grant.id !== grantId),
                 })}
             />
           </section>
@@ -3149,6 +3478,44 @@ export function BuilderEditor({
                   </ul>
                 ) : (
                   <p className="builder-summary__meta">No starting gear selected yet.</p>
+                )}
+              </article>
+
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Proficiencies and languages</span>
+                <p className="builder-summary__meta">
+                  Armor: {equipmentProficiencies.armor.length ? equipmentProficiencies.armor.join(", ") : "None detected"}
+                </p>
+                <p className="builder-summary__meta">
+                  Weapons: {equipmentProficiencies.weapons.length ? equipmentProficiencies.weapons.join(", ") : "None detected"}
+                </p>
+                <p className="builder-summary__meta">
+                  Other proficiencies:{" "}
+                  {[...selectedProficiencyIds.map(humanizeGrantedId), ...manualGrantsByKind.proficiency.map((grant) => grant.name)]
+                    .filter(Boolean)
+                    .join(", ") || "None detected"}
+                </p>
+                <p className="builder-summary__meta">
+                  Languages:{" "}
+                  {[...selectedLanguageIds.map(humanizeGrantedId), ...manualGrantsByKind.language.map((grant) => grant.name)]
+                    .filter(Boolean)
+                    .join(", ") || "None detected"}
+                </p>
+              </article>
+
+              <article className="builder-review__card">
+                <span className="builder-panel__label">Manual / DM grants</span>
+                {draft.manualGrants.length ? (
+                  <ul className="route-shell__list">
+                    {draft.manualGrants.map((grant) => (
+                      <li key={grant.id}>
+                        <strong>{grant.name}</strong> ({grant.kind}
+                        {grant.source ? ` • ${grant.source}` : ""})
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="builder-summary__meta">No manual grants added.</p>
                 )}
               </article>
 
