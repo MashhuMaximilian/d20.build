@@ -124,6 +124,7 @@ export const BASE_ARMOR_RULES: BaseArmorRule[] = [
 
 type InventoryEffectContext = {
   abilities?: Partial<Record<AbilityKey, number>>;
+  attunementLimit?: number;
 };
 
 function slugify(value: string) {
@@ -244,6 +245,18 @@ export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryIte
 
 export function needsBaseWeaponResolution(item: CharacterInventoryItem) {
   return isWeaponLike(item) && !item.damage && !item.baseDamage && getBaseWeaponOptionsForInventoryItem(item).length > 0;
+}
+
+export function isGenericDamageValue(value?: string) {
+  return /\buses the chosen\b|\bchosen .*damage die\b/i.test(value ?? "");
+}
+
+export function needsBaseWeaponChoice(item: CharacterInventoryItem) {
+  return (
+    getBaseWeaponOptionsForInventoryItem(item).length > 0 &&
+    !item.baseItemId &&
+    (needsBaseWeaponResolution(item) || isGenericDamageValue(item.damage))
+  );
 }
 
 function getAbilityModifier(score?: number) {
@@ -388,7 +401,7 @@ export function buildStartingInventoryFromPlan(
   };
 }
 
-export function summarizeInventory(items: CharacterInventoryItem[]) {
+export function summarizeInventory(items: CharacterInventoryItem[], attunementLimit = ATTUNEMENT_LIMIT) {
   const equipped = items.filter((item) => item.equipped).length;
   const attuned = items.filter((item) => item.attuned).length;
   const attunable = items.filter((item) => item.attunable).length;
@@ -399,8 +412,8 @@ export function summarizeInventory(items: CharacterInventoryItem[]) {
     equipped,
     attuned,
     attunable,
-    attunementLimit: ATTUNEMENT_LIMIT,
-    attunementOverLimit: Math.max(0, attuned - ATTUNEMENT_LIMIT),
+    attunementLimit,
+    attunementOverLimit: Math.max(0, attuned - attunementLimit),
   };
 }
 
@@ -517,6 +530,7 @@ function getItemGrantLines(item: CharacterInventoryItem) {
 }
 
 export function getInventoryEffectSummary(items: CharacterInventoryItem[], context: InventoryEffectContext = {}) {
+  const attunementLimit = context.attunementLimit ?? ATTUNEMENT_LIMIT;
   const attunedItems = items.filter((item) => item.attuned);
   const equippedItems = items.filter((item) => item.equipped);
   const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
@@ -525,11 +539,11 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
   const weaponLines = items.map(getWeaponEffectLine).filter(Boolean);
   const itemGrantLines = items.flatMap(getItemGrantLines);
   const warnings = [
-    attunedItems.length > ATTUNEMENT_LIMIT
-      ? `Attunement limit exceeded: ${attunedItems.length}/${ATTUNEMENT_LIMIT}.`
+    attunedItems.length > attunementLimit
+      ? `Attunement limit exceeded: ${attunedItems.length}/${attunementLimit}.`
       : "",
-    attunedItems.length >= ATTUNEMENT_LIMIT
-      ? `Attunement slots full: ${attunedItems.length}/${ATTUNEMENT_LIMIT}. Unattune an item before attuning another.`
+    attunedItems.length >= attunementLimit
+      ? `Attunement slots full: ${attunedItems.length}/${attunementLimit}. Unattune an item before attuning another.`
       : "",
     equippedArmor.length > 1
       ? `Multiple armor entries are equipped: ${equippedArmor.map((item) => item.name).join(", ")}. The sheet should use one armor formula.`
@@ -541,12 +555,12 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
       .filter((item) => item.equipped && item.attunable && !item.attuned)
       .map((item) => `${item.name} is equipped but not attuned; its attunement-gated effects should stay inactive.`),
     ...items
-      .filter((item) => item.equipped && needsBaseWeaponResolution(item))
+      .filter((item) => item.equipped && needsBaseWeaponChoice(item))
       .map((item) => `${item.name} needs a base weapon or damage value before sheet/PDF attack rows can be complete.`),
   ].filter(Boolean);
 
   return {
-    attunementLimit: ATTUNEMENT_LIMIT,
+    attunementLimit,
     attunedCount: attunedItems.length,
     equippedCount: equippedItems.length,
     acLines,

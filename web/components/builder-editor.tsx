@@ -36,6 +36,8 @@ import { saveCharacterDraft } from "@/lib/characters/storage";
 import {
   ATTUNEMENT_LIMIT,
   buildStartingInventoryFromPlan,
+  getInventoryEffectSummary,
+  needsBaseWeaponChoice,
 } from "@/lib/equipment/inventory";
 import {
   getMissingEquipmentChoiceCount,
@@ -747,6 +749,23 @@ export function BuilderEditor({
     [classes, draft.classEntries],
   );
   const activeClassEntry = draft.classEntries[activeClassEntryIndex] ?? null;
+  const attunementLimit = useMemo(() => {
+    const artificerLevel = draft.classEntries.reduce((highest, entry, index) => {
+      const className = classRecordsByEntry[index]?.class.name ?? "";
+      return /\bartificer\b/i.test(className) ? Math.max(highest, entry.level) : highest;
+    }, 0);
+
+    if (artificerLevel >= 18) {
+      return 6;
+    }
+    if (artificerLevel >= 14) {
+      return 5;
+    }
+    if (artificerLevel >= 10) {
+      return 4;
+    }
+    return ATTUNEMENT_LIMIT;
+  }, [classRecordsByEntry, draft.classEntries]);
 
   const selectedRace = useMemo(
     () => races.find((entry) => entry.race.id === draft.raceId) ?? null,
@@ -931,6 +950,29 @@ export function BuilderEditor({
       }),
     [draft.abilities, totalAppliedBonuses],
   );
+  const equipmentEffectSummary = useMemo(
+    () =>
+      getInventoryEffectSummary(draft.inventoryItems, {
+        abilities: effectiveAbilities,
+        attunementLimit,
+      }),
+    [attunementLimit, draft.inventoryItems, effectiveAbilities],
+  );
+  const equipmentValidationMessages = useMemo(() => {
+    const blockingEffectWarnings = equipmentEffectSummary.warnings.filter(
+      (warning) =>
+        !warning.startsWith("Attunement slots full:") &&
+        !warning.includes("is equipped but not attuned"),
+    );
+    const messages = [
+      ...draft.inventoryItems
+        .filter(needsBaseWeaponChoice)
+        .map((item) => `${item.name} needs a base weapon choice before sheet/PDF attack rows can be complete.`),
+      ...blockingEffectWarnings,
+    ];
+
+    return Array.from(new Set(messages));
+  }, [draft.inventoryItems, equipmentEffectSummary.warnings]);
   const spellGroups = useMemo(
     () =>
       deriveSpellcastingGroups({
@@ -2059,13 +2101,14 @@ export function BuilderEditor({
       case "spellcasting":
         return spellValidationMessages;
       case "equipment":
-        return missingEquipmentChoices
-          ? [
-              `Finish the remaining ${missingEquipmentChoices} starting equipment choice${
+        return [
+          missingEquipmentChoices
+            ? `Finish the remaining ${missingEquipmentChoices} starting equipment choice${
                 missingEquipmentChoices === 1 ? "" : "s"
-              } before continuing.`,
-            ]
-          : [];
+              } before continuing.`
+            : "",
+          ...equipmentValidationMessages,
+        ].filter(Boolean);
       case "review":
         return saveValidationMessage ? [saveValidationMessage] : [];
       default:
@@ -2079,6 +2122,7 @@ export function BuilderEditor({
     draft.classEntries,
     draft.name,
     draft.subraceId,
+    equipmentValidationMessages,
     improvementValidationMessages,
     levelingValidationMessage,
     missingEquipmentChoices,
@@ -2137,7 +2181,7 @@ export function BuilderEditor({
       case "spellcasting":
         return spellValidationMessages.length === 0;
       case "equipment":
-        return missingEquipmentChoices === 0;
+        return missingEquipmentChoices === 0 && equipmentValidationMessages.length === 0;
       case "review":
         return canSave;
       default:
@@ -2169,7 +2213,7 @@ export function BuilderEditor({
       case "spellcasting":
         return spellValidationMessages.length === 0;
       case "equipment":
-        return missingEquipmentChoices === 0;
+        return missingEquipmentChoices === 0 && equipmentValidationMessages.length === 0;
       case "review":
         return canSave;
       default:
@@ -2642,6 +2686,7 @@ export function BuilderEditor({
               currency={draft.inventoryCurrency}
               equipmentNotes={draft.equipmentNotes}
               effectiveAbilities={effectiveAbilities}
+              attunementLimit={attunementLimit}
               onModeChange={(mode) =>
                 updateDraft({
                   equipmentAcquisitionMode: mode,
@@ -2677,7 +2722,7 @@ export function BuilderEditor({
                     }
 
                     const currentAttunedCount = draft.inventoryItems.filter((candidate) => candidate.attuned).length;
-                    if (!item.attuned && currentAttunedCount >= ATTUNEMENT_LIMIT) {
+                    if (!item.attuned && currentAttunedCount >= attunementLimit) {
                       return item;
                     }
 

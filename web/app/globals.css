@@ -1048,10 +1048,19 @@ a {
   align-items: center;
 }
 
-.equipment-step__iconButton {
-  min-width: 44px;
-  padding-inline: 14px;
-  font-size: 1.05rem;
+.equipment-step__actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 78px;
+  padding: 8px 12px;
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.equipment-step__actionButton span[aria-hidden="true"] {
+  font-size: 0.95rem;
   line-height: 1;
 }
 
@@ -1094,6 +1103,51 @@ a {
   grid-template-columns: repeat(2, minmax(260px, 1fr));
   gap: 16px;
   align-items: start;
+}
+
+.equipment-step__grantRows {
+  display: grid;
+  gap: 12px;
+}
+
+.equipment-step__grantRow {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 250, 242, 0.78);
+}
+
+.equipment-step__grantSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.equipment-step__grantSummary small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.equipment-step__grantBody {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.equipment-step__legacyGrant {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(146, 38, 16, 0.05);
 }
 
 .equipment-step__manualCard {

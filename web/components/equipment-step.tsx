@@ -13,6 +13,8 @@ import {
   getBaseWeaponOptionsForInventoryItem,
   getCurrencyTotalInGp,
   getInventoryEffectSummary,
+  isGenericDamageValue,
+  needsBaseWeaponChoice,
   needsBaseWeaponResolution,
   summarizeInventory,
 } from "@/lib/equipment/inventory";
@@ -27,6 +29,7 @@ type EquipmentStepProps = {
   currency: CharacterCurrency;
   equipmentNotes: CharacterEquipmentNotes;
   effectiveAbilities: Record<AbilityKey, number>;
+  attunementLimit: number;
   onModeChange: (mode: EquipmentAcquisitionMode) => void;
   onGoldOverrideChange: (value: number | null) => void;
   onSelect: (groupId: string, optionId: string) => void;
@@ -75,18 +78,6 @@ function titleCaseCategory(value: string) {
   return value.replace(/-/g, " ").replace(/\b\w/g, (match) => match.toUpperCase());
 }
 
-function isGenericDamage(value?: string) {
-  return /\buses the chosen\b|\bchosen .*damage die\b/i.test(value ?? "");
-}
-
-function needsBaseWeaponChoice(item: CharacterInventoryItem) {
-  return (
-    getBaseWeaponOptionsForInventoryItem(item).length > 0 &&
-    !item.baseItemId &&
-    (needsBaseWeaponResolution(item) || isGenericDamage(item.damage))
-  );
-}
-
 const ITEM_BROWSER_PREFERRED_TAGS = [
   "Adventuring Gear",
   "Treasure",
@@ -97,6 +88,7 @@ const ITEM_BROWSER_PREFERRED_TAGS = [
   "Magic Armor",
   "Weapons",
   "Magic Weapons",
+  "Requires attunement",
   "Ammunition",
   "Spellcasting Focus",
   "Wondrous Items",
@@ -132,6 +124,58 @@ const CUSTOM_ITEM_CATEGORY_OPTIONS: Array<{ value: InventoryCategory; label: str
   { value: "misc", label: "Miscellaneous" },
 ];
 
+const DM_GRANT_ROWS: Array<{
+  key: keyof Pick<
+    CharacterEquipmentNotes,
+    | "additionalSpells"
+    | "additionalProficiencies"
+    | "additionalLanguages"
+    | "additionalFeats"
+    | "additionalFeatures"
+    | "additionalAbilityScores"
+  >;
+  title: string;
+  description: string;
+  nextSurface: string;
+}> = [
+  {
+    key: "additionalSpells",
+    title: "Additional spells",
+    description: "DM-granted spells, item spells, boons, and table exceptions.",
+    nextSurface: "Spell picker with cantrip/leveled filters and source-aware detail preview.",
+  },
+  {
+    key: "additionalProficiencies",
+    title: "Additional proficiencies",
+    description: "Skills, tools, weapons, armor, saves, expertise, and conditional proficiencies.",
+    nextSurface: "Proficiency picker using the same family resolver as class, race, and background choices.",
+  },
+  {
+    key: "additionalLanguages",
+    title: "Additional languages",
+    description: "Learned, granted, temporary, or campaign-specific languages.",
+    nextSurface: "Language picker with custom-language support for table-specific settings.",
+  },
+  {
+    key: "additionalFeats",
+    title: "Additional feats",
+    description: "Bonus feats, feat-like boons, and DM-approved prerequisite exceptions.",
+    nextSurface: "Feat browser with prerequisites, source filters, and explicit manual-grant provenance.",
+  },
+  {
+    key: "additionalFeatures",
+    title: "Additional features",
+    description: "Blessings, charms, curses, faction benefits, custom class features, and item traits.",
+    nextSurface: "Feature browser plus custom feature cards that flow into review/sheet/PDF.",
+  },
+  {
+    key: "additionalAbilityScores",
+    title: "Additional ASIs / ability changes",
+    description: "Permanent ASIs, temporary score setters, penalties, and training rewards.",
+    nextSurface: "ASI editor that distinguishes score increases, set-to values, and conditional effects.",
+  },
+];
+
 function getEquipmentCatalogCardId(item: EquipmentCatalogEntry) {
   return `${item.origin}::${item.sourceUrl || item.source}::${item.id}`;
 }
@@ -145,6 +189,7 @@ export function EquipmentStep({
   currency,
   equipmentNotes,
   effectiveAbilities,
+  attunementLimit,
   onModeChange,
   onGoldOverrideChange,
   onSelect,
@@ -177,10 +222,10 @@ export function EquipmentStep({
   const [editingItemBaseDamage, setEditingItemBaseDamage] = useState("");
   const [editingItemDamage, setEditingItemDamage] = useState("");
   const [editingItemNotes, setEditingItemNotes] = useState("");
-  const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
+  const summary = useMemo(() => summarizeInventory(inventoryItems, attunementLimit), [attunementLimit, inventoryItems]);
   const effectSummary = useMemo(
-    () => getInventoryEffectSummary(inventoryItems, { abilities: effectiveAbilities }),
-    [effectiveAbilities, inventoryItems],
+    () => getInventoryEffectSummary(inventoryItems, { abilities: effectiveAbilities, attunementLimit }),
+    [attunementLimit, effectiveAbilities, inventoryItems],
   );
 
   useEffect(() => {
@@ -242,7 +287,7 @@ export function EquipmentStep({
     () =>
       catalogItems.map((item) => {
         const ownedCount = manualItemCounts.get(item.id) ?? 0;
-        const needsBaseWeapon = item.mechanicsLines.some((line) => isGenericDamage(line));
+        const needsBaseWeapon = item.mechanicsLines.some((line) => isGenericDamageValue(line));
         return {
           id: getEquipmentCatalogCardId(item),
           name: item.name,
@@ -257,6 +302,7 @@ export function EquipmentStep({
           impactLines: [
             ownedCount ? `Owned ${ownedCount}` : "Not owned",
             needsBaseWeapon ? "Needs base weapon after adding" : "",
+            item.attunable ? "Requires attunement" : "",
             ...item.impactLines,
           ].filter(Boolean),
           mechanicsLines: item.mechanicsLines,
@@ -269,12 +315,15 @@ export function EquipmentStep({
   const parsedEditingItemQuantity = Math.max(1, Number(editingItemQuantity) || 1);
   const selectedCustomBaseWeapon = BASE_WEAPON_OPTIONS.find((option) => option.id === customItemBaseId);
   const currentEquipmentWarnings = useMemo(
-    () => [
-      ...inventoryItems
-        .filter(needsBaseWeaponChoice)
-        .map((item) => `${item.name} needs a base weapon choice before sheet/PDF attack rows can be complete.`),
-      ...effectSummary.warnings,
-    ],
+    () =>
+      Array.from(
+        new Set([
+          ...inventoryItems
+            .filter(needsBaseWeaponChoice)
+            .map((item) => `${item.name} needs a base weapon choice before sheet/PDF attack rows can be complete.`),
+          ...effectSummary.warnings,
+        ]),
+      ),
     [effectSummary.warnings, inventoryItems],
   );
 
@@ -394,8 +443,7 @@ export function EquipmentStep({
             <span className="builder-panel__label">Equipment effects</span>
             {effectSummary.acLines.length ||
             effectSummary.weaponLines.length ||
-            effectSummary.itemGrantLines.length ||
-            effectSummary.warnings.length ? (
+            effectSummary.itemGrantLines.length ? (
               <ul className="equipment-step__effectList">
                 {effectSummary.acLines.map((line) => (
                   <li key={`ac-${line}`}>{line}</li>
@@ -405,11 +453,6 @@ export function EquipmentStep({
                 ))}
                 {effectSummary.itemGrantLines.map((line) => (
                   <li key={`grant-${line}`}>{line}</li>
-                ))}
-                {effectSummary.warnings.map((line) => (
-                  <li className="equipment-step__effectWarning" key={`warning-${line}`}>
-                    {line}
-                  </li>
                 ))}
               </ul>
             ) : (
@@ -609,7 +652,9 @@ export function EquipmentStep({
                     const baseWeaponRequired =
                       baseWeaponOptions.length > 0 &&
                       !editingItemBaseId &&
-                      (needsBaseWeaponResolution(item) || isGenericDamage(editingItemDamage) || isGenericDamage(item.damage));
+                      (needsBaseWeaponResolution(item) ||
+                        isGenericDamageValue(editingItemDamage) ||
+                        isGenericDamageValue(item.damage));
                     const attunementBlocked =
                       item.attunable &&
                       !item.attuned &&
@@ -627,24 +672,26 @@ export function EquipmentStep({
                         {item.equippable ? (
                           <button
                             aria-label={item.equipped ? `Unequip ${item.name}` : `Equip ${item.name}`}
-                            className={`choice-chip equipment-step__iconButton${item.equipped ? " choice-chip--active" : ""}`}
+                            className={`choice-chip equipment-step__actionButton${item.equipped ? " choice-chip--active" : ""}`}
                             title={item.equipped ? "Unequip" : "Equip"}
                             type="button"
                             onClick={() => onToggleEquipped(item.id)}
                           >
-                            {item.equipped ? "✓" : "□"}
+                            <span aria-hidden="true">{item.equipped ? "✓" : "□"}</span>
+                            <span>{item.equipped ? "Equipped" : "Equip"}</span>
                           </button>
                         ) : null}
                         {item.attunable ? (
                           <button
                             aria-label={item.attuned ? `Unattune ${item.name}` : `Attune ${item.name}`}
-                            className={`choice-chip equipment-step__iconButton${item.attuned ? " choice-chip--active" : ""}`}
+                            className={`choice-chip equipment-step__actionButton${item.attuned ? " choice-chip--active" : ""}`}
                             type="button"
                             disabled={attunementBlocked}
                             onClick={() => onToggleAttuned(item.id)}
                             title={attunementBlocked ? `Attunement limit is ${effectSummary.attunementLimit}.` : item.attuned ? "Unattune" : "Attune"}
                           >
-                            {item.attuned ? "✦" : "◇"}
+                            <span aria-hidden="true">{item.attuned ? "✦" : "◇"}</span>
+                            <span>{item.attuned ? "Attuned" : "Attune"}</span>
                           </button>
                         ) : null}
                         {attunementBlocked ? (
@@ -655,22 +702,24 @@ export function EquipmentStep({
                         {item.source === "manual" ? (
                           <button
                             aria-label={`Edit ${item.name}`}
-                            className="choice-chip equipment-step__iconButton"
+                            className="choice-chip equipment-step__actionButton"
                             title="Edit"
                             type="button"
                             onClick={() => startEditingItem(item)}
                           >
-                            ✎
+                            <span aria-hidden="true">✎</span>
+                            <span>Edit</span>
                           </button>
                         ) : null}
                         <button
                           aria-label={`Delete ${item.name}`}
-                          className="choice-chip equipment-step__iconButton"
+                          className="choice-chip equipment-step__actionButton"
                           title="Delete"
                           type="button"
                           onClick={() => onRemoveItem(item.id)}
                         >
-                          ×
+                          <span aria-hidden="true">×</span>
+                          <span>Delete</span>
                         </button>
                       </div>
                       {item.attackBonus || item.baseItemName || item.baseDamage || item.damage || item.notes ? (
@@ -743,7 +792,12 @@ export function EquipmentStep({
                                   setEditingItemBaseId(option?.id ?? "");
                                   setEditingItemBaseName(option?.name ?? "");
                                   setEditingItemBaseDamage(option?.damage ?? "");
-                                  if (option && (!editingItemDamage || editingItemDamage === editingItemBaseDamage || isGenericDamage(editingItemDamage))) {
+                                  if (
+                                    option &&
+                                    (!editingItemDamage ||
+                                      editingItemDamage === editingItemBaseDamage ||
+                                      isGenericDamageValue(editingItemDamage))
+                                  ) {
                                     setEditingItemDamage(option.damage);
                                   }
                                 }}
@@ -1050,107 +1104,38 @@ export function EquipmentStep({
       <details className="equipment-step__accordion equipment-step__accordion--wide" open>
         <summary className="equipment-step__accordionSummary">
           <span>Manual / DM-granted extras</span>
-          <small>Capture now, propagate in M4.4</small>
+          <small>M4.4 picker surface</small>
         </summary>
         <div className="equipment-step__accordionBody">
           <section className="equipment-step__panel">
             <div className="equipment-step__groupHeader">
               <span className="builder-panel__label">Additional build grants</span>
               <p className="builder-summary__meta">
-                Use these for table rulings, item effects, boons, downtime rewards, or homebrew grants. These are saved now; the next M4.4 pass wires them into the same resolver surfaces as normal choices.
+                These grants should be selected from proper catalogs, not typed as loose notes. This card is now the M4.4 landing zone: each row gets a workbench/table picker, and selected grants will live in a separate additional-inventory list that is always active unless deleted.
               </p>
             </div>
-            <div className="equipment-step__grantGrid">
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional spells</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="Example: fire bolt cantrip from a boon, once-per-day misty step from an item..."
-                  slashContext="Additional spells"
-                  value={equipmentNotes.additionalSpells}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalSpells: value,
-                    })
-                  }
-                />
-              </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional proficiencies</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="Skills, tools, weapons, armor, saves, expertise, or conditional proficiencies."
-                  slashContext="Additional proficiencies"
-                  value={equipmentNotes.additionalProficiencies}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalProficiencies: value,
-                    })
-                  }
-                />
-              </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional languages</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="Granted, learned, temporary, or campaign-specific languages."
-                  slashContext="Additional languages"
-                  value={equipmentNotes.additionalLanguages}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalLanguages: value,
-                    })
-                  }
-                />
-              </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional feats</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="Bonus feats, feat-like boons, or DM-approved exceptions."
-                  slashContext="Additional feats"
-                  value={equipmentNotes.additionalFeats}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalFeats: value,
-                    })
-                  }
-                />
-              </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional features</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="Blessings, charms, curses, faction benefits, custom class features, or item traits."
-                  slashContext="Additional features"
-                  value={equipmentNotes.additionalFeatures}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalFeatures: value,
-                    })
-                  }
-                />
-              </label>
-              <label className="builder-field">
-                <span className="builder-summary__meta">Additional ASIs / ability changes</span>
-                <MarkdownEditor
-                  compact
-                  placeholder="+1 Wisdom from training, set Strength to 19 while attuned, temporary penalties..."
-                  slashContext="Additional ability scores"
-                  value={equipmentNotes.additionalAbilityScores}
-                  onChange={(value) =>
-                    onEquipmentNotesChange({
-                      ...equipmentNotes,
-                      additionalAbilityScores: value,
-                    })
-                  }
-                />
-              </label>
+            <div className="equipment-step__grantRows">
+              {DM_GRANT_ROWS.map((row) => {
+                const legacyValue = equipmentNotes[row.key]?.trim();
+                return (
+                  <details className="equipment-step__grantRow" key={row.key}>
+                    <summary className="equipment-step__grantSummary">
+                      <span>{row.title}</span>
+                      <small>{legacyValue ? "Legacy note saved" : "No additions yet"}</small>
+                    </summary>
+                    <div className="equipment-step__grantBody">
+                      <p>{row.description}</p>
+                      <p className="builder-summary__meta">{row.nextSurface}</p>
+                      {legacyValue ? (
+                        <div className="equipment-step__legacyGrant">
+                          <span className="builder-panel__label">Existing placeholder note</span>
+                          <p>{legacyValue}</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </details>
+                );
+              })}
             </div>
           </section>
         </div>
