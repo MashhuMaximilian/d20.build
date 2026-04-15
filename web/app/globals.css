@@ -1055,6 +1055,10 @@ a {
   gap: 12px;
 }
 
+.equipment-step__manualRow--balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .equipment-step__manualActions {
   display: flex;
   justify-content: flex-start;
@@ -1091,6 +1095,16 @@ a {
   border: 1px solid rgba(146, 38, 16, 0.1);
   border-radius: 999px;
   background: rgba(255, 248, 236, 0.85);
+}
+
+.equipment-step__editPanel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 248, 236, 0.88);
 }
 
 .leveling-step {

@@ -2676,6 +2676,26 @@ export function BuilderEditor({
                         removedInventoryItemIds: [...draft.removedInventoryItemIds, itemId],
                       },
                 )}
+              onUpdateItem={(itemId, patch) =>
+                updateDraft({
+                  inventoryItems: draft.inventoryItems.map((item) =>
+                    item.id === itemId
+                      ? {
+                          ...item,
+                          name: patch.name,
+                          quantity: patch.quantity,
+                          category: patch.category,
+                          attackBonus: patch.attackBonus || undefined,
+                          damage: patch.damage || undefined,
+                          notes: patch.notes || undefined,
+                          equippable: ["weapon", "armor", "shield", "focus", "instrument", "tool", "clothing"].includes(patch.category),
+                          equipped: ["weapon", "armor", "shield", "focus", "instrument", "tool", "clothing"].includes(patch.category)
+                            ? item.equipped
+                            : false,
+                        }
+                      : item,
+                  ),
+                })}
               onAddManualItem={(entry) => {
                 const itemId = `manual::${entry.id}`;
                 const existing = draft.inventoryItems.find((item) => item.id === itemId);

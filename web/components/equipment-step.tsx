@@ -25,6 +25,17 @@ type EquipmentStepProps = {
   onToggleEquipped: (itemId: string) => void;
   onToggleAttuned: (itemId: string) => void;
   onRemoveItem: (itemId: string) => void;
+  onUpdateItem: (
+    itemId: string,
+    patch: {
+      name: string;
+      category: InventoryCategory;
+      quantity: number;
+      attackBonus: string;
+      damage: string;
+      notes: string;
+    },
+  ) => void;
   onAddManualItem: (entry: EquipmentCatalogEntry) => void;
   onAddCustomItem: (input: {
     name: string;
@@ -113,6 +124,7 @@ export function EquipmentStep({
   onToggleEquipped,
   onToggleAttuned,
   onRemoveItem,
+  onUpdateItem,
   onAddManualItem,
   onAddCustomItem,
   onEquipmentNotesChange,
@@ -127,6 +139,13 @@ export function EquipmentStep({
   const [customItemAttackBonus, setCustomItemAttackBonus] = useState("");
   const [customItemDamage, setCustomItemDamage] = useState("");
   const [customItemNotes, setCustomItemNotes] = useState("");
+  const [editingItemId, setEditingItemId] = useState("");
+  const [editingItemName, setEditingItemName] = useState("");
+  const [editingItemCategory, setEditingItemCategory] = useState<InventoryCategory>("misc");
+  const [editingItemQuantity, setEditingItemQuantity] = useState("1");
+  const [editingItemAttackBonus, setEditingItemAttackBonus] = useState("");
+  const [editingItemDamage, setEditingItemDamage] = useState("");
+  const [editingItemNotes, setEditingItemNotes] = useState("");
   const summary = useMemo(() => summarizeInventory(inventoryItems), [inventoryItems]);
 
   useEffect(() => {
@@ -210,6 +229,27 @@ export function EquipmentStep({
   );
 
   const parsedCustomItemQuantity = Math.max(1, Number(customItemQuantity) || 1);
+  const parsedEditingItemQuantity = Math.max(1, Number(editingItemQuantity) || 1);
+
+  function startEditingItem(item: CharacterInventoryItem) {
+    setEditingItemId(item.id);
+    setEditingItemName(item.name);
+    setEditingItemCategory((item.category as InventoryCategory) ?? "misc");
+    setEditingItemQuantity(String(item.quantity || 1));
+    setEditingItemAttackBonus(item.attackBonus ?? "");
+    setEditingItemDamage(item.damage ?? "");
+    setEditingItemNotes(item.notes ?? "");
+  }
+
+  function clearEditingItem() {
+    setEditingItemId("");
+    setEditingItemName("");
+    setEditingItemCategory("misc");
+    setEditingItemQuantity("1");
+    setEditingItemAttackBonus("");
+    setEditingItemDamage("");
+    setEditingItemNotes("");
+  }
 
   return (
     <div className="equipment-step">
@@ -498,6 +538,11 @@ export function EquipmentStep({
                             {item.attuned ? "Attuned" : "Attune"}
                           </button>
                         ) : null}
+                        {item.source === "manual" ? (
+                          <button className="choice-chip" type="button" onClick={() => startEditingItem(item)}>
+                            Edit
+                          </button>
+                        ) : null}
                         <button className="choice-chip" type="button" onClick={() => onRemoveItem(item.id)}>
                           Delete
                         </button>
@@ -507,6 +552,105 @@ export function EquipmentStep({
                           {item.attackBonus ? <span>Hit/damage bonus: {item.attackBonus}</span> : null}
                           {item.damage ? <span>Damage: {item.damage}</span> : null}
                           {item.notes ? <span>{item.notes}</span> : null}
+                        </div>
+                      ) : null}
+                      {editingItemId === item.id ? (
+                        <div className="equipment-step__editPanel">
+                          <div className="equipment-step__manualRow equipment-step__manualRow--balanced">
+                            <label className="builder-field">
+                              <span className="builder-summary__meta">Item name</span>
+                              <input
+                                className="input"
+                                value={editingItemName}
+                                onChange={(event) => setEditingItemName(event.target.value)}
+                              />
+                            </label>
+                            <label className="builder-field">
+                              <span className="builder-summary__meta">Qty</span>
+                              <input
+                                className="input"
+                                inputMode="numeric"
+                                min={1}
+                                type="number"
+                                value={editingItemQuantity}
+                                onChange={(event) => setEditingItemQuantity(event.target.value)}
+                              />
+                            </label>
+                          </div>
+                          <div className="equipment-step__manualRow equipment-step__manualRow--balanced">
+                            <label className="builder-field">
+                              <span className="builder-summary__meta">Category</span>
+                              <select
+                                className="input"
+                                value={editingItemCategory}
+                                onChange={(event) => setEditingItemCategory(event.target.value as InventoryCategory)}
+                              >
+                                {CUSTOM_ITEM_CATEGORY_OPTIONS.map((option) => (
+                                  <option key={option.value} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="builder-field">
+                              <span className="builder-summary__meta">Hit / damage modifier</span>
+                              <input
+                                className="input"
+                                placeholder="+1, +2..."
+                                value={editingItemAttackBonus}
+                                onChange={(event) => setEditingItemAttackBonus(event.target.value)}
+                              />
+                            </label>
+                          </div>
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Damage</span>
+                            <input
+                              className="input"
+                              placeholder="1d8 slashing, +1d6 fire..."
+                              value={editingItemDamage}
+                              onChange={(event) => setEditingItemDamage(event.target.value)}
+                            />
+                          </label>
+                          <label className="builder-field">
+                            <span className="builder-summary__meta">Notes</span>
+                            <MarkdownEditor
+                              compact
+                              placeholder="Optional details, effects, provenance, or table ruling."
+                              slashContext="Inventory item notes"
+                              value={editingItemNotes}
+                              onChange={setEditingItemNotes}
+                            />
+                          </label>
+                          <div className="equipment-step__manualActions">
+                            <button
+                              className="button button--secondary button--compact"
+                              type="button"
+                              disabled={!editingItemName.trim()}
+                              onClick={() => {
+                                if (!editingItemName.trim()) {
+                                  return;
+                                }
+                                onUpdateItem(item.id, {
+                                  name: editingItemName.trim(),
+                                  category: editingItemCategory,
+                                  quantity: parsedEditingItemQuantity,
+                                  attackBonus: editingItemAttackBonus.trim(),
+                                  damage: editingItemDamage.trim(),
+                                  notes: editingItemNotes.trim(),
+                                });
+                                clearEditingItem();
+                              }}
+                            >
+                              Save item
+                            </button>
+                            <button
+                              className="button button--ghost button--compact"
+                              type="button"
+                              onClick={clearEditingItem}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -600,7 +744,7 @@ export function EquipmentStep({
                 />
               </label>
             </div>
-            <div className="equipment-step__manualRow">
+            <div className="equipment-step__manualRow equipment-step__manualRow--balanced">
               <label className="builder-field">
                 <span className="builder-summary__meta">Hit / damage modifier</span>
                 <input
