@@ -10,8 +10,8 @@ import { CatalogSelector, type CatalogItem } from "@/components/catalog-selector
 import { EquipmentStep } from "@/components/equipment-step";
 import { FeatsAsiStep } from "@/components/feats-asi-step";
 import { LevelingStep } from "@/components/leveling-step";
-import { getMarkdownPreview, hasMarkdownContent } from "@/components/markdown-editor";
 import { ProgressionChoicesStep } from "@/components/progression-choices-step";
+import { ReviewSheetStep } from "@/components/review-sheet-step";
 import { SpellcastingStep } from "@/components/spellcasting-step";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type {
@@ -943,10 +943,6 @@ function addAbilityBonusMaps(...maps: Array<Record<AbilityKey, number>>) {
   );
 }
 
-function formatAbilityBonus(amount: number, ability: AbilityKey) {
-  return `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`;
-}
-
 function getImprovementValidationMessages(
   opportunities: ReturnType<typeof deriveImprovementOpportunities>,
   selections: Record<string, CharacterImprovementSelection>,
@@ -1443,6 +1439,14 @@ export function BuilderEditor({
       ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Racial Trait") : []),
     ];
   }, [selectedRace, selectedSubrace]);
+  const selectedRacialTraitElements = useMemo(() => {
+    if (!selectedRace) {
+      return [];
+    }
+
+    const traitIds = new Set(selectedRacialTraitIds);
+    return selectedRace.traits.filter((trait) => traitIds.has(trait.id));
+  }, [selectedRace, selectedRacialTraitIds]);
   const selectedClassFeatureNames = useMemo(
     () =>
       classRecordsByEntry.flatMap((record, index) => {
@@ -1500,6 +1504,27 @@ export function BuilderEditor({
       }),
     [classRecordsByEntry, draft.classEntries],
   );
+  const selectedClassFeatureElements = useMemo(
+    () =>
+      classRecordsByEntry.flatMap((record, index) => {
+        const entry = draft.classEntries[index];
+        if (!record || !entry?.classId) {
+          return [];
+        }
+
+        const grantedFeatureIds = new Set(selectedClassFeatureIds);
+        const selectedSubclass =
+          record.subclassSteps
+            .flatMap((step) => step.options)
+            .find((option) => option.archetype.id === entry.subclassId) ?? null;
+
+        return [
+          ...record.features.filter((feature) => grantedFeatureIds.has(feature.id)),
+          ...(selectedSubclass?.features.filter((feature) => grantedFeatureIds.has(feature.id)) ?? []),
+        ];
+      }),
+    [classRecordsByEntry, draft.classEntries, selectedClassFeatureIds],
+  );
   const selectedBackgroundFeatureIds = useMemo(
     () =>
       selectedBackground
@@ -1514,6 +1539,11 @@ export function BuilderEditor({
             .filter((feature) => selectedBackgroundFeatureIds.includes(feature.id))
             .map((feature) => feature.name)
         : [],
+    [selectedBackground, selectedBackgroundFeatureIds],
+  );
+  const selectedBackgroundFeatureElements = useMemo(
+    () =>
+      selectedBackground?.features.filter((feature) => selectedBackgroundFeatureIds.includes(feature.id)) ?? [],
     [selectedBackground, selectedBackgroundFeatureIds],
   );
   const selectedFeatFeatureIds = useMemo(
@@ -3320,268 +3350,35 @@ export function BuilderEditor({
         );
       case "review":
         return (
-          <section className="builder-stepPanel builder-review">
-            <div className="builder-stepPanel__intro">
-              <span className="route-shell__tag">Review</span>
-              <h2 className="route-shell__title">Finalize the draft with a real readiness check</h2>
-              <p className="route-shell__copy">
-                Review should feel like the finish surface, not a blank summary. This pass checks what is complete, what still needs attention,
-                and whether the draft is ready to save.
-              </p>
-            </div>
-
-            <div className="builder-review__layout">
-              <article className="builder-review__card builder-review__card--summary">
-                <span className="builder-panel__label">Readiness</span>
-                <strong className="builder-summary__name">{canSave ? "Ready to save" : "Needs attention"}</strong>
-                <p className="builder-summary__meta">
-                  {canSave
-                    ? "All required guided selections are in place for this draft shell."
-                    : saveValidationMessage || "Complete the missing steps below before saving."}
-                </p>
-                <ul className="builder-review__checklist">
-                  {completionChecklist.map((item) => (
-                    <li className={item.done ? "is-complete" : "is-pending"} key={item.label}>
-                      <span>{item.done ? "Done" : "Pending"}</span>
-                      <strong>{item.label}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-
-              <div className="builder-review__stack">
-                <article className="builder-review__card">
-                  <span className="builder-panel__label">Identity</span>
-                  <strong className="builder-summary__name">{draft.name || "Untitled Adventurer"}</strong>
-                  <p className="builder-summary__meta">Player: {draft.playerName || "Unassigned"}</p>
-                </article>
-
-                <article className="builder-review__card">
-                  <span className="builder-panel__label">Selections</span>
-                  <p className="builder-summary__meta">Race: {selectedRace?.race.name ?? "Missing"}</p>
-                  <p className="builder-summary__meta">Subrace: {selectedSubrace?.name ?? (selectedRace?.subraces.length ? "Missing" : "Not required")}</p>
-                  <p className="builder-summary__meta">Primary class: {selectedClass?.class.name ?? "Missing"}</p>
-                  <p className="builder-summary__meta">Character level: {draft.level}</p>
-                  <p className="builder-summary__meta">
-                    Class split:{" "}
-                    {draft.classEntries.some((entry) => entry.classId)
-                      ? draft.classEntries
-                          .flatMap((entry) => {
-                            if (!entry.classId) {
-                              return [];
-                            }
-                            const classRecord = classes.find((candidate) => candidate.class.id === entry.classId);
-                            return [`${classRecord?.class.name ?? entry.classId} ${entry.level}`];
-                          })
-                          .join(" / ")
-                      : "Missing"}
-                  </p>
-                  <p className="builder-summary__meta">
-                    Subclasses:{" "}
-                    {draft.classEntries.some((entry) => entry.classId)
-                      ? draft.classEntries
-                          .flatMap((entry, index) => {
-                            if (!entry.classId) {
-                              return [];
-                            }
-                            const classRecord = classRecordsByEntry[index];
-                            const subclassStep = classRecord?.subclassSteps[0];
-                            if (!classRecord) {
-                              return ["Missing class"];
-                            }
-                            if (!subclassStep) {
-                              return [`${classRecord.class.name}: none`];
-                            }
-                            if (subclassStep.level && entry.level < subclassStep.level) {
-                              return [`${classRecord.class.name}: unlocks at ${subclassStep.level}`];
-                            }
-                            const selected = subclassStep.options.find((option) => option.archetype.id === entry.subclassId);
-                            return [`${classRecord.class.name}: ${selected?.archetype.name ?? "Missing"}`];
-                          })
-                          .join(" / ")
-                      : "No class yet"}
-                  </p>
-                  <p className="builder-summary__meta">Background: {selectedBackground?.background.name ?? "Missing"}</p>
-                  <p className="builder-summary__meta">
-                    Backstory notes:{" "}
-                    {Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length
-                      ? `${Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length} section${
-                          Object.values(draft.backstory).filter((value) => hasMarkdownContent(value)).length === 1 ? "" : "s"
-                        } filled`
-                      : "None yet"}
-                  </p>
-                  <p className="builder-summary__meta">
-                    Improvements: {improvementOpportunities.length
-                      ? improvementValidationMessages.length
-                        ? `${improvementOpportunities.length - improvementValidationMessages.length}/${improvementOpportunities.length} resolved`
-                        : `${improvementOpportunities.length} resolved`
-                      : "None unlocked yet"}
-                  </p>
-                  <p className="builder-summary__meta">
-                    Spellcasting: {spellGroups.length
-                      ? spellValidationMessages.length
-                        ? `${spellGroups.length - spellValidationMessages.length}/${spellGroups.length} groups resolved`
-                        : `${spellGroups.length} groups resolved`
-                      : "No spell selections unlocked yet"}
-                  </p>
-                  <p className="builder-summary__meta">
-                    Equipment: {draft.inventoryItems.length ? `${draft.inventoryItems.length} owned starting items` : "Missing"}
-                  </p>
-                </article>
-              </div>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Build impact</span>
-                <p className="builder-summary__meta">
-                  Racial bonuses:{" "}
-                  {Object.entries(racialBonuses).length
-                    ? Object.entries(racialBonuses)
-                        .map(([ability, amount]) => `${amount >= 0 ? "+" : ""}${amount} ${ability.toUpperCase()}`)
-                        .join(", ")
-                    : "None yet"}
-                </p>
-                <p className="builder-summary__meta">
-                  Feats / ASI bonuses:{" "}
-                  {Object.values(improvementBonuses).some((amount) => amount > 0)
-                    ? ABILITY_KEYS
-                        .filter((ability) => improvementBonuses[ability] > 0)
-                        .map((ability) => formatAbilityBonus(improvementBonuses[ability], ability))
-                        .join(", ")
-                    : "None yet"}
-                </p>
-                <p className="builder-summary__meta">
-                  Traits: {selectedRacialTraitNames.length ? selectedRacialTraitNames.join(", ") : "None yet"}
-                </p>
-                <p className="builder-summary__meta">
-                  Subclass timing: {primarySubclassStep?.timingLabel ?? "No subclass step available"}
-                </p>
-                <p className="builder-summary__meta">Total level: {draft.level}</p>
-                <p className="builder-summary__meta">
-                  Equipment choices remaining: {missingEquipmentChoices}
-                </p>
-                <p className="builder-summary__meta">
-                  Spell groups pending: {spellValidationMessages.length}
-                </p>
-                <p className="builder-summary__meta">Pending builder choices: {pendingChoices}</p>
-              </article>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Feats / ASI</span>
-                {improvementOpportunities.length ? (
-                  <ul className="route-shell__list">
-                    {improvementOpportunities.map((opportunity) => {
-                      const selection = draft.improvementSelections[opportunity.id];
-
-                      if (!selection) {
-                        return (
-                          <li key={opportunity.id}>
-                            {opportunity.className} {opportunity.unlockLevel}: pending
-                          </li>
-                        );
-                      }
-
-                      if (selection.mode === "feat") {
-                        return (
-                          <li key={opportunity.id}>
-                            {opportunity.className} {opportunity.unlockLevel}: {selection.featName ?? "Selected feat"}
-                          </li>
-                        );
-                      }
-
-                      const bonusText = ABILITY_KEYS
-                        .filter((ability) => (selection.abilityBonuses[ability] ?? 0) > 0)
-                        .map((ability) => formatAbilityBonus(selection.abilityBonuses[ability] ?? 0, ability))
-                        .join(", ");
-
-                      return (
-                        <li key={opportunity.id}>
-                          {opportunity.className} {opportunity.unlockLevel}: {bonusText || "pending"}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <p className="builder-summary__meta">No improvements unlocked yet.</p>
-                )}
-              </article>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Starting gear</span>
-                {draft.inventoryItems.length ? (
-                  <ul className="equipment-step__itemList">
-                    {draft.inventoryItems.map((item) => (
-                      <li key={item.id}>
-                        {item.quantity > 1 ? `${item.quantity} ` : ""}
-                        {item.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="builder-summary__meta">No starting gear selected yet.</p>
-                )}
-              </article>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Proficiencies and languages</span>
-                <p className="builder-summary__meta">
-                  Armor: {equipmentProficiencies.armor.length ? equipmentProficiencies.armor.join(", ") : "None detected"}
-                </p>
-                <p className="builder-summary__meta">
-                  Weapons: {equipmentProficiencies.weapons.length ? equipmentProficiencies.weapons.join(", ") : "None detected"}
-                </p>
-                <p className="builder-summary__meta">
-                  Other proficiencies:{" "}
-                  {[...selectedProficiencyIds.map(humanizeGrantedId), ...manualGrantsByKind.proficiency.map((grant) => grant.name)]
-                    .filter(Boolean)
-                    .join(", ") || "None detected"}
-                </p>
-                <p className="builder-summary__meta">
-                  Languages:{" "}
-                  {[...selectedLanguageIds.map(humanizeGrantedId), ...manualGrantsByKind.language.map((grant) => grant.name)]
-                    .filter(Boolean)
-                    .join(", ") || "None detected"}
-                </p>
-              </article>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Manual / DM grants</span>
-                {draft.manualGrants.length ? (
-                  <ul className="route-shell__list">
-                    {draft.manualGrants.map((grant) => (
-                      <li key={grant.id}>
-                        <strong>{grant.name}</strong> ({grant.kind}
-                        {grant.source ? ` • ${grant.source}` : ""})
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="builder-summary__meta">No manual grants added.</p>
-                )}
-              </article>
-
-              <article className="builder-review__card">
-                <span className="builder-panel__label">Backstory</span>
-                {Object.entries(draft.backstory).some(([, value]) => hasMarkdownContent(value)) ? (
-                  <ul className="route-shell__list">
-                    {Object.entries(draft.backstory)
-                      .filter(([, value]) => hasMarkdownContent(value))
-                      .map(([key, value]) => (
-                        <li key={key}>
-                          {key === "alliesAndOrganizations"
-                            ? "Allies and organizations"
-                            : key === "additionalFeatures"
-                              ? "Additional features"
-                              : key.charAt(0).toUpperCase() + key.slice(1)}
-                          : {getMarkdownPreview(value, 100)}
-                        </li>
-                      ))}
-                  </ul>
-                ) : (
-                  <p className="builder-summary__meta">No backstory notes yet.</p>
-                )}
-              </article>
-            </div>
-          </section>
+          <ReviewSheetStep
+            canSave={canSave}
+            classRecordsByEntry={classRecordsByEntry}
+            completionChecklist={completionChecklist}
+            draft={draft}
+            effectiveAbilities={effectiveAbilities}
+            equipmentEffectSummary={equipmentEffectSummary}
+            equipmentProficiencies={equipmentProficiencies}
+            improvementBonuses={improvementBonuses}
+            manualGrantsByKind={manualGrantsByKind}
+            navigationWarnings={navigationWarnings}
+            racialBonuses={racialBonuses}
+            saveValidationMessage={saveValidationMessage}
+            selectedBackground={selectedBackground}
+            selectedBackgroundFeatureElements={selectedBackgroundFeatureElements}
+            selectedClassFeatureElements={selectedClassFeatureElements}
+            selectedFeatElements={selectedFeatElements}
+            selectedLanguageIds={selectedLanguageIds}
+            selectedLanguageNames={selectedLanguageNames}
+            selectedProgressionElements={selectedProgressionElements}
+            selectedProficiencyIds={selectedProficiencyIds}
+            selectedProficiencyNames={selectedProficiencyNames}
+            selectedRace={selectedRace}
+            selectedRacialTraitElements={selectedRacialTraitElements}
+            selectedSpellIds={selectedSpellIds}
+            selectedSubrace={selectedSubrace}
+            spellGroups={spellGroups}
+            spells={spells}
+          />
         );
       default:
         return null;

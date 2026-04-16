@@ -320,7 +320,7 @@ function resolveSpellStatValue(
   return 0;
 }
 
-function getMaxSpellLevel(rules: BuiltInRule[], classLevel: number) {
+export function getSpellSlotSummary(rules: BuiltInRule[], classLevel: number) {
   const resolvedStats = new Map<string, number>();
   const counts = new Map<number, number>();
 
@@ -348,11 +348,17 @@ function getMaxSpellLevel(rules: BuiltInRule[], classLevel: number) {
 
   return [...counts.entries()]
     .filter(([, count]) => count > 0)
-    .map(([slotLevel]) => slotLevel)
+    .sort((left, right) => left[0] - right[0])
+    .map(([slotLevel, count]) => ({ slotLevel, count }));
+}
+
+export function getMaxSpellLevel(rules: BuiltInRule[], classLevel: number) {
+  return getSpellSlotSummary(rules, classLevel)
+    .map(({ slotLevel }) => slotLevel)
     .sort((left, right) => right - left)[0] ?? 0;
 }
 
-function getPreparationCapacity(
+export function getPreparationCapacity(
   rules: BuiltInRule[],
   classLevel: number,
   effectiveAbilities: Record<AbilityKey, number>,

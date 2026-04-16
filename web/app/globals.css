@@ -809,6 +809,188 @@ a {
   color: var(--accent);
 }
 
+.review-sheet {
+  display: grid;
+  gap: 18px;
+}
+
+.review-sheet__tabBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.review-sheet__tab {
+  display: grid;
+  gap: 4px;
+  min-width: 140px;
+  padding: 12px 16px;
+  border: 1px solid rgba(146, 38, 16, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 252, 246, 0.92);
+  color: var(--copy);
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.review-sheet__tab span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--copy-soft);
+}
+
+.review-sheet__tab strong {
+  color: var(--accent-strong);
+}
+
+.review-sheet__tab:hover,
+.review-sheet__tab--active {
+  border-color: rgba(146, 38, 16, 0.42);
+  box-shadow: 0 10px 30px rgba(146, 38, 16, 0.1);
+  transform: translateY(-1px);
+}
+
+.review-sheet__grid,
+.review-sheet__sectionStack {
+  display: grid;
+  gap: 16px;
+}
+
+.review-sheet__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.review-sheet__card--span2 {
+  grid-column: 1 / -1;
+}
+
+.review-sheet__checklist,
+.review-sheet__actionGrid,
+.review-sheet__spellGroupGrid,
+.review-sheet__featureGrid,
+.review-sheet__inventoryList,
+.review-sheet__resourceGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.review-sheet__checklist {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.review-sheet__checkItem {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 14px;
+  background: rgba(146, 38, 16, 0.04);
+}
+
+.review-sheet__checkItem span {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-sheet__checkItem.is-complete span {
+  color: var(--success);
+}
+
+.review-sheet__checkItem.is-pending span {
+  color: var(--accent);
+}
+
+.review-sheet__warningBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.review-sheet__resourceGrid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.review-sheet__twoColumn {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.review-sheet__listBlock {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(146, 38, 16, 0.03);
+}
+
+.review-sheet__listBlock--full {
+  grid-column: 1 / -1;
+}
+
+.review-sheet__actionGrid,
+.review-sheet__spellGroupGrid,
+.review-sheet__featureGrid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.review-sheet__actionCard,
+.review-sheet__spellGroupCard,
+.review-sheet__featureCard,
+.review-sheet__inventoryCard {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.86);
+}
+
+.review-sheet__spellList {
+  display: grid;
+  gap: 8px;
+}
+
+.review-sheet__spellCard {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(146, 38, 16, 0.03);
+}
+
+.review-sheet__spellCard p,
+.review-sheet__inventoryCard p {
+  margin: 0;
+  color: var(--copy-soft);
+}
+
+.review-sheet__featureBody {
+  color: var(--copy);
+}
+
+.review-sheet__featureBody > *:first-child {
+  margin-top: 0;
+}
+
+.review-sheet__featureBody > *:last-child {
+  margin-bottom: 0;
+}
+
+.review-sheet__inventoryList {
+  grid-template-columns: 1fr;
+}
+
+.review-sheet__inventoryCard {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.8fr);
+  align-items: start;
+}
+
 .equipment-step {
   display: grid;
   gap: 18px;
@@ -3199,6 +3381,12 @@ a {
   }
 
   .builder-review__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .review-sheet__grid,
+  .review-sheet__twoColumn,
+  .review-sheet__inventoryCard {
     grid-template-columns: 1fr;
   }
 
