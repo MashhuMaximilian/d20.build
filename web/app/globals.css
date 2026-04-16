@@ -911,12 +911,72 @@ a {
   gap: 8px;
 }
 
+.review-sheet__miniToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 999px;
+  background: rgba(146, 38, 16, 0.04);
+}
+
+.review-sheet__miniToggleButton {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--copy-soft);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.review-sheet__miniToggleButton.is-active {
+  background: rgba(146, 38, 16, 0.9);
+  color: #fff;
+}
+
 .review-sheet__resourceGrid {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .review-sheet__resourceGrid--dense {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.review-sheet__slotPipStack {
+  display: grid;
+  gap: 8px;
+}
+
+.review-sheet__slotPipRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.review-sheet__slotPipLabel {
+  color: var(--accent-strong);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.review-sheet__slotPips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.review-sheet__slotPip {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(146, 38, 16, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.94);
 }
 
 .review-sheet__twoColumn {
@@ -1064,6 +1124,44 @@ a {
 .review-sheet__compactList {
   display: grid;
   gap: 8px;
+}
+
+.review-sheet__tableWrap {
+  overflow: auto;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.92);
+}
+
+.review-sheet__table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.review-sheet__table th,
+.review-sheet__table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(146, 38, 16, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.review-sheet__table th {
+  color: var(--accent-strong);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(146, 38, 16, 0.03);
+}
+
+.review-sheet__table tbody tr {
+  cursor: pointer;
+}
+
+.review-sheet__table tbody tr:hover {
+  background: rgba(146, 38, 16, 0.04);
 }
 
 .review-sheet__compactRow,
@@ -1278,6 +1376,50 @@ a {
 .review-sheet__detailBody {
   display: grid;
   gap: 10px;
+}
+
+.review-sheet__scoreRows {
+  display: grid;
+  gap: 8px;
+}
+
+.review-sheet__scoreRow {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(146, 38, 16, 0.1);
+  border-radius: 12px;
+  background: rgba(146, 38, 16, 0.03);
+}
+
+.review-sheet__scoreRow strong {
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+}
+
+.review-sheet__scoreRow span,
+.review-sheet__scoreRow em {
+  font-size: 0.9rem;
+}
+
+.review-sheet__scoreRow em {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.review-sheet__scoreDot {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid rgba(146, 38, 16, 0.4);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.review-sheet__scoreDot.is-proficient {
+  background: rgba(146, 38, 16, 0.88);
+  border-color: rgba(146, 38, 16, 0.88);
 }
 
 .equipment-step {
@@ -3177,11 +3319,17 @@ a {
   border: 1px solid rgba(146, 38, 16, 0.14);
   border-radius: 18px;
   background: rgba(255, 252, 246, 0.94);
+  gap: 16px;
 }
 
 .review-sheet .backstory-step__sheetCard .markdown-renderer__surface {
   padding: 12px 14px;
   min-height: 110px;
+}
+
+.review-sheet .backstory-step__sheetCard .builder-summary__name {
+  font-size: 1.35rem;
+  margin-bottom: 4px;
 }
 
 .backstory-step__field--large {

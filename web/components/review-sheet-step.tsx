@@ -71,6 +71,7 @@ type ReviewResource = {
   label: string;
   value: string;
   meta?: string;
+  slots?: Array<{ label: string; count: number }>;
 };
 
 type ReviewVital = {
@@ -89,11 +90,22 @@ type ReviewActionCard = {
   source?: string;
 };
 
+type ReviewCatalogView = "workbench" | "table";
+
+type ReviewStatRow = {
+  id: string;
+  label: string;
+  ability: string;
+  total: number;
+  proficient: boolean;
+};
+
 type ReviewDetailState =
   | {
       kind: "spell";
       spell: BuiltInElement;
       groupLabel: string;
+      ownerLabel: string;
       badges: string[];
     }
   | {
@@ -252,6 +264,36 @@ const WARLOCK_PACT_SLOT_TABLE: Record<number, { slots: number; level: number }> 
   20: { slots: 4, level: 5 },
 };
 
+const SAVING_THROW_ABILITY_MAP: Record<AbilityKey, string> = {
+  strength: "Strength",
+  dexterity: "Dexterity",
+  constitution: "Constitution",
+  intelligence: "Intelligence",
+  wisdom: "Wisdom",
+  charisma: "Charisma",
+};
+
+const SKILL_ABILITY_MAP: Array<{ id: string; label: string; ability: AbilityKey }> = [
+  { id: "acrobatics", label: "Acrobatics", ability: "dexterity" },
+  { id: "animal-handling", label: "Animal Handling", ability: "wisdom" },
+  { id: "arcana", label: "Arcana", ability: "intelligence" },
+  { id: "athletics", label: "Athletics", ability: "strength" },
+  { id: "deception", label: "Deception", ability: "charisma" },
+  { id: "history", label: "History", ability: "intelligence" },
+  { id: "insight", label: "Insight", ability: "wisdom" },
+  { id: "intimidation", label: "Intimidation", ability: "charisma" },
+  { id: "investigation", label: "Investigation", ability: "intelligence" },
+  { id: "medicine", label: "Medicine", ability: "wisdom" },
+  { id: "nature", label: "Nature", ability: "intelligence" },
+  { id: "perception", label: "Perception", ability: "wisdom" },
+  { id: "performance", label: "Performance", ability: "charisma" },
+  { id: "persuasion", label: "Persuasion", ability: "charisma" },
+  { id: "religion", label: "Religion", ability: "intelligence" },
+  { id: "sleight-of-hand", label: "Sleight of Hand", ability: "dexterity" },
+  { id: "stealth", label: "Stealth", ability: "dexterity" },
+  { id: "survival", label: "Survival", ability: "wisdom" },
+];
+
 function humanizeGrantedId(value: string) {
   return value
     .replace(/^ID_/, "")
@@ -379,6 +421,34 @@ function getFallbackSpellSlotSummary(className: string, level: number) {
     return slots.length ? slots.map((count, index) => `L${index + 1}:${count}`).join(" • ") : "";
   }
   return "";
+}
+
+function getFallbackSpellSlotEntries(className: string, level: number) {
+  const normalized = className.toLowerCase();
+  if (/warlock/.test(normalized)) {
+    const pact = WARLOCK_PACT_SLOT_TABLE[level];
+    return pact ? [{ label: `Pact ${pact.level}`, count: pact.slots }] : [];
+  }
+  if (/artificer|paladin|ranger/.test(normalized)) {
+    return (HALF_CASTER_SLOT_TABLE[level] ?? []).map((count, index) => ({
+      label: `L${index + 1}`,
+      count,
+    }));
+  }
+  if (/bard|cleric|druid|sorcerer|wizard/.test(normalized)) {
+    return (FULL_CASTER_SLOT_TABLE[level] ?? []).map((count, index) => ({
+      label: `L${index + 1}`,
+      count,
+    }));
+  }
+  return [];
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function parseWalkingSpeed(text: string) {
@@ -636,6 +706,9 @@ function deriveReviewResources(args: {
     const featureNames = new Set(args.selectedClassFeatureElements.map((feature) => feature.name.toLowerCase()));
     const slotSummary = getSpellSlotSummary(record.class.rules, entry.level);
     const fallbackSlotSummary = !slotSummary.length ? getFallbackSpellSlotSummary(className, entry.level) : "";
+    const slotEntries = slotSummary.length
+      ? slotSummary.map(({ slotLevel, count }) => ({ label: `L${slotLevel}`, count }))
+      : getFallbackSpellSlotEntries(className, entry.level);
     if (slotSummary.length || fallbackSlotSummary) {
       resources.push({
         id: `${record.class.id}-slots`,
@@ -644,6 +717,7 @@ function deriveReviewResources(args: {
           ? slotSummary.map(({ slotLevel, count }) => `L${slotLevel}:${count}`).join(" • ")
           : fallbackSlotSummary,
         meta: slotSummary.length ? "Explicit slot progression" : "Standard class progression",
+        slots: slotEntries,
       });
     }
 
@@ -696,6 +770,86 @@ function deriveReviewResources(args: {
   });
 
   return uniqueById(resources);
+}
+
+function deriveSavingThrowRows(args: {
+  draft: CharacterDraft;
+  effectiveAbilities: Record<AbilityKey, number>;
+  selectedProficiencyLabels: string[];
+}) {
+  const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
+  const labels = new Set(args.selectedProficiencyLabels.map((value) => value.toLowerCase()));
+  return ABILITY_KEYS.map((ability) => {
+    const proficient = labels.has(ABILITY_LABELS[ability].toLowerCase()) || labels.has(`${ABILITY_LABELS[ability].toLowerCase()} saving throw`);
+    const total = getAbilityModifier(args.effectiveAbilities[ability]) + (proficient ? proficiencyBonus : 0);
+    return {
+      id: `save-${ability}`,
+      label: SAVING_THROW_ABILITY_MAP[ability],
+      ability: ABILITY_LABELS[ability].slice(0, 3),
+      total,
+      proficient,
+    } satisfies ReviewStatRow;
+  });
+}
+
+function deriveSkillRows(args: {
+  draft: CharacterDraft;
+  effectiveAbilities: Record<AbilityKey, number>;
+  selectedProficiencyLabels: string[];
+}) {
+  const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
+  const labels = new Set(args.selectedProficiencyLabels.map((value) => value.toLowerCase()));
+  return SKILL_ABILITY_MAP.map((skill) => {
+    const proficient = labels.has(skill.label.toLowerCase());
+    const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + (proficient ? proficiencyBonus : 0);
+    return {
+      id: `skill-${skill.id}`,
+      label: skill.label,
+      ability: ABILITY_LABELS[skill.ability].slice(0, 3),
+      total,
+      proficient,
+    } satisfies ReviewStatRow;
+  });
+}
+
+function derivePassivePerception(skillRows: ReviewStatRow[]) {
+  const perception = skillRows.find((row) => row.id === "skill-perception");
+  return 10 + (perception?.total ?? 0);
+}
+
+function deriveAttacksPerAction(args: {
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+  draft: CharacterDraft;
+  selectedElements: BuiltInElement[];
+}) {
+  let attacks = 1;
+
+  args.draft.classEntries.forEach((entry, index) => {
+    if (!entry.classId || entry.level <= 0) {
+      return;
+    }
+    const className = resolveClassName(args.classRecordsByEntry[index], entry).toLowerCase();
+    if (/fighter/.test(className)) {
+      if (entry.level >= 20) {
+        attacks = Math.max(attacks, 4);
+      } else if (entry.level >= 11) {
+        attacks = Math.max(attacks, 3);
+      } else if (entry.level >= 5) {
+        attacks = Math.max(attacks, 2);
+      }
+    } else if (/artificer|barbarian|monk|paladin|ranger/.test(className) && entry.level >= 5) {
+      attacks = Math.max(attacks, 2);
+    }
+  });
+
+  if (
+    attacks === 1 &&
+    args.selectedElements.some((element) => /^extra attack$/i.test(element.name) || /extra attack/i.test(element.description))
+  ) {
+    attacks = 2;
+  }
+
+  return attacks;
 }
 
 function deriveWeaponActionCards(items: CharacterDraft["inventoryItems"]) {
@@ -813,11 +967,57 @@ function buildFeatureSections(args: {
     sections.push({ id: "race", title: "Race & lineage", items: uniqueByNameAndSource(raceItems as BuiltInElement[]) });
   }
 
-  if (args.selectedClassFeatureElements.length || args.selectedProgressionElements.length) {
+  const classFeatures = args.selectedClassFeatureElements.filter((item) => !/archetype/i.test(item.type));
+  const subclassFeatures = args.selectedClassFeatureElements.filter((item) => /archetype/i.test(item.type));
+  const progressionProficiencies = args.selectedProgressionElements.filter(
+    (item) => /proficiency/i.test(item.type) || /proficiency/i.test(item.name),
+  );
+  const progressionLanguages = args.selectedProgressionElements.filter(
+    (item) => /language/i.test(item.type) || /language/i.test(item.name),
+  );
+  const buildChoiceItems = args.selectedProgressionElements.filter(
+    (item) =>
+      !/(^|\b)(language|proficiency)\b/i.test(item.type) &&
+      !/(language|proficiency) option/i.test(item.name),
+  );
+
+  if (classFeatures.length) {
     sections.push({
       id: "class",
-      title: "Class, subclass, and build choices",
-      items: uniqueByNameAndSource([...args.selectedClassFeatureElements, ...args.selectedProgressionElements]),
+      title: "Class features",
+      items: uniqueByNameAndSource(classFeatures),
+    });
+  }
+
+  if (subclassFeatures.length) {
+    sections.push({
+      id: "subclass",
+      title: "Subclass and specialization",
+      items: uniqueByNameAndSource(subclassFeatures),
+    });
+  }
+
+  if (buildChoiceItems.length) {
+    sections.push({
+      id: "build-choices",
+      title: "Build choices and unlocked picks",
+      items: uniqueByNameAndSource(buildChoiceItems),
+    });
+  }
+
+  if (progressionProficiencies.length) {
+    sections.push({
+      id: "proficiency-choices",
+      title: "Unlocked proficiencies and tools",
+      items: uniqueByNameAndSource(progressionProficiencies),
+    });
+  }
+
+  if (progressionLanguages.length) {
+    sections.push({
+      id: "language-choices",
+      title: "Unlocked languages",
+      items: uniqueByNameAndSource(progressionLanguages),
     });
   }
 
@@ -895,6 +1095,14 @@ function ReviewDetailDrawer({
           <div className="review-sheet__detailStat">
             <span>Components</span>
             <strong>{getSpellComponents(detail.spell) || "—"}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Classes</span>
+            <strong>{detail.ownerLabel || "—"}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Spell list</span>
+            <strong>{detail.groupLabel}</strong>
           </div>
         </div>
         <div className="review-sheet__detailBody">
@@ -1012,6 +1220,9 @@ function ReviewDetailDrawer({
 export function ReviewSheetStep(props: ReviewSheetProps) {
   const [activeTab, setActiveTab] = useState<ReviewSheetTab>("character");
   const [detail, setDetail] = useState<ReviewDetailState | null>(null);
+  const [actionsView, setActionsView] = useState<ReviewCatalogView>("workbench");
+  const [featuresView, setFeaturesView] = useState<ReviewCatalogView>("workbench");
+  const [inventoryView, setInventoryView] = useState<ReviewCatalogView>("workbench");
 
   const selectedSheetElements = useMemo(
     () =>
@@ -1133,13 +1344,27 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
   ].filter(Boolean);
 
   const selectedProficiencyLabels = useMemo(
-    () =>
-      uniqueStrings([
+    () => {
+      const equipmentLabels = new Set(
+        [
+          ...props.equipmentProficiencies.armor.map((value) => normalizeReviewLabel(value)),
+          ...props.equipmentProficiencies.weapons.map((value) => normalizeReviewLabel(value)),
+        ].map((value) => value.toLowerCase()),
+      );
+
+      return uniqueStrings([
         ...props.selectedProficiencyNames.map(normalizeReviewLabel),
         ...props.selectedProficiencyIds.map(humanizeGrantedId).map(normalizeReviewLabel),
         ...props.manualGrantsByKind.proficiency.map((grant) => normalizeReviewLabel(grant.name)),
-      ]),
-    [props.manualGrantsByKind.proficiency, props.selectedProficiencyIds, props.selectedProficiencyNames],
+      ]).filter((value) => !equipmentLabels.has(value.toLowerCase()));
+    },
+    [
+      props.equipmentProficiencies.armor,
+      props.equipmentProficiencies.weapons,
+      props.manualGrantsByKind.proficiency,
+      props.selectedProficiencyIds,
+      props.selectedProficiencyNames,
+    ],
   );
 
   const selectedLanguageLabels = useMemo(
@@ -1157,6 +1382,50 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     ...props.equipmentEffectSummary.weaponLines,
     ...props.equipmentEffectSummary.itemGrantLines,
   ];
+
+  const spellTableRows = useMemo(
+    () =>
+      spellGroupCards.flatMap(({ group, entries }) =>
+        entries.map((spell) => ({
+          id: `${group.id}-${spell.id}`,
+          spell,
+          groupTitle: group.title,
+          ownerLabel: group.ownerLabel,
+        })),
+      ),
+    [spellGroupCards],
+  );
+
+  const savingThrowRows = useMemo(
+    () =>
+      deriveSavingThrowRows({
+        draft: props.draft,
+        effectiveAbilities: props.effectiveAbilities,
+        selectedProficiencyLabels,
+      }),
+    [props.draft, props.effectiveAbilities, selectedProficiencyLabels],
+  );
+
+  const skillRows = useMemo(
+    () =>
+      deriveSkillRows({
+        draft: props.draft,
+        effectiveAbilities: props.effectiveAbilities,
+        selectedProficiencyLabels,
+      }),
+    [props.draft, props.effectiveAbilities, selectedProficiencyLabels],
+  );
+
+  const passivePerception = useMemo(() => derivePassivePerception(skillRows), [skillRows]);
+  const attacksPerAction = useMemo(
+    () =>
+      deriveAttacksPerAction({
+        classRecordsByEntry: props.classRecordsByEntry,
+        draft: props.draft,
+        selectedElements: selectedSheetElements,
+      }),
+    [props.classRecordsByEntry, props.draft, selectedSheetElements],
+  );
 
   return (
     <section className="builder-stepPanel review-sheet">
@@ -1250,7 +1519,22 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
               {resources.map((resource) => (
                 <div className="ability-card" key={resource.id}>
                   <span className="ability-card__label">{resource.label}</span>
-                  <strong className="summary-card__value">{resource.value}</strong>
+                  {resource.slots?.length ? (
+                    <div className="review-sheet__slotPipStack">
+                      {resource.slots.map((slot) => (
+                        <div className="review-sheet__slotPipRow" key={`${resource.id}-${slot.label}`}>
+                          <span className="review-sheet__slotPipLabel">{slot.label}</span>
+                          <div className="review-sheet__slotPips" aria-label={`${slot.label} slots: ${slot.count}`}>
+                            {Array.from({ length: slot.count }, (_, index) => (
+                              <span className="review-sheet__slotPip" key={`${slot.label}-${index}`} />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <strong className="summary-card__value">{resource.value}</strong>
+                  )}
                   <span className="ability-card__meta">{resource.meta || "Tracked"}</span>
                 </div>
               ))}
@@ -1307,148 +1591,322 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
               </div>
             </div>
           </article>
+
+          <article className="builder-review__card">
+            <span className="builder-panel__label">Saving throws</span>
+            <div className="review-sheet__scoreRows">
+              {savingThrowRows.map((row) => (
+                <div className="review-sheet__scoreRow" key={row.id}>
+                  <span className={`review-sheet__scoreDot${row.proficient ? " is-proficient" : ""}`} />
+                  <strong>{row.total >= 0 ? `+${row.total}` : row.total}</strong>
+                  <span>{row.label}</span>
+                  <em>({row.ability})</em>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="builder-review__card">
+            <span className="builder-panel__label">Skills and table basics</span>
+            <div className="review-sheet__headlineRow">
+              <div className="review-sheet__chipList">
+                <span className="review-sheet__chip">Passive Perception {passivePerception}</span>
+                <span className="review-sheet__chip">{attacksPerAction} Attack / Action</span>
+              </div>
+            </div>
+            <div className="review-sheet__scoreRows">
+              {skillRows.map((row) => (
+                <div className="review-sheet__scoreRow" key={row.id}>
+                  <span className={`review-sheet__scoreDot${row.proficient ? " is-proficient" : ""}`} />
+                  <strong>{row.total >= 0 ? `+${row.total}` : row.total}</strong>
+                  <span>{row.label}</span>
+                  <em>({row.ability})</em>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
       ) : null}
 
       {activeTab === "actions" ? (
         <div className="review-sheet__grid">
           <article className="builder-review__card review-sheet__card--span2">
-            <span className="builder-panel__label">Action surface</span>
-            <p className="builder-summary__meta">Compact table-facing actions derived from equipped gear and known action-like features.</p>
-            <div className="review-sheet__compactList">
-              {actionCards.length ? (
-                actionCards.map((card) => (
-                  <button
-                    className="review-sheet__compactRow"
-                    key={card.id}
-                    type="button"
-                    onClick={() =>
-                      setDetail({
-                        kind: "action",
-                        action: card,
-                        badges: uniqueStrings([card.timing, card.cost ?? "", card.source ?? ""]),
-                      })
-                    }
-                  >
-                    <div className="review-sheet__compactMain">
-                      <strong>{card.title} <span className="review-sheet__inlineMeta">· {card.timing}</span></strong>
-                      <span>{card.source || card.cost || "Action"}</span>
-                    </div>
-                    <div className="review-sheet__compactMeta">
-                      <p>{card.summary}</p>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <p className="builder-summary__meta">No compact actions detected yet. Martial attacks will appear from equipped weapons, and explicit feature actions will show as the build grows.</p>
-              )}
+            <div className="review-sheet__headlineRow">
+              <span className="builder-panel__label">Action surface</span>
+              <div className="review-sheet__miniToggle" role="tablist" aria-label="Actions and spells view">
+                <button className={`review-sheet__miniToggleButton${actionsView === "workbench" ? " is-active" : ""}`} type="button" onClick={() => setActionsView("workbench")}>Workbench</button>
+                <button className={`review-sheet__miniToggleButton${actionsView === "table" ? " is-active" : ""}`} type="button" onClick={() => setActionsView("table")}>Table</button>
+              </div>
             </div>
+            <p className="builder-summary__meta">Compact table-facing actions derived from equipped gear and known action-like features.</p>
+            {actionsView === "workbench" ? (
+              <div className="review-sheet__compactList">
+                {actionCards.length ? (
+                  actionCards.map((card) => (
+                    <button
+                      className="review-sheet__compactRow"
+                      key={card.id}
+                      type="button"
+                      onClick={() =>
+                        setDetail({
+                          kind: "action",
+                          action: card,
+                          badges: uniqueStrings([card.timing, card.cost ?? "", card.source ?? ""]),
+                        })
+                      }
+                    >
+                      <div className="review-sheet__compactMain">
+                        <strong>{card.title} <span className="review-sheet__inlineMeta">· {card.timing}</span></strong>
+                        <span>{card.source || card.cost || "Action"}</span>
+                      </div>
+                      <div className="review-sheet__compactMeta">
+                        <p>{card.summary}</p>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <p className="builder-summary__meta">No compact actions detected yet. Martial attacks will appear from equipped weapons, and explicit feature actions will show as the build grows.</p>
+                )}
+              </div>
+            ) : (
+              <div className="review-sheet__tableWrap">
+                <table className="review-sheet__table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Timing</th>
+                      <th>Cost</th>
+                      <th>Summary</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {actionCards.length ? (
+                      actionCards.map((card) => (
+                        <tr key={card.id} onClick={() => setDetail({ kind: "action", action: card, badges: uniqueStrings([card.timing, card.cost ?? "", card.source ?? ""]) })}>
+                          <td>{card.title}</td>
+                          <td>{card.timing}</td>
+                          <td>{card.cost || "—"}</td>
+                          <td>{card.summary}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan={4}>No compact actions detected yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </article>
 
           <article className="builder-review__card review-sheet__card--span2">
             <span className="builder-panel__label">Spellcasting</span>
-            <div className="review-sheet__spellGroupGrid">
-              {spellGroupCards.length ? (
-                spellGroupCards.map(({ group, entries }) => (
-                  <article className="review-sheet__spellGroupCard" key={group.id}>
-                    <div className="review-sheet__headlineRow">
-                      <div>
-                        <span className="builder-panel__label">{group.ownerLabel}</span>
-                        <strong className="review-sheet__sectionTitle">{group.title}</strong>
-                        <p className="builder-summary__meta">
-                          {group.kind === "granted"
-                            ? `${entries.length} granted`
-                            : `${props.draft.spellSelections[group.id]?.length ?? 0}/${group.maxSelections} selected`}
-                        </p>
+            {actionsView === "workbench" ? (
+              <div className="review-sheet__spellGroupGrid">
+                {spellGroupCards.length ? (
+                  spellGroupCards.map(({ group, entries }) => (
+                    <article className="review-sheet__spellGroupCard" key={group.id}>
+                      <div className="review-sheet__headlineRow">
+                        <div>
+                          <strong className="review-sheet__sectionTitle">{group.title}</strong>
+                          <p className="builder-summary__meta">
+                            {group.ownerLabel} • {group.kind === "granted"
+                              ? `${entries.length} granted`
+                              : `${props.draft.spellSelections[group.id]?.length ?? 0}/${group.maxSelections} selected`}
+                          </p>
+                        </div>
+                        <span className="review-sheet__statusPill">{entries.length} entries</span>
                       </div>
-                      <span className="review-sheet__statusPill">{entries.length} entries</span>
-                    </div>
-                    {entries.length ? (
-                      <div className="review-sheet__compactList">
-                        {entries.map((spell) => (
-                          <button
-                            className="review-sheet__compactRow review-sheet__compactRow--spell"
-                            key={`${group.id}-${spell.id}`}
-                            type="button"
-                            onClick={() =>
-                              setDetail({
-                                kind: "spell",
-                                spell,
-                                groupLabel: group.title,
-                                badges: uniqueStrings([
-                                  getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
-                                  getSpellSchool(spell),
-                                  isSpellRitual(spell) ? "Ritual" : "",
-                                  isSpellConcentration(spell) ? "Concentration" : "",
-                                  group.title,
-                                  group.ownerLabel,
-                                ]),
-                              })
-                            }
-                          >
-                            <div className="review-sheet__compactMain">
-                              <strong>{spell.name} <span className="review-sheet__inlineMeta">· {group.title}</span></strong>
-                              <span>{spell.source || group.ownerLabel}</span>
-                            </div>
-                            <div className="review-sheet__compactMeta">
-                              <p>{getSpellPreview(spell)}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+                      {entries.length ? (
+                        <div className="review-sheet__compactList">
+                          {entries.map((spell) => (
+                            <button
+                              className="review-sheet__compactRow review-sheet__compactRow--spell"
+                              key={`${group.id}-${spell.id}`}
+                              type="button"
+                              onClick={() =>
+                                setDetail({
+                                  kind: "spell",
+                                  spell,
+                                  groupLabel: group.title,
+                                  ownerLabel: group.ownerLabel,
+                                  badges: uniqueStrings([
+                                    getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
+                                    getSpellSchool(spell),
+                                    isSpellRitual(spell) ? "Ritual" : "",
+                                    isSpellConcentration(spell) ? "Concentration" : "",
+                                    group.title,
+                                    group.ownerLabel,
+                                  ]),
+                                })
+                              }
+                            >
+                              <div className="review-sheet__compactMain">
+                                <strong>{spell.name} <span className="review-sheet__inlineMeta">· {group.title}</span></strong>
+                              </div>
+                              <div className="review-sheet__compactMeta">
+                                <p>{getSpellPreview(spell)}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="builder-summary__meta">No spells chosen in this group yet.</p>
+                      )}
+                    </article>
+                  ))
+                ) : (
+                  <p className="builder-summary__meta">No spell groups are active for this build.</p>
+                )}
+              </div>
+            ) : (
+              <div className="review-sheet__tableWrap">
+                <table className="review-sheet__table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>List</th>
+                      <th>Level</th>
+                      <th>Summary</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {spellTableRows.length ? (
+                      spellTableRows.map(({ id, spell, groupTitle, ownerLabel }) => (
+                        <tr
+                          key={id}
+                          onClick={() =>
+                            setDetail({
+                              kind: "spell",
+                              spell,
+                              groupLabel: groupTitle,
+                              ownerLabel,
+                              badges: uniqueStrings([
+                                getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
+                                getSpellSchool(spell),
+                                isSpellRitual(spell) ? "Ritual" : "",
+                                isSpellConcentration(spell) ? "Concentration" : "",
+                                groupTitle,
+                                ownerLabel,
+                              ]),
+                            })
+                          }
+                        >
+                          <td>{spell.name}</td>
+                          <td>{groupTitle}</td>
+                          <td>{getSpellLevel(spell) === 0 ? "Cantrip" : `L${getSpellLevel(spell)}`}</td>
+                          <td>{getSpellPreview(spell)}</td>
+                        </tr>
+                      ))
                     ) : (
-                      <p className="builder-summary__meta">No spells chosen in this group yet.</p>
+                      <tr><td colSpan={4}>No spell groups are active for this build.</td></tr>
                     )}
-                  </article>
-                ))
-              ) : (
-                <p className="builder-summary__meta">No spell groups are active for this build.</p>
-              )}
-            </div>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </article>
         </div>
       ) : null}
 
       {activeTab === "features" ? (
         <div className="review-sheet__sectionStack">
+          <div className="review-sheet__headlineRow">
+            <span className="builder-panel__label">Feature catalog</span>
+            <div className="review-sheet__miniToggle" role="tablist" aria-label="Features view">
+              <button className={`review-sheet__miniToggleButton${featuresView === "workbench" ? " is-active" : ""}`} type="button" onClick={() => setFeaturesView("workbench")}>Workbench</button>
+              <button className={`review-sheet__miniToggleButton${featuresView === "table" ? " is-active" : ""}`} type="button" onClick={() => setFeaturesView("table")}>Table</button>
+            </div>
+          </div>
           {featureSections.length ? (
             featureSections.map((section) => (
               <article className="builder-review__card" key={section.id}>
                 <span className="builder-panel__label">{section.title}</span>
-                <div className="review-sheet__featureSectionGrid">
-                  {section.items.map((item) =>
-                    "kind" in item ? (
-                      renderManualGrant(item, () =>
-                        setDetail({
-                          kind: "manual-grant",
-                          grant: item,
-                          badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
-                        }),
-                      )
-                    ) : (
-                      <button
-                        className="review-sheet__featureTile"
-                        key={item.id}
-                        type="button"
-                        onClick={() =>
+                {featuresView === "workbench" ? (
+                  <div className="review-sheet__featureSectionGrid">
+                    {section.items.map((item) =>
+                      "kind" in item ? (
+                        renderManualGrant(item, () =>
                           setDetail({
-                            kind: "feature",
-                            feature: item,
-                            badges: uniqueStrings([item.type, item.source || ""]),
-                          })
-                        }
-                      >
-                        <div className="review-sheet__featureTileHeader">
-                          <strong>{item.name}</strong>
-                          <span>{item.source || item.type} · {item.type}</span>
-                        </div>
-                        <div className="review-sheet__featureTileBody">
-                          <p>{getFeaturePreview(item)}</p>
-                        </div>
-                      </button>
-                    ),
-                  )}
-                </div>
+                            kind: "manual-grant",
+                            grant: item,
+                            badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
+                          }),
+                        )
+                      ) : (
+                        <button
+                          className="review-sheet__featureTile"
+                          key={item.id}
+                          type="button"
+                          onClick={() =>
+                            setDetail({
+                              kind: "feature",
+                              feature: item,
+                              badges: uniqueStrings([item.type, item.source || ""]),
+                            })
+                          }
+                        >
+                          <div className="review-sheet__featureTileHeader">
+                            <strong>{item.name}</strong>
+                            <span>{[item.source || "", item.type].filter(Boolean).join(" · ")}</span>
+                          </div>
+                          <div className="review-sheet__featureTileBody">
+                            <p>{getFeaturePreview(item)}</p>
+                          </div>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                ) : (
+                  <div className="review-sheet__tableWrap">
+                    <table className="review-sheet__table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Source</th>
+                          <th>Type</th>
+                          <th>Summary</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {section.items.map((item) =>
+                          "kind" in item ? (
+                            <tr
+                              key={item.id}
+                              onClick={() =>
+                                setDetail({
+                                  kind: "manual-grant",
+                                  grant: item,
+                                  badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
+                                })
+                              }
+                            >
+                              <td>{item.name}</td>
+                              <td>{item.source || "Manual / DM grant"}</td>
+                              <td>{item.kind}</td>
+                              <td>{item.note || item.description || "Open details"}</td>
+                            </tr>
+                          ) : (
+                            <tr
+                              key={item.id}
+                              onClick={() =>
+                                setDetail({
+                                  kind: "feature",
+                                  feature: item,
+                                  badges: uniqueStrings([item.type, item.source || ""]),
+                                })
+                              }
+                            >
+                              <td>{item.name}</td>
+                              <td>{item.source || "—"}</td>
+                              <td>{item.type}</td>
+                              <td>{getFeaturePreview(item)}</td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </article>
             ))
           ) : (
@@ -1482,7 +1940,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
               </div>
             </div>
             <p className="builder-summary__meta">
-              Currency: {props.draft.inventoryCurrency.pp} pp • {props.draft.inventoryCurrency.gp} gp • {props.draft.inventoryCurrency.ep} ep • {props.draft.inventoryCurrency.sp} sp • {props.draft.inventoryCurrency.cp} cp
+              Currency: {props.draft.inventoryCurrency.pp} platinum • {props.draft.inventoryCurrency.gp} gold • {props.draft.inventoryCurrency.ep} electrum • {props.draft.inventoryCurrency.sp} silver • {props.draft.inventoryCurrency.cp} copper
             </p>
           </article>
 
@@ -1500,39 +1958,83 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           </article>
 
           <article className="builder-review__card review-sheet__card--span2">
-            <span className="builder-panel__label">Owned gear</span>
-            <div className="review-sheet__inventoryList">
-              {props.draft.inventoryItems.length ? (
-                props.draft.inventoryItems.map((item) => (
-                  <button
-                    className="review-sheet__inventoryRow"
-                    key={item.id}
-                    type="button"
-                    onClick={() =>
-                      setDetail({
-                        kind: "item",
-                        item,
-                        badges: getInventoryItemBadges(item),
-                      })
-                    }
-                  >
-                    <div className="review-sheet__compactMain">
-                      <strong>{item.name}</strong>
-                      <span>{item.sourceLabel}</span>
-                    </div>
-                    <div className="review-sheet__inventoryMeta">
-                      <span>{item.category}</span>
-                      <span>Qty {item.quantity}</span>
-                      <span>{item.equipped ? "Equipped" : "Stored"}</span>
-                      <span>{item.attuned ? "Attuned" : item.attunable ? "Attunable" : "No attunement"}</span>
-                    </div>
-                    <p className="review-sheet__inventoryPreview">{getInventoryItemPreview(item)}</p>
-                  </button>
-                ))
-              ) : (
-                <p className="builder-summary__meta">No inventory entries yet.</p>
-              )}
+            <div className="review-sheet__headlineRow">
+              <span className="builder-panel__label">Owned gear</span>
+              <div className="review-sheet__miniToggle" role="tablist" aria-label="Inventory view">
+                <button className={`review-sheet__miniToggleButton${inventoryView === "workbench" ? " is-active" : ""}`} type="button" onClick={() => setInventoryView("workbench")}>Workbench</button>
+                <button className={`review-sheet__miniToggleButton${inventoryView === "table" ? " is-active" : ""}`} type="button" onClick={() => setInventoryView("table")}>Table</button>
+              </div>
             </div>
+            {inventoryView === "workbench" ? (
+              <div className="review-sheet__inventoryList">
+                {props.draft.inventoryItems.length ? (
+                  props.draft.inventoryItems.map((item) => (
+                    <button
+                      className="review-sheet__inventoryRow"
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        setDetail({
+                          kind: "item",
+                          item,
+                          badges: getInventoryItemBadges(item),
+                        })
+                      }
+                    >
+                      <div className="review-sheet__compactMain">
+                        <strong>{item.name}</strong>
+                        <span>{item.sourceLabel}</span>
+                      </div>
+                      <div className="review-sheet__inventoryMeta">
+                        <span>{item.category}</span>
+                        <span>Qty {item.quantity}</span>
+                        <span>{item.equipped ? "Equipped" : "Stored"}</span>
+                        <span>{item.attuned ? "Attuned" : item.attunable ? "Attunable" : "No attunement"}</span>
+                      </div>
+                      <p className="review-sheet__inventoryPreview">{getInventoryItemPreview(item)}</p>
+                    </button>
+                  ))
+                ) : (
+                  <p className="builder-summary__meta">No inventory entries yet.</p>
+                )}
+              </div>
+            ) : (
+              <div className="review-sheet__tableWrap">
+                <table className="review-sheet__table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Qty</th>
+                      <th>State</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {props.draft.inventoryItems.length ? (
+                      props.draft.inventoryItems.map((item) => (
+                        <tr
+                          key={item.id}
+                          onClick={() =>
+                            setDetail({
+                              kind: "item",
+                              item,
+                              badges: getInventoryItemBadges(item),
+                            })
+                          }
+                        >
+                          <td>{item.name}</td>
+                          <td>{item.category}</td>
+                          <td>{item.quantity}</td>
+                          <td>{item.attuned ? "Attuned" : item.attunable ? "Attunable" : item.equipped ? "Equipped" : "Stored"}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan={4}>No inventory entries yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </article>
 
           {(hasMarkdownContent(props.draft.equipmentNotes.additionalTreasure) || hasMarkdownContent(props.draft.equipmentNotes.questItems)) ? (
