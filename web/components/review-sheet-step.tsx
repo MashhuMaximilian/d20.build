@@ -52,6 +52,7 @@ type ReviewSheetProps = {
   selectedBackground: BuiltInBackgroundRecord | null;
   selectedBackgroundFeatureElements: BuiltInElement[];
   selectedClassFeatureElements: BuiltInElement[];
+  selectedExpertiseLabels: string[];
   selectedFeatElements: BuiltInElement[];
   selectedLanguageIds: string[];
   selectedLanguageNames: string[];
@@ -98,6 +99,7 @@ type ReviewStatRow = {
   ability: string;
   total: number;
   proficient: boolean;
+  expertise?: boolean;
 };
 
 type ReviewDetailState =
@@ -795,19 +797,24 @@ function deriveSavingThrowRows(args: {
 function deriveSkillRows(args: {
   draft: CharacterDraft;
   effectiveAbilities: Record<AbilityKey, number>;
+  selectedExpertiseLabels: string[];
   selectedProficiencyLabels: string[];
 }) {
   const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
   const labels = new Set(args.selectedProficiencyLabels.map((value) => value.toLowerCase()));
+  const expertiseLabels = new Set(args.selectedExpertiseLabels.map((value) => value.toLowerCase()));
   return SKILL_ABILITY_MAP.map((skill) => {
-    const proficient = labels.has(skill.label.toLowerCase());
-    const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + (proficient ? proficiencyBonus : 0);
+    const expertise = expertiseLabels.has(skill.label.toLowerCase());
+    const proficient = expertise || labels.has(skill.label.toLowerCase());
+    const tier = expertise ? 2 : proficient ? 1 : 0;
+    const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + proficiencyBonus * tier;
     return {
       id: `skill-${skill.id}`,
       label: skill.label,
       ability: ABILITY_LABELS[skill.ability].slice(0, 3),
       total,
       proficient,
+      expertise,
     } satisfies ReviewStatRow;
   });
 }
@@ -887,11 +894,16 @@ function deriveFeatureActionCards(elements: BuiltInElement[]) {
   );
 }
 
-function deriveSpellGroupCards(groups: SpellSelectionGroup[], spells: BuiltInElement[], selectedSpellIds: string[]) {
+function deriveSpellGroupCards(
+  groups: SpellSelectionGroup[],
+  spells: BuiltInElement[],
+  spellSelections: CharacterDraft["spellSelections"],
+) {
   const spellsById = new Map(spells.map((spell) => [spell.id, spell]));
 
   return groups.map((group) => {
-    const ids = [...new Set([...(group.grantedSpellIds ?? []), ...selectedSpellIds.filter((id) => (group.availableSpellIds ?? []).includes(id))])];
+    const selectedIds = spellSelections[group.id] ?? [];
+    const ids = [...new Set([...(group.grantedSpellIds ?? []), ...selectedIds])];
     const entries = ids
       .map((id) => spellsById.get(id))
       .filter((spell): spell is BuiltInElement => Boolean(spell));
@@ -958,7 +970,7 @@ function buildFeatureSections(args: {
   selectedRace: BuiltInRaceRecord | null;
   selectedRacialTraitElements: BuiltInElement[];
   selectedSubrace: BuiltInElement | null;
-  manualFeatureGrants: CharacterManualGrant[];
+  manualGrantsByKind: Record<CharacterManualGrantKind, CharacterManualGrant[]>;
 }) {
   const sections: Array<{ id: string; title: string; items: Array<BuiltInElement | CharacterManualGrant> }> = [];
 
@@ -1030,8 +1042,24 @@ function buildFeatureSections(args: {
     sections.push({ id: "feats", title: "Feats", items: uniqueByNameAndSource(args.selectedFeatElements) });
   }
 
-  if (args.manualFeatureGrants.length) {
-    sections.push({ id: "manual", title: "Manual / DM feature grants", items: args.manualFeatureGrants });
+  if (args.manualGrantsByKind.feature.length) {
+    sections.push({ id: "manual-feature", title: "Manual / DM feature grants", items: args.manualGrantsByKind.feature });
+  }
+
+  if (args.manualGrantsByKind.feat.length) {
+    sections.push({ id: "manual-feat", title: "Manual / DM feat grants", items: args.manualGrantsByKind.feat });
+  }
+
+  if (args.manualGrantsByKind.proficiency.length) {
+    sections.push({ id: "manual-proficiency", title: "Manual / DM proficiencies", items: args.manualGrantsByKind.proficiency });
+  }
+
+  if (args.manualGrantsByKind.language.length) {
+    sections.push({ id: "manual-language", title: "Manual / DM languages", items: args.manualGrantsByKind.language });
+  }
+
+  if (args.manualGrantsByKind.asi.length) {
+    sections.push({ id: "manual-asi", title: "Manual / DM ASIs", items: args.manualGrantsByKind.asi });
   }
 
   return sections;
@@ -1301,8 +1329,8 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
   );
 
   const spellGroupCards = useMemo(
-    () => deriveSpellGroupCards(props.spellGroups, props.spells, props.selectedSpellIds),
-    [props.selectedSpellIds, props.spellGroups, props.spells],
+    () => deriveSpellGroupCards(props.spellGroups, props.spells, props.draft.spellSelections),
+    [props.draft.spellSelections, props.spellGroups, props.spells],
   );
 
   const featureSections = useMemo(
@@ -1316,10 +1344,10 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         selectedRace: props.selectedRace,
         selectedRacialTraitElements: props.selectedRacialTraitElements,
         selectedSubrace: props.selectedSubrace,
-        manualFeatureGrants: props.manualGrantsByKind.feature,
+        manualGrantsByKind: props.manualGrantsByKind,
       }),
     [
-      props.manualGrantsByKind.feature,
+      props.manualGrantsByKind,
       props.selectedBackground,
       props.selectedBackgroundFeatureElements,
       props.selectedClassFeatureElements,
@@ -1377,6 +1405,11 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     [props.manualGrantsByKind.language, props.selectedLanguageIds, props.selectedLanguageNames],
   );
 
+  const selectedExpertiseLabels = useMemo(
+    () => uniqueStrings(props.selectedExpertiseLabels.map(normalizeReviewLabel)),
+    [props.selectedExpertiseLabels],
+  );
+
   const allEffectLines = [
     ...props.equipmentEffectSummary.acLines,
     ...props.equipmentEffectSummary.weaponLines,
@@ -1411,9 +1444,10 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
       deriveSkillRows({
         draft: props.draft,
         effectiveAbilities: props.effectiveAbilities,
+        selectedExpertiseLabels: props.selectedExpertiseLabels,
         selectedProficiencyLabels,
       }),
-    [props.draft, props.effectiveAbilities, selectedProficiencyLabels],
+    [props.draft, props.effectiveAbilities, props.selectedExpertiseLabels, selectedProficiencyLabels],
   );
 
   const passivePerception = useMemo(() => derivePassivePerception(skillRows), [skillRows]);
@@ -1581,6 +1615,14 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                     : <span className="review-sheet__chip review-sheet__chip--muted">None detected</span>}
                 </div>
               </div>
+              <div className="review-sheet__listBlock">
+                <strong>Expertise</strong>
+                <div className="review-sheet__chipList">
+                  {selectedExpertiseLabels.length
+                    ? selectedExpertiseLabels.map((value) => <span className="review-sheet__chip review-sheet__chip--accent" key={value}>{value}</span>)
+                    : <span className="review-sheet__chip review-sheet__chip--muted">None detected</span>}
+                </div>
+              </div>
               <div className="review-sheet__listBlock review-sheet__listBlock--full">
                 <strong>Languages</strong>
                 <div className="review-sheet__chipList">
@@ -1617,7 +1659,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             <div className="review-sheet__scoreRows">
               {skillRows.map((row) => (
                 <div className="review-sheet__scoreRow" key={row.id}>
-                  <span className={`review-sheet__scoreDot${row.proficient ? " is-proficient" : ""}`} />
+                  <span className={`review-sheet__scoreDot${row.expertise ? " is-expertise" : row.proficient ? " is-proficient" : ""}`} />
                   <strong>{row.total >= 0 ? `+${row.total}` : row.total}</strong>
                   <span>{row.label}</span>
                   <em>({row.ability})</em>
@@ -1757,6 +1799,40 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                 ) : (
                   <p className="builder-summary__meta">No spell groups are active for this build.</p>
                 )}
+                {props.manualGrantsByKind.spell.length ? (
+                  <article className="review-sheet__spellGroupCard">
+                    <div className="review-sheet__headlineRow">
+                      <div>
+                        <strong className="review-sheet__sectionTitle">Manual / DM spell grants</strong>
+                        <p className="builder-summary__meta">Additional spell grants outside normal builder restrictions.</p>
+                      </div>
+                      <span className="review-sheet__statusPill">{props.manualGrantsByKind.spell.length} entries</span>
+                    </div>
+                    <div className="review-sheet__compactList">
+                      {props.manualGrantsByKind.spell.map((grant) => (
+                        <button
+                          className="review-sheet__compactRow review-sheet__compactRow--spell"
+                          key={grant.id}
+                          type="button"
+                          onClick={() =>
+                            setDetail({
+                              kind: "manual-grant",
+                              grant,
+                              badges: uniqueStrings(["SPELL", grant.source || "Manual / DM grant"]),
+                            })
+                          }
+                        >
+                          <div className="review-sheet__compactMain">
+                            <strong>{grant.name} <span className="review-sheet__inlineMeta">· Manual / DM spell grant</span></strong>
+                          </div>
+                          <div className="review-sheet__compactMeta">
+                            <p>{grant.note || grant.description || "Open details"}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ) : null}
               </div>
             ) : (
               <div className="review-sheet__tableWrap">
@@ -1800,6 +1876,23 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                     ) : (
                       <tr><td colSpan={4}>No spell groups are active for this build.</td></tr>
                     )}
+                    {props.manualGrantsByKind.spell.map((grant) => (
+                      <tr
+                        key={grant.id}
+                        onClick={() =>
+                          setDetail({
+                            kind: "manual-grant",
+                            grant,
+                            badges: uniqueStrings(["SPELL", grant.source || "Manual / DM grant"]),
+                          })
+                        }
+                      >
+                        <td>{grant.name}</td>
+                        <td>Manual / DM spell grants</td>
+                        <td>Grant</td>
+                        <td>{grant.note || grant.description || "Open details"}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

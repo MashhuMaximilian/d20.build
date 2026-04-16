@@ -1006,9 +1006,10 @@ a {
 }
 
 .review-sheet__featureSectionGrid {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .review-sheet__actionCard,
@@ -1119,6 +1120,12 @@ a {
 
 .review-sheet__chip--muted {
   opacity: 0.82;
+}
+
+.review-sheet__chip--accent {
+  border-color: rgba(146, 38, 16, 0.22);
+  background: rgba(146, 38, 16, 0.08);
+  color: var(--accent-strong);
 }
 
 .review-sheet__compactList {
@@ -1253,6 +1260,7 @@ a {
 .review-sheet__featureTile {
   appearance: none;
   display: grid;
+  flex: 1 1 280px;
   gap: 8px;
   align-content: start;
   width: 100%;
@@ -1271,6 +1279,7 @@ a {
     box-shadow 120ms ease,
     transform 120ms ease;
 }
+
 
 .review-sheet__featureTile:hover {
   border-color: rgba(146, 38, 16, 0.26);
@@ -1420,6 +1429,12 @@ a {
 .review-sheet__scoreDot.is-proficient {
   background: rgba(146, 38, 16, 0.88);
   border-color: rgba(146, 38, 16, 0.88);
+}
+
+.review-sheet__scoreDot.is-expertise {
+  background: rgba(146, 38, 16, 0.88);
+  border-color: rgba(146, 38, 16, 0.88);
+  box-shadow: inset 0 0 0 2px rgba(255, 252, 246, 0.92);
 }
 
 .equipment-step {

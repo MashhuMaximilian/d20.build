@@ -419,6 +419,48 @@ function humanizeGrantedId(value: string) {
     .replace(/\bCant\b/g, "Cant");
 }
 
+const EXPERTISE_SKILL_LABELS: Record<string, string> = {
+  acrobatics: "Acrobatics",
+  animalhandling: "Animal Handling",
+  arcana: "Arcana",
+  athletics: "Athletics",
+  deception: "Deception",
+  history: "History",
+  insight: "Insight",
+  intimidation: "Intimidation",
+  investigation: "Investigation",
+  medicine: "Medicine",
+  nature: "Nature",
+  perception: "Perception",
+  performance: "Performance",
+  persuasion: "Persuasion",
+  religion: "Religion",
+  sleightofhand: "Sleight of Hand",
+  stealth: "Stealth",
+  survival: "Survival",
+};
+
+function extractExpertiseLabelsFromElement(element: BuiltInElement) {
+  const labels = new Set<string>();
+  const directMatch = element.name.match(/(?:skill\s+)?expertise\s*\(([^)]+)\)/i);
+  if (directMatch?.[1]) {
+    labels.add(directMatch[1].trim());
+  }
+
+  element.rules.forEach((rule) => {
+    if (rule.kind !== "stat" || rule.bonus !== "double" || !rule.name.endsWith(":proficiency")) {
+      return;
+    }
+    const baseName = rule.name.slice(0, -":proficiency".length).replace(/[^a-z]/gi, "").toLowerCase();
+    const skillLabel = EXPERTISE_SKILL_LABELS[baseName];
+    if (skillLabel) {
+      labels.add(skillLabel);
+    }
+  });
+
+  return [...labels];
+}
+
 function collectStatBonusesFromElements(elements: BuiltInElement[]) {
   const values = elements.flatMap((element) =>
     element.rules.flatMap((rule) =>
@@ -1847,6 +1889,25 @@ export function BuilderEditor({
         .filter((element) => element.type === "Proficiency")
         .map((element) => element.name),
     [selectedProgressionElements],
+  );
+  const selectedExpertiseLabels = useMemo(
+    () =>
+      [...new Set(
+        [
+          ...selectedProgressionElements,
+          ...selectedClassFeatureElements,
+          ...selectedFeatElements,
+          ...selectedBackgroundFeatureElements,
+          ...selectedRacialTraitElements,
+        ].flatMap(extractExpertiseLabelsFromElement),
+      )],
+    [
+      selectedBackgroundFeatureElements,
+      selectedClassFeatureElements,
+      selectedFeatElements,
+      selectedProgressionElements,
+      selectedRacialTraitElements,
+    ],
   );
   const selectedLanguageIds = useMemo(
     () => [
@@ -3370,6 +3431,7 @@ export function BuilderEditor({
             selectedLanguageIds={selectedLanguageIds}
             selectedLanguageNames={selectedLanguageNames}
             selectedProgressionElements={selectedProgressionElements}
+            selectedExpertiseLabels={selectedExpertiseLabels}
             selectedProficiencyIds={selectedProficiencyIds}
             selectedProficiencyNames={selectedProficiencyNames}
             selectedRace={selectedRace}
