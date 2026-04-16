@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import { hasMarkdownContent, MarkdownRenderer } from "@/components/markdown-editor";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
@@ -20,11 +20,14 @@ import { getInventoryEffectSummary } from "@/lib/equipment/inventory";
 import {
   getPreparationCapacity,
   getSpellCastingTime,
+  getSpellComponents,
   getSpellDuration,
   getSpellLevel,
   getSpellRange,
   getSpellSchool,
   getSpellSlotSummary,
+  isSpellConcentration,
+  isSpellRitual,
   type SpellSelectionGroup,
 } from "@/lib/progression/spellcasting";
 
@@ -79,6 +82,34 @@ type ReviewActionCard = {
   source?: string;
 };
 
+type ReviewDetailState =
+  | {
+      kind: "spell";
+      spell: BuiltInElement;
+      groupLabel: string;
+      badges: string[];
+    }
+  | {
+      kind: "feature";
+      feature: BuiltInElement;
+      badges: string[];
+    }
+  | {
+      kind: "manual-grant";
+      grant: CharacterManualGrant;
+      badges: string[];
+    }
+  | {
+      kind: "item";
+      item: CharacterDraft["inventoryItems"][number];
+      badges: string[];
+    }
+  | {
+      kind: "action";
+      action: ReviewActionCard;
+      badges: string[];
+    };
+
 const TAB_OPTIONS: Array<{ id: ReviewSheetTab; label: string; eyebrow: string }> = [
   { id: "character", label: "Character", eyebrow: "Overview" },
   { id: "actions", label: "Actions & Spells", eyebrow: "Play surface" },
@@ -121,6 +152,55 @@ function uniqueById<T extends { id: string }>(items: T[]) {
       return false;
     }
     seen.add(item.id);
+    return true;
+  });
+}
+
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function stripHtml(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sentencePreview(value: string, fallback = "No short summary available.") {
+  const cleaned = stripHtml(value);
+  if (!cleaned) {
+    return fallback;
+  }
+  const sentence = cleaned.match(/.+?[.!?](?:\s|$)/)?.[0]?.trim() ?? cleaned;
+  return sentence.length > 180 ? `${sentence.slice(0, 177)}...` : sentence;
+}
+
+function titleizeBackstoryKey(key: string) {
+  switch (key) {
+    case "alliesAndOrganizations":
+      return "Allies and Organizations";
+    case "additionalFeatures":
+      return "Additional Features";
+    case "personalityTraits":
+      return "Personality Traits";
+    default:
+      return key
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/^./, (char) => char.toUpperCase());
+  }
+}
+
+function uniqueByNameAndSource<T extends { name: string; source?: string }>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = `${item.name.toLowerCase()}::${(item.source ?? "").toLowerCase()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
     return true;
   });
 }
@@ -280,6 +360,51 @@ function deriveSpellGroupCards(groups: SpellSelectionGroup[], spells: BuiltInEle
   });
 }
 
+function getFeaturePreview(element: BuiltInElement) {
+  if (element.prerequisite) {
+    return element.prerequisite;
+  }
+
+  if (element.descriptionHtml) {
+    return sentencePreview(element.descriptionHtml);
+  }
+
+  return element.description || "No short summary available.";
+}
+
+function getSpellPreview(spell: BuiltInElement) {
+  return `${getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`} • ${getSpellSchool(spell)} • ${getSpellCastingTime(spell)}`;
+}
+
+function getSpellBadges(spell: BuiltInElement) {
+  return uniqueStrings([
+    getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
+    getSpellSchool(spell),
+    isSpellRitual(spell) ? "Ritual" : "",
+    isSpellConcentration(spell) ? "Concentration" : "",
+  ]);
+}
+
+function getInventoryItemBadges(item: CharacterDraft["inventoryItems"][number]) {
+  return uniqueStrings([
+    item.category,
+    item.family ?? "",
+    item.rarity ?? "",
+    item.equipped ? "Equipped" : "Stored",
+    item.attuned ? "Attuned" : item.attunable ? "Attunable" : "",
+  ]);
+}
+
+function getInventoryItemPreview(item: CharacterDraft["inventoryItems"][number]) {
+  const parts = uniqueStrings([
+    item.baseDamage || item.damage || "",
+    item.attackBonus ? `Modifier ${item.attackBonus}` : "",
+    item.notes ? sentencePreview(item.notes) : "",
+  ]);
+
+  return parts.join(" • ") || "No active mechanics shown.";
+}
+
 function buildFeatureSections(args: {
   selectedBackground: BuiltInBackgroundRecord | null;
   selectedBackgroundFeatureElements: BuiltInElement[];
@@ -293,33 +418,26 @@ function buildFeatureSections(args: {
 }) {
   const sections: Array<{ id: string; title: string; items: Array<BuiltInElement | CharacterManualGrant> }> = [];
 
-  const raceItems = [
-    ...(args.selectedRace ? [args.selectedRace.race] : []),
-    ...(args.selectedSubrace ? [args.selectedSubrace] : []),
-    ...args.selectedRacialTraitElements,
-  ];
+  const raceItems = [...args.selectedRacialTraitElements];
   if (raceItems.length) {
-    sections.push({ id: "race", title: "Race & lineage", items: uniqueById(raceItems as BuiltInElement[]) });
+    sections.push({ id: "race", title: "Race & lineage", items: uniqueByNameAndSource(raceItems as BuiltInElement[]) });
   }
 
   if (args.selectedClassFeatureElements.length || args.selectedProgressionElements.length) {
     sections.push({
       id: "class",
       title: "Class, subclass, and build choices",
-      items: uniqueById([...args.selectedClassFeatureElements, ...args.selectedProgressionElements]),
+      items: uniqueByNameAndSource([...args.selectedClassFeatureElements, ...args.selectedProgressionElements]),
     });
   }
 
-  const backgroundItems = [
-    ...(args.selectedBackground ? [args.selectedBackground.background] : []),
-    ...args.selectedBackgroundFeatureElements,
-  ];
+  const backgroundItems = [...args.selectedBackgroundFeatureElements];
   if (backgroundItems.length) {
-    sections.push({ id: "background", title: "Background", items: uniqueById(backgroundItems as BuiltInElement[]) });
+    sections.push({ id: "background", title: "Background", items: uniqueByNameAndSource(backgroundItems as BuiltInElement[]) });
   }
 
   if (args.selectedFeatElements.length) {
-    sections.push({ id: "feats", title: "Feats", items: uniqueById(args.selectedFeatElements) });
+    sections.push({ id: "feats", title: "Feats", items: uniqueByNameAndSource(args.selectedFeatElements) });
   }
 
   if (args.manualFeatureGrants.length) {
@@ -329,22 +447,182 @@ function buildFeatureSections(args: {
   return sections;
 }
 
-function renderManualGrant(grant: CharacterManualGrant) {
+function renderManualGrant(grant: CharacterManualGrant, onOpen: () => void) {
   return (
-    <article className="review-sheet__featureCard" key={grant.id}>
-      <span className="builder-panel__label">Manual grant</span>
-      <strong className="builder-summary__name">{grant.name}</strong>
-      <p className="builder-summary__meta">
-        {grant.source || "Manual / DM grant"}
-        {grant.note ? ` • ${grant.note}` : ""}
-      </p>
-      {grant.description ? <p className="builder-summary__meta">{grant.description}</p> : null}
-    </article>
+    <button className="review-sheet__compactRow" key={grant.id} type="button" onClick={onOpen}>
+      <div className="review-sheet__compactMain">
+        <strong>{grant.name}</strong>
+        <span>{grant.source || "Manual / DM grant"}</span>
+      </div>
+      <div className="review-sheet__compactMeta">
+        <span className="review-sheet__chip">Manual grant</span>
+        <p>{grant.note || grant.description || "Open details"}</p>
+      </div>
+    </button>
+  );
+}
+
+function ReviewDetailDrawer({
+  detail,
+  onClose,
+}: {
+  detail: ReviewDetailState | null;
+  onClose: () => void;
+}) {
+  if (!detail) {
+    return null;
+  }
+
+  let title = "";
+  let subtitle = "";
+  let body: ReactNode = null;
+
+  if (detail.kind === "spell") {
+    title = detail.spell.name;
+    subtitle = detail.spell.source;
+    body = (
+      <>
+        <div className="review-sheet__detailGrid">
+          <div className="review-sheet__detailStat">
+            <span>Level</span>
+            <strong>{getSpellLevel(detail.spell) === 0 ? "Cantrip" : getSpellLevel(detail.spell)}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>School</span>
+            <strong>{getSpellSchool(detail.spell)}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Casting time</span>
+            <strong>{getSpellCastingTime(detail.spell)}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Range</span>
+            <strong>{getSpellRange(detail.spell)}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Duration</span>
+            <strong>{getSpellDuration(detail.spell)}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Components</span>
+            <strong>{getSpellComponents(detail.spell) || "—"}</strong>
+          </div>
+        </div>
+        <div className="review-sheet__detailBody">
+          <FeatureContent element={detail.spell} />
+        </div>
+      </>
+    );
+  }
+
+  if (detail.kind === "feature") {
+    title = detail.feature.name;
+    subtitle = detail.feature.source || detail.feature.type;
+    body = (
+      <div className="review-sheet__detailBody">
+        <FeatureContent element={detail.feature} />
+      </div>
+    );
+  }
+
+  if (detail.kind === "manual-grant") {
+    title = detail.grant.name;
+    subtitle = detail.grant.source || "Manual / DM grant";
+    body = (
+      <div className="review-sheet__detailBody">
+        {detail.grant.note ? <p className="builder-summary__meta">{detail.grant.note}</p> : null}
+        {detail.grant.description ? <p className="builder-summary__meta">{detail.grant.description}</p> : null}
+      </div>
+    );
+  }
+
+  if (detail.kind === "item") {
+    title = detail.item.name;
+    subtitle = detail.item.sourceLabel;
+    body = (
+      <>
+        <div className="review-sheet__detailGrid">
+          <div className="review-sheet__detailStat">
+            <span>Category</span>
+            <strong>{detail.item.category}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Quantity</span>
+            <strong>{detail.item.quantity}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>State</span>
+            <strong>{detail.item.equipped ? "Equipped" : "Stored"}</strong>
+          </div>
+          <div className="review-sheet__detailStat">
+            <span>Attunement</span>
+            <strong>{detail.item.attuned ? "Attuned" : detail.item.attunable ? "Attunable" : "No attunement"}</strong>
+          </div>
+          {detail.item.baseDamage || detail.item.damage ? (
+            <div className="review-sheet__detailStat">
+              <span>Damage</span>
+              <strong>{detail.item.damage || detail.item.baseDamage}</strong>
+            </div>
+          ) : null}
+          {detail.item.attackBonus ? (
+            <div className="review-sheet__detailStat">
+              <span>Modifier</span>
+              <strong>{detail.item.attackBonus}</strong>
+            </div>
+          ) : null}
+        </div>
+        {detail.item.detailHtml ? (
+          <div className="review-sheet__detailBody" dangerouslySetInnerHTML={{ __html: detail.item.detailHtml }} />
+        ) : detail.item.notes ? (
+          <div className="review-sheet__detailBody">
+            <p className="builder-summary__meta">{detail.item.notes}</p>
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  if (detail.kind === "action") {
+    title = detail.action.title;
+    subtitle = detail.action.source || detail.action.timing;
+    body = (
+      <div className="review-sheet__detailBody">
+        <p className="builder-summary__meta">{detail.action.summary}</p>
+        {detail.action.cost ? <p className="builder-summary__meta">Cost: {detail.action.cost}</p> : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="review-sheet__detailOverlay" role="dialog" aria-modal="true">
+      <button aria-label="Close details" className="review-sheet__detailBackdrop" type="button" onClick={onClose} />
+      <aside className="review-sheet__detailDrawer">
+        <div className="review-sheet__detailHeader">
+          <div className="review-sheet__detailTitle">
+            <span className="builder-panel__label">Details</span>
+            <strong className="builder-summary__name">{title}</strong>
+            <p className="builder-summary__meta">{subtitle}</p>
+          </div>
+          <button className="builder-button builder-button--ghost" type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        <div className="review-sheet__chipList">
+          {detail.badges.map((badge) => (
+            <span className="review-sheet__chip" key={badge}>
+              {badge}
+            </span>
+          ))}
+        </div>
+        {body}
+      </aside>
+    </div>
   );
 }
 
 export function ReviewSheetStep(props: ReviewSheetProps) {
   const [activeTab, setActiveTab] = useState<ReviewSheetTab>("character");
+  const [detail, setDetail] = useState<ReviewDetailState | null>(null);
 
   const resources = useMemo(
     () =>
@@ -427,6 +705,32 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     ...props.navigationWarnings,
   ].filter(Boolean);
 
+  const selectedProficiencyLabels = useMemo(
+    () =>
+      uniqueStrings([
+        ...props.selectedProficiencyNames,
+        ...props.selectedProficiencyIds.map(humanizeGrantedId),
+        ...props.manualGrantsByKind.proficiency.map((grant) => grant.name),
+      ]),
+    [props.manualGrantsByKind.proficiency, props.selectedProficiencyIds, props.selectedProficiencyNames],
+  );
+
+  const selectedLanguageLabels = useMemo(
+    () =>
+      uniqueStrings([
+        ...props.selectedLanguageNames,
+        ...props.selectedLanguageIds.map(humanizeGrantedId),
+        ...props.manualGrantsByKind.language.map((grant) => grant.name),
+      ]),
+    [props.manualGrantsByKind.language, props.selectedLanguageIds, props.selectedLanguageNames],
+  );
+
+  const allEffectLines = [
+    ...props.equipmentEffectSummary.acLines,
+    ...props.equipmentEffectSummary.weaponLines,
+    ...props.equipmentEffectSummary.itemGrantLines,
+  ];
+
   return (
     <section className="builder-stepPanel review-sheet">
       <div className="builder-stepPanel__intro">
@@ -455,20 +759,28 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         <div className="review-sheet__grid">
           <article className="builder-review__card review-sheet__card--span2">
             <span className="builder-panel__label">Readiness</span>
-            <strong className="builder-summary__name">{props.canSave ? "Ready to save" : "Needs attention"}</strong>
-            <p className="builder-summary__meta">
-              {props.canSave
-                ? "The guided build is in a saveable state."
-                : props.saveValidationMessage || "Finish the remaining blockers before saving."}
-            </p>
-            <div className="review-sheet__checklist">
-              {props.completionChecklist.map((item) => (
-                <div className={`review-sheet__checkItem${item.done ? " is-complete" : " is-pending"}`} key={item.label}>
-                  <span>{item.done ? "Done" : "Pending"}</span>
-                  <strong>{item.label}</strong>
-                </div>
-              ))}
+            <div className="review-sheet__headlineRow">
+              <div>
+                <strong className="builder-summary__name">{props.canSave ? "Ready to save" : "Needs attention"}</strong>
+                <p className="builder-summary__meta">
+                  {props.canSave
+                    ? "The guided build is in a saveable state."
+                    : props.saveValidationMessage || "Finish the remaining blockers before saving."}
+                </p>
+              </div>
+              <div className="review-sheet__statusPill">{props.completionChecklist.filter((item) => item.done).length}/{props.completionChecklist.length} steps complete</div>
             </div>
+            <details className="review-sheet__foldout">
+              <summary>Builder checklist</summary>
+              <div className="review-sheet__checklist">
+                {props.completionChecklist.map((item) => (
+                  <div className={`review-sheet__checkItem${item.done ? " is-complete" : " is-pending"}`} key={item.label}>
+                    <span>{item.done ? "Done" : "Pending"}</span>
+                    <strong>{item.label}</strong>
+                  </div>
+                ))}
+              </div>
+            </details>
             {readinessWarnings.length ? (
               <div className="review-sheet__warningBlock">
                 {readinessWarnings.map((warning) => (
@@ -528,24 +840,30 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             <div className="review-sheet__twoColumn">
               <div className="review-sheet__listBlock">
                 <strong>Armor and weapons</strong>
-                <p className="builder-summary__meta">Armor: {props.equipmentProficiencies.armor.length ? props.equipmentProficiencies.armor.join(", ") : "None detected"}</p>
-                <p className="builder-summary__meta">Weapons: {props.equipmentProficiencies.weapons.length ? props.equipmentProficiencies.weapons.join(", ") : "None detected"}</p>
+                <div className="review-sheet__chipList">
+                  {props.equipmentProficiencies.armor.length
+                    ? props.equipmentProficiencies.armor.map((value) => <span className="review-sheet__chip" key={`armor-${value}`}>Armor: {value}</span>)
+                    : <span className="review-sheet__chip review-sheet__chip--muted">No armor proficiencies detected</span>}
+                  {props.equipmentProficiencies.weapons.length
+                    ? props.equipmentProficiencies.weapons.map((value) => <span className="review-sheet__chip" key={`weapon-${value}`}>Weapon: {value}</span>)
+                    : <span className="review-sheet__chip review-sheet__chip--muted">No weapon proficiencies detected</span>}
+                </div>
               </div>
               <div className="review-sheet__listBlock">
                 <strong>Selected proficiencies</strong>
-                <p className="builder-summary__meta">
-                  {[...props.selectedProficiencyNames, ...props.selectedProficiencyIds.map(humanizeGrantedId), ...props.manualGrantsByKind.proficiency.map((grant) => grant.name)]
-                    .filter(Boolean)
-                    .join(", ") || "None detected"}
-                </p>
+                <div className="review-sheet__chipList">
+                  {selectedProficiencyLabels.length
+                    ? selectedProficiencyLabels.map((value) => <span className="review-sheet__chip" key={value}>{value}</span>)
+                    : <span className="review-sheet__chip review-sheet__chip--muted">None detected</span>}
+                </div>
               </div>
               <div className="review-sheet__listBlock review-sheet__listBlock--full">
                 <strong>Languages</strong>
-                <p className="builder-summary__meta">
-                  {[...props.selectedLanguageNames, ...props.selectedLanguageIds.map(humanizeGrantedId), ...props.manualGrantsByKind.language.map((grant) => grant.name)]
-                    .filter(Boolean)
-                    .join(", ") || "None detected"}
-                </p>
+                <div className="review-sheet__chipList">
+                  {selectedLanguageLabels.length
+                    ? selectedLanguageLabels.map((value) => <span className="review-sheet__chip" key={value}>{value}</span>)
+                    : <span className="review-sheet__chip review-sheet__chip--muted">None detected</span>}
+                </div>
               </div>
             </div>
           </article>
@@ -557,17 +875,33 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           <article className="builder-review__card review-sheet__card--span2">
             <span className="builder-panel__label">Action surface</span>
             <p className="builder-summary__meta">Compact table-facing actions derived from equipped gear and known action-like features.</p>
-            <div className="review-sheet__actionGrid">
+            <div className="review-sheet__compactList">
               {actionCards.length ? (
                 actionCards.map((card) => (
-                  <article className="review-sheet__actionCard" key={card.id}>
-                    <span className="builder-panel__label">{card.timing}</span>
-                    <strong className="builder-summary__name">{card.title}</strong>
-                    <p className="builder-summary__meta">{card.summary}</p>
-                    <p className="builder-summary__meta">
-                      {[card.cost, card.source].filter(Boolean).join(" • ") || "Always available"}
-                    </p>
-                  </article>
+                  <button
+                    className="review-sheet__compactRow"
+                    key={card.id}
+                    type="button"
+                    onClick={() =>
+                      setDetail({
+                        kind: "action",
+                        action: card,
+                        badges: uniqueStrings([card.timing, card.cost ?? "", card.source ?? ""]),
+                      })
+                    }
+                  >
+                    <div className="review-sheet__compactMain">
+                      <strong>{card.title}</strong>
+                      <span>{card.timing}</span>
+                    </div>
+                    <div className="review-sheet__compactMeta">
+                      <div className="review-sheet__chipList">
+                        {card.cost ? <span className="review-sheet__chip">{card.cost}</span> : null}
+                        {card.source ? <span className="review-sheet__chip">{card.source}</span> : null}
+                      </div>
+                      <p>{card.summary}</p>
+                    </div>
+                  </button>
                 ))
               ) : (
                 <p className="builder-summary__meta">No compact actions detected yet. Martial attacks will appear from equipped weapons, and explicit feature actions will show as the build grows.</p>
@@ -581,21 +915,49 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
               {spellGroupCards.length ? (
                 spellGroupCards.map(({ group, entries }) => (
                   <article className="review-sheet__spellGroupCard" key={group.id}>
-                    <span className="builder-panel__label">{group.ownerLabel}</span>
-                    <strong className="builder-summary__name">{group.title}</strong>
-                    <p className="builder-summary__meta">
-                      {group.kind === "granted"
-                        ? `${entries.length} granted`
-                        : `${props.draft.spellSelections[group.id]?.length ?? 0}/${group.maxSelections} selected`}
-                    </p>
+                    <div className="review-sheet__headlineRow">
+                      <div>
+                        <span className="builder-panel__label">{group.ownerLabel}</span>
+                        <strong className="review-sheet__sectionTitle">{group.title}</strong>
+                        <p className="builder-summary__meta">
+                          {group.kind === "granted"
+                            ? `${entries.length} granted`
+                            : `${props.draft.spellSelections[group.id]?.length ?? 0}/${group.maxSelections} selected`}
+                        </p>
+                      </div>
+                      <span className="review-sheet__statusPill">{entries.length} entries</span>
+                    </div>
                     {entries.length ? (
-                      <div className="review-sheet__spellList">
+                      <div className="review-sheet__compactList">
                         {entries.map((spell) => (
-                          <article className="review-sheet__spellCard" key={`${group.id}-${spell.id}`}>
-                            <strong>{spell.name}</strong>
-                            <p>{getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`} • {getSpellSchool(spell)}</p>
-                            <p>{getSpellCastingTime(spell)} • {getSpellRange(spell)} • {getSpellDuration(spell)}</p>
-                          </article>
+                          <button
+                            className="review-sheet__compactRow review-sheet__compactRow--spell"
+                            key={`${group.id}-${spell.id}`}
+                            type="button"
+                            onClick={() =>
+                              setDetail({
+                                kind: "spell",
+                                spell,
+                                groupLabel: group.title,
+                                badges: uniqueStrings([...getSpellBadges(spell), group.title, group.ownerLabel]),
+                              })
+                            }
+                          >
+                            <div className="review-sheet__compactMain">
+                              <strong>{spell.name}</strong>
+                              <span>{group.title}</span>
+                            </div>
+                            <div className="review-sheet__compactMeta">
+                              <div className="review-sheet__chipList">
+                                {getSpellBadges(spell).map((badge) => (
+                                  <span className="review-sheet__chip" key={`${spell.id}-${badge}`}>
+                                    {badge}
+                                  </span>
+                                ))}
+                              </div>
+                              <p>{getSpellPreview(spell)} • {getSpellRange(spell)} • {getSpellDuration(spell)}</p>
+                            </div>
+                          </button>
                         ))}
                       </div>
                     ) : (
@@ -617,16 +979,41 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             featureSections.map((section) => (
               <article className="builder-review__card" key={section.id}>
                 <span className="builder-panel__label">{section.title}</span>
-                <div className="review-sheet__featureGrid">
+                <div className="review-sheet__compactList">
                   {section.items.map((item) =>
                     "kind" in item ? (
-                      renderManualGrant(item)
+                      renderManualGrant(item, () =>
+                        setDetail({
+                          kind: "manual-grant",
+                          grant: item,
+                          badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
+                        }),
+                      )
                     ) : (
-                      <article className="review-sheet__featureCard" key={item.id}>
-                        <span className="builder-panel__label">{item.source || item.type}</span>
-                        <strong className="builder-summary__name">{item.name}</strong>
-                        <FeatureContent element={item} />
-                      </article>
+                      <button
+                        className="review-sheet__compactRow"
+                        key={item.id}
+                        type="button"
+                        onClick={() =>
+                          setDetail({
+                            kind: "feature",
+                            feature: item,
+                            badges: uniqueStrings([item.type, item.source || ""]),
+                          })
+                        }
+                      >
+                        <div className="review-sheet__compactMain">
+                          <strong>{item.name}</strong>
+                          <span>{item.source || item.type}</span>
+                        </div>
+                        <div className="review-sheet__compactMeta">
+                          <div className="review-sheet__chipList">
+                            <span className="review-sheet__chip">{item.type}</span>
+                            {item.prerequisite ? <span className="review-sheet__chip">Prerequisite</span> : null}
+                          </div>
+                          <p>{getFeaturePreview(item)}</p>
+                        </div>
+                      </button>
                     ),
                   )}
                 </div>
@@ -669,17 +1056,9 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
 
           <article className="builder-review__card">
             <span className="builder-panel__label">Equipment effects</span>
-            {[
-              ...props.equipmentEffectSummary.acLines,
-              ...props.equipmentEffectSummary.weaponLines,
-              ...props.equipmentEffectSummary.itemGrantLines,
-            ].length ? (
+            {allEffectLines.length ? (
               <ul className="route-shell__list">
-                {[
-                  ...props.equipmentEffectSummary.acLines,
-                  ...props.equipmentEffectSummary.weaponLines,
-                  ...props.equipmentEffectSummary.itemGrantLines,
-                ].map((line) => (
+                {allEffectLines.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
@@ -693,20 +1072,30 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             <div className="review-sheet__inventoryList">
               {props.draft.inventoryItems.length ? (
                 props.draft.inventoryItems.map((item) => (
-                  <article className="review-sheet__inventoryCard" key={item.id}>
-                    <div>
+                  <button
+                    className="review-sheet__inventoryRow"
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      setDetail({
+                        kind: "item",
+                        item,
+                        badges: getInventoryItemBadges(item),
+                      })
+                    }
+                  >
+                    <div className="review-sheet__compactMain">
                       <strong>{item.name}</strong>
-                      <p>{item.sourceLabel}</p>
+                      <span>{item.sourceLabel}</span>
                     </div>
-                    <div>
-                      <p>{item.category}</p>
-                      <p>Qty {item.quantity}</p>
+                    <div className="review-sheet__inventoryMeta">
+                      <span>{item.category}</span>
+                      <span>Qty {item.quantity}</span>
+                      <span>{item.equipped ? "Equipped" : "Stored"}</span>
+                      <span>{item.attuned ? "Attuned" : item.attunable ? "Attunable" : "No attunement"}</span>
                     </div>
-                    <div>
-                      <p>{item.equipped ? "Equipped" : "Stored"}</p>
-                      <p>{item.attuned ? "Attuned" : item.attunable ? "Attunable" : "No attunement"}</p>
-                    </div>
-                  </article>
+                    <p className="review-sheet__inventoryPreview">{getInventoryItemPreview(item)}</p>
+                  </button>
                 ))
               ) : (
                 <p className="builder-summary__meta">No inventory entries yet.</p>
@@ -737,7 +1126,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           {props.draft.manualGrants.length ? (
             <article className="builder-review__card review-sheet__card--span2">
               <span className="builder-panel__label">Additional build grants</span>
-              <ul className="route-shell__list">
+              <ul className="route-shell__list review-sheet__grantList">
                 {props.draft.manualGrants.map((grant) => (
                   <li key={grant.id}>
                     <strong>{grant.name}</strong> ({grant.kind}
@@ -761,11 +1150,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                   .map(([key, value]) => (
                     <article className="backstory-step__sheetCard" key={key}>
                       <strong className="builder-summary__name">
-                        {key === "alliesAndOrganizations"
-                          ? "Allies and organizations"
-                          : key === "additionalFeatures"
-                            ? "Additional features"
-                            : key.charAt(0).toUpperCase() + key.slice(1)}
+                        {titleizeBackstoryKey(key)}
                       </strong>
                       <MarkdownRenderer compact value={value} />
                     </article>
@@ -780,6 +1165,8 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           )}
         </div>
       ) : null}
+
+      <ReviewDetailDrawer detail={detail} onClose={() => setDetail(null)} />
     </section>
   );
 }
