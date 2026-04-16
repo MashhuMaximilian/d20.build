@@ -915,6 +915,10 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
+.review-sheet__resourceGrid--dense {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
 .review-sheet__twoColumn {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -939,6 +943,12 @@ a {
 .review-sheet__spellGroupGrid,
 .review-sheet__featureGrid {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.review-sheet__featureSectionGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .review-sheet__actionCard,
@@ -1098,6 +1108,12 @@ a {
   line-height: 1.2;
 }
 
+.review-sheet__inlineMeta {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
 .review-sheet__compactMain span {
   color: var(--muted);
   font-size: 0.84rem;
@@ -1117,11 +1133,14 @@ a {
 }
 
 .review-sheet__compactRow--spell {
+  gap: 6px;
   padding: 10px 12px;
 }
 
 .review-sheet__inventoryRow {
-  grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(180px, 0.7fr);
+  gap: 8px 16px;
+  padding: 12px 14px;
 }
 
 .review-sheet__inventoryMeta {
@@ -1131,6 +1150,60 @@ a {
   align-content: start;
   color: var(--copy-soft);
   font-size: 0.86rem;
+}
+
+.review-sheet__featureTile {
+  appearance: none;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  width: 100%;
+  min-height: 118px;
+  padding: 12px 14px;
+  border: 1px solid rgba(146, 38, 16, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.9);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.review-sheet__featureTile:hover {
+  border-color: rgba(146, 38, 16, 0.26);
+  background: rgba(255, 252, 246, 0.96);
+  box-shadow: 0 10px 24px rgba(77, 39, 20, 0.08);
+  transform: translateY(-1px);
+}
+
+.review-sheet__featureTileHeader,
+.review-sheet__featureTileBody {
+  display: grid;
+  gap: 4px;
+}
+
+.review-sheet__featureTileHeader strong {
+  color: var(--accent-strong);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.review-sheet__featureTileHeader span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.review-sheet__featureTileBody p {
+  margin: 0;
+  color: var(--copy-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .review-sheet__grantList li {
@@ -3097,6 +3170,18 @@ a {
 .backstory-step__sheetCard {
   gap: 12px;
   align-content: start;
+}
+
+.review-sheet .backstory-step__sheetCard {
+  padding: 18px;
+  border: 1px solid rgba(146, 38, 16, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 252, 246, 0.94);
+}
+
+.review-sheet .backstory-step__sheetCard .markdown-renderer__surface {
+  padding: 12px 14px;
+  min-height: 110px;
 }
 
 .backstory-step__field--large {

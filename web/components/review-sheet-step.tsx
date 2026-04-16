@@ -6,7 +6,7 @@ import { hasMarkdownContent, MarkdownRenderer } from "@/components/markdown-edit
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
 import type { BuiltInRaceRecord } from "@/lib/builtins/races";
-import type { BuiltInElement } from "@/lib/builtins/types";
+import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 import {
   ABILITY_KEYS,
   ABILITY_LABELS,
@@ -67,6 +67,13 @@ type ReviewSheetProps = {
 };
 
 type ReviewResource = {
+  id: string;
+  label: string;
+  value: string;
+  meta?: string;
+};
+
+type ReviewVital = {
   id: string;
   label: string;
   value: string;
@@ -136,6 +143,115 @@ const FEATURE_ACTION_RULES: Array<{
   { match: /^Misty Visions$/i, timing: "Action", summary: "Cast Silent Image at will without spending a slot.", cost: "At will" },
 ];
 
+const HIT_DIE_BY_CLASS_NAME: Record<string, number> = {
+  artificer: 8,
+  barbarian: 12,
+  bard: 8,
+  bloodhunter: 10,
+  blood_hunter: 10,
+  cleric: 8,
+  druid: 8,
+  fighter: 10,
+  monk: 8,
+  mystic: 8,
+  paladin: 10,
+  psion: 6,
+  pugilist: 8,
+  ranger: 10,
+  rogue: 8,
+  sorcerer: 6,
+  warlock: 8,
+  wizard: 6,
+};
+
+const ARMOR_BASE_RULES: Array<{
+  match: RegExp;
+  base: number;
+  dexCap?: number;
+}> = [
+  { match: /\bpadded\b/i, base: 11 },
+  { match: /\bleather\b/i, base: 11 },
+  { match: /\bstudded leather\b/i, base: 12 },
+  { match: /\bhide\b/i, base: 12, dexCap: 2 },
+  { match: /\bchain shirt\b/i, base: 13, dexCap: 2 },
+  { match: /\bscale mail\b/i, base: 14, dexCap: 2 },
+  { match: /\bbreastplate\b/i, base: 14, dexCap: 2 },
+  { match: /\bhalf plate\b/i, base: 15, dexCap: 2 },
+  { match: /\bring mail\b/i, base: 14, dexCap: 0 },
+  { match: /\bchain mail\b/i, base: 16, dexCap: 0 },
+  { match: /\bsplint\b/i, base: 17, dexCap: 0 },
+  { match: /\bplate\b/i, base: 18, dexCap: 0 },
+];
+
+const FULL_CASTER_SLOT_TABLE: Record<number, number[]> = {
+  1: [2],
+  2: [3],
+  3: [4, 2],
+  4: [4, 3],
+  5: [4, 3, 2],
+  6: [4, 3, 3],
+  7: [4, 3, 3, 1],
+  8: [4, 3, 3, 2],
+  9: [4, 3, 3, 3, 1],
+  10: [4, 3, 3, 3, 2],
+  11: [4, 3, 3, 3, 2, 1],
+  12: [4, 3, 3, 3, 2, 1],
+  13: [4, 3, 3, 3, 2, 1, 1],
+  14: [4, 3, 3, 3, 2, 1, 1],
+  15: [4, 3, 3, 3, 2, 1, 1, 1],
+  16: [4, 3, 3, 3, 2, 1, 1, 1],
+  17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
+  18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
+  19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
+  20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
+};
+
+const HALF_CASTER_SLOT_TABLE: Record<number, number[]> = {
+  1: [],
+  2: [2],
+  3: [3],
+  4: [3],
+  5: [4, 2],
+  6: [4, 2],
+  7: [4, 3],
+  8: [4, 3],
+  9: [4, 3, 2],
+  10: [4, 3, 2],
+  11: [4, 3, 3],
+  12: [4, 3, 3],
+  13: [4, 3, 3, 1],
+  14: [4, 3, 3, 1],
+  15: [4, 3, 3, 2],
+  16: [4, 3, 3, 2],
+  17: [4, 3, 3, 3, 1],
+  18: [4, 3, 3, 3, 1],
+  19: [4, 3, 3, 3, 2],
+  20: [4, 3, 3, 3, 2],
+};
+
+const WARLOCK_PACT_SLOT_TABLE: Record<number, { slots: number; level: number }> = {
+  1: { slots: 1, level: 1 },
+  2: { slots: 2, level: 1 },
+  3: { slots: 2, level: 2 },
+  4: { slots: 2, level: 2 },
+  5: { slots: 2, level: 3 },
+  6: { slots: 2, level: 3 },
+  7: { slots: 2, level: 4 },
+  8: { slots: 2, level: 4 },
+  9: { slots: 2, level: 5 },
+  10: { slots: 2, level: 5 },
+  11: { slots: 3, level: 5 },
+  12: { slots: 3, level: 5 },
+  13: { slots: 3, level: 5 },
+  14: { slots: 3, level: 5 },
+  15: { slots: 3, level: 5 },
+  16: { slots: 3, level: 5 },
+  17: { slots: 4, level: 5 },
+  18: { slots: 4, level: 5 },
+  19: { slots: 4, level: 5 },
+  20: { slots: 4, level: 5 },
+};
+
 function humanizeGrantedId(value: string) {
   return value
     .replace(/^ID_/, "")
@@ -143,6 +259,43 @@ function humanizeGrantedId(value: string) {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function titleCaseWords(value: string) {
+  return value.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeReviewLabel(value: string) {
+  let cleaned = value.trim();
+  if (!cleaned) {
+    return "";
+  }
+
+  cleaned = cleaned
+    .replace(/^ID_/, "")
+    .replace(/_/g, " ")
+    .replace(/\bPROFICIENCY\b/gi, "")
+    .replace(/\bLANGUAGE\b/gi, "")
+    .replace(/\bSAVINGTHROW\b/gi, "Saving Throw ")
+    .replace(/\bSAVING THROW\b/gi, "Saving Throw ")
+    .replace(/\bSKILL\b/gi, "")
+    .replace(/\bTOOL\b/gi, "")
+    .replace(/\bWEAPON\b/gi, "")
+    .replace(/\bARMOR\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  const normalized = /^[A-Z0-9 ]+$/.test(cleaned) ? cleaned.toLowerCase() : cleaned;
+  return titleCaseWords(normalized)
+    .replace(/^Saving Throw /, "")
+    .replace(/^Light Armor$/, "Light Armor")
+    .replace(/^Medium Armor$/, "Medium Armor")
+    .replace(/^Heavy Armor$/, "Heavy Armor")
+    .replace(/^Shields$/, "Shields");
 }
 
 function uniqueById<T extends { id: string }>(items: T[]) {
@@ -176,6 +329,239 @@ function sentencePreview(value: string, fallback = "No short summary available."
   }
   const sentence = cleaned.match(/.+?[.!?](?:\s|$)/)?.[0]?.trim() ?? cleaned;
   return sentence.length > 180 ? `${sentence.slice(0, 177)}...` : sentence;
+}
+
+function formatFeet(value: number) {
+  return `${value} ft.`;
+}
+
+function getAbilityModifier(value: number) {
+  return Math.floor((value - 10) / 2);
+}
+
+function getAverageHitDieGain(hitDie: number) {
+  return Math.floor(hitDie / 2) + 1;
+}
+
+function resolveClassName(record: BuiltInClassRecord | null, entry: CharacterDraft["classEntries"][number]) {
+  return record?.class.name || entry.classId || "";
+}
+
+function resolveHitDie(className: string) {
+  const normalized = className.toLowerCase().replace(/\s+/g, "");
+  return HIT_DIE_BY_CLASS_NAME[normalized] ?? 8;
+}
+
+function getNumericRuleBonus(element: BuiltInElement, matcher: RegExp) {
+  const ruleTotals = element.rules
+    .filter((rule): rule is Extract<BuiltInRule, { kind: "stat" }> => rule.kind === "stat" && matcher.test(rule.name))
+    .reduce((sum, rule) => sum + Number.parseInt(rule.value, 10), 0);
+
+  const setterTotals = element.setters
+    .filter((setter) => matcher.test(setter.name))
+    .reduce((sum, setter) => sum + Number.parseInt(setter.value, 10), 0);
+
+  return ruleTotals + setterTotals;
+}
+
+function getFallbackSpellSlotSummary(className: string, level: number) {
+  const normalized = className.toLowerCase();
+  if (/warlock/.test(normalized)) {
+    const pact = WARLOCK_PACT_SLOT_TABLE[level];
+    return pact ? `Pact L${pact.level}:${pact.slots}` : "";
+  }
+  if (/artificer|paladin|ranger/.test(normalized)) {
+    const slots = HALF_CASTER_SLOT_TABLE[level] ?? [];
+    return slots.length ? slots.map((count, index) => `L${index + 1}:${count}`).join(" • ") : "";
+  }
+  if (/bard|cleric|druid|sorcerer|wizard/.test(normalized)) {
+    const slots = FULL_CASTER_SLOT_TABLE[level] ?? [];
+    return slots.length ? slots.map((count, index) => `L${index + 1}:${count}`).join(" • ") : "";
+  }
+  return "";
+}
+
+function parseWalkingSpeed(text: string) {
+  const match =
+    text.match(/\bbase walking speed is (\d+) feet\b/i) ||
+    text.match(/\byour speed is (\d+) feet\b/i) ||
+    text.match(/\bwalking speed of (\d+) feet\b/i);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+function deriveWalkingSpeed(args: {
+  selectedRace: BuiltInRaceRecord | null;
+  selectedSubrace: BuiltInElement | null;
+  selectedElements: BuiltInElement[];
+}) {
+  const textSources = [
+    args.selectedSubrace?.descriptionHtml,
+    args.selectedSubrace?.description,
+    args.selectedRace?.race.descriptionHtml,
+    args.selectedRace?.race.description,
+    ...args.selectedElements.flatMap((element) => [element.descriptionHtml, element.description]),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map(stripHtml);
+
+  const parsedSpeed = textSources.map(parseWalkingSpeed).find((value) => value !== null);
+  const raceName = args.selectedRace?.race.name.toLowerCase() ?? "";
+  const defaultBase =
+    parsedSpeed ??
+    (/gnome|halfling|dwarf/.test(raceName) ? 25 : 30);
+
+  const bonus = args.selectedElements.reduce(
+    (sum, element) => sum + getNumericRuleBonus(element, /^speed(?::|$)/i),
+    0,
+  );
+
+  return {
+    base: defaultBase,
+    total: defaultBase + bonus,
+    bonus,
+  };
+}
+
+function deriveArmorClass(args: {
+  draft: CharacterDraft;
+  effectiveAbilities: Record<AbilityKey, number>;
+}) {
+  const dexMod = getAbilityModifier(args.effectiveAbilities.dexterity);
+  const equippedItems = args.draft.inventoryItems.filter((item) => item.equipped);
+  const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
+  const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
+
+  const armorTotals = equippedArmor.map((item) => {
+    const sourceName = item.baseItemName || item.name;
+    const rule = ARMOR_BASE_RULES.find((entry) => entry.match.test(sourceName));
+    if (!rule) {
+      return null;
+    }
+    const dexContribution = Math.min(dexMod, rule.dexCap ?? dexMod);
+    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
+    return {
+      item,
+      total: rule.base + dexContribution + magic,
+      detail: `${sourceName}: ${rule.base}${rule.dexCap === 0 ? "" : `, Dex ${dexContribution >= 0 ? "+" : ""}${dexContribution}`}${magic ? `, magic ${magic >= 0 ? "+" : ""}${magic}` : ""}`,
+    };
+  }).filter((entry): entry is { item: CharacterDraft["inventoryItems"][number]; total: number; detail: string } => Boolean(entry));
+
+  const chosenArmor = armorTotals.sort((left, right) => right.total - left.total)[0];
+  const shieldBonus = equippedShields.reduce((sum, item) => {
+    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
+    return sum + 2 + magic;
+  }, 0);
+
+  if (chosenArmor) {
+    return {
+      value: chosenArmor.total + shieldBonus,
+      meta: `${chosenArmor.item.name}${shieldBonus ? ` + shield ${shieldBonus}` : ""}`,
+    };
+  }
+
+  return {
+    value: 10 + dexMod + shieldBonus,
+    meta: `${shieldBonus ? `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod} + shield ${shieldBonus}` : `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod}`}`,
+  };
+}
+
+function deriveHitPointSummary(args: {
+  draft: CharacterDraft;
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+  effectiveAbilities: Record<AbilityKey, number>;
+  selectedElements: BuiltInElement[];
+}) {
+  const constitutionMod = getAbilityModifier(args.effectiveAbilities.constitution);
+  let hp = 0;
+  let usedStartingLevel = false;
+
+  args.draft.classEntries.forEach((entry, index) => {
+    if (!entry.classId || entry.level <= 0) {
+      return;
+    }
+
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    const hitDie = resolveHitDie(className);
+    const averageGain = getAverageHitDieGain(hitDie);
+
+    for (let levelIndex = 0; levelIndex < entry.level; levelIndex += 1) {
+      const isFirstCharacterLevel = !usedStartingLevel && levelIndex === 0;
+      hp += isFirstCharacterLevel ? hitDie : averageGain;
+      hp += constitutionMod;
+    }
+
+    usedStartingLevel = true;
+  });
+
+  if (args.selectedElements.some((element) => /^tough$/i.test(element.name))) {
+    hp += args.draft.level * 2;
+  }
+
+  hp += args.selectedElements.reduce((sum, element) => sum + getNumericRuleBonus(element, /^hp$/i), 0);
+
+  return {
+    value: `${hp}`,
+    meta: "Average max HP from class hit dice",
+  };
+}
+
+function deriveHitDiceSummary(args: {
+  draft: CharacterDraft;
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+}) {
+  const parts = args.draft.classEntries.flatMap((entry, index) => {
+    if (!entry.classId || entry.level <= 0) {
+      return [];
+    }
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    const hitDie = resolveHitDie(className);
+    return [`${entry.level}d${hitDie}`];
+  });
+
+  return parts.join(" • ") || "—";
+}
+
+function deriveCharacterVitals(args: {
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+  draft: CharacterDraft;
+  effectiveAbilities: Record<AbilityKey, number>;
+  selectedElements: BuiltInElement[];
+  selectedRace: BuiltInRaceRecord | null;
+  selectedSubrace: BuiltInElement | null;
+}) {
+  const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
+  const initiativeBonus =
+    getAbilityModifier(args.effectiveAbilities.dexterity) +
+    args.selectedElements.reduce((sum, element) => sum + getNumericRuleBonus(element, /^initiative$/i), 0);
+  const speed = deriveWalkingSpeed({
+    selectedRace: args.selectedRace,
+    selectedSubrace: args.selectedSubrace,
+    selectedElements: args.selectedElements,
+  });
+  const armorClass = deriveArmorClass({
+    draft: args.draft,
+    effectiveAbilities: args.effectiveAbilities,
+  });
+  const hitPoints = deriveHitPointSummary({
+    draft: args.draft,
+    classRecordsByEntry: args.classRecordsByEntry,
+    effectiveAbilities: args.effectiveAbilities,
+    selectedElements: args.selectedElements,
+  });
+
+  return [
+    { id: "hp", label: "HP", value: hitPoints.value, meta: hitPoints.meta },
+    { id: "ac", label: "AC", value: `${armorClass.value}`, meta: armorClass.meta },
+    { id: "initiative", label: "Initiative", value: `${initiativeBonus >= 0 ? "+" : ""}${initiativeBonus}`, meta: "Dexterity-based" },
+    {
+      id: "speed",
+      label: "Speed",
+      value: formatFeet(speed.total),
+      meta: speed.bonus ? `${formatFeet(speed.base)} base • ${speed.bonus >= 0 ? "+" : ""}${speed.bonus} bonus` : `${formatFeet(speed.base)} base`,
+    },
+    { id: "pb", label: "Prof. bonus", value: `${proficiencyBonus >= 0 ? "+" : ""}${proficiencyBonus}`, meta: `Level ${args.draft.level}` },
+    { id: "hit-dice", label: "Hit dice", value: deriveHitDiceSummary(args), meta: "Rest recovery pool" },
+  ] satisfies ReviewVital[];
 }
 
 function titleizeBackstoryKey(key: string) {
@@ -249,12 +635,15 @@ function deriveReviewResources(args: {
     const className = record.class.name;
     const featureNames = new Set(args.selectedClassFeatureElements.map((feature) => feature.name.toLowerCase()));
     const slotSummary = getSpellSlotSummary(record.class.rules, entry.level);
-    if (slotSummary.length) {
+    const fallbackSlotSummary = !slotSummary.length ? getFallbackSpellSlotSummary(className, entry.level) : "";
+    if (slotSummary.length || fallbackSlotSummary) {
       resources.push({
         id: `${record.class.id}-slots`,
         label: `${className} slots`,
-        value: slotSummary.map(({ slotLevel, count }) => `L${slotLevel}:${count}`).join(" • "),
-        meta: "Explicit slot progression",
+        value: slotSummary.length
+          ? slotSummary.map(({ slotLevel, count }) => `L${slotLevel}:${count}`).join(" • ")
+          : fallbackSlotSummary,
+        meta: slotSummary.length ? "Explicit slot progression" : "Standard class progression",
       });
     }
 
@@ -373,16 +762,17 @@ function getFeaturePreview(element: BuiltInElement) {
 }
 
 function getSpellPreview(spell: BuiltInElement) {
-  return `${getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`} • ${getSpellSchool(spell)} • ${getSpellCastingTime(spell)}`;
-}
-
-function getSpellBadges(spell: BuiltInElement) {
-  return uniqueStrings([
+  return [
     getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
     getSpellSchool(spell),
+    getSpellCastingTime(spell),
+    getSpellRange(spell),
+    getSpellDuration(spell),
     isSpellRitual(spell) ? "Ritual" : "",
     isSpellConcentration(spell) ? "Concentration" : "",
-  ]);
+  ]
+    .filter(Boolean)
+    .join(" • ");
 }
 
 function getInventoryItemBadges(item: CharacterDraft["inventoryItems"][number]) {
@@ -449,13 +839,12 @@ function buildFeatureSections(args: {
 
 function renderManualGrant(grant: CharacterManualGrant, onOpen: () => void) {
   return (
-    <button className="review-sheet__compactRow" key={grant.id} type="button" onClick={onOpen}>
-      <div className="review-sheet__compactMain">
+    <button className="review-sheet__featureTile" key={grant.id} type="button" onClick={onOpen}>
+      <div className="review-sheet__featureTileHeader">
         <strong>{grant.name}</strong>
-        <span>{grant.source || "Manual / DM grant"}</span>
+        <span>{grant.source || "Manual / DM grant"} · Manual grant</span>
       </div>
-      <div className="review-sheet__compactMeta">
-        <span className="review-sheet__chip">Manual grant</span>
+      <div className="review-sheet__featureTileBody">
         <p>{grant.note || grant.description || "Open details"}</p>
       </div>
     </button>
@@ -624,6 +1013,24 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
   const [activeTab, setActiveTab] = useState<ReviewSheetTab>("character");
   const [detail, setDetail] = useState<ReviewDetailState | null>(null);
 
+  const selectedSheetElements = useMemo(
+    () =>
+      uniqueById([
+        ...props.selectedClassFeatureElements,
+        ...props.selectedProgressionElements,
+        ...props.selectedFeatElements,
+        ...props.selectedRacialTraitElements,
+        ...props.selectedBackgroundFeatureElements,
+      ]),
+    [
+      props.selectedBackgroundFeatureElements,
+      props.selectedClassFeatureElements,
+      props.selectedFeatElements,
+      props.selectedProgressionElements,
+      props.selectedRacialTraitElements,
+    ],
+  );
+
   const resources = useMemo(
     () =>
       deriveReviewResources({
@@ -641,6 +1048,26 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
       props.equipmentEffectSummary,
       props.selectedClassFeatureElements,
       props.spellGroups,
+    ],
+  );
+
+  const characterVitals = useMemo(
+    () =>
+      deriveCharacterVitals({
+        classRecordsByEntry: props.classRecordsByEntry,
+        draft: props.draft,
+        effectiveAbilities: props.effectiveAbilities,
+        selectedElements: selectedSheetElements,
+        selectedRace: props.selectedRace,
+        selectedSubrace: props.selectedSubrace,
+      }),
+    [
+      props.classRecordsByEntry,
+      props.draft,
+      props.effectiveAbilities,
+      props.selectedRace,
+      props.selectedSubrace,
+      selectedSheetElements,
     ],
   );
 
@@ -708,9 +1135,9 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
   const selectedProficiencyLabels = useMemo(
     () =>
       uniqueStrings([
-        ...props.selectedProficiencyNames,
-        ...props.selectedProficiencyIds.map(humanizeGrantedId),
-        ...props.manualGrantsByKind.proficiency.map((grant) => grant.name),
+        ...props.selectedProficiencyNames.map(normalizeReviewLabel),
+        ...props.selectedProficiencyIds.map(humanizeGrantedId).map(normalizeReviewLabel),
+        ...props.manualGrantsByKind.proficiency.map((grant) => normalizeReviewLabel(grant.name)),
       ]),
     [props.manualGrantsByKind.proficiency, props.selectedProficiencyIds, props.selectedProficiencyNames],
   );
@@ -718,9 +1145,9 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
   const selectedLanguageLabels = useMemo(
     () =>
       uniqueStrings([
-        ...props.selectedLanguageNames,
-        ...props.selectedLanguageIds.map(humanizeGrantedId),
-        ...props.manualGrantsByKind.language.map((grant) => grant.name),
+        ...props.selectedLanguageNames.map(normalizeReviewLabel),
+        ...props.selectedLanguageIds.map(humanizeGrantedId).map(normalizeReviewLabel),
+        ...props.manualGrantsByKind.language.map((grant) => normalizeReviewLabel(grant.name)),
       ]),
     [props.manualGrantsByKind.language, props.selectedLanguageIds, props.selectedLanguageNames],
   );
@@ -801,6 +1228,19 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             <p className="builder-summary__meta">Background: {props.selectedBackground?.background.name ?? "Missing"}</p>
             <p className="builder-summary__meta">Class split: {classSplit || "Missing"}</p>
             <p className="builder-summary__meta">Level {props.draft.level}</p>
+          </article>
+
+          <article className="builder-review__card">
+            <span className="builder-panel__label">Sheet essentials</span>
+            <div className="review-sheet__resourceGrid review-sheet__resourceGrid--dense">
+              {characterVitals.map((vital) => (
+                <div className="ability-card ability-card--compact" key={vital.id}>
+                  <span className="ability-card__label">{vital.label}</span>
+                  <strong className="summary-card__value">{vital.value}</strong>
+                  <span className="ability-card__meta">{vital.meta || "Tracked"}</span>
+                </div>
+              ))}
+            </div>
           </article>
 
           <article className="builder-review__card">
@@ -891,14 +1331,10 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                     }
                   >
                     <div className="review-sheet__compactMain">
-                      <strong>{card.title}</strong>
-                      <span>{card.timing}</span>
+                      <strong>{card.title} <span className="review-sheet__inlineMeta">· {card.timing}</span></strong>
+                      <span>{card.source || card.cost || "Action"}</span>
                     </div>
                     <div className="review-sheet__compactMeta">
-                      <div className="review-sheet__chipList">
-                        {card.cost ? <span className="review-sheet__chip">{card.cost}</span> : null}
-                        {card.source ? <span className="review-sheet__chip">{card.source}</span> : null}
-                      </div>
                       <p>{card.summary}</p>
                     </div>
                   </button>
@@ -939,23 +1375,23 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                                 kind: "spell",
                                 spell,
                                 groupLabel: group.title,
-                                badges: uniqueStrings([...getSpellBadges(spell), group.title, group.ownerLabel]),
+                                badges: uniqueStrings([
+                                  getSpellLevel(spell) === 0 ? "Cantrip" : `Level ${getSpellLevel(spell)}`,
+                                  getSpellSchool(spell),
+                                  isSpellRitual(spell) ? "Ritual" : "",
+                                  isSpellConcentration(spell) ? "Concentration" : "",
+                                  group.title,
+                                  group.ownerLabel,
+                                ]),
                               })
                             }
                           >
                             <div className="review-sheet__compactMain">
-                              <strong>{spell.name}</strong>
-                              <span>{group.title}</span>
+                              <strong>{spell.name} <span className="review-sheet__inlineMeta">· {group.title}</span></strong>
+                              <span>{spell.source || group.ownerLabel}</span>
                             </div>
                             <div className="review-sheet__compactMeta">
-                              <div className="review-sheet__chipList">
-                                {getSpellBadges(spell).map((badge) => (
-                                  <span className="review-sheet__chip" key={`${spell.id}-${badge}`}>
-                                    {badge}
-                                  </span>
-                                ))}
-                              </div>
-                              <p>{getSpellPreview(spell)} • {getSpellRange(spell)} • {getSpellDuration(spell)}</p>
+                              <p>{getSpellPreview(spell)}</p>
                             </div>
                           </button>
                         ))}
@@ -979,7 +1415,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
             featureSections.map((section) => (
               <article className="builder-review__card" key={section.id}>
                 <span className="builder-panel__label">{section.title}</span>
-                <div className="review-sheet__compactList">
+                <div className="review-sheet__featureSectionGrid">
                   {section.items.map((item) =>
                     "kind" in item ? (
                       renderManualGrant(item, () =>
@@ -991,7 +1427,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                       )
                     ) : (
                       <button
-                        className="review-sheet__compactRow"
+                        className="review-sheet__featureTile"
                         key={item.id}
                         type="button"
                         onClick={() =>
@@ -1002,15 +1438,11 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                           })
                         }
                       >
-                        <div className="review-sheet__compactMain">
+                        <div className="review-sheet__featureTileHeader">
                           <strong>{item.name}</strong>
-                          <span>{item.source || item.type}</span>
+                          <span>{item.source || item.type} · {item.type}</span>
                         </div>
-                        <div className="review-sheet__compactMeta">
-                          <div className="review-sheet__chipList">
-                            <span className="review-sheet__chip">{item.type}</span>
-                            {item.prerequisite ? <span className="review-sheet__chip">Prerequisite</span> : null}
-                          </div>
+                        <div className="review-sheet__featureTileBody">
                           <p>{getFeaturePreview(item)}</p>
                         </div>
                       </button>
