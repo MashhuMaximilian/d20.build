@@ -1251,6 +1251,10 @@ export function BuilderEditor({
         .filter((entry): entry is BuiltInElement => Boolean(entry)),
     [draft.manualGrants, elementPool],
   );
+  const selectedManualFeatureBonuses = useMemo(
+    () => collectStatBonusesFromElements(selectedManualFeatureElements),
+    [selectedManualFeatureElements],
+  );
   const selectedManualSpellElements = useMemo(
     () =>
       draft.manualGrants
@@ -1412,7 +1416,7 @@ export function BuilderEditor({
       ),
     [draft.improvementSelections, improvementOpportunities],
   );
-  const totalAppliedBonuses = useMemo(
+  const totalAppliedBonuses = useMemo<Record<AbilityKey, number>>(
     () =>
       addAbilityBonusMaps(
         ABILITY_KEYS.reduce<Record<AbilityKey, number>>(
@@ -1433,6 +1437,7 @@ export function BuilderEditor({
         ABILITY_KEYS.reduce<Record<AbilityKey, number>>(
           (totals, ability) => {
             totals[ability] = selectedFeatBonuses[ability] ?? 0;
+            totals[ability] += selectedManualFeatureBonuses[ability] ?? 0;
             return totals;
           },
           {
@@ -1446,7 +1451,7 @@ export function BuilderEditor({
         ),
         manualAbilityBonuses,
       ),
-    [improvementBonuses, manualAbilityBonuses, racialBonuses, selectedFeatBonuses],
+    [improvementBonuses, manualAbilityBonuses, racialBonuses, selectedFeatBonuses, selectedManualFeatureBonuses],
   );
   const effectiveAbilities = useMemo(
     () =>
@@ -1512,6 +1517,7 @@ export function BuilderEditor({
       const ancestryChoiceBonus = ancestryImprovementBonuses[ability] ?? 0;
       const asiBonus = classImprovementBonuses[ability] ?? 0;
       const featBonus = selectedFeatBonuses[ability] ?? 0;
+      const progressionBonus = selectedManualFeatureBonuses[ability] ?? 0;
       const manualBonus = manualAbilityBonuses[ability] ?? 0;
 
       if (racialBonus) {
@@ -1534,6 +1540,10 @@ export function BuilderEditor({
         parts.push(`Feat ${featBonus >= 0 ? "+" : ""}${featBonus}`);
       }
 
+      if (progressionBonus) {
+        parts.push(`Feature ${progressionBonus >= 0 ? "+" : ""}${progressionBonus}`);
+      }
+
       if (manualBonus) {
         parts.push(`Manual grant ${manualBonus >= 0 ? "+" : ""}${manualBonus}`);
       }
@@ -1544,7 +1554,7 @@ export function BuilderEditor({
     });
 
     return breakdown;
-  }, [ancestryImprovementBonuses, classImprovementBonuses, draft.useTashasCustomizedOrigin, manualAbilityBonuses, racialBonuses, selectedFeatBonuses]);
+  }, [ancestryImprovementBonuses, classImprovementBonuses, draft.useTashasCustomizedOrigin, manualAbilityBonuses, racialBonuses, selectedFeatBonuses, selectedManualFeatureBonuses]);
 
   const selectedRacialTraitNames = useMemo(() => {
     if (!selectedRace) {
@@ -1778,6 +1788,7 @@ export function BuilderEditor({
       ...(selectedBackground ? collectGrantedIds(selectedBackground.background.rules, "Proficiency") : []),
       ...collectGrantedIdsFromElements(selectedBackgroundFeatureElements, "Proficiency"),
       ...collectGrantedIdsFromElements(allSelectedFeatElements, "Proficiency"),
+      ...collectGrantedIdsFromElements(selectedManualFeatureElements, "Proficiency"),
     ];
   }, [
     allSelectedFeatElements,
@@ -1786,6 +1797,7 @@ export function BuilderEditor({
     selectedBackground,
     selectedBackgroundFeatureIds,
     selectedClassFeatureIds,
+    selectedManualFeatureElements,
     selectedRace,
     selectedRacialTraitIds,
     selectedSubrace,
@@ -1796,8 +1808,9 @@ export function BuilderEditor({
       ...(selectedSubrace ? collectGrantedIds(selectedSubrace.rules, "Language") : []),
       ...(selectedBackground ? collectGrantedIds(selectedBackground.background.rules, "Language") : []),
       ...collectGrantedIdsFromElements(allSelectedFeatElements, "Language"),
+      ...collectGrantedIdsFromElements(selectedManualFeatureElements, "Language"),
     ],
-    [allSelectedFeatElements, selectedBackground, selectedRace, selectedSubrace],
+    [allSelectedFeatElements, selectedBackground, selectedManualFeatureElements, selectedRace, selectedSubrace],
   );
   const selectedSubclassNames = useMemo(
     () =>
@@ -3632,6 +3645,7 @@ export function BuilderEditor({
             selectedFeatElements={allSelectedFeatElements}
             selectedLanguageIds={selectedLanguageIds}
             selectedLanguageNames={selectedLanguageNames}
+            selectedManualFeatureElements={selectedManualFeatureElements}
             selectedProgressionElements={selectedProgressionElements}
             selectedExpertiseLabels={selectedExpertiseLabels}
             selectedProficiencyIds={selectedProficiencyIds}

@@ -56,6 +56,7 @@ type ReviewSheetProps = {
   selectedFeatElements: BuiltInElement[];
   selectedLanguageIds: string[];
   selectedLanguageNames: string[];
+  selectedManualFeatureElements: BuiltInElement[];
   selectedProgressionElements: BuiltInElement[];
   selectedProficiencyIds: string[];
   selectedProficiencyNames: string[];
@@ -966,6 +967,7 @@ function buildFeatureSections(args: {
   selectedBackgroundFeatureElements: BuiltInElement[];
   selectedClassFeatureElements: BuiltInElement[];
   selectedFeatElements: BuiltInElement[];
+  selectedManualFeatureElements: BuiltInElement[];
   selectedProgressionElements: BuiltInElement[];
   selectedRace: BuiltInRaceRecord | null;
   selectedRacialTraitElements: BuiltInElement[];
@@ -973,6 +975,8 @@ function buildFeatureSections(args: {
   manualGrantsByKind: Record<CharacterManualGrantKind, CharacterManualGrant[]>;
 }) {
   const sections: Array<{ id: string; title: string; items: Array<BuiltInElement | CharacterManualGrant> }> = [];
+  const manualFeatureGrantsWithoutRefs = args.manualGrantsByKind.feature.filter((grant) => !grant.refId);
+  const manualFeatGrantsWithoutRefs = args.manualGrantsByKind.feat.filter((grant) => !grant.refId);
 
   const raceItems = [...args.selectedRacialTraitElements];
   if (raceItems.length) {
@@ -1042,20 +1046,20 @@ function buildFeatureSections(args: {
     sections.push({ id: "feats", title: "Feats", items: uniqueByNameAndSource(args.selectedFeatElements) });
   }
 
-  if (args.manualGrantsByKind.feature.length) {
-    sections.push({ id: "manual-feature", title: "Manual / DM feature grants", items: args.manualGrantsByKind.feature });
+  if (args.selectedManualFeatureElements.length) {
+    sections.push({
+      id: "manual-feature-elements",
+      title: "Manual / DM feature grants",
+      items: uniqueByNameAndSource(args.selectedManualFeatureElements),
+    });
   }
 
-  if (args.manualGrantsByKind.feat.length) {
-    sections.push({ id: "manual-feat", title: "Manual / DM feat grants", items: args.manualGrantsByKind.feat });
+  if (manualFeatureGrantsWithoutRefs.length) {
+    sections.push({ id: "manual-feature", title: "Manual / DM custom features", items: manualFeatureGrantsWithoutRefs });
   }
 
-  if (args.manualGrantsByKind.proficiency.length) {
-    sections.push({ id: "manual-proficiency", title: "Manual / DM proficiencies", items: args.manualGrantsByKind.proficiency });
-  }
-
-  if (args.manualGrantsByKind.language.length) {
-    sections.push({ id: "manual-language", title: "Manual / DM languages", items: args.manualGrantsByKind.language });
+  if (manualFeatGrantsWithoutRefs.length) {
+    sections.push({ id: "manual-feat", title: "Manual / DM custom feats", items: manualFeatGrantsWithoutRefs });
   }
 
   if (args.manualGrantsByKind.asi.length) {
@@ -1340,6 +1344,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         selectedBackgroundFeatureElements: props.selectedBackgroundFeatureElements,
         selectedClassFeatureElements: props.selectedClassFeatureElements,
         selectedFeatElements: props.selectedFeatElements,
+        selectedManualFeatureElements: props.selectedManualFeatureElements,
         selectedProgressionElements: props.selectedProgressionElements,
         selectedRace: props.selectedRace,
         selectedRacialTraitElements: props.selectedRacialTraitElements,
@@ -1352,6 +1357,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
       props.selectedBackgroundFeatureElements,
       props.selectedClassFeatureElements,
       props.selectedFeatElements,
+      props.selectedManualFeatureElements,
       props.selectedProgressionElements,
       props.selectedRace,
       props.selectedRacialTraitElements,
