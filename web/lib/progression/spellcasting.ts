@@ -35,6 +35,7 @@ export type SpellSelectionGroup = {
 
 type DeriveSpellcastingGroupsArgs = {
   activeFeats: BuiltInElement[];
+  activeProgressionOptions?: BuiltInElement[];
   classRecordsByEntry: Array<BuiltInClassRecord | null>;
   classEntries: CharacterClassEntry[];
   effectiveAbilities: Record<AbilityKey, number>;
@@ -135,6 +136,34 @@ function getClassSpellOwnerLabel(feature: BuiltInElement, className: string) {
   }
 
   return feature.name;
+}
+
+function hasSpellRules(element: BuiltInElement, rules: BuiltInRule[]) {
+  return (
+    Boolean(element.spellcasting) ||
+    rules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
+    rules.some((rule) => rule.kind === "grant" && rule.type === "Spell")
+  );
+}
+
+function getProgressionSpellOwnerType(element: BuiltInElement): SpellSelectionGroup["ownerType"] {
+  if (element.type === "Sub Race") {
+    return "subrace";
+  }
+
+  if (element.type === "Racial Trait") {
+    return "race";
+  }
+
+  if (element.type === "Archetype Feature") {
+    return "subclass";
+  }
+
+  if (element.type === "Feat" || element.type === "Feat Feature") {
+    return "feat";
+  }
+
+  return "class";
 }
 
 function activeGrantIds(rules: BuiltInRule[], type: string, currentLevel: number) {
@@ -709,6 +738,7 @@ function buildGroupsForSource(
 
 export function deriveSpellcastingGroups({
   activeFeats,
+  activeProgressionOptions = [],
   classRecordsByEntry,
   classEntries,
   effectiveAbilities,
@@ -723,7 +753,7 @@ export function deriveSpellcastingGroups({
 
   activeRaceTraits.forEach((trait) => {
     const traitRules = mergeRules(trait.rules, trait.spellcasting?.rules);
-    if (!traitRules.some((rule) => rule.kind === "select" && rule.type === "Spell") && !traitRules.some((rule) => rule.kind === "grant" && rule.type === "Spell")) {
+    if (!hasSpellRules(trait, traitRules)) {
       return;
     }
 
@@ -740,12 +770,8 @@ export function deriveSpellcastingGroups({
 
   activeFeats.forEach((feat) => {
     const featRules = mergeRules(feat.rules, feat.spellcasting?.rules);
-    const hasSpellRules =
-      Boolean(feat.spellcasting) ||
-      featRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-      featRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
-    if (!hasSpellRules) {
+    if (!hasSpellRules(feat, featRules)) {
       return;
     }
 
@@ -757,6 +783,27 @@ export function deriveSpellcastingGroups({
       spellcastingAbility: feat.spellcasting?.ability?.toLowerCase(),
       rules: featRules,
       spellcastingRules: featRules,
+    });
+  });
+
+  activeProgressionOptions.forEach((option) => {
+    if (option.type === "Spell") {
+      return;
+    }
+
+    const optionRules = mergeRules(option.rules, option.spellcasting?.rules);
+    if (!hasSpellRules(option, optionRules)) {
+      return;
+    }
+
+    sources.push({
+      currentLevel: totalLevel,
+      fallbackListKey: option.spellcasting?.name || option.name,
+      ownerLabel: option.name,
+      ownerType: getProgressionSpellOwnerType(option),
+      spellcastingAbility: option.spellcasting?.ability?.toLowerCase(),
+      rules: optionRules,
+      spellcastingRules: optionRules,
     });
   });
 
@@ -773,12 +820,8 @@ export function deriveSpellcastingGroups({
     );
     unlockedFeatures.forEach((feature) => {
       const featureRules = mergeRules(feature.rules, feature.spellcasting?.rules);
-      const hasSpellRules =
-        Boolean(feature.spellcasting) ||
-        featureRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-        featureRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
-      if (!hasSpellRules) {
+      if (!hasSpellRules(feature, featureRules)) {
         return;
       }
 
@@ -805,12 +848,8 @@ export function deriveSpellcastingGroups({
     const unlockedSubclassFeatures = getUnlockedSubclassFeatures(classRecord, entry);
     unlockedSubclassFeatures.forEach((feature) => {
       const featureRules = mergeRules(feature.rules, feature.spellcasting?.rules);
-      const hasSpellRules =
-        Boolean(feature.spellcasting) ||
-        featureRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-        featureRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
-      if (!hasSpellRules) {
+      if (!hasSpellRules(feature, featureRules)) {
         return;
       }
 
@@ -826,7 +865,25 @@ export function deriveSpellcastingGroups({
     });
   });
 
-  return sources.flatMap((source) =>
+  const uniqueSources = sources.filter((source, index, allSources) => {
+    const key = [
+      source.ownerType,
+      source.ownerLabel,
+      source.currentLevel,
+      source.rules.map((rule) => JSON.stringify(rule)).join("|"),
+    ].join("::");
+
+    return allSources.findIndex((candidate) =>
+      [
+        candidate.ownerType,
+        candidate.ownerLabel,
+        candidate.currentLevel,
+        candidate.rules.map((rule) => JSON.stringify(rule)).join("|"),
+      ].join("::") === key
+    ) === index;
+  });
+
+  return uniqueSources.flatMap((source) =>
     buildGroupsForSource(source, spells, effectiveAbilities, spellSelections),
   );
 }

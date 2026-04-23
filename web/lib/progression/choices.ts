@@ -173,6 +173,17 @@ function resolveNestedOwnerFeatures(entry: SelectedProgressionOptionEntry, optio
   return [entry.element, ...grantedFeatures];
 }
 
+function resolveFeatureWithDirectGrants(element: BuiltInElement, optionPool: Map<string, BuiltInElement>) {
+  return resolveNestedOwnerFeatures(
+    {
+      classEntryIndex: -1,
+      ownerLabel: element.name,
+      element,
+    },
+    optionPool,
+  );
+}
+
 function isImprovementRule(rule: BuiltInRule) {
   if (rule.kind !== "select") {
     return false;
@@ -885,23 +896,33 @@ function buildGroupsFromFeatures(args: {
   return features.flatMap((feature) =>
     collectSelectableRules(feature, entryLevel)
       .filter((rule) => !rule.requirements || getRequirementFailures(rule.requirements, undefined, contextForOwner).length === 0)
-      .map((rule) => ({
-        id: buildGroupId(classEntryIndex, ownerType, feature.id, rule),
-        classEntryIndex,
-        ownerType,
-        ownerLabel,
-        featureId: feature.id,
-        featureName: feature.name,
-        title: rule.name,
-        familyLabel: formatSupportLabel(rule.supports) || rule.type,
-        optionType: rule.type,
-        unlockLevel: rule.level ?? entryLevel,
-        exactSelections: Math.max(1, rule.number ?? 1),
-        optional: rule.optional === true || isOptionalAlternateSpellcastingRule(rule),
-        supportsKey: rule.supports,
-        description: feature.description,
-        options: resolveRuleOptions(feature, rule, optionPool, contextForOwner),
-      } satisfies ProgressionChoiceGroup)),
+      .map((rule) => {
+        const options = resolveRuleOptions(feature, rule, optionPool, contextForOwner);
+        const hasOptions = options.length > 0;
+        const hasEligibleOptions = options.some((option) => option.requirementFailures.length === 0);
+        const conditionalOnly = hasOptions && !hasEligibleOptions;
+
+        return {
+          id: buildGroupId(classEntryIndex, ownerType, feature.id, rule),
+          classEntryIndex,
+          ownerType,
+          ownerLabel,
+          featureId: feature.id,
+          featureName: feature.name,
+          title: rule.name,
+          familyLabel: formatSupportLabel(rule.supports) || rule.type,
+          optionType: rule.type,
+          unlockLevel: rule.level ?? entryLevel,
+          exactSelections: Math.max(1, rule.number ?? 1),
+          optional:
+            conditionalOnly ||
+            rule.optional === true ||
+            isOptionalAlternateSpellcastingRule(rule),
+          supportsKey: rule.supports,
+          description: feature.description,
+          options,
+        } satisfies ProgressionChoiceGroup;
+      }),
   );
 }
 
@@ -1121,7 +1142,7 @@ export function deriveProgressionChoiceGroups(args: {
       ownerType: "feat",
       ownerLabel: feat.name,
       entryLevel: Math.max(args.context.totalLevel, 1),
-      features: [feat],
+      features: resolveFeatureWithDirectGrants(feat, optionPool),
       optionPool,
       context: args.context,
     }),
@@ -1133,7 +1154,7 @@ export function deriveProgressionChoiceGroups(args: {
       ownerType: "nested",
       ownerLabel: "Manual / DM grant",
       entryLevel: Math.max(args.context.totalLevel, 1),
-      features: [feature],
+      features: resolveFeatureWithDirectGrants(feature, optionPool),
       optionPool,
       context: args.context,
     }),

@@ -382,6 +382,17 @@ function collectAllGrantedIdsFromElements(elements: BuiltInElement[]) {
   );
 }
 
+function uniqueElementsById(elements: BuiltInElement[]) {
+  const seen = new Set<string>();
+  return elements.filter((element) => {
+    if (seen.has(element.id)) {
+      return false;
+    }
+    seen.add(element.id);
+    return true;
+  });
+}
+
 function collectNestedGrantedIds(
   pool: BuiltInElement[],
   seedIds: string[],
@@ -1963,58 +1974,99 @@ export function BuilderEditor({
     () => getSelectedProgressionOptionElements(progressionGroups, draft.progressionSelections),
     [draft.progressionSelections, progressionGroups],
   );
+  const selectedProgressionGrantElements = useMemo(
+    () =>
+      collectAllGrantedIdsFromElements([...selectedManualFeatureElements, ...selectedProgressionElements])
+        .map((id) => elementPool.get(id))
+        .filter((entry): entry is BuiltInElement => Boolean(entry)),
+    [elementPool, selectedManualFeatureElements, selectedProgressionElements],
+  );
+  const activeProgressionElements = useMemo(
+    () =>
+      uniqueElementsById([
+        ...selectedManualFeatureElements,
+        ...selectedProgressionElements,
+        ...selectedProgressionGrantElements,
+      ]),
+    [selectedManualFeatureElements, selectedProgressionElements, selectedProgressionGrantElements],
+  );
+  const activeSpellGroups = useMemo(
+    () =>
+      deriveSpellcastingGroups({
+        activeFeats: allSelectedFeatElements,
+        activeProgressionOptions: activeProgressionElements,
+        classRecordsByEntry,
+        classEntries: draft.classEntries,
+        effectiveAbilities,
+        race: selectedRace,
+        spellSelections: draft.spellSelections,
+        spells,
+        subrace: selectedSubrace,
+        totalLevel: totalCharacterLevel,
+      }),
+    [
+      allSelectedFeatElements,
+      classRecordsByEntry,
+      draft.classEntries,
+      draft.spellSelections,
+      effectiveAbilities,
+      activeProgressionElements,
+      selectedRace,
+      selectedSubrace,
+      spells,
+      totalCharacterLevel,
+    ],
+  );
   const selectedProficiencyIds = useMemo(
     () => [
       ...selectedBaseProficiencyIds,
-      ...selectedProgressionElements.flatMap((element) =>
+      ...activeProgressionElements.flatMap((element) =>
         element.type === "Proficiency" ? [element.id] : collectGrantedIds(element.rules, "Proficiency"),
       ),
     ],
-    [selectedBaseProficiencyIds, selectedProgressionElements],
+    [activeProgressionElements, selectedBaseProficiencyIds],
   );
   const selectedProficiencyNames = useMemo(
     () =>
-      selectedProgressionElements
+      activeProgressionElements
         .filter((element) => element.type === "Proficiency")
         .map((element) => element.name),
-    [selectedProgressionElements],
+    [activeProgressionElements],
   );
   const selectedExpertiseLabels = useMemo(
     () =>
       [...new Set(
         [
-          ...selectedProgressionElements,
+          ...activeProgressionElements,
           ...selectedClassFeatureElements,
           ...allSelectedFeatElements,
-          ...selectedManualFeatureElements,
           ...selectedBackgroundFeatureElements,
           ...selectedRacialTraitElements,
         ].flatMap(extractExpertiseLabelsFromElement),
       )],
     [
       selectedBackgroundFeatureElements,
+      activeProgressionElements,
       allSelectedFeatElements,
       selectedClassFeatureElements,
-      selectedManualFeatureElements,
-      selectedProgressionElements,
       selectedRacialTraitElements,
     ],
   );
   const selectedLanguageIds = useMemo(
     () => [
       ...selectedBaseLanguageIds,
-      ...selectedProgressionElements.flatMap((element) =>
+      ...activeProgressionElements.flatMap((element) =>
         element.type === "Language" ? [element.id] : collectGrantedIds(element.rules, "Language"),
       ),
     ],
-    [selectedBaseLanguageIds, selectedProgressionElements],
+    [activeProgressionElements, selectedBaseLanguageIds],
   );
   const selectedLanguageNames = useMemo(
     () =>
-      selectedProgressionElements
+      activeProgressionElements
         .filter((element) => element.type === "Language")
         .map((element) => element.name),
-    [selectedProgressionElements],
+    [activeProgressionElements],
   );
   const progressionValidationMessages = useMemo(
     () => getProgressionValidationMessages(progressionGroups, draft.progressionSelections),
@@ -2062,7 +2114,7 @@ export function BuilderEditor({
             ...selectedBackgroundFeatureIds,
             ...selectedClassFeatureIds,
             ...selectedFeatFeatureIds,
-            ...selectedProgressionElements.map((element) => element.id),
+            ...activeProgressionElements.map((element) => element.id),
           ],
           selectedFeatureNames: [
             ...selectedSubclassNames,
@@ -2072,7 +2124,7 @@ export function BuilderEditor({
             ...selectedFeatureGrantIds.map(humanizeGrantedId),
             ...selectedBackgroundFeatureNames,
             ...selectedClassFeatureNames,
-            ...selectedProgressionElements.map((element) => element.name),
+            ...activeProgressionElements.map((element) => element.name),
           ],
           selectedProficiencyIds,
           selectedProficiencyNames,
@@ -2084,7 +2136,7 @@ export function BuilderEditor({
           selectedSpellNames,
           selectedCantripIds,
           selectedCantripNames,
-          hasSpellcasting: spellGroups.length > 0,
+          hasSpellcasting: activeSpellGroups.length > 0,
           totalLevel: totalCharacterLevel,
           classLevelsByName,
           knownRaceNames: races.map((entry) => entry.race.name),
@@ -2116,7 +2168,8 @@ export function BuilderEditor({
     selectedSubclassNames,
     selectedClassFeatureNames,
     selectedLanguageNames,
-    selectedProgressionElements,
+    activeSpellGroups.length,
+    activeProgressionElements,
     selectedProficiencyNames,
     selectedProficiencyIds,
     selectedCantripIds,
@@ -2124,7 +2177,6 @@ export function BuilderEditor({
     selectedSpellIds,
     selectedSpellNames,
     selectedLanguageIds,
-    spellGroups.length,
     totalCharacterLevel,
   ]);
 
@@ -2178,7 +2230,7 @@ export function BuilderEditor({
   );
   const spellValidationMessages = useMemo(
     () => {
-      const baseMessages = getSpellValidationMessages(spellGroups, draft.spellSelections);
+      const baseMessages = getSpellValidationMessages(activeSpellGroups, draft.spellSelections);
 
       const eldritchBlastDependentChoices = selectedProgressionElements.filter((element) =>
         /eldritch blast cantrip/i.test(
@@ -2199,7 +2251,7 @@ export function BuilderEditor({
 
       return baseMessages;
     },
-    [draft.spellSelections, selectedCantripNames, selectedProgressionElements, selectedSpellNames, spellGroups],
+    [activeSpellGroups, draft.spellSelections, selectedCantripNames, selectedProgressionElements, selectedSpellNames],
   );
   const pendingChoices = useMemo(() => {
     const subracePending = selectedRace && selectedRace.subraces.length > 0 && !draft.subraceId ? 1 : 0;
@@ -2294,12 +2346,12 @@ export function BuilderEditor({
         progressionValidationMessages,
         abilityValidationMessage,
         improvementValidationMessages,
-        spellSelectionEnabled: spellGroups.length > 0,
+        spellSelectionEnabled: activeSpellGroups.length > 0,
         spellValidationMessages,
         missingEquipmentChoices,
         levelingValidationMessage,
       }),
-    [abilityValidationMessage, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, progressionValidationMessages, selectedRace, spellGroups.length, spellValidationMessages],
+    [abilityValidationMessage, activeSpellGroups.length, classRecordsByEntry, draft, improvementValidationMessages, levelingValidationMessage, missingEquipmentChoices, progressionValidationMessages, selectedRace, spellValidationMessages],
   );
   const manualGrantsByKind = useMemo(
     () =>
@@ -2384,7 +2436,7 @@ export function BuilderEditor({
         label: "Feats / ASI",
         description: "Resolve every unlocked class-based improvement opportunity before gear and review.",
       },
-      ...(spellGroups.length
+      ...(activeSpellGroups.length
         ? [
             {
               id: "spellcasting",
@@ -2415,7 +2467,7 @@ export function BuilderEditor({
     );
 
     return base;
-  }, [progressionGroups.length, selectedRace, spellGroups.length, unlockedSubclassEntryIndexes.length]);
+  }, [activeSpellGroups.length, progressionGroups.length, selectedRace, unlockedSubclassEntryIndexes.length]);
 
   const currentStepIndex = Math.max(
     steps.findIndex((step) => step.id === currentStep),
@@ -2510,9 +2562,9 @@ export function BuilderEditor({
   }, [draft.improvementSelections, improvementOpportunities]);
 
   useEffect(() => {
-    const validGroupIds = new Set(spellGroups.map((group) => group.id));
+    const validGroupIds = new Set(activeSpellGroups.map((group) => group.id));
     const validSpellIds = new Map(
-      spellGroups.map((group) => [group.id, new Set([...group.availableSpellIds, ...group.grantedSpellIds])]),
+      activeSpellGroups.map((group) => [group.id, new Set([...group.availableSpellIds, ...group.grantedSpellIds])]),
     );
     const hasStaleSelections = Object.entries(draft.spellSelections).some(([groupId, spellIds]) => {
       if (!validGroupIds.has(groupId)) {
@@ -2540,7 +2592,7 @@ export function BuilderEditor({
       ...current,
       spellSelections: nextSelections,
     }));
-  }, [draft.spellSelections, spellGroups]);
+  }, [activeSpellGroups, draft.spellSelections]);
 
   useEffect(() => {
     setDraft((current) => {
@@ -3260,7 +3312,7 @@ export function BuilderEditor({
         return (
           <section className="builder-stepPanel">
             <SpellcastingStep
-              groups={spellGroups}
+              groups={activeSpellGroups}
               selections={draft.spellSelections}
               spells={spells}
               onSelectionChange={(groupId, spellIds) =>
@@ -3532,7 +3584,7 @@ export function BuilderEditor({
             selectedRacialTraitElements={selectedRacialTraitElements}
             selectedSpellIds={selectedSpellIds}
             selectedSubrace={selectedSubrace}
-            spellGroups={spellGroups}
+            spellGroups={activeSpellGroups}
             spells={spells}
           />
         );
