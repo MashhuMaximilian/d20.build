@@ -358,6 +358,43 @@ function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function getManualGrantKindLabel(kind: CharacterManualGrantKind) {
+  switch (kind) {
+    case "spell":
+      return "Spell grant";
+    case "proficiency":
+      return "Proficiency grant";
+    case "language":
+      return "Language grant";
+    case "feat":
+      return "Feat grant";
+    case "feature":
+      return "Feature grant";
+    case "asi":
+      return "ASI grant";
+    default:
+      return "Manual grant";
+  }
+}
+
+function getManualGrantSourceLabel(grant: CharacterManualGrant) {
+  return grant.source || "Manual / DM grant";
+}
+
+function getManualGrantTraceLabel(grant: CharacterManualGrant) {
+  return `${getManualGrantSourceLabel(grant)} · ${getManualGrantKindLabel(grant.kind)}`;
+}
+
+function getManualGrantSummary(grant: CharacterManualGrant) {
+  if (grant.kind === "asi" && grant.ability && grant.amount) {
+    const abilityLabel = ABILITY_LABELS[grant.ability];
+    const modeLabel = grant.mode === "set" ? "set to" : "increase";
+    return `${abilityLabel} ${modeLabel} ${grant.amount}.`;
+  }
+
+  return grant.note || grant.description || "Open details";
+}
+
 function stripHtml(value: string) {
   return value
     .replace(/<br\s*\/?>/gi, " ")
@@ -1074,10 +1111,10 @@ function renderManualGrant(grant: CharacterManualGrant, onOpen: () => void) {
     <button className="review-sheet__featureTile" key={grant.id} type="button" onClick={onOpen}>
       <div className="review-sheet__featureTileHeader">
         <strong>{grant.name}</strong>
-        <span>{grant.source || "Manual / DM grant"} · Manual grant</span>
+        <span>{getManualGrantTraceLabel(grant)}</span>
       </div>
       <div className="review-sheet__featureTileBody">
-        <p>{grant.note || grant.description || "Open details"}</p>
+        <p>{getManualGrantSummary(grant)}</p>
       </div>
     </button>
   );
@@ -1156,9 +1193,14 @@ function ReviewDetailDrawer({
 
   if (detail.kind === "manual-grant") {
     title = detail.grant.name;
-    subtitle = detail.grant.source || "Manual / DM grant";
+    subtitle = getManualGrantTraceLabel(detail.grant);
     body = (
       <div className="review-sheet__detailBody">
+        {detail.grant.kind === "asi" && detail.grant.ability && detail.grant.amount ? (
+          <p className="builder-summary__meta">
+            {ABILITY_LABELS[detail.grant.ability]} {detail.grant.mode === "set" ? "set to" : "increase"} {detail.grant.amount}.
+          </p>
+        ) : null}
         {detail.grant.note ? <p className="builder-summary__meta">{detail.grant.note}</p> : null}
         {detail.grant.description ? <p className="builder-summary__meta">{detail.grant.description}</p> : null}
       </div>
@@ -1824,15 +1866,15 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                             setDetail({
                               kind: "manual-grant",
                               grant,
-                              badges: uniqueStrings(["SPELL", grant.source || "Manual / DM grant"]),
+                              badges: uniqueStrings(["SPELL", getManualGrantSourceLabel(grant), getManualGrantKindLabel(grant.kind)]),
                             })
                           }
                         >
                           <div className="review-sheet__compactMain">
-                            <strong>{grant.name} <span className="review-sheet__inlineMeta">· Manual / DM spell grant</span></strong>
+                            <strong>{grant.name} <span className="review-sheet__inlineMeta">· {getManualGrantKindLabel(grant.kind)}</span></strong>
                           </div>
                           <div className="review-sheet__compactMeta">
-                            <p>{grant.note || grant.description || "Open details"}</p>
+                            <p>{getManualGrantTraceLabel(grant)}</p>
                           </div>
                         </button>
                       ))}
@@ -1889,14 +1931,14 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                           setDetail({
                             kind: "manual-grant",
                             grant,
-                            badges: uniqueStrings(["SPELL", grant.source || "Manual / DM grant"]),
+                            badges: uniqueStrings(["SPELL", getManualGrantSourceLabel(grant), getManualGrantKindLabel(grant.kind)]),
                           })
                         }
                       >
                         <td>{grant.name}</td>
-                        <td>Manual / DM spell grants</td>
+                        <td>{getManualGrantTraceLabel(grant)}</td>
                         <td>Grant</td>
-                        <td>{grant.note || grant.description || "Open details"}</td>
+                        <td>{getManualGrantSummary(grant)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1928,7 +1970,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                           setDetail({
                             kind: "manual-grant",
                             grant: item,
-                            badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
+                            badges: uniqueStrings([item.kind.toUpperCase(), getManualGrantSourceLabel(item), getManualGrantKindLabel(item.kind)]),
                           }),
                         )
                       ) : (
@@ -1975,14 +2017,14 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                                 setDetail({
                                   kind: "manual-grant",
                                   grant: item,
-                                  badges: uniqueStrings([item.kind.toUpperCase(), item.source || "Manual / DM grant"]),
+                                  badges: uniqueStrings([item.kind.toUpperCase(), getManualGrantSourceLabel(item), getManualGrantKindLabel(item.kind)]),
                                 })
                               }
                             >
                               <td>{item.name}</td>
-                              <td>{item.source || "Manual / DM grant"}</td>
+                              <td>{getManualGrantTraceLabel(item)}</td>
                               <td>{item.kind}</td>
-                              <td>{item.note || item.description || "Open details"}</td>
+                              <td>{getManualGrantSummary(item)}</td>
                             </tr>
                           ) : (
                             <tr
@@ -2162,8 +2204,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
               <ul className="route-shell__list review-sheet__grantList">
                 {props.draft.manualGrants.map((grant) => (
                   <li key={grant.id}>
-                    <strong>{grant.name}</strong> ({grant.kind}
-                    {grant.source ? ` • ${grant.source}` : ""})
+                    <strong>{grant.name}</strong> ({getManualGrantTraceLabel(grant)})
                   </li>
                 ))}
               </ul>
