@@ -382,6 +382,32 @@ function collectAllGrantedIdsFromElements(elements: BuiltInElement[]) {
   );
 }
 
+function collectAllNestedGrantedIdsFromElements(
+  elementPool: Map<string, BuiltInElement>,
+  elements: BuiltInElement[],
+) {
+  const visited = new Set<string>();
+  const queue = collectAllGrantedIdsFromElements(elements);
+  const collected: string[] = [];
+
+  while (queue.length) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) {
+      continue;
+    }
+
+    visited.add(currentId);
+    collected.push(currentId);
+
+    const grantedElement = elementPool.get(currentId);
+    if (grantedElement) {
+      queue.push(...collectAllGrantedIdsFromElements([grantedElement]));
+    }
+  }
+
+  return collected;
+}
+
 function uniqueElementsById(elements: BuiltInElement[]) {
   const seen = new Set<string>();
   return elements.filter((element) => {
@@ -1691,17 +1717,18 @@ export function BuilderEditor({
   ]);
   const selectedFeatureGrantIds = useMemo(
     () =>
-      [
-        ...(selectedRace ? collectAllGrantedIdsFromElements([selectedRace.race]) : []),
-        ...(selectedSubrace ? collectAllGrantedIdsFromElements([selectedSubrace]) : []),
-        ...collectAllGrantedIdsFromElements(selectedRacialTraitElements),
-        ...collectAllGrantedIdsFromElements(selectedClassFeatureElements),
-        ...collectAllGrantedIdsFromElements(selectedBackgroundFeatureElements),
-        ...collectAllGrantedIdsFromElements(allSelectedFeatElements),
-        ...collectAllGrantedIdsFromElements(selectedManualFeatureElements),
-      ].filter((id, index, values) => Boolean(id) && values.indexOf(id) === index),
+      collectAllNestedGrantedIdsFromElements(elementPool, [
+        ...(selectedRace ? [selectedRace.race] : []),
+        ...(selectedSubrace ? [selectedSubrace] : []),
+        ...selectedRacialTraitElements,
+        ...selectedClassFeatureElements,
+        ...selectedBackgroundFeatureElements,
+        ...allSelectedFeatElements,
+        ...selectedManualFeatureElements,
+      ]).filter((id, index, values) => Boolean(id) && values.indexOf(id) === index),
     [
       allSelectedFeatElements,
+      elementPool,
       selectedBackgroundFeatureElements,
       selectedClassFeatureElements,
       selectedManualFeatureElements,
@@ -1976,10 +2003,29 @@ export function BuilderEditor({
   );
   const selectedProgressionGrantElements = useMemo(
     () =>
-      collectAllGrantedIdsFromElements([...selectedManualFeatureElements, ...selectedProgressionElements])
+      collectAllNestedGrantedIdsFromElements(elementPool, [
+        ...(selectedRace ? [selectedRace.race] : []),
+        ...(selectedSubrace ? [selectedSubrace] : []),
+        ...selectedRacialTraitElements,
+        ...selectedClassFeatureElements,
+        ...selectedBackgroundFeatureElements,
+        ...allSelectedFeatElements,
+        ...selectedManualFeatureElements,
+        ...selectedProgressionElements,
+      ])
         .map((id) => elementPool.get(id))
         .filter((entry): entry is BuiltInElement => Boolean(entry)),
-    [elementPool, selectedManualFeatureElements, selectedProgressionElements],
+    [
+      allSelectedFeatElements,
+      elementPool,
+      selectedBackgroundFeatureElements,
+      selectedClassFeatureElements,
+      selectedManualFeatureElements,
+      selectedProgressionElements,
+      selectedRace,
+      selectedRacialTraitElements,
+      selectedSubrace,
+    ],
   );
   const activeProgressionElements = useMemo(
     () =>
@@ -1989,6 +2035,14 @@ export function BuilderEditor({
         ...selectedProgressionGrantElements,
       ]),
     [selectedManualFeatureElements, selectedProgressionElements, selectedProgressionGrantElements],
+  );
+  const hasSpellcastingAccess = useMemo(
+    () =>
+      spellGroups.length > 0 ||
+      activeProgressionElements.some((element) =>
+        Boolean(element.spellcasting) || /spellcasting/i.test(element.name),
+      ),
+    [activeProgressionElements, spellGroups.length],
   );
   const activeSpellGroups = useMemo(
     () =>
@@ -2002,6 +2056,7 @@ export function BuilderEditor({
         spellSelections: draft.spellSelections,
         spells,
         subrace: selectedSubrace,
+        hasSpellcastingAccess,
         totalLevel: totalCharacterLevel,
       }),
     [
@@ -2011,6 +2066,7 @@ export function BuilderEditor({
       draft.spellSelections,
       effectiveAbilities,
       activeProgressionElements,
+      hasSpellcastingAccess,
       selectedRace,
       selectedSubrace,
       spells,

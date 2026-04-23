@@ -39,6 +39,7 @@ type DeriveSpellcastingGroupsArgs = {
   classRecordsByEntry: Array<BuiltInClassRecord | null>;
   classEntries: CharacterClassEntry[];
   effectiveAbilities: Record<AbilityKey, number>;
+  hasSpellcastingAccess?: boolean;
   race: BuiltInRaceRecord | null;
   spellSelections: Record<string, string[]>;
   spells: BuiltInElement[];
@@ -381,6 +382,22 @@ function getAvailableSpellIdsForRule(
     .map((spell) => spell.id);
 }
 
+function getCasterMaxSpellLevelForCharacterLevel(level: number) {
+  return Math.min(9, Math.max(1, Math.ceil(level / 2)));
+}
+
+function isMagicalSecretsElement(element: BuiltInElement) {
+  return (
+    /magical secrets/i.test(element.name) ||
+    element.rules.some(
+      (rule) =>
+        rule.kind === "select" &&
+        rule.type === "Spell" &&
+        /magical secrets/i.test(rule.name),
+    )
+  );
+}
+
 function resolveSpellStatValue(
   rule: Extract<BuiltInRule, { kind: "stat" }>,
   resolved: Map<string, number>,
@@ -564,6 +581,8 @@ function buildPreparedGroup(args: {
 type SourceDescriptor = {
   currentLevel: number;
   fallbackListKey?: string;
+  forceAllSpellLists?: boolean;
+  forcedMaxSpellLevel?: number;
   ownerLabel: string;
   ownerType: SpellSelectionGroup["ownerType"];
   spellcastingAbility?: string;
@@ -602,7 +621,9 @@ function buildGroupsForSource(
   selectionRules.forEach((rule) => {
     const support = resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel);
     const kind: SpellSelectionGroupKind =
-      rule.name.toLowerCase().includes("cantrip") || support?.level === 0
+      source.forceAllSpellLists
+        ? "known"
+        : rule.name.toLowerCase().includes("cantrip") || support?.level === 0
         ? "cantrip"
         : rule.name.toLowerCase().includes("spellbook")
           ? "spellbook"
@@ -642,15 +663,20 @@ function buildGroupsForSource(
   const groups: SpellSelectionGroup[] = [];
 
   grouped.forEach(({ kind, rules, title, description }, groupKey) => {
-    const availableSpellIds = rules.flatMap((rule) =>
-      getAvailableSpellIdsForRule(
-        spells,
-        resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel),
-      ),
-    );
+    const availableSpellIds = source.forceAllSpellLists
+      ? spells
+          .filter((spell) => getSpellLevel(spell) <= (source.forcedMaxSpellLevel ?? maxSpellLevel))
+          .map((spell) => spell.id)
+      : rules.flatMap((rule) =>
+          getAvailableSpellIdsForRule(
+            spells,
+            resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel),
+          ),
+        );
     const allowsCantrips =
-      kind !== "spellbook" &&
-      rules.some((rule) => resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel)?.includesCantrips);
+      source.forceAllSpellLists ||
+      (kind !== "spellbook" &&
+        rules.some((rule) => resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel)?.includesCantrips));
     const normalizedSpellIds = uniqueStrings(availableSpellIds).filter((spellId) => {
       const spell = spells.find((candidate) => candidate.id === spellId);
       if (!spell) {
@@ -742,6 +768,7 @@ export function deriveSpellcastingGroups({
   classRecordsByEntry,
   classEntries,
   effectiveAbilities,
+  hasSpellcastingAccess = false,
   race,
   spellSelections,
   spells,
@@ -795,10 +822,18 @@ export function deriveSpellcastingGroups({
     if (!hasSpellRules(option, optionRules)) {
       return;
     }
+    const isManualMagicalSecrets = isMagicalSecretsElement(option);
+    if (isManualMagicalSecrets && !hasSpellcastingAccess) {
+      return;
+    }
 
     sources.push({
       currentLevel: totalLevel,
       fallbackListKey: option.spellcasting?.name || option.name,
+      forceAllSpellLists: isManualMagicalSecrets,
+      forcedMaxSpellLevel: isManualMagicalSecrets
+        ? getCasterMaxSpellLevelForCharacterLevel(totalLevel)
+        : undefined,
       ownerLabel: option.name,
       ownerType: getProgressionSpellOwnerType(option),
       spellcastingAbility: option.spellcasting?.ability?.toLowerCase(),
@@ -831,10 +866,15 @@ export function deriveSpellcastingGroups({
         Boolean(feature.spellcasting?.name) &&
         !preparedFromSpellbook &&
         featureRules.some((rule) => rule.kind === "stat" && rule.name.endsWith(":spellcasting:prepare"));
+      const isMagicalSecrets = isMagicalSecretsElement(feature);
 
       sources.push({
         currentLevel: entry.level,
         fallbackListKey: feature.spellcasting?.name || classRecord.class.name,
+        forceAllSpellLists: isMagicalSecrets,
+        forcedMaxSpellLevel: isMagicalSecrets
+          ? getCasterMaxSpellLevelForCharacterLevel(entry.level)
+          : undefined,
         ownerLabel: getClassSpellOwnerLabel(feature, classRecord.class.name),
         ownerType: "class",
         spellcastingAbility: feature.spellcasting?.ability?.toLowerCase(),

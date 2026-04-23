@@ -85,26 +85,57 @@ function collectAllGrantedIdsFromElements(elements: BuiltInElement[], level?: nu
   );
 }
 
+function collectAllNestedGrantedIdsFromElements(
+  elements: BuiltInElement[],
+  optionPool: Map<string, BuiltInElement>,
+  level?: number,
+) {
+  const visited = new Set<string>();
+  const queue = collectAllGrantedIdsFromElements(elements, level);
+  const collected: string[] = [];
+
+  while (queue.length) {
+    const currentId = queue.shift();
+    if (!currentId || visited.has(currentId)) {
+      continue;
+    }
+
+    visited.add(currentId);
+    collected.push(currentId);
+
+    const grantedElement = optionPool.get(currentId);
+    if (grantedElement) {
+      queue.push(...collectAllGrantedIdsFromElements([grantedElement], level));
+    }
+  }
+
+  return collected;
+}
+
 function extendContextWithGrantedElements(
   context: RequirementContext,
   elements: BuiltInElement[],
   optionPool: Map<string, BuiltInElement>,
   level?: number,
 ): RequirementContext {
-  const allGrantIds = collectAllGrantedIdsFromElements(elements, level);
+  const allGrantIds = collectAllNestedGrantedIdsFromElements(elements, optionPool, level);
+  const allGrantElements = allGrantIds
+    .map((id) => optionPool.get(id))
+    .filter((element): element is BuiltInElement => Boolean(element));
+  const grantSurface = [...elements, ...allGrantElements];
   const grantedFeatureIds = [
-    ...collectGrantedIdsFromElements(elements, "Class Feature", level),
-    ...collectGrantedIdsFromElements(elements, "Archetype Feature", level),
-    ...collectGrantedIdsFromElements(elements, "Racial Trait", level),
-    ...collectGrantedIdsFromElements(elements, "Background Feature", level),
-    ...collectGrantedIdsFromElements(elements, "Feat Feature", level),
-    ...collectGrantedIdsFromElements(elements, "Grants", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Class Feature", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Archetype Feature", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Racial Trait", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Background Feature", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Feat Feature", level),
+    ...collectGrantedIdsFromElements(grantSurface, "Grants", level),
     ...allGrantIds,
   ];
   const grantedFeatureNames = grantedFeatureIds.map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id));
-  const grantedProficiencyIds = collectGrantedIdsFromElements(elements, "Proficiency", level);
-  const grantedLanguageIds = collectGrantedIdsFromElements(elements, "Language", level);
-  const grantedSpellIds = collectGrantedIdsFromElements(elements, "Spell", level);
+  const grantedProficiencyIds = collectGrantedIdsFromElements(grantSurface, "Proficiency", level);
+  const grantedLanguageIds = collectGrantedIdsFromElements(grantSurface, "Language", level);
+  const grantedSpellIds = collectGrantedIdsFromElements(grantSurface, "Spell", level);
 
   return {
     ...context,
@@ -913,7 +944,7 @@ function buildGroupsFromFeatures(args: {
           familyLabel: formatSupportLabel(rule.supports) || rule.type,
           optionType: rule.type,
           unlockLevel: rule.level ?? entryLevel,
-          exactSelections: Math.max(1, rule.number ?? 1),
+          exactSelections: conditionalOnly ? 0 : Math.max(1, rule.number ?? 1),
           optional:
             conditionalOnly ||
             rule.optional === true ||
@@ -962,17 +993,21 @@ function extendRequirementContext(
     return context;
   }
 
-  const grantedFeatureIds = selectedEntries.flatMap((entry) =>
-    [
-      ...collectGrantedIdsFromElements([entry.element], "Class Feature"),
-      ...collectGrantedIdsFromElements([entry.element], "Archetype Feature"),
-      ...collectGrantedIdsFromElements([entry.element], "Racial Trait"),
-      ...collectGrantedIdsFromElements([entry.element], "Background Feature"),
-      ...collectGrantedIdsFromElements([entry.element], "Feat Feature"),
-      ...collectGrantedIdsFromElements([entry.element], "Grants"),
-      ...collectAllGrantedIdsFromElements([entry.element]),
-    ].filter(Boolean),
-  );
+  const selectedElements = selectedEntries.map((entry) => entry.element);
+  const nestedGrantIds = collectAllNestedGrantedIdsFromElements(selectedElements, optionPool);
+  const nestedGrantElements = nestedGrantIds
+    .map((id) => optionPool.get(id))
+    .filter((element): element is BuiltInElement => Boolean(element));
+  const grantSurface = [...selectedElements, ...nestedGrantElements];
+  const grantedFeatureIds = [
+    ...collectGrantedIdsFromElements(grantSurface, "Class Feature"),
+    ...collectGrantedIdsFromElements(grantSurface, "Archetype Feature"),
+    ...collectGrantedIdsFromElements(grantSurface, "Racial Trait"),
+    ...collectGrantedIdsFromElements(grantSurface, "Background Feature"),
+    ...collectGrantedIdsFromElements(grantSurface, "Feat Feature"),
+    ...collectGrantedIdsFromElements(grantSurface, "Grants"),
+    ...nestedGrantIds,
+  ].filter(Boolean);
   const grantedFeatureNames = grantedFeatureIds
     .map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id))
     .filter((name): name is string => Boolean(name));
@@ -991,52 +1026,52 @@ function extendRequirementContext(
     ],
     selectedSizeIds: [
       ...context.selectedSizeIds,
-      ...selectedEntries.flatMap((entry) => collectGrantedIdsFromElements([entry.element], "Size")),
+      ...collectGrantedIdsFromElements(grantSurface, "Size"),
     ],
     selectedProficiencyIds: [
       ...context.selectedProficiencyIds,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Proficiency" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Proficiency"),
+      ...grantSurface.flatMap((element) =>
+        element.type === "Proficiency" ? [element.id] : collectGrantedIdsFromElements([element], "Proficiency"),
       ),
     ],
     selectedProficiencyNames: [
       ...context.selectedProficiencyNames,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Proficiency" ? [entry.element.name] : [],
+      ...grantSurface.flatMap((element) =>
+        element.type === "Proficiency" ? [element.name] : [],
       ),
     ],
     selectedLanguageIds: [
       ...context.selectedLanguageIds,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Language" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Language"),
+      ...grantSurface.flatMap((element) =>
+        element.type === "Language" ? [element.id] : collectGrantedIdsFromElements([element], "Language"),
       ),
     ],
     selectedLanguageNames: [
       ...context.selectedLanguageNames,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Language" ? [entry.element.name] : [],
+      ...grantSurface.flatMap((element) =>
+        element.type === "Language" ? [element.name] : [],
       ),
     ],
     selectedSpellIds: [
       ...context.selectedSpellIds,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Spell" ? [entry.element.id] : collectGrantedIdsFromElements([entry.element], "Spell"),
+      ...grantSurface.flatMap((element) =>
+        element.type === "Spell" ? [element.id] : collectGrantedIdsFromElements([element], "Spell"),
       ),
     ],
     selectedSpellNames: [
       ...context.selectedSpellNames,
-      ...selectedEntries.flatMap((entry) => (entry.element.type === "Spell" ? [entry.element.name] : [])),
+      ...grantSurface.flatMap((element) => (element.type === "Spell" ? [element.name] : [])),
     ],
     selectedCantripIds: [
       ...context.selectedCantripIds,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Spell" && getSpellLevel(entry.element) === 0 ? [entry.element.id] : [],
+      ...grantSurface.flatMap((element) =>
+        element.type === "Spell" && getSpellLevel(element) === 0 ? [element.id] : [],
       ),
     ],
     selectedCantripNames: [
       ...context.selectedCantripNames,
-      ...selectedEntries.flatMap((entry) =>
-        entry.element.type === "Spell" && getSpellLevel(entry.element) === 0 ? [entry.element.name] : [],
+      ...grantSurface.flatMap((element) =>
+        element.type === "Spell" && getSpellLevel(element) === 0 ? [element.name] : [],
       ),
     ],
   };
