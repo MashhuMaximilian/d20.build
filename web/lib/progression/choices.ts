@@ -581,25 +581,6 @@ function isGenericSpellcastingRule(rule: Extract<BuiltInRule, { kind: "select" }
   );
 }
 
-function isSpecialProgressionSpellRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
-  if (rule.type !== "Spell") {
-    return false;
-  }
-
-  const tokens = [
-    ...splitSupportTokens(rule.supports),
-    ...splitSupportTokens(rule.name),
-    normalizeToken(rule.name),
-  ];
-  return tokens.some(
-    (token) =>
-      token.includes("discipline") ||
-      token.includes("psionic") ||
-      token.includes("mystic order") ||
-      token.includes("talent"),
-  );
-}
-
 function isNarrativeBackstoryRule(rule: Extract<BuiltInRule, { kind: "select" }>) {
   const normalizedName = normalizeToken(rule.name);
 
@@ -782,7 +763,6 @@ function collectSelectableRules(feature: BuiltInElement, entryLevel: number) {
       rule.type !== "Race Variant" &&
       !isNarrativeBackstoryRule(rule) &&
       !isGenericSpellcastingRule(rule) &&
-      (rule.type !== "Spell" || isSpecialProgressionSpellRule(rule)) &&
       !isImprovementRule(rule) &&
       (!rule.level || rule.level <= entryLevel),
   );
@@ -944,6 +924,7 @@ export function deriveProgressionChoiceGroups(args: {
   activeClassRecords: Array<BuiltInClassRecord | null>;
   activeBackground: BuiltInBackgroundRecord | null;
   activeFeats: BuiltInElement[];
+  activeManualFeatures: BuiltInElement[];
   activeRace: BuiltInRaceRecord | null;
   classEntries: CharacterClassEntry[];
   feats: BuiltInElement[];
@@ -1045,7 +1026,19 @@ export function deriveProgressionChoiceGroups(args: {
     }),
   );
 
-  const groups = [...raceGroups, ...backgroundGroups, ...featGroups, ...classGroups];
+  const manualFeatureGroups = args.activeManualFeatures.flatMap((feature) =>
+    buildGroupsFromFeatures({
+      classEntryIndex: -1,
+      ownerType: "nested",
+      ownerLabel: "Manual / DM grant",
+      entryLevel: Math.max(args.context.totalLevel, 1),
+      features: [feature],
+      optionPool,
+      context: args.context,
+    }),
+  );
+
+  const groups = [...raceGroups, ...backgroundGroups, ...featGroups, ...manualFeatureGroups, ...classGroups];
   const processedSelectedKeys = new Set<string>();
   let frontier = getSelectedProgressionOptionEntries(groups, args.selections);
 

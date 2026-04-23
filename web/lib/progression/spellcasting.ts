@@ -108,6 +108,22 @@ function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function getClassSpellOwnerLabel(feature: BuiltInElement, className: string) {
+  const normalizedFeatureName = feature.name.trim().toLowerCase();
+  const normalizedClassName = className.trim().toLowerCase();
+  const normalizedSpellListName = (feature.spellcasting?.name || "").trim().toLowerCase();
+
+  if (
+    normalizedFeatureName === "spellcasting" ||
+    normalizedFeatureName === normalizedClassName ||
+    normalizedSpellListName === normalizedClassName
+  ) {
+    return className;
+  }
+
+  return feature.name;
+}
+
 function activeGrantIds(rules: BuiltInRule[], type: string, currentLevel: number) {
   return rules.flatMap((rule) =>
     rule.kind === "grant" && rule.type === type && (!rule.level || rule.level <= currentLevel)
@@ -219,13 +235,14 @@ function splitSupportClauses(value: string) {
 }
 
 function splitSupportAlternatives(value: string) {
-  const trimmed = value.trim().replace(/^\(|\)$/g, "");
+  const trimmed = value.trim();
   if (!trimmed) {
     return [];
   }
 
   return trimmed
     .split(/\|\|?/)
+    .map((token) => token.trim().replace(/^\(+|\)+$/g, ""))
     .map((token) => normalizeListKey(token))
     .filter(Boolean);
 }
@@ -727,11 +744,11 @@ export function deriveSpellcastingGroups({
       sources.push({
         currentLevel: entry.level,
         fallbackListKey: feature.spellcasting?.name || classRecord.class.name,
-        ownerLabel: classRecord.class.name,
+        ownerLabel: getClassSpellOwnerLabel(feature, classRecord.class.name),
         ownerType: "class",
         spellcastingAbility: feature.spellcasting?.ability?.toLowerCase(),
         rules: feature.rules,
-        spellcastingRules: feature.spellcasting?.rules ?? feature.rules,
+        spellcastingRules: feature.spellcasting?.rules ?? classRecord.class.rules,
         preparedFromSpellbook,
         preparedFromFullList,
       });
@@ -755,7 +772,7 @@ export function deriveSpellcastingGroups({
         ownerType: "subclass",
         spellcastingAbility: feature.spellcasting?.ability?.toLowerCase(),
         rules: feature.rules,
-        spellcastingRules: feature.spellcasting?.rules ?? feature.rules,
+        spellcastingRules: feature.spellcasting?.rules ?? classRecord.class.rules,
       });
     });
   });

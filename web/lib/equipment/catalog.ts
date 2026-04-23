@@ -718,12 +718,34 @@ export async function getMergedEquipmentCatalog() {
     ].join("::");
   }
 
+  const entriesBySignature = new Map<string, EquipmentCatalogEntry[]>();
+
   [...builtInById.values(), ...importedById.values()].forEach((entry) => {
     const signature = getEntrySignature(entry);
-    const existing = deduped.get(signature);
-    if (!existing || scoreEntry(entry) > scoreEntry(existing)) {
-      deduped.set(signature, entry);
+    const current = entriesBySignature.get(signature) ?? [];
+    current.push(entry);
+    entriesBySignature.set(signature, current);
+  });
+
+  entriesBySignature.forEach((entries, signature) => {
+    const sorted = [...entries].sort((left, right) => scoreEntry(right) - scoreEntry(left));
+    const best = sorted[0];
+    const builtInMatch = entries.find((entry) => entry.origin === "built-in");
+    if (!best) {
+      return;
     }
+
+    if (!builtInMatch) {
+      deduped.set(signature, best);
+      return;
+    }
+
+    deduped.set(signature, {
+      ...best,
+      origin: "built-in",
+      source: builtInMatch.source,
+      sourceUrl: builtInMatch.sourceUrl,
+    });
   });
 
   return [...deduped.values()].sort(

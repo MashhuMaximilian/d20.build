@@ -204,6 +204,7 @@ export function FeatsAsiStep({
   const [sourceScopes, setSourceScopes] = useState<Record<string, FeatSourceScope>>({});
   const [selectedSources, setSelectedSources] = useState<Record<string, string[]>>({});
   const [expandedSourceLists, setExpandedSourceLists] = useState<Record<string, boolean>>({});
+  const [eligibleOnlyFilters, setEligibleOnlyFilters] = useState<Record<string, boolean>>({});
   const [tableSorts, setTableSorts] = useState<Record<string, FeatTableSortState>>({});
   const featOptions = useMemo(() => getAvailableFeatOptions(feats), [feats]);
 
@@ -236,6 +237,7 @@ export function FeatsAsiStep({
           const viewMode = viewModes[opportunity.id] ?? "cards";
           const sourceScope = sourceScopes[opportunity.id] ?? "all";
           const selectedSourceFilters = selectedSources[opportunity.id] ?? [];
+          const showEligibleOnly = eligibleOnlyFilters[opportunity.id] ?? true;
           const tableSort = tableSorts[opportunity.id] ?? { key: "name", direction: "asc" as const };
           const scopedFeats = featOptions.filter((feat) => {
             if (sourceScope === "built-in") {
@@ -252,6 +254,10 @@ export function FeatsAsiStep({
           const sourceListExpanded = expandedSourceLists[opportunity.id] ?? false;
           const visibleSourceOptions = sourceListExpanded ? sourceOptions : sourceOptions.slice(0, 12);
           const filteredFeats = scopedFeats.filter((feat) => {
+            if (showEligibleOnly && (featFailuresById[feat.id] ?? []).length) {
+              return false;
+            }
+
             if (
               featQuery &&
               !`${feat.name} ${feat.source} ${feat.description}`.toLowerCase().includes(featQuery)
@@ -532,6 +538,46 @@ export function FeatsAsiStep({
                                 </button>
                               ))}
                             </div>
+                          </div>
+
+                          <div className="catalog-selector__filterGroup">
+                            <span className="catalog-selector__sectionLabel">Availability</span>
+                            <div className="catalog-selector__filters">
+                              <button
+                                className={`choice-chip${showEligibleOnly ? " choice-chip--active" : ""}`}
+                                type="button"
+                                aria-pressed={showEligibleOnly}
+                                onClick={() =>
+                                  setEligibleOnlyFilters((current) => ({
+                                    ...current,
+                                    [opportunity.id]: !showEligibleOnly,
+                                  }))
+                                }
+                              >
+                                Eligible only
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="catalog-selector__appliedFilters">
+                            <button
+                              className={`catalog-selector__filterChip catalog-selector__appliedFilter${showEligibleOnly ? " catalog-selector__filterChip--active" : ""}`}
+                              type="button"
+                              aria-pressed={showEligibleOnly}
+                              onClick={() =>
+                                setEligibleOnlyFilters((current) => ({
+                                  ...current,
+                                  [opportunity.id]: !showEligibleOnly,
+                                }))
+                              }
+                            >
+                              Eligible only
+                            </button>
+                            {featQuery ? (
+                              <span className="catalog-selector__filterChip catalog-selector__appliedFilter">
+                                Search: {queries[opportunity.id]}
+                              </span>
+                            ) : null}
                           </div>
 
                           {sourceOptions.length > 1 ? (

@@ -200,6 +200,7 @@ export function ProgressionChoicesStep({
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [activePane, setActivePane] = useState<"filters" | "list" | "detail">("list");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [showEligibleOnly, setShowEligibleOnly] = useState(true);
   const [interactionWarning, setInteractionWarning] = useState("");
   const [tableSort, setTableSort] = useState<TableSortState<"name" | "source" | "summary" | "impact">>({
     key: "name",
@@ -223,16 +224,17 @@ export function ProgressionChoicesStep({
     () =>
       activeGroup
         ? activeGroup.options.filter((option) =>
-            !query
-              ? true
-              : `${option.element.name} ${option.element.source} ${option.element.description} ${
-                  option.element.prerequisite ?? ""
-                }`
-                  .toLowerCase()
-                  .includes(query),
+            (!showEligibleOnly || !option.requirementFailures.length) &&
+            (!query
+                ? true
+                : `${option.element.name} ${option.element.source} ${option.element.description} ${
+                    option.element.prerequisite ?? ""
+                  }`
+                    .toLowerCase()
+                    .includes(query)),
           )
         : [],
-    [activeGroup, query],
+    [activeGroup, query, showEligibleOnly],
   );
   const sortedOptions = useMemo(
     () =>
@@ -426,6 +428,20 @@ export function ProgressionChoicesStep({
                   />
                 </div>
 
+                <div className="catalog-selector__filterGroup">
+                  <span className="catalog-selector__sectionLabel">Availability</span>
+                  <div className="catalog-selector__filters">
+                    <button
+                      className={`choice-chip${showEligibleOnly ? " choice-chip--active" : ""}`}
+                      type="button"
+                      aria-pressed={showEligibleOnly}
+                      onClick={() => setShowEligibleOnly((current) => !current)}
+                    >
+                      Eligible only
+                    </button>
+                  </div>
+                </div>
+
                 <div className="catalog-selector__selectionSnapshot">
                   <span className="catalog-selector__sectionLabel">Selection rule</span>
                   <strong className="catalog-selector__snapshotTitle">{activeGroup.title}</strong>
@@ -496,9 +512,36 @@ export function ProgressionChoicesStep({
                         }
                       />
                     </label>
+                    <div className="catalog-selector__filterGroup">
+                      <span className="catalog-selector__sectionLabel">Availability</span>
+                      <div className="catalog-selector__filters">
+                        <button
+                          className={`choice-chip${showEligibleOnly ? " choice-chip--active" : ""}`}
+                          type="button"
+                          aria-pressed={showEligibleOnly}
+                          onClick={() => setShowEligibleOnly((current) => !current)}
+                        >
+                          Eligible only
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : null}
+
+              <div className="catalog-selector__appliedFilters">
+                <button
+                  className={`catalog-selector__filterChip catalog-selector__appliedFilter${showEligibleOnly ? " catalog-selector__filterChip--active" : ""}`}
+                  type="button"
+                  aria-pressed={showEligibleOnly}
+                  onClick={() => setShowEligibleOnly((current) => !current)}
+                >
+                  Eligible only
+                </button>
+                {query ? (
+                  <span className="catalog-selector__filterChip catalog-selector__appliedFilter">Search: {queries[activeGroup.id]}</span>
+                ) : null}
+              </div>
 
               {sortedOptions.length ? (
                 viewMode === "table" ? (

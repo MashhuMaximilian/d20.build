@@ -17,6 +17,10 @@ export type CatalogItem = {
   summaryLines?: string[];
   impactLines?: string[];
   mechanicsLines?: string[];
+  requirementFailures?: string[];
+  prerequisiteFailures?: string[];
+  disabledReason?: string;
+  unavailableReason?: string;
   featureDetails?: {
     name: string;
     description: string;
@@ -24,6 +28,15 @@ export type CatalogItem = {
     source?: string;
   }[];
 };
+
+function getCatalogItemFailures(item: CatalogItem) {
+  return [
+    ...(item.requirementFailures ?? []),
+    ...(item.prerequisiteFailures ?? []),
+    item.disabledReason ?? "",
+    item.unavailableReason ?? "",
+  ].filter(Boolean);
+}
 
 function getSourceFilterLabel(item: CatalogItem) {
   if (item.origin === "built-in") {
@@ -323,6 +336,7 @@ export function CatalogSelector({
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [primaryTagFilter, setPrimaryTagFilter] = useState<string | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [showEligibleOnly, setShowEligibleOnly] = useState(true);
   const [previewId, setPreviewId] = useState(selectedId);
   const [detailView, setDetailView] = useState<"overview" | "mechanics" | "features" | "reference">(
     defaultDetailView ?? getDefaultDetailView(label),
@@ -395,6 +409,10 @@ export function CatalogSelector({
     const queryTokens = normalizedQuery.split(" ").filter(Boolean);
 
     return items.filter((item) => {
+      if (showEligibleOnly && getCatalogItemFailures(item).length) {
+        return false;
+      }
+
       if (sourceFilter !== "all" && item.origin !== sourceFilter) {
         return false;
       }
@@ -439,7 +457,7 @@ export function CatalogSelector({
 
       return queryTokens.every((token) => haystack.includes(token));
     });
-  }, [items, primaryTagFilter, query, selectedSources, sourceFilter, tagFilter]);
+  }, [items, primaryTagFilter, query, selectedSources, showEligibleOnly, sourceFilter, tagFilter]);
 
   const searchScores = useMemo(() => {
     const queryTokens = normalizeSearchValue(query).split(" ").filter(Boolean);
@@ -554,7 +572,7 @@ export function CatalogSelector({
     setDetailView(defaultDetailView ?? getDefaultDetailView(label));
   }, [defaultDetailView, label, previewItem?.id]);
 
-  const activeFilters = [
+  const nonEligibilityFilters = [
     sourceFilter !== "all"
       ? sourceFilter === "built-in"
         ? "Built-in SRD"
@@ -564,6 +582,10 @@ export function CatalogSelector({
     ...selectedSources,
     tagFilter ?? "",
     query ? `Search: ${query}` : "",
+  ].filter(Boolean);
+  const activeFilters = [
+    showEligibleOnly ? "Eligible only" : "",
+    ...nonEligibilityFilters,
   ].filter(Boolean);
 
   return (
@@ -651,6 +673,20 @@ export function CatalogSelector({
                   }}
                 >
                   Imported sources
+                </button>
+              </div>
+            </div>
+
+            <div className="catalog-selector__filterGroup">
+              <span className="catalog-selector__sectionLabel">Availability</span>
+              <div className="catalog-selector__filters">
+                <button
+                  className={`choice-chip${showEligibleOnly ? " choice-chip--active" : ""}`}
+                  type="button"
+                  aria-pressed={showEligibleOnly}
+                  onClick={() => setShowEligibleOnly((current) => !current)}
+                >
+                  Eligible only
                 </button>
               </div>
             </div>
@@ -774,7 +810,7 @@ export function CatalogSelector({
                   </span>
                 </button>
               </div>
-              {activeFilters.length ? (
+              {nonEligibilityFilters.length || !showEligibleOnly ? (
                 <button
                   className="button button--secondary button--compact"
                   type="button"
@@ -784,6 +820,7 @@ export function CatalogSelector({
                     setSourceFilter("all");
                     setSelectedSources([]);
                     setQuery("");
+                    setShowEligibleOnly(true);
                   }}
                 >
                   Clear filters
@@ -806,9 +843,9 @@ export function CatalogSelector({
                   </label>
 
                   <div className="catalog-selector__tableToolbarControls">
-                    <div className="catalog-selector__filterGroup">
-                      <span className="catalog-selector__sectionLabel">Source</span>
-                      <div className="catalog-selector__filters">
+                      <div className="catalog-selector__filterGroup">
+                        <span className="catalog-selector__sectionLabel">Source</span>
+                        <div className="catalog-selector__filters">
                         {(["all", "built-in", "imported"] as const).map((option) => (
                           <button
                             key={option}
@@ -824,8 +861,22 @@ export function CatalogSelector({
                             {option === "all" ? "All" : option === "built-in" ? "Built-in" : "Imported sources"}
                           </button>
                         ))}
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="catalog-selector__filterGroup">
+                        <span className="catalog-selector__sectionLabel">Availability</span>
+                        <div className="catalog-selector__filters">
+                          <button
+                            className={`choice-chip${showEligibleOnly ? " choice-chip--active" : ""}`}
+                            type="button"
+                            aria-pressed={showEligibleOnly}
+                            onClick={() => setShowEligibleOnly((current) => !current)}
+                          >
+                            Eligible only
+                          </button>
+                        </div>
+                      </div>
 
                     {(sourceOptions.length > 1 || tagOptions.length) ? (
                       <button
