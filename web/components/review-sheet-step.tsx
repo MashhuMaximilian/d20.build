@@ -446,6 +446,33 @@ function getNumericRuleBonus(element: BuiltInElement, matcher: RegExp) {
   return ruleTotals + setterTotals;
 }
 
+function createAbilityBonusMap() {
+  return {
+    strength: 0,
+    dexterity: 0,
+    constitution: 0,
+    intelligence: 0,
+    wisdom: 0,
+    charisma: 0,
+  } satisfies Record<AbilityKey, number>;
+}
+
+function collectAbilityBonusesFromElements(elements: BuiltInElement[]) {
+  return elements.reduce<Record<AbilityKey, number>>((totals, element) => {
+    element.rules.forEach((rule) => {
+      if (rule.kind !== "stat" || !ABILITY_KEYS.includes(rule.name as AbilityKey)) {
+        return;
+      }
+      const ability = rule.name as AbilityKey;
+      const amount = Number(rule.value);
+      if (Number.isFinite(amount)) {
+        totals[ability] += amount;
+      }
+    });
+    return totals;
+  }, createAbilityBonusMap());
+}
+
 function getFallbackSpellSlotSummary(className: string, level: number) {
   const normalized = className.toLowerCase();
   if (/warlock/.test(normalized)) {
@@ -1458,6 +1485,11 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     [props.selectedExpertiseLabels],
   );
 
+  const manualFeatureBonuses = useMemo(
+    () => collectAbilityBonusesFromElements(props.selectedManualFeatureElements),
+    [props.selectedManualFeatureElements],
+  );
+
   const allEffectLines = [
     ...props.equipmentEffectSummary.acLines,
     ...props.equipmentEffectSummary.weaponLines,
@@ -1634,6 +1666,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                   <span className="ability-card__meta">
                     Base {props.draft.abilities[ability]}
                     {props.racialBonuses[ability] ? ` • racial ${props.racialBonuses[ability] >= 0 ? "+" : ""}${props.racialBonuses[ability]}` : ""}
+                    {manualFeatureBonuses[ability] ? ` • feature ${manualFeatureBonuses[ability] >= 0 ? "+" : ""}${manualFeatureBonuses[ability]}` : ""}
                     {props.improvementBonuses[ability] ? ` • ASI ${props.improvementBonuses[ability] >= 0 ? "+" : ""}${props.improvementBonuses[ability]}` : ""}
                   </span>
                 </div>
@@ -1791,10 +1824,10 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           <article className="builder-review__card review-sheet__card--span2">
             <span className="builder-panel__label">Spellcasting</span>
             {actionsView === "workbench" ? (
-              <div className="review-sheet__spellGroupGrid">
+              <div className="review-sheet__sectionStack">
                 {spellGroupCards.length ? (
                   spellGroupCards.map(({ group, entries }) => (
-                    <article className="review-sheet__spellGroupCard" key={group.id}>
+                    <article className="builder-review__card" key={group.id}>
                       <div className="review-sheet__headlineRow">
                         <div>
                           <strong className="review-sheet__sectionTitle">{group.title}</strong>
@@ -1848,7 +1881,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
                   <p className="builder-summary__meta">No spell groups are active for this build.</p>
                 )}
                 {props.manualGrantsByKind.spell.length ? (
-                  <article className="review-sheet__spellGroupCard">
+                  <article className="builder-review__card">
                     <div className="review-sheet__headlineRow">
                       <div>
                         <strong className="review-sheet__sectionTitle">Manual / DM spell grants</strong>
