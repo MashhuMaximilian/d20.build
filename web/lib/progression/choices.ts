@@ -62,6 +62,99 @@ function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string,
   );
 }
 
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function humanizeGrantedId(value: string) {
+  return value
+    .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
+    .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^ID_LANGUAGE_/, "")
+    .replace(/^ID_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function collectAllGrantedIdsFromElements(elements: BuiltInElement[], level?: number) {
+  return elements.flatMap((element) =>
+    element.rules.flatMap((rule) =>
+      rule.kind === "grant" && (!level || !rule.level || rule.level <= level) ? [rule.id] : [],
+    ),
+  );
+}
+
+function extendContextWithGrantedElements(
+  context: RequirementContext,
+  elements: BuiltInElement[],
+  optionPool: Map<string, BuiltInElement>,
+  level?: number,
+): RequirementContext {
+  const allGrantIds = collectAllGrantedIdsFromElements(elements, level);
+  const grantedFeatureIds = [
+    ...collectGrantedIdsFromElements(elements, "Class Feature", level),
+    ...collectGrantedIdsFromElements(elements, "Archetype Feature", level),
+    ...collectGrantedIdsFromElements(elements, "Racial Trait", level),
+    ...collectGrantedIdsFromElements(elements, "Background Feature", level),
+    ...collectGrantedIdsFromElements(elements, "Feat Feature", level),
+    ...collectGrantedIdsFromElements(elements, "Grants", level),
+    ...allGrantIds,
+  ];
+  const grantedFeatureNames = grantedFeatureIds.map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id));
+  const grantedProficiencyIds = collectGrantedIdsFromElements(elements, "Proficiency", level);
+  const grantedLanguageIds = collectGrantedIdsFromElements(elements, "Language", level);
+  const grantedSpellIds = collectGrantedIdsFromElements(elements, "Spell", level);
+
+  return {
+    ...context,
+    selectedFeatureIds: uniqueStrings([
+      ...context.selectedFeatureIds,
+      ...elements.map((element) => element.id),
+      ...grantedFeatureIds,
+    ]),
+    selectedFeatureNames: uniqueStrings([
+      ...context.selectedFeatureNames,
+      ...elements.map((element) => element.name),
+      ...grantedFeatureNames,
+    ]),
+    selectedSizeIds: uniqueStrings([
+      ...context.selectedSizeIds,
+      ...collectGrantedIdsFromElements(elements, "Size", level),
+    ]),
+    selectedProficiencyIds: uniqueStrings([
+      ...context.selectedProficiencyIds,
+      ...elements.flatMap((element) => (element.type === "Proficiency" ? [element.id] : [])),
+      ...grantedProficiencyIds,
+    ]),
+    selectedProficiencyNames: uniqueStrings([
+      ...context.selectedProficiencyNames,
+      ...elements.flatMap((element) => (element.type === "Proficiency" ? [element.name] : [])),
+      ...grantedProficiencyIds.map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id)),
+    ]),
+    selectedLanguageIds: uniqueStrings([
+      ...context.selectedLanguageIds,
+      ...elements.flatMap((element) => (element.type === "Language" ? [element.id] : [])),
+      ...grantedLanguageIds,
+    ]),
+    selectedLanguageNames: uniqueStrings([
+      ...context.selectedLanguageNames,
+      ...elements.flatMap((element) => (element.type === "Language" ? [element.name] : [])),
+      ...grantedLanguageIds.map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id)),
+    ]),
+    selectedSpellIds: uniqueStrings([
+      ...context.selectedSpellIds,
+      ...elements.flatMap((element) => (element.type === "Spell" ? [element.id] : [])),
+      ...grantedSpellIds,
+    ]),
+    selectedSpellNames: uniqueStrings([
+      ...context.selectedSpellNames,
+      ...elements.flatMap((element) => (element.type === "Spell" ? [element.name] : [])),
+      ...grantedSpellIds.map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id)),
+    ]),
+  };
+}
+
 function resolveNestedOwnerFeatures(entry: SelectedProgressionOptionEntry, optionPool: Map<string, BuiltInElement>) {
   const nestedGrantTypes = [
     "Class Feature",
@@ -778,10 +871,16 @@ function buildGroupsFromFeatures(args: {
   context: RequirementContext;
 }) {
   const { classEntryIndex, ownerType, ownerLabel, entryLevel, features, optionPool, context } = args;
-  const contextForOwner =
+  const baseContextForOwner =
     classEntryIndex >= 0 && (ownerType === "class" || ownerType === "subclass" || ownerType === "nested")
       ? { ...context, ownerClassLevel: entryLevel }
       : context;
+  const contextForOwner = extendContextWithGrantedElements(
+    baseContextForOwner,
+    features,
+    optionPool,
+    entryLevel,
+  );
 
   return features.flatMap((feature) =>
     collectSelectableRules(feature, entryLevel)
@@ -849,10 +948,12 @@ function extendRequirementContext(
       ...collectGrantedIdsFromElements([entry.element], "Racial Trait"),
       ...collectGrantedIdsFromElements([entry.element], "Background Feature"),
       ...collectGrantedIdsFromElements([entry.element], "Feat Feature"),
+      ...collectGrantedIdsFromElements([entry.element], "Grants"),
+      ...collectAllGrantedIdsFromElements([entry.element]),
     ].filter(Boolean),
   );
   const grantedFeatureNames = grantedFeatureIds
-    .map((id) => optionPool.get(id)?.name)
+    .map((id) => optionPool.get(id)?.name ?? humanizeGrantedId(id))
     .filter((name): name is string => Boolean(name));
 
   return {

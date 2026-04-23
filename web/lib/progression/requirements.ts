@@ -673,6 +673,26 @@ export function getRequirementFailures(
   }
 
   const selectedNamedOptions = [...context.selectedFeatureNames, ...context.selectedFeatNames].map(normalizeComparisonText);
+  const selectedResistanceOptions = [
+    ...context.selectedFeatureNames,
+    ...context.selectedFeatureIds.map(humanizeRequirementId),
+  ].map(normalizeComparisonText);
+  const damageTypes =
+    "acid|bludgeoning|cold|fire|force|lightning|necrotic|piercing|poison|psychic|radiant|slashing|thunder";
+  const resistanceMatches = [
+    ...fallbackText.matchAll(new RegExp(`\\b(${damageTypes})\\s+(?:damage\\s+)?resistance\\b`, "gi")),
+    ...fallbackText.matchAll(new RegExp(`\\bresistance\\s+to\\s+(${damageTypes})(?:\\s+damage)?\\b`, "gi")),
+  ];
+  resistanceMatches.forEach((match) => {
+    const requiredType = normalizeComparisonText(match[1]);
+    const hasMatch = selectedResistanceOptions.some(
+      (name) => name.includes(requiredType) && name.includes("resistance"),
+    );
+
+    if (!hasMatch) {
+      failures.push(`Requires ${requiredType.replace(/\b\w/g, (char) => char.toUpperCase())} resistance.`);
+    }
+  });
   const selectedNamedSpells = [...selectedSpellNames];
   const selectedNamedCantrips = [...selectedCantripNames];
   const specialNamedRequirements = [

@@ -108,6 +108,19 @@ function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function mergeRules(...ruleSets: Array<BuiltInRule[] | undefined>) {
+  const seen = new Set<string>();
+
+  return ruleSets.flatMap((rules) => rules ?? []).filter((rule) => {
+    const key = JSON.stringify(rule);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
 function getClassSpellOwnerLabel(feature: BuiltInElement, className: string) {
   const normalizedFeatureName = feature.name.trim().toLowerCase();
   const normalizedClassName = className.trim().toLowerCase();
@@ -266,6 +279,23 @@ function resolveSpellSupport(
     .filter((part) => part !== numericPart)
     .map((part) => splitSupportAlternatives(part))
     .filter((group) => group.length);
+  const numericAlternatives = supportGroups
+    .flat()
+    .filter((token) => /^\d+$/.test(token))
+    .map(Number);
+  const hasOnlyNumericSupport =
+    supportGroups.length > 0 &&
+    supportGroups.every((group) => group.every((token) => /^\d+$/.test(token)));
+
+  if (hasOnlyNumericSupport) {
+    return {
+      supportGroups: [],
+      levelMode: numericAlternatives.length === 1 && !usesDynamicMaxLevel ? ("exact" as const) : ("upto" as const),
+      level: Math.max(level, ...numericAlternatives),
+      anyList: true,
+      includesCantrips: numericAlternatives.includes(0),
+    };
+  }
 
   if (!supportGroups.length && fallbackListKey) {
     supportGroups.push([normalizeListKey(fallbackListKey)]);
@@ -280,6 +310,8 @@ function resolveSpellSupport(
     levelMode:
       numericPart && !usesDynamicMaxLevel ? ("exact" as const) : ("upto" as const),
     level,
+    anyList: false,
+    includesCantrips: numericPart === "0",
   };
 }
 
@@ -297,14 +329,20 @@ function matchesSpellSupport(spell: BuiltInElement, supportGroups: string[][]) {
 
 function getAvailableSpellIdsForRule(
   spells: BuiltInElement[],
-  support: { supportGroups: string[][]; levelMode: "exact" | "upto"; level: number } | null,
+  support: {
+    supportGroups: string[][];
+    levelMode: "exact" | "upto";
+    level: number;
+    anyList?: boolean;
+    includesCantrips?: boolean;
+  } | null,
 ) {
   if (!support) {
     return [];
   }
 
   return spells
-    .filter((spell) => matchesSpellSupport(spell, support.supportGroups))
+    .filter((spell) => support.anyList || matchesSpellSupport(spell, support.supportGroups))
     .filter((spell) => {
       const spellLevel = getSpellLevel(spell);
       return support.levelMode === "exact"
@@ -581,6 +619,9 @@ function buildGroupsForSource(
         resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel),
       ),
     );
+    const allowsCantrips =
+      kind !== "spellbook" &&
+      rules.some((rule) => resolveSpellSupport(rule, source.fallbackListKey, maxSpellLevel)?.includesCantrips);
     const normalizedSpellIds = uniqueStrings(availableSpellIds).filter((spellId) => {
       const spell = spells.find((candidate) => candidate.id === spellId);
       if (!spell) {
@@ -588,7 +629,7 @@ function buildGroupsForSource(
       }
 
       const spellLevel = getSpellLevel(spell);
-      return kind === "cantrip" ? spellLevel === 0 : spellLevel > 0;
+      return kind === "cantrip" ? spellLevel === 0 : allowsCantrips || spellLevel > 0;
     });
 
     groups.push(
@@ -681,7 +722,8 @@ export function deriveSpellcastingGroups({
   const sources: SourceDescriptor[] = [];
 
   activeRaceTraits.forEach((trait) => {
-    if (!trait.rules.some((rule) => rule.kind === "select" && rule.type === "Spell") && !trait.rules.some((rule) => rule.kind === "grant" && rule.type === "Spell")) {
+    const traitRules = mergeRules(trait.rules, trait.spellcasting?.rules);
+    if (!traitRules.some((rule) => rule.kind === "select" && rule.type === "Spell") && !traitRules.some((rule) => rule.kind === "grant" && rule.type === "Spell")) {
       return;
     }
 
@@ -691,16 +733,17 @@ export function deriveSpellcastingGroups({
       ownerLabel: trait.name,
       ownerType: "race",
       spellcastingAbility: trait.spellcasting?.ability?.toLowerCase(),
-      rules: trait.rules,
-      spellcastingRules: trait.spellcasting?.rules,
+      rules: traitRules,
+      spellcastingRules: traitRules,
     });
   });
 
   activeFeats.forEach((feat) => {
+    const featRules = mergeRules(feat.rules, feat.spellcasting?.rules);
     const hasSpellRules =
       Boolean(feat.spellcasting) ||
-      feat.rules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-      feat.rules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
+      featRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
+      featRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
     if (!hasSpellRules) {
       return;
@@ -712,8 +755,8 @@ export function deriveSpellcastingGroups({
       ownerLabel: feat.name,
       ownerType: "feat",
       spellcastingAbility: feat.spellcasting?.ability?.toLowerCase(),
-      rules: feat.rules,
-      spellcastingRules: feat.spellcasting?.rules ?? feat.rules,
+      rules: featRules,
+      spellcastingRules: featRules,
     });
   });
 
@@ -724,11 +767,16 @@ export function deriveSpellcastingGroups({
     }
 
     const unlockedFeatures = getUnlockedClassFeatures(classRecord, entry.level);
+    const classSpellcastingRules = mergeRules(
+      classRecord.class.rules,
+      ...unlockedFeatures.flatMap((feature) => [feature.rules, feature.spellcasting?.rules]),
+    );
     unlockedFeatures.forEach((feature) => {
+      const featureRules = mergeRules(feature.rules, feature.spellcasting?.rules);
       const hasSpellRules =
         Boolean(feature.spellcasting) ||
-        feature.rules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-        feature.rules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
+        featureRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
+        featureRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
       if (!hasSpellRules) {
         return;
@@ -739,7 +787,7 @@ export function deriveSpellcastingGroups({
       const preparedFromFullList =
         Boolean(feature.spellcasting?.name) &&
         !preparedFromSpellbook &&
-        feature.rules.some((rule) => rule.kind === "stat" && rule.name.endsWith(":spellcasting:prepare"));
+        featureRules.some((rule) => rule.kind === "stat" && rule.name.endsWith(":spellcasting:prepare"));
 
       sources.push({
         currentLevel: entry.level,
@@ -747,8 +795,8 @@ export function deriveSpellcastingGroups({
         ownerLabel: getClassSpellOwnerLabel(feature, classRecord.class.name),
         ownerType: "class",
         spellcastingAbility: feature.spellcasting?.ability?.toLowerCase(),
-        rules: feature.rules,
-        spellcastingRules: feature.spellcasting?.rules ?? classRecord.class.rules,
+        rules: featureRules,
+        spellcastingRules: mergeRules(featureRules, classSpellcastingRules),
         preparedFromSpellbook,
         preparedFromFullList,
       });
@@ -756,10 +804,11 @@ export function deriveSpellcastingGroups({
 
     const unlockedSubclassFeatures = getUnlockedSubclassFeatures(classRecord, entry);
     unlockedSubclassFeatures.forEach((feature) => {
+      const featureRules = mergeRules(feature.rules, feature.spellcasting?.rules);
       const hasSpellRules =
         Boolean(feature.spellcasting) ||
-        feature.rules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
-        feature.rules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
+        featureRules.some((rule) => rule.kind === "select" && rule.type === "Spell") ||
+        featureRules.some((rule) => rule.kind === "grant" && rule.type === "Spell");
 
       if (!hasSpellRules) {
         return;
@@ -771,8 +820,8 @@ export function deriveSpellcastingGroups({
         ownerLabel: feature.name,
         ownerType: "subclass",
         spellcastingAbility: feature.spellcasting?.ability?.toLowerCase(),
-        rules: feature.rules,
-        spellcastingRules: feature.spellcasting?.rules ?? classRecord.class.rules,
+        rules: featureRules,
+        spellcastingRules: mergeRules(featureRules, classSpellcastingRules),
       });
     });
   });
