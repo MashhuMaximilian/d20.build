@@ -326,10 +326,25 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
   });
 
   const railCards = uniqueById([
-    ...(source.featureCards ?? []).filter((card) => card.pageHint === "front-rail").map(normalizeCard),
+    ...featureCards.filter(
+      (card) =>
+        card.pageHint === "front-rail" ||
+        card.kind === "condition" ||
+        card.kind === "sense" ||
+        card.kind === "proficiency" ||
+        card.kind === "language",
+    ),
   ]);
 
-  const deckOnly = featureCards.filter((card) => card.pageHint !== "front-rail" && card.contentKind !== "appendix");
+  const deckOnly = featureCards.filter(
+    (card) =>
+      card.pageHint !== "front-rail" &&
+      card.contentKind !== "appendix" &&
+      card.kind !== "condition" &&
+      card.kind !== "sense" &&
+      card.kind !== "proficiency" &&
+      card.kind !== "language",
+  );
   const packed = packCards(deckOnly, FRONT_PAGE_DECK_CAPACITY);
 
   return {

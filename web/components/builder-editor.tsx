@@ -68,7 +68,10 @@ import {
   getSpellValidationMessages,
 } from "@/lib/progression/spellcasting";
 import { buildPdfCharacterFromBuilder } from "@/lib/pdf/from-builder";
-import { buildPdfExportHtml } from "@/lib/pdf/render";
+import {
+  createPdfExportToken,
+  storePdfExportPayload,
+} from "@/lib/pdf/session";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
@@ -2509,17 +2512,16 @@ export function BuilderEditor({
       return;
     }
 
-    const exportWindow = window.open("", "_blank", "width=1200,height=900");
+    const token = createPdfExportToken();
+    storePdfExportPayload(token, pdfCharacter);
+
+    const exportWindow = window.open(`/pdf-export?token=${encodeURIComponent(token)}`, "_blank", "width=1200,height=900");
     if (!exportWindow) {
       setStatusTone("error");
       setStatus("Allow pop-ups to export the PDF.");
+      window.localStorage.removeItem(`arcanum:pdf-export:${token}`);
       return;
     }
-
-    const html = buildPdfExportHtml(pdfCharacter);
-    exportWindow.document.open();
-    exportWindow.document.write(html);
-    exportWindow.document.close();
     exportWindow.focus();
   }, [pdfCharacter]);
 
