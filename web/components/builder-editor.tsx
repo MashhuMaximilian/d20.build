@@ -66,6 +66,8 @@ import {
   getSpellLevel,
   getSpellValidationMessages,
 } from "@/lib/progression/spellcasting";
+import { buildPdfCharacterFromBuilder } from "@/lib/pdf/from-builder";
+import { buildPdfExportHtml } from "@/lib/pdf/render";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
@@ -2440,6 +2442,73 @@ export function BuilderEditor({
       ),
     [draft.manualGrants],
   );
+  const pdfCharacter = useMemo(
+    () =>
+      buildPdfCharacterFromBuilder({
+        abilities: draft.abilities,
+        allSelectedFeatElements,
+        classRecordsByEntry,
+        draft,
+        effectiveAbilities,
+        manualGrantsByKind,
+        selectedBackground,
+        selectedBackgroundFeatureElements,
+        selectedClassFeatureElements,
+        selectedExpertiseLabels,
+        selectedFeatElements: allSelectedFeatElements,
+        selectedLanguageIds,
+        selectedLanguageNames,
+        selectedManualFeatureElements,
+        selectedProgressionElements,
+        selectedProficiencyIds,
+        selectedProficiencyNames,
+        selectedRace,
+        selectedRacialTraitElements,
+        selectedSpellIds,
+        selectedSubrace,
+        spellGroups: activeSpellGroups,
+        spells,
+      }),
+    [
+      activeSpellGroups,
+      allSelectedFeatElements,
+      classRecordsByEntry,
+      draft,
+      effectiveAbilities,
+      manualGrantsByKind,
+      selectedBackground,
+      selectedBackgroundFeatureElements,
+      selectedClassFeatureElements,
+      selectedExpertiseLabels,
+      selectedLanguageIds,
+      selectedLanguageNames,
+      selectedManualFeatureElements,
+      selectedProgressionElements,
+      selectedProficiencyIds,
+      selectedProficiencyNames,
+      selectedRace,
+      selectedRacialTraitElements,
+      selectedSpellIds,
+      selectedSubrace,
+      spells,
+    ],
+  );
+  const handleExportPdf = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const exportWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=900");
+    if (!exportWindow) {
+      setStatusTone("error");
+      setStatus("Allow pop-ups to export the PDF.");
+      return;
+    }
+
+    exportWindow.document.open();
+    exportWindow.document.write(buildPdfExportHtml(pdfCharacter));
+    exportWindow.document.close();
+  }, [pdfCharacter]);
 
   const steps = useMemo<BuilderStep[]>(() => {
     const base: BuilderStep[] = [
@@ -3656,6 +3725,7 @@ export function BuilderEditor({
             selectedSubrace={selectedSubrace}
             spellGroups={activeSpellGroups}
             spells={spells}
+            onExportPdf={handleExportPdf}
           />
         );
       default:
@@ -3758,6 +3828,11 @@ export function BuilderEditor({
           </div>
         </div>
         <div className="builder-navigation__actions">
+          {activeStep.kind === "review" ? (
+            <button className="button button--secondary" type="button" onClick={handleExportPdf}>
+              Export PDF
+            </button>
+          ) : null}
           {previousStep ? (
             <button
               className="button button--secondary"

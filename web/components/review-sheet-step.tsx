@@ -66,6 +66,7 @@ type ReviewSheetProps = {
   selectedSubrace: BuiltInElement | null;
   spellGroups: SpellSelectionGroup[];
   spells: BuiltInElement[];
+  onExportPdf?: () => void;
 };
 
 type ReviewResource = {
@@ -1543,12 +1544,19 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
 
   return (
     <section className="builder-stepPanel review-sheet">
-      <div className="builder-stepPanel__intro">
-        <span className="route-shell__tag">Review</span>
-        <h2 className="route-shell__title">Read the draft like a real character sheet</h2>
-        <p className="route-shell__copy">
-          This is the web-first sheet surface: stats, resources, actions, spells, features, inventory, and personality in one place without waiting for PDF export.
-        </p>
+      <div className="builder-stepPanel__intro review-sheet__intro">
+        <div>
+          <span className="route-shell__tag">Review</span>
+          <h2 className="route-shell__title">Read the draft like a real character sheet</h2>
+          <p className="route-shell__copy">
+            This is the web-first sheet surface: stats, resources, actions, spells, features, inventory, and personality in one place without waiting for PDF export.
+          </p>
+        </div>
+        {props.onExportPdf ? (
+          <button className="button button--secondary review-sheet__exportButton" type="button" onClick={props.onExportPdf}>
+            Export PDF
+          </button>
+        ) : null}
       </div>
 
       <div className="review-sheet__tabBar">
