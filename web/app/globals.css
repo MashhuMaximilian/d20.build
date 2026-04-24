@@ -664,6 +664,17 @@ a {
   gap: 10px;
 }
 
+.review-sheet__intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.review-sheet__exportButton {
+  flex: 0 0 auto;
+}
+
 .builder-navigation {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

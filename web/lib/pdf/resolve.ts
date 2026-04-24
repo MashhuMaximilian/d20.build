@@ -1,0 +1,514 @@
+import type { BuiltInElement } from "@/lib/builtins/types";
+import type {
+  CharacterBackstory,
+  CharacterInventoryItem,
+  CharacterManualGrant,
+} from "@/lib/characters/types";
+
+import { PDF_SVG_COMPONENT_MANIFEST } from "@/lib/pdf/assets";
+import type {
+  PdfAppendixEntry,
+  PdfCardKind,
+  PdfContentKind,
+  PdfFrontPageComposition,
+  PdfPageCard,
+  PdfPageKind,
+  PdfPagePlan,
+  PdfPageSection,
+  PdfResolveSource,
+  PdfStatBlock,
+  ResolvedPdfCharacter,
+} from "@/lib/pdf/types";
+
+const FRONT_PAGE_DECK_CAPACITY = 14;
+const INVENTORY_PAGE_CAPACITY = 8;
+const SPELL_PAGE_CAPACITY = 16;
+const APPENDIX_PAGE_CAPACITY = 6;
+
+function stripHtml(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function sentencePreview(value: string, fallback = "No short summary available.") {
+  const cleaned = stripHtml(value);
+  if (!cleaned) {
+    return fallback;
+  }
+
+  const sentence = cleaned.match(/.+?[.!?](?:\s|$)/)?.[0]?.trim() ?? cleaned;
+  return sentence.length > 180 ? `${sentence.slice(0, 177)}...` : sentence;
+}
+
+function uniqueById<T extends { id: string }>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) {
+      return false;
+    }
+    seen.add(item.id);
+    return true;
+  });
+}
+
+function normalizeText(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalizeTags(tags: string[] | undefined) {
+  return uniqueStrings((tags ?? []).map(normalizeText).filter(Boolean));
+}
+
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getCardPriority(kind: PdfCardKind, contentKind: PdfContentKind, pageHint?: PdfPageKind | "front-rail") {
+  const kindWeight: Record<PdfCardKind, number> = {
+    trait: 10,
+    feature: 20,
+    condition: 30,
+    sense: 35,
+    proficiency: 40,
+    language: 45,
+    item: 60,
+    spell: 70,
+    note: 80,
+  };
+  const contentWeight: Record<PdfContentKind, number> = {
+    summary: 0,
+    table: 5,
+    detail: 10,
+    appendix: 20,
+  };
+
+  return kindWeight[kind] + contentWeight[contentKind] + (pageHint === "front-rail" ? -5 : 0);
+}
+
+function getContentKindFromDetail(detail?: string) {
+  if (!detail) {
+    return "summary" as const;
+  }
+
+  const length = stripHtml(detail).length;
+  if (length > 1200) {
+    return "appendix" as const;
+  }
+  if (length > 350) {
+    return "detail" as const;
+  }
+  return "summary" as const;
+}
+
+function inferWidthHint(kind: PdfCardKind, detail?: string) {
+  const length = stripHtml(detail ?? "").length;
+  if (kind === "item" || kind === "spell" || length > 500) {
+    return "wide" as const;
+  }
+  if (length > 180) {
+    return "medium" as const;
+  }
+  return "small" as const;
+}
+
+function resolveCardKind(element: BuiltInElement): PdfCardKind {
+  if (/companion/i.test(element.type)) {
+    return "feature";
+  }
+  if (/trait/i.test(element.type)) {
+    return "trait";
+  }
+  if (/condition/i.test(element.type)) {
+    return "condition";
+  }
+  if (/language/i.test(element.type)) {
+    return "language";
+  }
+  if (/proficiency/i.test(element.type)) {
+    return "proficiency";
+  }
+  if (/spell/i.test(element.type)) {
+    return "spell";
+  }
+  if (/feat/i.test(element.type)) {
+    return "feature";
+  }
+  return "feature";
+}
+
+export function toPdfCardFromElement(
+  element: BuiltInElement,
+  overrides?: Partial<Pick<PdfPageCard, "kind" | "contentKind" | "pageHint" | "priority" | "sourceLabel" | "summary" | "detail" | "tags" | "widthHint">>,
+) {
+  const detail = overrides?.detail ?? element.descriptionHtml ?? element.description;
+  const kind = overrides?.kind ?? resolveCardKind(element);
+  const contentKind = overrides?.contentKind ?? getContentKindFromDetail(detail);
+  const pageHint = overrides?.pageHint;
+
+  return {
+    id: element.id,
+    title: element.name,
+    kind,
+    contentKind,
+    summary: overrides?.summary ?? sentencePreview(detail),
+    detail,
+    sourceLabel: overrides?.sourceLabel ?? element.source,
+    tags: normalizeTags([element.type, ...(element.supports ?? [])]),
+    priority: overrides?.priority ?? getCardPriority(kind, contentKind, pageHint),
+    pageHint,
+    widthHint: overrides?.widthHint ?? inferWidthHint(kind, detail),
+  } satisfies PdfPageCard;
+}
+
+export function toPdfCardFromGrant(grant: CharacterManualGrant) {
+  const detail = grant.detailHtml ?? grant.description ?? grant.note ?? "";
+  const kind: PdfCardKind =
+    grant.kind === "spell"
+      ? "spell"
+      : grant.kind === "language"
+        ? "language"
+        : grant.kind === "proficiency"
+          ? "proficiency"
+          : grant.kind === "feat"
+            ? "feature"
+            : grant.kind === "asi"
+              ? "note"
+              : "feature";
+  const contentKind = getContentKindFromDetail(detail);
+
+  return {
+    id: grant.id,
+    title: grant.name,
+    kind,
+    contentKind,
+    summary: sentencePreview(detail, grant.note || grant.description || "Manual grant"),
+    detail: detail || undefined,
+    sourceLabel: grant.source || "Manual / DM grant",
+    tags: normalizeTags([grant.kind, grant.refId ? "referenced" : "custom"]),
+    priority: getCardPriority(kind, contentKind),
+    widthHint: inferWidthHint(kind, detail),
+  } satisfies PdfPageCard;
+}
+
+export function toPdfCardFromInventoryItem(item: CharacterInventoryItem) {
+  const detail = item.detailHtml ?? item.notes ?? "";
+  const contentKind = getContentKindFromDetail(detail);
+  return {
+    id: item.id,
+    title: item.name,
+    kind: "item",
+    contentKind,
+    summary: sentencePreview(detail, item.notes || item.name),
+    detail: detail || undefined,
+    sourceLabel: item.sourceLabel || item.sourceName || item.source,
+    tags: normalizeTags([item.category, item.family ?? "", item.rarity ?? "", item.slot ?? ""]),
+    priority: getCardPriority("item", contentKind),
+    widthHint: inferWidthHint("item", detail),
+  } satisfies PdfPageCard;
+}
+
+function statBlockToCard(stat: PdfStatBlock) {
+  return {
+    id: stat.id,
+    title: stat.label,
+    kind: "note" as const,
+    contentKind: "summary" as const,
+    summary: stat.value,
+    detail: stat.meta,
+    sourceLabel: "Derived sheet stat",
+    tags: ["stat"],
+    priority: 5,
+    pageHint: "front-rail" as const,
+    widthHint: "small" as const,
+  } satisfies PdfPageCard;
+}
+
+function backstoryToCards(backstory?: CharacterBackstory) {
+  if (!backstory) {
+    return [];
+  }
+
+  const entries: Array<[string, string, string]> = [
+    ["personality-traits", "Personality traits", backstory.personalityTraits],
+    ["ideals", "Ideals", backstory.ideals],
+    ["bonds", "Bonds", backstory.bonds],
+    ["flaws", "Flaws", backstory.flaws],
+    ["allies-and-organizations", "Allies and organizations", backstory.alliesAndOrganizations],
+    ["backstory", "Backstory", backstory.backstory],
+    ["additional-features", "Additional features", backstory.additionalFeatures],
+  ];
+
+  return entries
+    .filter(([, , value]) => Boolean(normalizeText(value)))
+    .map(([id, title, value]) => ({
+      id,
+      title,
+      kind: "note" as const,
+      contentKind: "detail" as const,
+      summary: sentencePreview(value),
+      detail: value,
+      sourceLabel: "Backstory",
+      tags: ["backstory"],
+      priority: 90,
+      pageHint: "backstory" as const,
+      widthHint: "wide" as const,
+    }));
+}
+
+function toPdfAppendixEntryFromCard(card: PdfPageCard): PdfAppendixEntry {
+  return {
+    id: card.id,
+    title: card.title,
+    kind: "appendix",
+    body: card.detail || card.summary,
+    sourceLabel: card.sourceLabel,
+    tags: [...card.tags],
+  };
+}
+
+function normalizeCard(card: PdfPageCard) {
+  return {
+    ...card,
+    summary: normalizeText(card.summary),
+    detail: card.detail ? normalizeText(card.detail) : undefined,
+    tags: normalizeTags(card.tags),
+    priority: Number.isFinite(card.priority) ? Math.floor(card.priority) : 100,
+  };
+}
+
+function packCards(cards: PdfPageCard[], capacity: number) {
+  return {
+    packed: cards.slice(0, capacity),
+    overflow: cards.slice(capacity),
+  };
+}
+
+function buildSection(id: string, title: string, cards: PdfPageCard[], description?: string): PdfPageSection | null {
+  if (!cards.length) {
+    return null;
+  }
+
+  return {
+    id,
+    title,
+    cards,
+    description,
+  };
+}
+
+function buildPage(kind: PdfPageKind, number: number, title: string, sections: Array<PdfPageSection | null>, notes: string[] = []): PdfPagePlan {
+  return {
+    number,
+    kind,
+    title,
+    sections: sections.filter((section): section is PdfPageSection => Boolean(section)),
+    notes,
+  };
+}
+
+export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPageComposition {
+  const normalizedStats = uniqueById(source.stats.map((stat) => ({
+    ...stat,
+    label: normalizeText(stat.label),
+    value: normalizeText(stat.value),
+    meta: stat.meta ? normalizeText(stat.meta) : undefined,
+  })));
+
+  const featureCards = uniqueById((source.featureCards ?? []).map(normalizeCard)).sort((left, right) => {
+    if (left.priority !== right.priority) {
+      return left.priority - right.priority;
+    }
+    return left.title.localeCompare(right.title);
+  });
+
+  const railCards = uniqueById([
+    ...(source.featureCards ?? []).filter((card) => card.pageHint === "front-rail").map(normalizeCard),
+  ]);
+
+  const deckOnly = featureCards.filter((card) => card.pageHint !== "front-rail" && card.contentKind !== "appendix");
+  const packed = packCards(deckOnly, FRONT_PAGE_DECK_CAPACITY);
+
+  return {
+    stats: normalizedStats,
+    deck: packed.packed,
+    deckOverflow: packed.overflow,
+    railCards: railCards.sort((left, right) => left.priority - right.priority),
+    notes: uniqueStrings([
+      ...(source.notes ?? []),
+      "Front page is split between a numeric/stat zone and a generated feature-card deck.",
+    ]),
+    capacity: FRONT_PAGE_DECK_CAPACITY,
+  };
+}
+
+function buildPageCards(cards: PdfPageCard[], capacity: number) {
+  const normalized = uniqueById(cards.map(normalizeCard)).sort((left, right) => {
+    if (left.priority !== right.priority) {
+      return left.priority - right.priority;
+    }
+    return left.title.localeCompare(right.title);
+  });
+  const chunks: PdfPageCard[][] = [];
+  let cursor = 0;
+
+  while (cursor < normalized.length) {
+    chunks.push(normalized.slice(cursor, cursor + capacity));
+    cursor += capacity;
+  }
+
+  return chunks;
+}
+
+export function resolvePdfCharacter(source: PdfResolveSource): ResolvedPdfCharacter {
+  const featureCards = uniqueById((source.featureCards ?? []).map(normalizeCard));
+  const companionCards = uniqueById((source.companionCards ?? []).map(normalizeCard));
+  const inventoryCards = uniqueById((source.inventoryCards ?? []).map(normalizeCard));
+  const spellCards = uniqueById((source.spellCards ?? []).map(normalizeCard));
+  const backstoryCards = uniqueById([
+    ...(source.backstoryCards ?? []).map(normalizeCard),
+    ...backstoryToCards(source.backstory),
+  ]);
+  const appendixEntries = uniqueById([
+    ...(source.appendixEntries ?? []),
+    ...featureCards.filter((card) => card.contentKind === "appendix").map(toPdfAppendixEntryFromCard),
+    ...inventoryCards.filter((card) => card.contentKind === "appendix").map(toPdfAppendixEntryFromCard),
+    ...spellCards.filter((card) => card.contentKind === "appendix").map(toPdfAppendixEntryFromCard),
+  ]);
+
+  const frontPage = buildFrontPageComposition({
+    ...source,
+    featureCards,
+  });
+
+  const overflowAppendixEntries = frontPage.deckOverflow.map(toPdfAppendixEntryFromCard);
+  const allAppendixEntries = uniqueById([...appendixEntries, ...overflowAppendixEntries]);
+
+  const resolved: ResolvedPdfCharacter = {
+    id: source.draft.id,
+    name: normalizeText(source.draft.name || "Unnamed character"),
+    playerName: normalizeText(source.draft.playerName || ""),
+    level: Math.max(1, Math.floor(source.draft.level || 1)),
+    raceLabel: normalizeText(source.identity?.raceLabel || source.draft.raceId || ""),
+    subraceLabel: normalizeText(source.identity?.subraceLabel || source.draft.subraceId || ""),
+    classLabel:
+      normalizeText(source.identity?.classLabel || "") ||
+      uniqueStrings(source.draft.classEntries.map((entry) => entry.classId).filter(Boolean)).join(" / "),
+    backgroundLabel: normalizeText(source.identity?.backgroundLabel || source.draft.backgroundId || ""),
+    stats: frontPage.stats,
+    frontPage,
+    companionCards,
+    inventoryCards,
+    spellCards,
+    backstoryCards,
+    appendixEntries: allAppendixEntries,
+    notes: uniqueStrings(source.notes ?? []),
+    currency: source.currency,
+    backstory: source.backstory ?? source.draft.backstory,
+    source: source.draft,
+    pagePlan: [],
+  };
+
+  return {
+    ...resolved,
+    pagePlan: buildPdfPagePlan(resolved),
+  };
+}
+
+export function buildPdfPagePlan(character: ResolvedPdfCharacter): PdfPagePlan[] {
+  const pages: PdfPagePlan[] = [];
+  let pageNumber = 1;
+  const backstorySourceCards = character.backstoryCards.length ? character.backstoryCards : backstoryToCards(character.backstory);
+  const statsCards = character.frontPage.stats.map(statBlockToCard);
+
+  pages.push(
+    buildPage("front", pageNumber, "Front Page", [
+      buildSection("front-stats", "Numbers and stats", statsCards, "Primary numbers, resources, and derived combat values."),
+      buildSection("front-deck", "Features and traits", character.frontPage.deck, "Primary feature cards for the first page."),
+      buildSection("front-rail", "Conditions, senses, and other front-page references", character.frontPage.railCards, "Compact cards that replace placeholder whitespace."),
+    ], character.frontPage.notes),
+  );
+
+  if (character.companionCards.length) {
+    pageNumber += 1;
+    pages.push(
+      buildPage("companion", pageNumber, "Companion", buildPageCards(character.companionCards, INVENTORY_PAGE_CAPACITY).map((cards, index) =>
+        buildSection(`companion-${index + 1}`, "Companion cards", cards, "Companion traits, actions, and reactions."),
+      ), ["Companion page appears before inventory when a companion exists."]),
+    );
+  }
+
+  if (character.inventoryCards.length) {
+    pageNumber += 1;
+    pages.push(
+      buildPage("inventory", pageNumber, "Inventory", buildPageCards(character.inventoryCards, INVENTORY_PAGE_CAPACITY).map((cards, index) =>
+        buildSection(`inventory-${index + 1}`, "Inventory cards", cards, "Gear, attunement, notes, and item details."),
+      ), ["Inventory follows companion when present."]),
+    );
+  }
+
+  if (character.spellCards.length) {
+    pageNumber += 1;
+    pages.push(
+      buildPage("spells", pageNumber, "Spell List", buildPageCards(character.spellCards, SPELL_PAGE_CAPACITY).map((cards, index) =>
+        buildSection(`spells-${index + 1}`, "Spell cards", cards, "Prepared, known, or otherwise selected spells only."),
+      ), ["Spell page is shown only when the character has relevant spellcasting content."]),
+    );
+  }
+
+  if (character.backstoryCards.length || character.backstory?.backstory || character.backstory?.personalityTraits) {
+    pageNumber += 1;
+    const cards = buildPageCards(backstorySourceCards, INVENTORY_PAGE_CAPACITY)
+      .map((cards, index) =>
+        buildSection(`backstory-${index + 1}`, "Backstory cards", cards, "Personality, ideals, bonds, flaws, and other narrative content."),
+      )
+      .filter((section): section is PdfPageSection => Boolean(section));
+    pages.push(
+      buildPage("backstory", pageNumber, "Backstory", cards, ["Narrative content comes after the mechanical pages."]),
+    );
+  }
+
+  if (character.appendixEntries.length) {
+    const appendixChunks = buildPageCards(
+      character.appendixEntries.map((entry) => ({
+        id: entry.id,
+        title: entry.title,
+        kind: "note",
+        contentKind: "appendix",
+        summary: sentencePreview(entry.body),
+        detail: entry.body,
+        sourceLabel: entry.sourceLabel,
+        tags: entry.tags,
+        priority: 100,
+        pageHint: "appendix",
+        widthHint: "wide",
+      })),
+      APPENDIX_PAGE_CAPACITY,
+    );
+
+    appendixChunks.forEach((cards, index) => {
+      pageNumber += 1;
+      pages.push(
+        buildPage(
+          "appendix",
+          pageNumber,
+          index === 0 ? "Appendix" : `Appendix ${index + 1}`,
+          [buildSection(`appendix-${index + 1}`, "Verbose details", cards, "Long-form detail pages for spells, items, features, and similar content.")],
+          ["Appendix pages hold overflow and long-form detail content."],
+        ),
+      );
+    });
+  }
+
+  return pages;
+}
+
+export function mapPdfSvgUsage() {
+  return {
+    ...PDF_SVG_COMPONENT_MANIFEST,
+    frontPageTemplate: "SVGs for PDF/examples with svgs/Design general character sheet p1 v3.svg",
+  } as const;
+}
