@@ -1138,6 +1138,7 @@ export function BuilderEditor({
   const [status, setStatus] = useState("");
   const [statusTone, setStatusTone] = useState<"error" | "success">("success");
   const [isSaving, setIsSaving] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [currentStep, setCurrentStep] = useState("foundation");
   const [showNavigationWarnings, setShowNavigationWarnings] = useState(false);
   const [activeClassEntryIndex, setActiveClassEntryIndex] = useState(0);
@@ -2508,6 +2509,7 @@ export function BuilderEditor({
       return;
     }
 
+    setIsExportingPdf(true);
     try {
       const response = await fetch("/pdf-export", {
         method: "POST",
@@ -2536,6 +2538,8 @@ export function BuilderEditor({
       console.error("Failed to export PDF", error);
       setStatusTone("error");
       setStatus("PDF export failed. Please try again.");
+    } finally {
+      setIsExportingPdf(false);
     }
   }, [pdfCharacter]);
 
@@ -3754,6 +3758,7 @@ export function BuilderEditor({
             selectedSubrace={selectedSubrace}
             spellGroups={activeSpellGroups}
             spells={spells}
+            isExportingPdf={isExportingPdf}
             onExportPdf={handleExportPdf}
           />
         );
@@ -3858,8 +3863,15 @@ export function BuilderEditor({
         </div>
         <div className="builder-navigation__actions">
           {activeStep.kind === "review" ? (
-            <button className="button button--secondary" type="button" onClick={handleExportPdf}>
-              Download PDF
+            <button
+              className="button button--secondary"
+              type="button"
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              aria-busy={isExportingPdf}
+            >
+              {isExportingPdf ? <span className="button__spinner" aria-hidden="true" /> : null}
+              {isExportingPdf ? "Generating Character Sheet..." : "Download Character Sheet"}
             </button>
           ) : null}
           {previousStep ? (

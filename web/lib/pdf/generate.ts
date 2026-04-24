@@ -15,10 +15,11 @@ const PAGE_WIDTH = 595;
 const PAGE_HEIGHT = 842;
 
 type TextOptions = {
-  font?: "Helvetica" | "Helvetica-Bold" | "Times-Roman" | "Times-Bold";
+  font?: "Helvetica" | "Helvetica-Bold" | "Times-Roman" | "Times-Bold" | typeof PDF_TEXT_FONT_FAMILY;
   size?: number;
   color?: string;
   align?: "left" | "center" | "right";
+  lineGap?: number;
 };
 
 type RenderedPage = {
@@ -38,8 +39,23 @@ const FRONT_PAGE_LAYOUT = {
   features: { x: 10, y: 558, width: 575, height: 250 },
 } as const;
 
-const FRONT_PAGE_RAIL_CARD = { width: 190, height: 60 };
-const FRONT_PAGE_FEATURE_CARD = { width: 280, height: 78 };
+const FRONT_PAGE_SPELLCASTING_BOXES = [
+  { x: 402, y: 157, width: 48, height: 28, key: "spellcasting bonus" },
+  { x: 466, y: 157, width: 48, height: 28, key: "save dc" },
+  { x: 529, y: 157, width: 48, height: 28, key: "spellcasting ability" },
+] as const;
+const FRONT_PAGE_SENSES_REGION = { x: 399, y: 200, width: 180, height: 108 };
+const FRONT_PAGE_RACIAL_REGION = { x: 399, y: 324, width: 180, height: 148 };
+const FRONT_PAGE_FEATURE_GRID = {
+  x: 14,
+  y: 573,
+  width: 567,
+  height: 226,
+  columns: 3,
+  maxRows: 4,
+  columnGap: 8,
+  rowGap: 6,
+} as const;
 const PDF_TEXT_FONT_FAMILY = "Noto Sans";
 let svgToPdfImpl: typeof SVGtoPDF | null = null;
 
@@ -143,7 +159,41 @@ function addSvg(
 }
 
 function textColor(doc: PDFDocument, color?: string) {
-  doc.fillColor(color || "#4b2c1f");
+  doc.fillColor(color || "#111111");
+}
+
+function resolveFontName(font?: TextOptions["font"]) {
+  return font || PDF_TEXT_FONT_FAMILY;
+}
+
+function fitTextSize(
+  doc: PDFDocument,
+  text: string,
+  width: number,
+  height: number,
+  options: TextOptions & { maxSize: number; minSize: number },
+) {
+  const step = 0.5;
+  for (let size = options.maxSize; size >= options.minSize; size -= step) {
+    doc.save();
+    doc.font(resolveFontName(options.font));
+    doc.fontSize(size);
+    const measuredHeight = doc.heightOfString(text, {
+      width,
+      height,
+      align: options.align || "left",
+      lineBreak: true,
+      ellipsis: true,
+      lineGap: options.lineGap,
+    });
+    doc.restore();
+
+    if (measuredHeight <= height) {
+      return size;
+    }
+  }
+
+  return options.minSize;
 }
 
 function writeText(
@@ -155,7 +205,7 @@ function writeText(
   height: number,
   options: TextOptions = {},
 ) {
-  doc.font(PDF_TEXT_FONT_FAMILY);
+  doc.font(resolveFontName(options.font));
   doc.fontSize(options.size || 8.5);
   textColor(doc, options.color);
   doc.text(text, x, y, {
@@ -164,6 +214,22 @@ function writeText(
     align: options.align || "left",
     lineBreak: true,
     ellipsis: true,
+    lineGap: options.lineGap,
+  });
+}
+
+function writeFittedText(
+  doc: PDFDocument,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  options: TextOptions & { maxSize: number; minSize: number },
+) {
+  writeText(doc, text, x, y, width, height, {
+    ...options,
+    size: fitTextSize(doc, text, width, height, options),
   });
 }
 
@@ -175,33 +241,25 @@ function valueBoxX(index: number) {
 function renderFrontHeader(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   addSvg(doc, assets.frontPageHeader, FRONT_PAGE_LAYOUT.header.x, FRONT_PAGE_LAYOUT.header.y, FRONT_PAGE_LAYOUT.header.width, FRONT_PAGE_LAYOUT.header.height);
 
-  writeText(doc, character.name, 28, 32, 215, 18, {
+  writeFittedText(doc, safeText(character.name), 26, 37, 176, 24, {
     font: "Times-Bold",
-    size: 21,
-  });
-  writeText(doc, "CHARACTER NAME", 28, 57, 120, 7, {
-    size: 5.5,
-    color: "#8d8175",
+    maxSize: 24,
+    minSize: 15,
   });
 
-  const rightX = 238;
-  const rightY = 25;
-  const metaRows: Array<{ label: string; value: string; x: number; y: number; width: number }> = [
-    { label: "RACE", value: [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ") || "—", x: rightX, y: rightY, width: 112 },
-    { label: "CLASS & LEVEL", value: `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`, x: rightX + 119, y: rightY, width: 108 },
-    { label: "BACKGROUND", value: character.backgroundLabel || "—", x: rightX, y: rightY + 22, width: 112 },
-    { label: "PLAYER NAME", value: character.playerName || "—", x: rightX + 119, y: rightY + 22, width: 108 },
+  const metaRows: Array<{ value: string; x: number; y: number; width: number; maxSize?: number }> = [
+    { value: [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ") || "—", x: 240, y: 28, width: 95, maxSize: 8.5 },
+    { value: `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`, x: 349, y: 28, width: 160, maxSize: 8.5 },
+    { value: character.backgroundLabel || "—", x: 240, y: 50, width: 95, maxSize: 8.2 },
+    { value: "—", x: 349, y: 50, width: 66, maxSize: 8.2 },
+    { value: "—", x: 430, y: 50, width: 48, maxSize: 8.2 },
+    { value: character.playerName || "—", x: 489, y: 50, width: 68, maxSize: 8.2 },
   ];
 
   for (const row of metaRows) {
-    writeText(doc, row.label, row.x, row.y, row.width, 6, {
-      size: 5.3,
-      color: "#94887d",
-    });
-    writeText(doc, row.value, row.x, row.y + 8, row.width, 12, {
-      font: "Times-Bold",
-      size: row.label === "CLASS & LEVEL" ? 9.5 : 9,
-      color: "#4b2c1f",
+    writeFittedText(doc, safeText(row.value), row.x, row.y, row.width, 10, {
+      maxSize: row.maxSize ?? 8.5,
+      minSize: 5.8,
     });
   }
 }
@@ -209,22 +267,47 @@ function renderFrontHeader(doc: PDFDocument, assets: PdfSvgAssetBundle, characte
 function renderStatStrip(doc: PDFDocument, assets: PdfSvgAssetBundle, stats: ResolvedPdfCharacter["frontPage"]["stats"]) {
   addSvg(doc, assets.hpPanel, FRONT_PAGE_LAYOUT.stats.x, FRONT_PAGE_LAYOUT.stats.y, FRONT_PAGE_LAYOUT.stats.width, FRONT_PAGE_LAYOUT.stats.height);
 
-  stats.slice(0, 11).forEach((stat, index) => {
+  const statsByLabel = new Map(stats.map((stat) => [stat.label.toLowerCase(), stat]));
+  const values = [
+    statsByLabel.get("proficiency bonus")?.value || "—",
+    statsByLabel.get("initiative")?.value || "—",
+    statsByLabel.get("attacks / action")?.value || "—",
+    "—",
+    "0",
+    statsByLabel.get("hp")?.value || "—",
+    statsByLabel.get("hp")?.value || "—",
+    "—",
+    statsByLabel.get("hit dice")?.value || "—",
+    statsByLabel.get("ac")?.value || "—",
+    "—",
+  ];
+
+  const widths = [40, 40, 40, 40, 40, 48, 48, 44, 44, 40, 40];
+
+  values.forEach((value, index) => {
     const x = valueBoxX(index);
-    const y = 100;
-    writeText(doc, safeNumberText(stat.value), x, y, 40, 13, {
-      font: "Times-Bold",
-      size: index === 7 ? 15 : 11,
+    const width = widths[index] ?? 40;
+    const y = index >= 5 ? 100 : 101;
+    writeFittedText(doc, safeNumberText(value), x, y, width, 16, {
+      font: index === 9 ? "Helvetica-Bold" : "Times-Bold",
       align: "center",
-      color: "#4b2c1f",
+      maxSize: index >= 5 ? 16 : 13,
+      minSize: 8,
     });
-    if (stat.meta) {
-      writeText(doc, safeText(stat.meta), x - 4, y + 13, 48, 11, {
-        size: 5.8,
-        align: "center",
-        color: "#6e5a4b",
-      });
-    }
+  });
+}
+
+function renderSpellcastingBoxes(doc: PDFDocument, stats: ResolvedPdfCharacter["frontPage"]["stats"]) {
+  const statsByLabel = new Map(stats.map((stat) => [stat.label.toLowerCase(), stat.value]));
+
+  FRONT_PAGE_SPELLCASTING_BOXES.forEach((box) => {
+    const value = statsByLabel.get(box.key) || "—";
+    writeFittedText(doc, safeNumberText(value), box.x, box.y, box.width, box.height, {
+      font: box.key === "spellcasting ability" ? "Helvetica-Bold" : "Times-Bold",
+      align: "center",
+      maxSize: box.key === "spellcasting ability" ? 10 : 16,
+      minSize: 7,
+    });
   });
 }
 
@@ -236,12 +319,12 @@ function renderAbilityPanel(
   addSvg(doc, assets.abilityPanel, FRONT_PAGE_LAYOUT.abilities.x, FRONT_PAGE_LAYOUT.abilities.y, FRONT_PAGE_LAYOUT.abilities.width, FRONT_PAGE_LAYOUT.abilities.height);
 
   const abilityPositions = [
-    { row: 0, col: 0, x: 20, y: 174 },
-    { row: 0, col: 1, x: 120, y: 174 },
-    { row: 0, col: 2, x: 220, y: 174 },
-    { row: 1, col: 0, x: 20, y: 248 },
-    { row: 1, col: 1, x: 120, y: 248 },
-    { row: 1, col: 2, x: 220, y: 248 },
+    { x: 20, y: 157 },
+    { x: 109, y: 157 },
+    { x: 197, y: 157 },
+    { x: 20, y: 231 },
+    { x: 109, y: 231 },
+    { x: 197, y: 231 },
   ];
 
   character.frontPage.abilityRows.slice(0, 6).forEach((row, index) => {
@@ -249,24 +332,23 @@ function renderAbilityPanel(
     if (!slot) {
       return;
     }
-    writeText(doc, row.label, slot.x, slot.y, 82, 10, {
-      font: "Helvetica-Bold",
-      size: 9,
-      align: "center",
-    });
-    writeText(doc, `${row.score}`, slot.x, slot.y + 12, 82, 20, {
+    writeFittedText(doc, `${row.score}`, slot.x + 9, slot.y + 38, 50, 18, {
       font: "Times-Bold",
-      size: 17,
+      maxSize: 22,
+      minSize: 14,
       align: "center",
     });
-    writeText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, slot.x, slot.y + 30, 82, 8, {
-      size: 8.5,
+    writeFittedText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, slot.x + 11, slot.y + 87, 46, 10, {
+      font: "Helvetica-Bold",
+      maxSize: 10,
+      minSize: 7,
       align: "center",
     });
-    writeText(doc, `Save ${row.saveBonus >= 0 ? "+" : ""}${row.saveBonus}`, slot.x, slot.y + 38, 82, 8, {
-      size: 6.8,
+    writeFittedText(doc, `${row.saveBonus >= 0 ? "+" : ""}${row.saveBonus}`, slot.x + 12, slot.y + 7, 44, 8, {
+      font: "Helvetica-Bold",
+      maxSize: 7.5,
+      minSize: 5.5,
       align: "center",
-      color: "#7a6453",
     });
   });
 
@@ -293,22 +375,15 @@ function renderAbilityPanel(
       return;
     }
 
-    writeText(doc, group.title, box.x, box.y - 9, box.width, 7, {
-      size: 6.4,
-      align: "center",
-      color: "#968476",
-    });
-
     group.abilities.forEach((skillLabel, skillIndex) => {
       const skill = skillsByLabel.get(skillLabel.toLowerCase());
       if (!skill) {
         return;
       }
-      writeText(doc, `• ${skill.label}`, box.x + 2, box.y + skillIndex * 8, box.width - 20, 7, {
-        size: 6.4,
-      });
-      writeText(doc, `${skill.total >= 0 ? "+" : ""}${skill.total}`, box.x + box.width - 18, box.y + skillIndex * 8, 16, 7, {
-        size: 6.4,
+      writeFittedText(doc, `${skill.total >= 0 ? "+" : ""}${skill.total}`, box.x + box.width - 23, box.y + 2 + skillIndex * 8, 20, 7, {
+        font: "Helvetica-Bold",
+        maxSize: 6.4,
+        minSize: 5.2,
         align: "right",
       });
     });
@@ -321,28 +396,24 @@ function renderPassivesPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, charac
   const statsByLabel = new Map(character.frontPage.stats.map((stat) => [stat.label.toLowerCase(), stat]));
   const skillByLabel = new Map(character.frontPage.skillRows.map((skill) => [skill.label.toLowerCase(), skill]));
   const entries = [
-    { label: "Long J.", value: statsByLabel.get("long jump")?.value || "—", x: 20 },
-    { label: "High J.", value: statsByLabel.get("high jump")?.value || "—", x: 67 },
-    { label: "Lift / Drag", value: statsByLabel.get("lift / drag")?.value || "—", x: 115 },
-    { label: "Dark Vision", value: statsByLabel.get("dark vision")?.value || "—", x: 173 },
-    { label: "Perception", value: `+${10 + (skillByLabel.get("perception")?.total ?? 0)}`, x: 225 },
-    { label: "Insight", value: `+${10 + (skillByLabel.get("insight")?.total ?? 0)}`, x: 275 },
-    { label: "Investig.", value: `+${10 + (skillByLabel.get("investigation")?.total ?? 0)}`, x: 329 },
-    { label: "Walking", value: statsByLabel.get("speed")?.value || "—", x: 383 },
-    { label: "Flying", value: "—", x: 438 },
-    { label: "Climbing", value: "—", x: 491 },
-    { label: "Swimming", value: "—", x: 540 },
+    { value: statsByLabel.get("long jump")?.value || "—", x: 20 },
+    { value: statsByLabel.get("high jump")?.value || "—", x: 67 },
+    { value: statsByLabel.get("lift / drag")?.value || "—", x: 115 },
+    { value: statsByLabel.get("dark vision")?.value || "—", x: 173 },
+    { value: `${10 + (skillByLabel.get("perception")?.total ?? 0)}`, x: 225 },
+    { value: `${10 + (skillByLabel.get("insight")?.total ?? 0)}`, x: 275 },
+    { value: `${10 + (skillByLabel.get("investigation")?.total ?? 0)}`, x: 329 },
+    { value: statsByLabel.get("speed")?.value || "—", x: 383 },
+    { value: "—", x: 438 },
+    { value: "—", x: 491 },
+    { value: "—", x: 540 },
   ];
 
   entries.forEach((entry) => {
-    writeText(doc, entry.label, entry.x, 304, 38, 7, {
-      size: 5.5,
-      align: "center",
-      color: "#665546",
-    });
-    writeText(doc, safeNumberText(entry.value), entry.x, 310, 38, 8, {
+    writeFittedText(doc, safeNumberText(entry.value), entry.x, 316, 38, 9, {
       font: "Helvetica-Bold",
-      size: 7.5,
+      maxSize: 7.2,
+      minSize: 5.5,
       align: "center",
     });
   });
@@ -387,74 +458,105 @@ function renderCardFrame(
   assets: PdfSvgAssetBundle,
   card: PdfPageCard,
   frame: RenderedPage,
-  compact = false,
+  options: {
+    compact?: boolean;
+    summaryOnly?: boolean;
+  } = {},
 ) {
   addSvg(doc, assets.generalContainer, frame.x, frame.y, frame.width, frame.height);
 
-  const titleSize = compact ? 8.4 : 9.5;
-  const bodySize = compact ? 6.7 : 7.4;
-  const detailSize = compact ? 6.2 : 6.8;
+  const compact = Boolean(options.compact);
+  const summaryOnly = Boolean(options.summaryOnly);
   const contentX = frame.x + 9;
   const contentW = frame.width - 18;
   const titleY = frame.y + 8;
-  const bodyY = titleY + 13;
+  const bodyY = titleY + (compact ? 11 : 13);
+  const sourceX = frame.x + frame.width - 84;
+  const titleWidth = contentW - 64;
+  const sourceLabel = card.sourceLabel ? safeText(card.sourceLabel).slice(0, compact ? 20 : 28) : "";
 
-  writeText(doc, safeText(card.title), contentX, titleY, contentW - 60, 10, {
+  writeFittedText(doc, safeText(card.title), contentX, titleY, titleWidth, compact ? 11 : 13, {
     font: "Helvetica-Bold",
-    size: titleSize,
+    maxSize: compact ? 8.2 : 9.2,
+    minSize: compact ? 5.8 : 6.8,
   });
-  if (card.sourceLabel) {
-    writeText(doc, safeText(card.sourceLabel), frame.x + frame.width - 84, titleY + 1, 76, 7, {
-      size: 5.6,
+  if (sourceLabel) {
+    writeFittedText(doc, sourceLabel, sourceX, titleY + 1, 76, 7, {
+      maxSize: 5.6,
+      minSize: 4.5,
       align: "right",
-      color: "#766257",
+      color: "#444444",
     });
   }
-  if (card.tags.length) {
-    writeText(doc, card.tags.join(" · "), frame.x + frame.width - 84, titleY + 9, 76, 7, {
-      size: 5.3,
-      align: "right",
-      color: "#8b7b71",
-    });
-  }
-  writeText(doc, safeText(card.summary), contentX, bodyY, contentW, compact ? 24 : 30, {
-    size: bodySize,
-    color: "#4f392d",
+  writeFittedText(doc, safeText(card.summary), contentX, bodyY, contentW, summaryOnly ? frame.height - 24 : compact ? 25 : 30, {
+    maxSize: compact ? 7.2 : 7.8,
+    minSize: compact ? 5.3 : 6.0,
+    color: "#111111",
+    lineGap: compact ? 0 : 1,
   });
-  if (card.detail) {
-    writeText(doc, safeText(card.detail), contentX, bodyY + (compact ? 26 : 32), contentW, compact ? 16 : 18, {
-      size: detailSize,
-      color: "#665546",
+  if (!summaryOnly && card.detail) {
+    writeFittedText(doc, safeText(card.detail), contentX, bodyY + (compact ? 26 : 32), contentW, compact ? 16 : 18, {
+      maxSize: compact ? 6.2 : 6.8,
+      minSize: compact ? 4.9 : 5.3,
+      color: "#333333",
     });
   }
 }
 
 function renderRailCards(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["railCards"]) {
-  cards.slice(0, 8).forEach((card, index) => {
-    renderCardFrame(doc, assets, card, {
-      x: FRONT_PAGE_LAYOUT.rail.x,
-      y: FRONT_PAGE_LAYOUT.rail.y + index * (FRONT_PAGE_RAIL_CARD.height + 6),
-      width: FRONT_PAGE_RAIL_CARD.width,
-      height: FRONT_PAGE_RAIL_CARD.height,
-    }, true);
-  });
+  const racialCards = cards.filter((card) => card.kind === "trait").slice(0, 4);
+  const sensesCards = cards.filter((card) => card.kind !== "trait").slice(0, 3);
+
+  const renderRegion = (region: RenderedPage, regionCards: PdfPageCard[]) => {
+    if (!regionCards.length) {
+      return;
+    }
+
+    const gap = 6;
+    const visibleCards = regionCards.slice(0, 4);
+    const cardHeight = Math.max(40, Math.min(62, (region.height - gap * (visibleCards.length - 1)) / visibleCards.length));
+    visibleCards.forEach((card, index) => {
+      renderCardFrame(doc, assets, card, {
+        x: region.x,
+        y: region.y + index * (cardHeight + gap),
+        width: region.width,
+        height: cardHeight,
+      }, {
+        compact: true,
+        summaryOnly: true,
+      });
+    });
+  };
+
+  renderRegion(FRONT_PAGE_SENSES_REGION, sensesCards);
+  renderRegion(FRONT_PAGE_RACIAL_REGION, racialCards);
 }
 
 function renderFrontDeck(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["deck"]) {
-  const startX = FRONT_PAGE_LAYOUT.features.x;
-  const startY = FRONT_PAGE_LAYOUT.features.y;
-  const columnGap = 8;
-  const rowGap = 7;
-  const colWidth = FRONT_PAGE_FEATURE_CARD.width;
-  const cardHeight = FRONT_PAGE_FEATURE_CARD.height;
-  cards.slice(0, 6).forEach((card, index) => {
-    const col = index % 2;
-    const row = Math.floor(index / 2);
+  const visibleCards = cards.slice(0, FRONT_PAGE_FEATURE_GRID.columns * FRONT_PAGE_FEATURE_GRID.maxRows);
+  if (!visibleCards.length) {
+    return;
+  }
+
+  const rows = Math.min(FRONT_PAGE_FEATURE_GRID.maxRows, Math.ceil(visibleCards.length / FRONT_PAGE_FEATURE_GRID.columns));
+  const colWidth =
+    (FRONT_PAGE_FEATURE_GRID.width - FRONT_PAGE_FEATURE_GRID.columnGap * (FRONT_PAGE_FEATURE_GRID.columns - 1)) /
+    FRONT_PAGE_FEATURE_GRID.columns;
+  const cardHeight =
+    (FRONT_PAGE_FEATURE_GRID.height - FRONT_PAGE_FEATURE_GRID.rowGap * (rows - 1)) /
+    rows;
+
+  visibleCards.forEach((card, index) => {
+    const col = index % FRONT_PAGE_FEATURE_GRID.columns;
+    const row = Math.floor(index / FRONT_PAGE_FEATURE_GRID.columns);
     renderCardFrame(doc, assets, card, {
-      x: startX + col * (colWidth + columnGap),
-      y: startY + row * (cardHeight + rowGap),
+      x: FRONT_PAGE_FEATURE_GRID.x + col * (colWidth + FRONT_PAGE_FEATURE_GRID.columnGap),
+      y: FRONT_PAGE_FEATURE_GRID.y + row * (cardHeight + FRONT_PAGE_FEATURE_GRID.rowGap),
       width: colWidth,
       height: cardHeight,
+    }, {
+      compact: true,
+      summaryOnly: true,
     });
   });
 }
@@ -464,6 +566,7 @@ function renderFrontPage(doc: PDFDocument, assets: PdfSvgAssetBundle, character:
   renderFrontHeader(doc, assets, character);
   renderStatStrip(doc, assets, character.frontPage.stats);
   renderAbilityPanel(doc, assets, character);
+  renderSpellcastingBoxes(doc, character.frontPage.stats);
   renderPassivesPanel(doc, assets, character);
   renderAttacksPanel(doc, assets, character.frontPage.attackRows);
   renderRailCards(doc, assets, character.frontPage.railCards);
@@ -523,7 +626,9 @@ function renderPlanSection(
       y: rowStart + row * (cardHeight + gap),
       width: cardWidth,
       height: cardHeight,
-    }, cardWidth < 200);
+    }, {
+      compact: cardWidth < 200,
+    });
   });
 
   return rowStart + Math.ceil(section.cards.length / cardsPerRow) * (cardHeight + gap) - gap;

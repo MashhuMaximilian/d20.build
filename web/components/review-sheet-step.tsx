@@ -66,6 +66,7 @@ type ReviewSheetProps = {
   selectedSubrace: BuiltInElement | null;
   spellGroups: SpellSelectionGroup[];
   spells: BuiltInElement[];
+  isExportingPdf?: boolean;
   onExportPdf?: () => void;
 };
 
@@ -1563,8 +1564,15 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
           </p>
         </div>
         {props.onExportPdf ? (
-          <button className="button button--secondary review-sheet__exportButton" type="button" onClick={props.onExportPdf}>
-            Download PDF
+          <button
+            className="button button--secondary review-sheet__exportButton"
+            type="button"
+            onClick={props.onExportPdf}
+            disabled={props.isExportingPdf}
+            aria-busy={props.isExportingPdf}
+          >
+            {props.isExportingPdf ? <span className="button__spinner" aria-hidden="true" /> : null}
+            {props.isExportingPdf ? "Generating Character Sheet..." : "Download Character Sheet"}
           </button>
         ) : null}
       </div>

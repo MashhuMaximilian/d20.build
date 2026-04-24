@@ -23,7 +23,7 @@ import type {
   ResolvedPdfCharacter,
 } from "@/lib/pdf/types";
 
-const FRONT_PAGE_DECK_CAPACITY = 14;
+const FRONT_PAGE_DECK_CAPACITY = 12;
 const INVENTORY_PAGE_CAPACITY = 8;
 const SPELL_PAGE_CAPACITY = 16;
 const APPENDIX_PAGE_CAPACITY = 6;

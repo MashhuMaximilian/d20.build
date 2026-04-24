@@ -13,6 +13,7 @@ declare module "pdfkit" {
     align?: "left" | "center" | "right" | "justify";
     lineBreak?: boolean;
     ellipsis?: boolean;
+    lineGap?: number;
   };
 
   export default class PDFDocument extends Readable {
@@ -28,6 +29,8 @@ declare module "pdfkit" {
     registerFont(name: string, src: string | Buffer): this;
     fontSize(size: number): this;
     fillColor(color: string): this;
+    heightOfString(text: string, options?: PDFTextOptions): number;
+    widthOfString(text: string): number;
     save(): this;
     restore(): this;
     moveTo(x: number, y: number): this;
