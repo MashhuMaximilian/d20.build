@@ -1,9 +1,7 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import type { Metadata } from "next";
 
 import { PdfExportViewer } from "@/components/pdf-export-viewer";
+import { loadPdfSvgAsset, loadPdfSvgAssetBundle } from "@/lib/pdf/svg-assets.server";
 
 type PdfExportPageProps = {
   searchParams?: Promise<{
@@ -16,16 +14,34 @@ export const metadata: Metadata = {
 };
 
 async function loadFrontPageTemplate() {
-  const templatePath = path.resolve(
-    process.cwd(),
-    "../SVGs for PDF/examples with svgs/Design general character sheet p1 v3.svg",
-  );
-  return fs.readFile(templatePath, "utf8");
+  return loadPdfSvgAsset("frontPageTemplate");
 }
 
 export default async function PdfExportPage({ searchParams }: PdfExportPageProps) {
   const params = searchParams ? await searchParams : undefined;
   const templateSvg = await loadFrontPageTemplate();
+  const svgAssets = await loadPdfSvgAssetBundle([
+    "frontPageHeader",
+    "abilityPanel",
+    "hpPanel",
+    "passivesAndSpeeds",
+    "weaponAttacks",
+    "generalContainer",
+    "hitDie",
+    "lines",
+    "proficiencyBoolean",
+    "ac",
+    "bonusBox",
+    "hp",
+    "line",
+    "lineBonusSkill",
+    "passiveBox",
+    "proficiencyBox",
+    "skillBlock",
+    "skillLine",
+    "statBlock",
+    "weaponLine",
+  ]);
 
-  return <PdfExportViewer templateSvg={templateSvg} token={params?.token ?? null} />;
+  return <PdfExportViewer templateSvg={templateSvg} svgAssets={svgAssets} token={params?.token ?? null} />;
 }

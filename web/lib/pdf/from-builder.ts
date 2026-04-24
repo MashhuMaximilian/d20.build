@@ -9,8 +9,10 @@ import type {
   AbilityKey,
   CharacterDraft,
   CharacterManualGrant,
+  CharacterInventoryItem,
 } from "@/lib/characters/types";
 import { ABILITY_LABELS } from "@/lib/characters/types";
+import { normalizeInventoryWeaponItem } from "@/lib/equipment/inventory";
 import type { SpellSelectionGroup } from "@/lib/progression/spellcasting";
 
 import {
@@ -74,6 +76,35 @@ function getAbilityModifier(value: number) {
 
 function getAverageHitDieGain(hitDie: number) {
   return Math.floor(hitDie / 2) + 1;
+}
+
+const SKILL_ABILITY_MAP: Array<{ id: string; label: string; ability: AbilityKey }> = [
+  { id: "acrobatics", label: "Acrobatics", ability: "dexterity" },
+  { id: "animal-handling", label: "Animal Handling", ability: "wisdom" },
+  { id: "arcana", label: "Arcana", ability: "intelligence" },
+  { id: "athletics", label: "Athletics", ability: "strength" },
+  { id: "deception", label: "Deception", ability: "charisma" },
+  { id: "history", label: "History", ability: "intelligence" },
+  { id: "insight", label: "Insight", ability: "wisdom" },
+  { id: "intimidation", label: "Intimidation", ability: "charisma" },
+  { id: "investigation", label: "Investigation", ability: "intelligence" },
+  { id: "medicine", label: "Medicine", ability: "wisdom" },
+  { id: "nature", label: "Nature", ability: "intelligence" },
+  { id: "perception", label: "Perception", ability: "wisdom" },
+  { id: "performance", label: "Performance", ability: "charisma" },
+  { id: "persuasion", label: "Persuasion", ability: "charisma" },
+  { id: "religion", label: "Religion", ability: "intelligence" },
+  { id: "sleight-of-hand", label: "Sleight of Hand", ability: "dexterity" },
+  { id: "stealth", label: "Stealth", ability: "dexterity" },
+  { id: "survival", label: "Survival", ability: "wisdom" },
+];
+
+function normalizeLookupLabel(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getProficiencyBonus(level: number) {
+  return 2 + Math.floor((Math.max(1, level) - 1) / 4);
 }
 
 function resolveClassName(record: BuiltInClassRecord | null, entry: CharacterDraft["classEntries"][number]) {
@@ -294,8 +325,75 @@ function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, dr
   return labels.join(" / ");
 }
 
+function buildAbilityRows(args: BuilderPdfSourceArgs) {
+  const proficiencyBonus = getProficiencyBonus(args.draft.level);
+  const proficiencyLabels = new Set(args.selectedProficiencyNames.map(normalizeLookupLabel));
+
+  return Object.entries(ABILITY_LABELS).map(([abilityKey, label]) => {
+    const ability = abilityKey as AbilityKey;
+    const score = Number.isFinite(args.effectiveAbilities[ability]) ? args.effectiveAbilities[ability] : 10;
+    const modifier = getAbilityModifier(score);
+    const saveProficient =
+      proficiencyLabels.has(normalizeLookupLabel(label)) ||
+      proficiencyLabels.has(normalizeLookupLabel(`${label} saving throw`));
+
+    return {
+      id: `ability-${ability}`,
+      label,
+      score,
+      modifier,
+      saveBonus: modifier + (saveProficient ? proficiencyBonus : 0),
+      saveProficient,
+    };
+  });
+}
+
+function buildSkillRows(args: BuilderPdfSourceArgs) {
+  const proficiencyBonus = getProficiencyBonus(args.draft.level);
+  const proficiencyLabels = new Set(args.selectedProficiencyNames.map(normalizeLookupLabel));
+  const expertiseLabels = new Set(args.selectedExpertiseLabels.map(normalizeLookupLabel));
+
+  return SKILL_ABILITY_MAP.map((skill) => {
+    const proficient = proficiencyLabels.has(normalizeLookupLabel(skill.label));
+    const expertise = expertiseLabels.has(normalizeLookupLabel(skill.label));
+    const tier = expertise ? 2 : proficient ? 1 : 0;
+    const score = Number.isFinite(args.effectiveAbilities[skill.ability]) ? args.effectiveAbilities[skill.ability] : 10;
+    const modifier = getAbilityModifier(score);
+    return {
+      id: `skill-${skill.id}`,
+      label: skill.label,
+      ability: ABILITY_LABELS[skill.ability],
+      total: modifier + (proficiencyBonus * tier),
+      proficient,
+      expertise,
+    };
+  });
+}
+
+function buildAttackRows(args: BuilderPdfSourceArgs) {
+  return uniqueById(
+    args.draft.inventoryItems
+      .map(normalizeInventoryWeaponItem)
+      .filter((item): item is CharacterInventoryItem => Boolean(item.equipped && item.category === "weapon"))
+      .map((item) => {
+        const hit = item.attackBonus?.trim() || "—";
+        const damage = item.damage || item.baseDamage || "—";
+        const type = item.family || item.itemType || item.category || "";
+        const properties = [item.slot, item.rarity, item.notes].filter(Boolean).join(" · ");
+        return {
+          id: `attack-${item.id}`,
+          name: item.baseItemName || item.name,
+          hit,
+          damage,
+          type,
+          properties: properties || undefined,
+        };
+      }),
+  );
+}
+
 function buildStatCards(args: BuilderPdfSourceArgs) {
-  const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
+  const proficiencyBonus = getProficiencyBonus(args.draft.level);
   const vitals = deriveHitPointSummary({
     draft: args.draft,
     classRecordsByEntry: args.classRecordsByEntry,
@@ -404,6 +502,9 @@ export function buildPdfCharacterFromBuilder(args: BuilderPdfSourceArgs): Resolv
       backgroundLabel: args.selectedBackground?.background.name || "",
     },
     stats: buildStatCards(args),
+    abilityRows: buildAbilityRows(args),
+    skillRows: buildSkillRows(args),
+    attackRows: buildAttackRows(args),
     featureCards: buildFeatureCards(args),
     companionCards: buildCompanionCards(args),
     inventoryCards: buildInventoryCards(args),

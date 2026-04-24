@@ -8,6 +8,8 @@ import type {
 import { PDF_SVG_COMPONENT_MANIFEST } from "@/lib/pdf/assets";
 import type {
   PdfAppendixEntry,
+  PdfAttackRow,
+  PdfAbilityScoreRow,
   PdfCardKind,
   PdfContentKind,
   PdfFrontPageComposition,
@@ -17,6 +19,7 @@ import type {
   PdfPageSection,
   PdfResolveSource,
   PdfStatBlock,
+  PdfSkillRow,
   ResolvedPdfCharacter,
 } from "@/lib/pdf/types";
 
@@ -280,6 +283,39 @@ function normalizeCard(card: PdfPageCard) {
   };
 }
 
+function normalizeAbilityRow(row: PdfAbilityScoreRow): PdfAbilityScoreRow {
+  return {
+    ...row,
+    label: normalizeText(row.label),
+    score: Number.isFinite(row.score) ? Math.floor(row.score) : 10,
+    modifier: Number.isFinite(row.modifier) ? Math.floor(row.modifier) : 0,
+    saveBonus: Number.isFinite(row.saveBonus) ? Math.floor(row.saveBonus) : 0,
+    saveProficient: Boolean(row.saveProficient),
+  };
+}
+
+function normalizeSkillRow(row: PdfSkillRow): PdfSkillRow {
+  return {
+    ...row,
+    label: normalizeText(row.label),
+    ability: normalizeText(row.ability),
+    total: Number.isFinite(row.total) ? Math.floor(row.total) : 0,
+    proficient: Boolean(row.proficient),
+    expertise: Boolean(row.expertise),
+  };
+}
+
+function normalizeAttackRow(row: PdfAttackRow): PdfAttackRow {
+  return {
+    ...row,
+    name: normalizeText(row.name),
+    hit: normalizeText(row.hit),
+    damage: normalizeText(row.damage),
+    type: row.type ? normalizeText(row.type) : undefined,
+    properties: row.properties ? normalizeText(row.properties) : undefined,
+  };
+}
+
 function packCards(cards: PdfPageCard[], capacity: number) {
   return {
     packed: cards.slice(0, capacity),
@@ -318,6 +354,10 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
     meta: stat.meta ? normalizeText(stat.meta) : undefined,
   })));
 
+  const normalizedAbilityRows = uniqueById((source.abilityRows ?? []).map(normalizeAbilityRow)).sort((left, right) => left.label.localeCompare(right.label));
+  const normalizedSkillRows = uniqueById((source.skillRows ?? []).map(normalizeSkillRow)).sort((left, right) => left.label.localeCompare(right.label));
+  const normalizedAttackRows = uniqueById((source.attackRows ?? []).map(normalizeAttackRow));
+
   const featureCards = uniqueById((source.featureCards ?? []).map(normalizeCard)).sort((left, right) => {
     if (left.priority !== right.priority) {
       return left.priority - right.priority;
@@ -329,6 +369,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
     ...featureCards.filter(
       (card) =>
         card.pageHint === "front-rail" ||
+        card.kind === "trait" ||
         card.kind === "condition" ||
         card.kind === "sense" ||
         card.kind === "proficiency" ||
@@ -340,6 +381,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
     (card) =>
       card.pageHint !== "front-rail" &&
       card.contentKind !== "appendix" &&
+      card.kind !== "trait" &&
       card.kind !== "condition" &&
       card.kind !== "sense" &&
       card.kind !== "proficiency" &&
@@ -349,6 +391,9 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
 
   return {
     stats: normalizedStats,
+    abilityRows: normalizedAbilityRows,
+    skillRows: normalizedSkillRows,
+    attackRows: normalizedAttackRows,
     deck: packed.packed,
     deckOverflow: packed.overflow,
     railCards: railCards.sort((left, right) => left.priority - right.priority),

@@ -42,6 +42,33 @@ export type PdfStatBlock = {
   meta?: string;
 };
 
+export type PdfAbilityScoreRow = {
+  id: string;
+  label: string;
+  score: number;
+  modifier: number;
+  saveBonus: number;
+  saveProficient: boolean;
+};
+
+export type PdfSkillRow = {
+  id: string;
+  label: string;
+  ability: string;
+  total: number;
+  proficient: boolean;
+  expertise: boolean;
+};
+
+export type PdfAttackRow = {
+  id: string;
+  name: string;
+  hit: string;
+  damage: string;
+  type?: string;
+  properties?: string;
+};
+
 export type PdfPageSection = {
   id: string;
   title: string;
@@ -51,6 +78,9 @@ export type PdfPageSection = {
 
 export type PdfFrontPageComposition = {
   stats: PdfStatBlock[];
+  abilityRows: PdfAbilityScoreRow[];
+  skillRows: PdfSkillRow[];
+  attackRows: PdfAttackRow[];
   deck: PdfPageCard[];
   deckOverflow: PdfPageCard[];
   railCards: PdfPageCard[];
@@ -78,6 +108,9 @@ export type PdfAppendixEntry = {
 export type PdfResolveSource = {
   draft: CharacterDraft;
   stats: PdfStatBlock[];
+  abilityRows?: PdfAbilityScoreRow[];
+  skillRows?: PdfSkillRow[];
+  attackRows?: PdfAttackRow[];
   featureCards?: PdfPageCard[];
   companionCards?: PdfPageCard[];
   inventoryCards?: PdfPageCard[];
