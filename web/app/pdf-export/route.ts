@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { loadPdfSvgAssetBundle, PDF_EXPORT_SVG_ASSET_PATHS } from "@/lib/pdf/svg-assets.server";
 import type { ResolvedPdfCharacter } from "@/lib/pdf/types";
 import { generatePdfBytes } from "@/lib/pdf/generate";
+
+export const runtime = "nodejs";
 
 function sanitizeFileName(value: string) {
   return value
@@ -27,10 +30,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing character export data." }, { status: 400 });
   }
 
-  const pdfBytes = generatePdfBytes(character);
+  const svgAssets = await loadPdfSvgAssetBundle(
+    Object.keys(PDF_EXPORT_SVG_ASSET_PATHS) as Array<keyof typeof PDF_EXPORT_SVG_ASSET_PATHS>,
+  );
+  const pdfBytes = await generatePdfBytes(character, svgAssets);
   const fileName = `${sanitizeFileName(character.name)}.pdf`;
 
-  return new NextResponse(pdfBytes, {
+  return new NextResponse(new Uint8Array(pdfBytes), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

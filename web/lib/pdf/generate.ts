@@ -1,314 +1,539 @@
-import type { ResolvedPdfCharacter } from "@/lib/pdf/types";
+import PDFDocument from "pdfkit";
+import SVGtoPDF from "svg-to-pdfkit";
 
-const PAGE_WIDTH = 595.28;
-const PAGE_HEIGHT = 841.89;
+import type { PdfSvgAssetBundle } from "@/lib/pdf/svg-assets.server";
+import type {
+  PdfPageCard,
+  PdfPagePlan,
+  ResolvedPdfCharacter,
+} from "@/lib/pdf/types";
 
-type TextStyle = {
-  size: number;
-  font: "F1" | "F2";
+const PAGE_WIDTH = 595;
+const PAGE_HEIGHT = 842;
+
+type TextOptions = {
+  font?: "Helvetica" | "Helvetica-Bold" | "Times-Roman" | "Times-Bold";
+  size?: number;
+  color?: string;
+  align?: "left" | "center" | "right";
 };
 
-function mm(value: number) {
-  return (value * 72) / 25.4;
-}
+type RenderedPage = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
-function normalizeForPdf(value: string) {
+const FRONT_PAGE_LAYOUT = {
+  header: { x: 10, y: 10, width: 575, height: 69 },
+  stats: { x: 10, y: 84, width: 570, height: 51 },
+  abilities: { x: 10, y: 144, width: 384, height: 152 },
+  passives: { x: 10, y: 302, width: 570, height: 51 },
+  attacks: { x: 10, y: 360, width: 378, height: 92 },
+  rail: { x: 394, y: 144, width: 190, height: 472 },
+  features: { x: 10, y: 558, width: 575, height: 250 },
+} as const;
+
+const FRONT_PAGE_RAIL_CARD = { width: 190, height: 60 };
+const FRONT_PAGE_FEATURE_CARD = { width: 280, height: 78 };
+
+function toPlainText(value: string) {
   return value
-    .normalize("NFKD")
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, "-")
-    .replace(/[\u2026]/g, "...")
-    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "");
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>|<\/div>|<\/li>/gi, "\n")
+    .replace(/<li>/gi, "• ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n\s+/g, "\n")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
-function stripHtml(value: string) {
-  return normalizeForPdf(
-    value
-      .replace(/<br\s*\/?>/gi, " ")
-      .replace(/<\/p>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim(),
-  );
-}
-
-function escapePdfText(value: string) {
-  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-}
-
-function wrapText(value: string, fontSize: number, maxWidth: number) {
-  const text = stripHtml(value);
-  if (!text) {
-    return [] as string[];
+function safeText(value: unknown, fallback = "—") {
+  if (typeof value !== "string") {
+    return fallback;
   }
 
-  const approxChars = Math.max(12, Math.floor(maxWidth / (fontSize * 0.52)));
-  const words = text.split(/\s+/g);
-  const lines: string[] = [];
-  let current = "";
+  const cleaned = toPlainText(value);
+  return cleaned.length ? cleaned : fallback;
+}
 
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (candidate.length <= approxChars) {
-      current = candidate;
-      continue;
-    }
-
-    if (current) {
-      lines.push(current);
-    }
-
-    if (word.length > approxChars) {
-      const chunks = word.match(new RegExp(`.{1,${approxChars}}`, "g")) ?? [word];
-      lines.push(...chunks.slice(0, -1));
-      current = chunks[chunks.length - 1] ?? "";
-      continue;
-    }
-
-    current = word;
+function safeNumberText(value: string | number | undefined | null, fallback = "—") {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return `${value}`;
   }
 
-  if (current) {
-    lines.push(current);
+  if (typeof value === "string") {
+    const cleaned = value.trim();
+    if (!cleaned || cleaned.toLowerCase() === "nan") {
+      return fallback;
+    }
+    return cleaned;
   }
 
-  return lines;
+  return fallback;
 }
 
-function pageY(top: number, height = 0) {
-  return PAGE_HEIGHT - top - height;
+function collectPdfBytes(doc: PDFDocument) {
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    doc.on("data", (chunk: Buffer | Uint8Array) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    doc.once("end", () => resolve(Buffer.concat(chunks)));
+    doc.once("error", reject);
+  });
 }
 
-function rect(x: number, top: number, width: number, height: number, options?: { fill?: string; stroke?: string; lineWidth?: number }) {
-  const fill = options?.fill ?? "1 1 1";
-  const stroke = options?.stroke ?? "0.78 0.53 0.37";
-  const lineWidth = options?.lineWidth ?? 0.75;
-  return [
-    `${fill} rg`,
-    `${stroke} RG`,
-    `${lineWidth} w`,
-    `${x.toFixed(2)} ${pageY(top, height).toFixed(2)} ${width.toFixed(2)} ${height.toFixed(2)} re`,
-    `B`,
-  ];
-}
-
-function line(x1: number, top1: number, x2: number, top2: number, options?: { stroke?: string; lineWidth?: number }) {
-  const stroke = options?.stroke ?? "0.78 0.53 0.37";
-  const lineWidth = options?.lineWidth ?? 0.75;
-  return [
-    `${stroke} RG`,
-    `${lineWidth} w`,
-    `${x1.toFixed(2)} ${pageY(top1).toFixed(2)} m`,
-    `${x2.toFixed(2)} ${pageY(top2).toFixed(2)} l`,
-    `S`,
-  ];
-}
-
-function text(x: number, top: number, value: string, style: TextStyle) {
-  const safe = escapePdfText(normalizeForPdf(value));
-  return [
-    `BT`,
-    `/${style.font} ${style.size.toFixed(2)} Tf`,
-    `1 0 0 1 ${x.toFixed(2)} ${pageY(top, style.size).toFixed(2)} Tm`,
-    `(${safe}) Tj`,
-    `ET`,
-  ];
-}
-
-function textBlock(
+function addSvg(
+  doc: PDFDocument,
+  svg: string | undefined,
   x: number,
-  top: number,
+  y: number,
   width: number,
-  value: string,
-  style: TextStyle,
-  options?: { maxLines?: number; lineGap?: number },
+  height: number,
 ) {
-  const lines = wrapText(value, style.size, width);
-  const maxLines = options?.maxLines ?? lines.length;
-  const lineGap = options?.lineGap ?? Math.max(3, Math.round(style.size * 0.38));
-  const commands: string[] = [];
+  if (!svg) {
+    return;
+  }
 
-  lines.slice(0, maxLines).forEach((entry, index) => {
-    commands.push(...text(x, top + index * (style.size + lineGap), entry, style));
+  SVGtoPDF(doc, svg, x, y, {
+    width,
+    height,
+    preserveAspectRatio: "none",
+    assumePt: true,
   });
-
-  return commands;
 }
 
-function buildContent(character: ResolvedPdfCharacter) {
-  const commands: string[] = [];
-  const margin = mm(10);
-  const gutter = mm(4);
-  const innerWidth = PAGE_WIDTH - margin * 2;
-  const leftWidth = mm(92);
-  const rightWidth = innerWidth - leftWidth - gutter;
-  const topStart = mm(18);
-  const headerHeight = mm(24);
-  const leftX = margin;
-  const rightX = margin + leftWidth + gutter;
-
-  commands.push(...rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, { fill: "0.97 0.94 0.89", stroke: "0.97 0.94 0.89", lineWidth: 0 }));
-
-  // Header band
-  commands.push(...rect(margin, topStart, innerWidth, headerHeight, { fill: "0.99 0.98 0.95", stroke: "0.78 0.53 0.37", lineWidth: 1.1 }));
-  commands.push(...text(leftX + mm(4), topStart + mm(4), character.name, { size: 22, font: "F2" }));
-  commands.push(...text(leftX + mm(4), topStart + mm(13), "Front page export", { size: 8, font: "F1" }));
-
-  const metaX = rightX + mm(2);
-  const metaWidth = rightWidth - mm(4);
-  const metaLines = [
-    `Class: ${character.classLabel || "Unknown"}`,
-    `Level: ${character.level}`,
-    `Race: ${character.raceLabel || "Unknown"}`,
-    `Background: ${character.backgroundLabel || "Unknown"}`,
-    character.playerName ? `Player: ${character.playerName}` : "",
-  ].filter(Boolean);
-  metaLines.forEach((entry, index) => {
-    commands.push(...text(metaX, topStart + mm(4) + index * mm(4.5), entry, { size: 9.5, font: "F1" }));
-  });
-  commands.push(...line(margin + mm(2), topStart + headerHeight + mm(4), PAGE_WIDTH - margin - mm(2), topStart + headerHeight + mm(4), { lineWidth: 0.9 }));
-
-  // Left column: stats, skills, attacks
-  const statsTop = topStart + headerHeight + mm(8);
-  commands.push(...text(leftX, statsTop, "Numbers and stats", { size: 13, font: "F2" }));
-  const stats = character.frontPage.stats;
-  const statColumns = 2;
-  const statGap = mm(3);
-  const statCardWidth = (leftWidth - statGap) / statColumns;
-  const statCardHeight = mm(15);
-  const statStartTop = statsTop + mm(6);
-
-  stats.forEach((stat, index) => {
-    const column = index % statColumns;
-    const row = Math.floor(index / statColumns);
-    const x = leftX + column * (statCardWidth + statGap);
-    const y = statStartTop + row * (statCardHeight + statGap);
-    commands.push(...rect(x, y, statCardWidth, statCardHeight, { fill: "0.99 0.98 0.95" }));
-    commands.push(...text(x + mm(2.2), y + mm(2.4), stat.label, { size: 7.5, font: "F2" }));
-    commands.push(...text(x + mm(2.2), y + mm(8.2), stat.value, { size: 13, font: "F2" }));
-    if (stat.meta) {
-      commands.push(...textBlock(x + mm(2.2), y + mm(12.2), statCardWidth - mm(4.4), stat.meta, { size: 5.6, font: "F1" }, { maxLines: 2 }));
-    }
-  });
-
-  const statsRows = Math.ceil(stats.length / statColumns);
-  const skillsTop = statStartTop + statsRows * (statCardHeight + statGap) + mm(3);
-  commands.push(...text(leftX, skillsTop, "Skills", { size: 12, font: "F2" }));
-  commands.push(...rect(leftX, skillsTop + mm(4.5), leftWidth, mm(55), { fill: "0.99 0.98 0.95" }));
-  const skillRows = character.frontPage.skillRows.slice(0, 12);
-  const skillColumns = 2;
-  const skillColumnWidth = (leftWidth - mm(6)) / skillColumns;
-  skillRows.forEach((skill, index) => {
-    const column = index % skillColumns;
-    const row = Math.floor(index / skillColumns);
-    const x = leftX + mm(2) + column * skillColumnWidth;
-    const y = skillsTop + mm(8) + row * mm(7.5);
-    commands.push(...text(x, y, `${skill.label}`, { size: 7.5, font: "F1" }));
-    commands.push(...text(x + skillColumnWidth - mm(8), y, `${skill.total >= 0 ? "+" : ""}${skill.total}`, { size: 7.5, font: "F2" }));
-  });
-
-  const attacksTop = skillsTop + mm(63);
-  commands.push(...text(leftX, attacksTop, "Attacks", { size: 12, font: "F2" }));
-  commands.push(...rect(leftX, attacksTop + mm(4.5), leftWidth, mm(46), { fill: "0.99 0.98 0.95" }));
-  commands.push(...text(leftX + mm(2), attacksTop + mm(9), "Name", { size: 7.5, font: "F2" }));
-  commands.push(...text(leftX + mm(46), attacksTop + mm(9), "Hit", { size: 7.5, font: "F2" }));
-  commands.push(...text(leftX + mm(70), attacksTop + mm(9), "Damage", { size: 7.5, font: "F2" }));
-  const attacks = character.frontPage.attackRows.slice(0, 4);
-  attacks.forEach((attack, index) => {
-    const y = attacksTop + mm(14) + index * mm(8.2);
-    commands.push(...text(leftX + mm(2), y, attack.name, { size: 7.2, font: "F1" }));
-    commands.push(...text(leftX + mm(46), y, attack.hit, { size: 7.2, font: "F1" }));
-    commands.push(...text(leftX + mm(70), y, attack.damage, { size: 7.2, font: "F1" }));
-  });
-
-  // Right column: feature deck and rails
-  const featureTop = statsTop;
-  commands.push(...text(rightX, featureTop, "Features and traits", { size: 13, font: "F2" }));
-  const featureGap = mm(3);
-  const featureColumns = 2;
-  const featureCardWidth = (rightWidth - featureGap) / featureColumns;
-  const featureCardHeight = mm(24);
-  const features = [...character.frontPage.deck, ...character.frontPage.railCards].slice(0, 6);
-  const featureStartTop = featureTop + mm(6);
-  features.forEach((card, index) => {
-    const column = index % featureColumns;
-    const row = Math.floor(index / featureColumns);
-    const x = rightX + column * (featureCardWidth + featureGap);
-    const y = featureStartTop + row * (featureCardHeight + featureGap);
-    commands.push(...rect(x, y, featureCardWidth, featureCardHeight, { fill: "0.99 0.98 0.95" }));
-    commands.push(...text(x + mm(2), y + mm(2.4), card.title, { size: 8.5, font: "F2" }));
-    if (card.sourceLabel) {
-      commands.push(...text(x + featureCardWidth - mm(2), y + mm(2.4), card.sourceLabel, { size: 5.5, font: "F1" }));
-    }
-    commands.push(...textBlock(x + mm(2), y + mm(8), featureCardWidth - mm(4), card.summary, { size: 6.7, font: "F1" }, { maxLines: 3 }));
-    if (card.tags.length) {
-      commands.push(...textBlock(x + mm(2), y + featureCardHeight - mm(6), featureCardWidth - mm(4), card.tags.join(" · "), { size: 5.2, font: "F1" }, { maxLines: 1 }));
-    }
-  });
-
-  const deckRows = Math.ceil(features.length / featureColumns);
-  const railTop = featureStartTop + deckRows * (featureCardHeight + featureGap) + mm(3);
-  commands.push(...text(rightX, railTop, "Senses, conditions, and references", { size: 11, font: "F2" }));
-  commands.push(...rect(rightX, railTop + mm(4), rightWidth, mm(34), { fill: "0.99 0.98 0.95" }));
-  const railText = character.frontPage.railCards
-    .slice(0, 4)
-    .map((card) => `${card.title}: ${card.summary}`)
-    .join("  •  ");
-  commands.push(...textBlock(rightX + mm(2), railTop + mm(8), rightWidth - mm(4), railText || "No rail cards on this character.", { size: 6.4, font: "F1" }, { maxLines: 4 }));
-
-  const footerTop = PAGE_HEIGHT - mm(12);
-  const noteLine = character.frontPage.notes.length
-    ? character.frontPage.notes.join(" | ")
-    : "Front page PDF export";
-  commands.push(...text(leftX, footerTop, noteLine, { size: 6.6, font: "F1" }));
-  commands.push(...text(PAGE_WIDTH - margin - mm(20), footerTop, "Page 1", { size: 7, font: "F2" }));
-
-  return commands.join("\n");
+function textColor(doc: PDFDocument, color?: string) {
+  doc.fillColor(color || "#4b2c1f");
 }
 
-function buildPdfObjects(character: ResolvedPdfCharacter) {
-  const content = buildContent(character);
-  const objects = [
-    `<< /Type /Catalog /Pages 2 0 R >>`,
-    `<< /Type /Pages /Kids [3 0 R] /Count 1 >>`,
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH.toFixed(2)} ${PAGE_HEIGHT.toFixed(2)}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`,
-    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>`,
-    `<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>`,
-    `<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`,
+function writeText(
+  doc: PDFDocument,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  options: TextOptions = {},
+) {
+  doc.font(options.font || "Helvetica");
+  doc.fontSize(options.size || 8.5);
+  textColor(doc, options.color);
+  doc.text(text, x, y, {
+    width,
+    height,
+    align: options.align || "left",
+    lineBreak: true,
+    ellipsis: true,
+  });
+}
+
+function valueBoxX(index: number) {
+  const columns = [20, 72, 124, 176, 228, 280, 332, 384, 436, 488, 540];
+  return columns[index] ?? 20 + index * 52;
+}
+
+function renderFrontHeader(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  addSvg(doc, assets.frontPageHeader, FRONT_PAGE_LAYOUT.header.x, FRONT_PAGE_LAYOUT.header.y, FRONT_PAGE_LAYOUT.header.width, FRONT_PAGE_LAYOUT.header.height);
+
+  writeText(doc, character.name, 28, 32, 215, 18, {
+    font: "Times-Bold",
+    size: 21,
+  });
+  writeText(doc, "CHARACTER NAME", 28, 57, 120, 7, {
+    size: 5.5,
+    color: "#8d8175",
+  });
+
+  const rightX = 238;
+  const rightY = 25;
+  const metaRows: Array<{ label: string; value: string; x: number; y: number; width: number }> = [
+    { label: "RACE", value: [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ") || "—", x: rightX, y: rightY, width: 112 },
+    { label: "CLASS & LEVEL", value: `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`, x: rightX + 119, y: rightY, width: 108 },
+    { label: "BACKGROUND", value: character.backgroundLabel || "—", x: rightX, y: rightY + 22, width: 112 },
+    { label: "PLAYER NAME", value: character.playerName || "—", x: rightX + 119, y: rightY + 22, width: 108 },
   ];
 
-  return objects;
+  for (const row of metaRows) {
+    writeText(doc, row.label, row.x, row.y, row.width, 6, {
+      size: 5.3,
+      color: "#94887d",
+    });
+    writeText(doc, row.value, row.x, row.y + 8, row.width, 12, {
+      font: "Times-Bold",
+      size: row.label === "CLASS & LEVEL" ? 9.5 : 9,
+      color: "#4b2c1f",
+    });
+  }
 }
 
-export function generatePdfBytes(character: ResolvedPdfCharacter) {
-  const objects = buildPdfObjects(character);
-  const parts: string[] = [];
-  parts.push("%PDF-1.4\n");
+function renderStatStrip(doc: PDFDocument, assets: PdfSvgAssetBundle, stats: ResolvedPdfCharacter["frontPage"]["stats"]) {
+  addSvg(doc, assets.hpPanel, FRONT_PAGE_LAYOUT.stats.x, FRONT_PAGE_LAYOUT.stats.y, FRONT_PAGE_LAYOUT.stats.width, FRONT_PAGE_LAYOUT.stats.height);
 
-  const offsets: number[] = [0];
-  let length = Buffer.byteLength(parts[0], "utf8");
+  stats.slice(0, 11).forEach((stat, index) => {
+    const x = valueBoxX(index);
+    const y = 100;
+    writeText(doc, safeNumberText(stat.value), x, y, 40, 13, {
+      font: "Times-Bold",
+      size: index === 7 ? 15 : 11,
+      align: "center",
+      color: "#4b2c1f",
+    });
+    if (stat.meta) {
+      writeText(doc, safeText(stat.meta), x - 4, y + 13, 48, 11, {
+        size: 5.8,
+        align: "center",
+        color: "#6e5a4b",
+      });
+    }
+  });
+}
 
-  objects.forEach((object, index) => {
-    offsets.push(length);
-    const chunk = `${index + 1} 0 obj\n${object}\nendobj\n`;
-    parts.push(chunk);
-    length += Buffer.byteLength(chunk, "utf8");
+function renderAbilityPanel(
+  doc: PDFDocument,
+  assets: PdfSvgAssetBundle,
+  character: ResolvedPdfCharacter,
+) {
+  addSvg(doc, assets.abilityPanel, FRONT_PAGE_LAYOUT.abilities.x, FRONT_PAGE_LAYOUT.abilities.y, FRONT_PAGE_LAYOUT.abilities.width, FRONT_PAGE_LAYOUT.abilities.height);
+
+  const abilityPositions = [
+    { row: 0, col: 0, x: 20, y: 174 },
+    { row: 0, col: 1, x: 120, y: 174 },
+    { row: 0, col: 2, x: 220, y: 174 },
+    { row: 1, col: 0, x: 20, y: 248 },
+    { row: 1, col: 1, x: 120, y: 248 },
+    { row: 1, col: 2, x: 220, y: 248 },
+  ];
+
+  character.frontPage.abilityRows.slice(0, 6).forEach((row, index) => {
+    const slot = abilityPositions[index];
+    if (!slot) {
+      return;
+    }
+    writeText(doc, row.label, slot.x, slot.y, 82, 10, {
+      font: "Helvetica-Bold",
+      size: 9,
+      align: "center",
+    });
+    writeText(doc, `${row.score}`, slot.x, slot.y + 12, 82, 20, {
+      font: "Times-Bold",
+      size: 17,
+      align: "center",
+    });
+    writeText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, slot.x, slot.y + 30, 82, 8, {
+      size: 8.5,
+      align: "center",
+    });
+    writeText(doc, `Save ${row.saveBonus >= 0 ? "+" : ""}${row.saveBonus}`, slot.x, slot.y + 38, 82, 8, {
+      size: 6.8,
+      align: "center",
+      color: "#7a6453",
+    });
   });
 
-  const xrefOffset = length;
-  const xrefLines = ["xref", `0 ${objects.length + 1}`, "0000000000 65535 f "];
-  offsets.slice(1).forEach((offset) => {
-    xrefLines.push(`${offset.toString().padStart(10, "0")} 00000 n `);
-  });
-  const trailer = [
-    "trailer",
-    `<< /Size ${objects.length + 1} /Root 1 0 R >>`,
-    "startxref",
-    `${xrefOffset}`,
-    "%%EOF",
-  ].join("\n");
+  const skillGroups = [
+    { title: "STR", abilities: ["Athletics"] },
+    { title: "DEX", abilities: ["Acrobatics", "Sleight of Hand", "Stealth"] },
+    { title: "INT", abilities: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+    { title: "WIS", abilities: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+    { title: "CHA", abilities: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+  ];
 
-  parts.push(`${xrefLines.join("\n")}\n${trailer}`);
-  return Buffer.from(parts.join(""), "utf8");
+  const skillsByLabel = new Map(character.frontPage.skillRows.map((skill) => [skill.label.toLowerCase(), skill]));
+  const groupLayout = [
+    { x: 138, y: 167, width: 114, height: 44 },
+    { x: 257, y: 167, width: 114, height: 44 },
+    { x: 138, y: 218, width: 114, height: 44 },
+    { x: 257, y: 218, width: 114, height: 44 },
+    { x: 138, y: 269, width: 114, height: 44 },
+  ];
+
+  skillGroups.forEach((group, index) => {
+    const box = groupLayout[index];
+    if (!box) {
+      return;
+    }
+
+    writeText(doc, group.title, box.x, box.y - 9, box.width, 7, {
+      size: 6.4,
+      align: "center",
+      color: "#968476",
+    });
+
+    group.abilities.forEach((skillLabel, skillIndex) => {
+      const skill = skillsByLabel.get(skillLabel.toLowerCase());
+      if (!skill) {
+        return;
+      }
+      writeText(doc, `• ${skill.label}`, box.x + 2, box.y + skillIndex * 8, box.width - 20, 7, {
+        size: 6.4,
+      });
+      writeText(doc, `${skill.total >= 0 ? "+" : ""}${skill.total}`, box.x + box.width - 18, box.y + skillIndex * 8, 16, 7, {
+        size: 6.4,
+        align: "right",
+      });
+    });
+  });
+}
+
+function renderPassivesPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  addSvg(doc, assets.passivesAndSpeeds, FRONT_PAGE_LAYOUT.passives.x, FRONT_PAGE_LAYOUT.passives.y, FRONT_PAGE_LAYOUT.passives.width, FRONT_PAGE_LAYOUT.passives.height);
+
+  const statsByLabel = new Map(character.frontPage.stats.map((stat) => [stat.label.toLowerCase(), stat]));
+  const skillByLabel = new Map(character.frontPage.skillRows.map((skill) => [skill.label.toLowerCase(), skill]));
+  const entries = [
+    { label: "Long J.", value: statsByLabel.get("long jump")?.value || "—", x: 20 },
+    { label: "High J.", value: statsByLabel.get("high jump")?.value || "—", x: 67 },
+    { label: "Lift / Drag", value: statsByLabel.get("lift / drag")?.value || "—", x: 115 },
+    { label: "Dark Vision", value: statsByLabel.get("dark vision")?.value || "—", x: 173 },
+    { label: "Perception", value: `+${10 + (skillByLabel.get("perception")?.total ?? 0)}`, x: 225 },
+    { label: "Insight", value: `+${10 + (skillByLabel.get("insight")?.total ?? 0)}`, x: 275 },
+    { label: "Investig.", value: `+${10 + (skillByLabel.get("investigation")?.total ?? 0)}`, x: 329 },
+    { label: "Walking", value: statsByLabel.get("speed")?.value || "—", x: 383 },
+    { label: "Flying", value: "—", x: 438 },
+    { label: "Climbing", value: "—", x: 491 },
+    { label: "Swimming", value: "—", x: 540 },
+  ];
+
+  entries.forEach((entry) => {
+    writeText(doc, entry.label, entry.x, 304, 38, 7, {
+      size: 5.5,
+      align: "center",
+      color: "#665546",
+    });
+    writeText(doc, safeNumberText(entry.value), entry.x, 310, 38, 8, {
+      font: "Helvetica-Bold",
+      size: 7.5,
+      align: "center",
+    });
+  });
+}
+
+function renderAttacksPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, attacks: ResolvedPdfCharacter["frontPage"]["attackRows"]) {
+  addSvg(doc, assets.weaponAttacks, FRONT_PAGE_LAYOUT.attacks.x, FRONT_PAGE_LAYOUT.attacks.y, FRONT_PAGE_LAYOUT.attacks.width, FRONT_PAGE_LAYOUT.attacks.height);
+
+  const headerY = 388;
+  const rowYs = [404, 420, 436, 452, 468];
+  attacks.slice(0, 5).forEach((attack, index) => {
+    const y = rowYs[index];
+    writeText(doc, safeText(attack.name), 18, y, 150, 8, {
+      size: 7,
+    });
+    writeText(doc, safeText(attack.hit), 170, y, 36, 8, {
+      size: 7,
+      align: "center",
+    });
+    writeText(doc, safeText(attack.damage), 214, y, 92, 8, {
+      size: 7,
+    });
+    writeText(doc, safeText(attack.type || "Weapon"), 312, y, 38, 8, {
+      size: 7,
+      align: "center",
+    });
+    writeText(doc, safeText(attack.properties || "—"), 355, y, 125, 8, {
+      size: 7,
+    });
+  });
+
+  if (!attacks.length) {
+    writeText(doc, "No equipped weapons detected.", 18, headerY + 8, 320, 18, {
+      size: 8,
+      color: "#7b6a5f",
+    });
+  }
+}
+
+function renderCardFrame(
+  doc: PDFDocument,
+  assets: PdfSvgAssetBundle,
+  card: PdfPageCard,
+  frame: RenderedPage,
+  compact = false,
+) {
+  addSvg(doc, assets.generalContainer, frame.x, frame.y, frame.width, frame.height);
+
+  const titleSize = compact ? 8.4 : 9.5;
+  const bodySize = compact ? 6.7 : 7.4;
+  const detailSize = compact ? 6.2 : 6.8;
+  const contentX = frame.x + 9;
+  const contentW = frame.width - 18;
+  const titleY = frame.y + 8;
+  const bodyY = titleY + 13;
+
+  writeText(doc, safeText(card.title), contentX, titleY, contentW - 60, 10, {
+    font: "Helvetica-Bold",
+    size: titleSize,
+  });
+  if (card.sourceLabel) {
+    writeText(doc, safeText(card.sourceLabel), frame.x + frame.width - 84, titleY + 1, 76, 7, {
+      size: 5.6,
+      align: "right",
+      color: "#766257",
+    });
+  }
+  if (card.tags.length) {
+    writeText(doc, card.tags.join(" · "), frame.x + frame.width - 84, titleY + 9, 76, 7, {
+      size: 5.3,
+      align: "right",
+      color: "#8b7b71",
+    });
+  }
+  writeText(doc, safeText(card.summary), contentX, bodyY, contentW, compact ? 24 : 30, {
+    size: bodySize,
+    color: "#4f392d",
+  });
+  if (card.detail) {
+    writeText(doc, safeText(card.detail), contentX, bodyY + (compact ? 26 : 32), contentW, compact ? 16 : 18, {
+      size: detailSize,
+      color: "#665546",
+    });
+  }
+}
+
+function renderRailCards(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["railCards"]) {
+  cards.slice(0, 8).forEach((card, index) => {
+    renderCardFrame(doc, assets, card, {
+      x: FRONT_PAGE_LAYOUT.rail.x,
+      y: FRONT_PAGE_LAYOUT.rail.y + index * (FRONT_PAGE_RAIL_CARD.height + 6),
+      width: FRONT_PAGE_RAIL_CARD.width,
+      height: FRONT_PAGE_RAIL_CARD.height,
+    }, true);
+  });
+}
+
+function renderFrontDeck(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["deck"]) {
+  const startX = FRONT_PAGE_LAYOUT.features.x;
+  const startY = FRONT_PAGE_LAYOUT.features.y;
+  const columnGap = 8;
+  const rowGap = 7;
+  const colWidth = FRONT_PAGE_FEATURE_CARD.width;
+  const cardHeight = FRONT_PAGE_FEATURE_CARD.height;
+  cards.slice(0, 6).forEach((card, index) => {
+    const col = index % 2;
+    const row = Math.floor(index / 2);
+    renderCardFrame(doc, assets, card, {
+      x: startX + col * (colWidth + columnGap),
+      y: startY + row * (cardHeight + rowGap),
+      width: colWidth,
+      height: cardHeight,
+    });
+  });
+}
+
+function renderFrontPage(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  doc.addPage({ size: [PAGE_WIDTH, PAGE_HEIGHT], margin: 0 });
+  renderFrontHeader(doc, assets, character);
+  renderStatStrip(doc, assets, character.frontPage.stats);
+  renderAbilityPanel(doc, assets, character);
+  renderPassivesPanel(doc, assets, character);
+  renderAttacksPanel(doc, assets, character.frontPage.attackRows);
+  renderRailCards(doc, assets, character.frontPage.railCards);
+  renderFrontDeck(doc, assets, character.frontPage.deck);
+}
+
+function renderPageHeader(doc: PDFDocument, title: string, page: PdfPagePlan, character: ResolvedPdfCharacter) {
+  writeText(doc, character.name, 20, 22, 320, 18, {
+    font: "Times-Bold",
+    size: 23,
+  });
+  writeText(doc, title, 20, 43, 220, 10, {
+    size: 8.5,
+    color: "#7b6a5f",
+  });
+  writeText(doc, `Page ${page.number}`, 470, 21, 95, 12, {
+    font: "Helvetica-Bold",
+    size: 12,
+    align: "right",
+  });
+  writeText(doc, safeText(page.kind.toUpperCase()), 470, 36, 95, 8, {
+    size: 7.2,
+    align: "right",
+    color: "#7f7167",
+  });
+  doc.moveTo(20, 60).lineTo(575, 60).strokeColor("#d7b596").lineWidth(0.9).stroke();
+}
+
+function renderPlanSection(
+  doc: PDFDocument,
+  assets: PdfSvgAssetBundle,
+  section: PdfPagePlan["sections"][number],
+  startY: number,
+) {
+  writeText(doc, safeText(section.title), 20, startY, 350, 10, {
+    font: "Helvetica-Bold",
+    size: 12,
+    color: "#5f3624",
+  });
+  if (section.description) {
+    writeText(doc, safeText(section.description), 20, startY + 11, 430, 9, {
+      size: 6.8,
+      color: "#7c6b5e",
+    });
+  }
+
+  const cardsPerRow = 2;
+  const gap = 8;
+  const cardWidth = 270;
+  const cardHeight = 76;
+  const rowStart = startY + 24;
+  section.cards.forEach((card, index) => {
+    const row = Math.floor(index / cardsPerRow);
+    const col = index % cardsPerRow;
+    renderCardFrame(doc, assets, card, {
+      x: 20 + col * (cardWidth + gap),
+      y: rowStart + row * (cardHeight + gap),
+      width: cardWidth,
+      height: cardHeight,
+    }, cardWidth < 200);
+  });
+
+  return rowStart + Math.ceil(section.cards.length / cardsPerRow) * (cardHeight + gap) - gap;
+}
+
+function renderStandardPage(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, page: PdfPagePlan) {
+  doc.addPage({ size: [PAGE_WIDTH, PAGE_HEIGHT], margin: 0 });
+  renderPageHeader(doc, page.title, page, character);
+
+  let cursorY = 74;
+  page.sections.forEach((section) => {
+    cursorY = renderPlanSection(doc, assets, section, cursorY) + 12;
+  });
+
+  if (page.notes.length) {
+    cursorY += 4;
+    page.notes.slice(0, 3).forEach((note, index) => {
+      writeText(doc, safeText(note), 20, cursorY + index * 8, 555, 7, {
+        size: 6.4,
+        color: "#7d6d61",
+      });
+    });
+  }
+}
+
+export async function generatePdfBytes(character: ResolvedPdfCharacter, assets: PdfSvgAssetBundle) {
+  const doc = new PDFDocument({
+    size: [PAGE_WIDTH, PAGE_HEIGHT],
+    margin: 0,
+    autoFirstPage: false,
+    compress: true,
+  });
+
+  const done = collectPdfBytes(doc);
+
+  renderFrontPage(doc, assets, character);
+
+  character.pagePlan
+    .filter((page) => page.kind !== "front")
+    .forEach((page) => renderStandardPage(doc, assets, character, page));
+
+  doc.end();
+
+  return done;
 }
