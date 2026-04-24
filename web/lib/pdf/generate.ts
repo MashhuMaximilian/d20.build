@@ -61,6 +61,11 @@ async function resolvePdfFontPath() {
   throw new Error("Unable to locate the PDF font asset.");
 }
 
+async function loadPdfFontBuffer() {
+  const fontPath = await resolvePdfFontPath();
+  return fsPromises.readFile(fontPath);
+}
+
 function toPlainText(value: string) {
   return value
     .replace(/<br\s*\/?>/gi, "\n")
@@ -545,7 +550,7 @@ function renderStandardPage(doc: PDFDocument, assets: PdfSvgAssetBundle, charact
 }
 
 export async function generatePdfBytes(character: ResolvedPdfCharacter, assets: PdfSvgAssetBundle) {
-  const fontPath = await resolvePdfFontPath();
+  const fontBuffer = await loadPdfFontBuffer();
   const [{ default: PDFDocument }, { default: SVGtoPDF }] = await Promise.all([
     import("pdfkit/js/pdfkit.standalone.js"),
     import("svg-to-pdfkit"),
@@ -558,7 +563,7 @@ export async function generatePdfBytes(character: ResolvedPdfCharacter, assets: 
     autoFirstPage: false,
     compress: true,
   });
-  doc.registerFont(PDF_TEXT_FONT_FAMILY, fontPath);
+  doc.registerFont(PDF_TEXT_FONT_FAMILY, fontBuffer);
 
   const done = collectPdfBytes(doc);
 
