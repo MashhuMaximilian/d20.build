@@ -1,5 +1,6 @@
 import type {
   BuiltInElement,
+  BuiltInRule,
 } from "@/lib/builtins/types";
 import type { BuiltInBackgroundRecord } from "@/lib/builtins/backgrounds";
 import type { BuiltInClassRecord } from "@/lib/builtins/classes";
@@ -9,6 +10,7 @@ import type {
   CharacterDraft,
   CharacterManualGrant,
 } from "@/lib/characters/types";
+import { ABILITY_LABELS } from "@/lib/characters/types";
 import type { SpellSelectionGroup } from "@/lib/progression/spellcasting";
 
 import {
@@ -44,6 +46,7 @@ type BuilderPdfSourceArgs = {
   selectedSubrace: BuiltInElement | null;
   spellGroups: SpellSelectionGroup[];
   spells: BuiltInElement[];
+  selectedElements: BuiltInElement[];
 };
 
 function uniqueById<T extends { id: string }>(items: T[]) {
@@ -61,6 +64,231 @@ function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function getAbilityModifier(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.floor((value - 10) / 2);
+}
+
+function getAverageHitDieGain(hitDie: number) {
+  return Math.floor(hitDie / 2) + 1;
+}
+
+function resolveClassName(record: BuiltInClassRecord | null, entry: CharacterDraft["classEntries"][number]) {
+  return record?.class.name || entry.classId || "";
+}
+
+function resolveHitDie(className: string) {
+  const normalized = className.toLowerCase().replace(/\s+/g, "");
+  const hitDieByClassName: Record<string, number> = {
+    artificer: 8,
+    barbarian: 12,
+    bard: 8,
+    bloodhunter: 10,
+    blood_hunter: 10,
+    cleric: 8,
+    druid: 8,
+    fighter: 10,
+    monk: 8,
+    mystic: 8,
+    paladin: 10,
+    psion: 6,
+    pugilist: 8,
+    ranger: 10,
+    rogue: 8,
+    sorcerer: 6,
+    warlock: 8,
+    wizard: 6,
+  };
+
+  return hitDieByClassName[normalized] ?? 8;
+}
+
+function getNumericRuleBonus(element: BuiltInElement, matcher: RegExp) {
+  const ruleTotals = element.rules
+    .filter((rule): rule is Extract<BuiltInRule, { kind: "stat" }> => rule.kind === "stat" && matcher.test(rule.name))
+    .reduce((sum, rule) => {
+      const amount = Number.parseInt(rule.value, 10);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+
+  const setterTotals = element.setters
+    .filter((setter) => matcher.test(setter.name))
+    .reduce((sum, setter) => {
+      const amount = Number.parseInt(setter.value, 10);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+
+  return ruleTotals + setterTotals;
+}
+
+function parseWalkingSpeed(text: string) {
+  const match =
+    text.match(/\bbase walking speed is (\d+) feet\b/i) ||
+    text.match(/\byour speed is (\d+) feet\b/i) ||
+    text.match(/\bwalking speed of (\d+) feet\b/i);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+function deriveWalkingSpeed(args: {
+  selectedRace: BuiltInRaceRecord | null;
+  selectedSubrace: BuiltInElement | null;
+  selectedElements: BuiltInElement[];
+}) {
+  const textSources = [
+    args.selectedSubrace?.descriptionHtml,
+    args.selectedSubrace?.description,
+    args.selectedRace?.race.descriptionHtml,
+    args.selectedRace?.race.description,
+    ...args.selectedElements.flatMap((element) => [element.descriptionHtml, element.description]),
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) =>
+      value
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<\/p>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
+
+  const parsedSpeed = textSources.map(parseWalkingSpeed).find((value) => value !== null);
+  const raceName = args.selectedRace?.race.name.toLowerCase() ?? "";
+  const defaultBase =
+    parsedSpeed ??
+    (/gnome|halfling|dwarf/.test(raceName) ? 25 : 30);
+
+  const bonus = args.selectedElements.reduce(
+    (sum, element) => sum + getNumericRuleBonus(element, /^speed(?::|$)/i),
+    0,
+  );
+
+  return {
+    base: defaultBase,
+    total: defaultBase + bonus,
+    bonus,
+  };
+}
+
+function deriveArmorClass(args: {
+  draft: CharacterDraft;
+  effectiveAbilities: Record<AbilityKey, number>;
+}) {
+  const dexMod = getAbilityModifier(args.effectiveAbilities.dexterity);
+  const equippedItems = args.draft.inventoryItems.filter((item) => item.equipped);
+  const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
+  const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
+
+  const armorTotals = equippedArmor.map((item) => {
+    const sourceName = item.baseItemName || item.name;
+    const armorRules: Array<{ match: RegExp; base: number; dexCap?: number }> = [
+      { match: /\bpadded\b/i, base: 11 },
+      { match: /\bleather\b/i, base: 11 },
+      { match: /\bstudded leather\b/i, base: 12 },
+      { match: /\bhide\b/i, base: 12, dexCap: 2 },
+      { match: /\bchain shirt\b/i, base: 13, dexCap: 2 },
+      { match: /\bscale mail\b/i, base: 14, dexCap: 2 },
+      { match: /\bbreastplate\b/i, base: 14, dexCap: 2 },
+      { match: /\bhalf plate\b/i, base: 15, dexCap: 2 },
+      { match: /\bring mail\b/i, base: 14, dexCap: 0 },
+      { match: /\bchain mail\b/i, base: 16, dexCap: 0 },
+      { match: /\bsplint\b/i, base: 17, dexCap: 0 },
+      { match: /\bplate\b/i, base: 18, dexCap: 0 },
+    ];
+    const rule = armorRules.find((entry) => entry.match.test(sourceName));
+    if (!rule) {
+      return null;
+    }
+    const dexContribution = Math.min(dexMod, rule.dexCap ?? dexMod);
+    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
+    return {
+      item,
+      total: rule.base + dexContribution + magic,
+      detail: `${sourceName}: ${rule.base}${rule.dexCap === 0 ? "" : `, Dex ${dexContribution >= 0 ? "+" : ""}${dexContribution}`}${magic ? `, magic ${magic >= 0 ? "+" : ""}${magic}` : ""}`,
+    };
+  }).filter((entry): entry is { item: CharacterDraft["inventoryItems"][number]; total: number; detail: string } => Boolean(entry));
+
+  const chosenArmor = armorTotals.sort((left, right) => right.total - left.total)[0];
+  const shieldBonus = equippedShields.reduce((sum, item) => {
+    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
+    return sum + 2 + magic;
+  }, 0);
+
+  if (chosenArmor) {
+    return {
+      value: chosenArmor.total + shieldBonus,
+      meta: `${chosenArmor.item.name}${shieldBonus ? ` + shield ${shieldBonus}` : ""}`,
+    };
+  }
+
+  return {
+    value: 10 + dexMod + shieldBonus,
+    meta: `${shieldBonus ? `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod} + shield ${shieldBonus}` : `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod}`}`,
+  };
+}
+
+function deriveHitPointSummary(args: {
+  draft: CharacterDraft;
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+  effectiveAbilities: Record<AbilityKey, number>;
+  selectedElements: BuiltInElement[];
+}) {
+  const constitutionMod = getAbilityModifier(args.effectiveAbilities.constitution);
+  let hp = 0;
+  let usedStartingLevel = false;
+
+  args.draft.classEntries.forEach((entry, index) => {
+    if (!entry.classId || entry.level <= 0) {
+      return;
+    }
+
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    const hitDie = resolveHitDie(className);
+    const averageGain = getAverageHitDieGain(hitDie);
+
+    for (let levelIndex = 0; levelIndex < entry.level; levelIndex += 1) {
+      const isFirstCharacterLevel = !usedStartingLevel && levelIndex === 0;
+      hp += isFirstCharacterLevel ? hitDie : averageGain;
+      hp += constitutionMod;
+    }
+
+    usedStartingLevel = true;
+  });
+
+  if (args.selectedElements.some((element) => /^tough$/i.test(element.name))) {
+    hp += args.draft.level * 2;
+  }
+
+  hp += args.selectedElements.reduce((sum, element) => sum + getNumericRuleBonus(element, /^hp$/i), 0);
+
+  return {
+    value: `${hp}`,
+    meta: "Average max HP from class hit dice",
+  };
+}
+
+function deriveHitDiceSummary(args: {
+  draft: CharacterDraft;
+  classRecordsByEntry: Array<BuiltInClassRecord | null>;
+}) {
+  const parts = args.draft.classEntries.flatMap((entry, index) => {
+    if (!entry.classId || entry.level <= 0) {
+      return [];
+    }
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    const hitDie = resolveHitDie(className);
+    return [`${entry.level}d${hitDie}`];
+  });
+
+  return parts.join(" • ") || "—";
+}
+
+function getPrimarySpellcastingAbility(spellGroups: SpellSelectionGroup[]) {
+  return spellGroups.find((group) => Boolean(group.spellcastingAbility))?.spellcastingAbility?.toUpperCase() || "";
+}
+
 function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, draft: CharacterDraft) {
   const labels = draft.classEntries.map((entry, index) => classRecordsByEntry[index]?.class.name || entry.classId).filter(Boolean);
   return labels.join(" / ");
@@ -68,22 +296,45 @@ function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, dr
 
 function buildStatCards(args: BuilderPdfSourceArgs) {
   const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
-  const dexMod = Math.floor((args.effectiveAbilities.dexterity - 10) / 2);
-  const wisMod = Math.floor((args.effectiveAbilities.wisdom - 10) / 2);
-  const chaMod = Math.floor((args.effectiveAbilities.charisma - 10) / 2);
-  const intMod = Math.floor((args.effectiveAbilities.intelligence - 10) / 2);
-  const conMod = Math.floor((args.effectiveAbilities.constitution - 10) / 2);
+  const vitals = deriveHitPointSummary({
+    draft: args.draft,
+    classRecordsByEntry: args.classRecordsByEntry,
+    effectiveAbilities: args.effectiveAbilities,
+    selectedElements: args.selectedElements,
+  });
+  const armorClass = deriveArmorClass({
+    draft: args.draft,
+    effectiveAbilities: args.effectiveAbilities,
+  });
+  const speed = deriveWalkingSpeed({
+    selectedRace: args.selectedRace,
+    selectedSubrace: args.selectedSubrace,
+    selectedElements: args.selectedElements,
+  });
+  const dexMod = getAbilityModifier(args.effectiveAbilities.dexterity);
+  const attacksPerAction = args.selectedElements.some((element) => /extra attack/i.test(`${element.name} ${element.description ?? ""}`)) ? 2 : 1;
+  const spellcastingAbility = getPrimarySpellcastingAbility(args.spellGroups);
+  const spellcastingAbilityLabel = spellcastingAbility
+    ? ABILITY_LABELS[spellcastingAbility.toLowerCase() as AbilityKey]
+    : "";
+  const spellcastingScore = spellcastingAbility
+    ? getAbilityModifier(args.effectiveAbilities[spellcastingAbility.toLowerCase() as AbilityKey])
+    : 0;
+  const spellcastingBonus = spellcastingAbility ? proficiencyBonus + spellcastingScore : 0;
+  const spellSaveDc = spellcastingAbility ? 8 + proficiencyBonus + spellcastingScore : 0;
 
   return [
     { id: "proficiency-bonus", label: "Proficiency Bonus", value: `+${proficiencyBonus}` },
     { id: "initiative", label: "Initiative", value: `${dexMod >= 0 ? "+" : ""}${dexMod}` },
-    { id: "attacks", label: "Attacks / Action", value: `${Math.max(1, 1)}` },
-    { id: "passive-perception", label: "Passive Perception", value: `${10 + wisMod}` },
-    { id: "spellcasting-bonus", label: "Spellcasting Bonus", value: `${proficiencyBonus + chaMod >= 0 ? "+" : ""}${proficiencyBonus + chaMod}` },
-    { id: "spell-save-dc", label: "Save DC", value: `${8 + proficiencyBonus + chaMod}` },
-    { id: "spellcasting-ability", label: "Spellcasting Ability", value: `${args.selectedClassFeatureElements.some((feature) => /intelligence/i.test(feature.description + feature.descriptionHtml)) ? "INT" : "—"}` },
-    { id: "hp", label: "HP", value: `${args.draft.level * (8 + conMod)}` },
-    { id: "ac", label: "AC", value: "—" },
+    { id: "attacks", label: "Attacks / Action", value: `${attacksPerAction}` },
+    { id: "passive-perception", label: "Passive Perception", value: `${10 + getAbilityModifier(args.effectiveAbilities.wisdom)}` },
+    { id: "spellcasting-bonus", label: "Spellcasting Bonus", value: spellcastingAbility ? `${spellcastingBonus >= 0 ? "+" : ""}${spellcastingBonus}` : "—" },
+    { id: "spell-save-dc", label: "Save DC", value: spellcastingAbility ? `${spellSaveDc}` : "—" },
+    { id: "spellcasting-ability", label: "Spellcasting Ability", value: spellcastingAbilityLabel || "—" },
+    { id: "hp", label: "HP", value: vitals.value },
+    { id: "ac", label: "AC", value: `${armorClass.value}` },
+    { id: "speed", label: "Speed", value: `${speed.total} ft.` },
+    { id: "hit-dice", label: "Hit Dice", value: deriveHitDiceSummary({ draft: args.draft, classRecordsByEntry: args.classRecordsByEntry }) },
   ];
 }
 

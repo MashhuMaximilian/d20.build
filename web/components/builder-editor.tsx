@@ -41,6 +41,7 @@ import {
   buildStartingInventoryFromPlan,
   getInventoryEffectSummary,
   needsBaseWeaponChoice,
+  normalizeInventoryWeaponItem,
 } from "@/lib/equipment/inventory";
 import {
   getMissingEquipmentChoiceCount,
@@ -2468,6 +2469,14 @@ export function BuilderEditor({
         selectedSubrace,
         spellGroups: activeSpellGroups,
         spells,
+        selectedElements: [
+          ...selectedClassFeatureElements,
+          ...selectedProgressionElements,
+          ...selectedFeatElements,
+          ...selectedRacialTraitElements,
+          ...selectedBackgroundFeatureElements,
+          ...selectedManualFeatureElements,
+        ],
       }),
     [
       activeSpellGroups,
@@ -2491,6 +2500,8 @@ export function BuilderEditor({
       selectedSpellIds,
       selectedSubrace,
       spells,
+      selectedFeatElements,
+      selectedBackgroundFeatureElements,
     ],
   );
   const handleExportPdf = useCallback(() => {
@@ -2498,7 +2509,7 @@ export function BuilderEditor({
       return;
     }
 
-    const exportWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=900");
+    const exportWindow = window.open("", "_blank", "width=1200,height=900");
     if (!exportWindow) {
       setStatusTone("error");
       setStatus("Allow pop-ups to export the PDF.");
@@ -2506,17 +2517,10 @@ export function BuilderEditor({
     }
 
     const html = buildPdfExportHtml(pdfCharacter);
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-
-    exportWindow.location.href = url;
-    exportWindow.addEventListener(
-      "load",
-      () => {
-        URL.revokeObjectURL(url);
-      },
-      { once: true },
-    );
+    exportWindow.document.open();
+    exportWindow.document.write(html);
+    exportWindow.document.close();
+    exportWindow.focus();
   }, [pdfCharacter]);
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -3556,7 +3560,7 @@ export function BuilderEditor({
                 updateDraft({
                   inventoryItems: draft.inventoryItems.map((item) =>
                     item.id === itemId
-                      ? {
+                      ? normalizeInventoryWeaponItem({
                           ...item,
                           name: patch.name,
                           quantity: patch.quantity,
@@ -3571,7 +3575,7 @@ export function BuilderEditor({
                           equipped: ["weapon", "armor", "shield", "focus", "instrument", "tool", "clothing"].includes(patch.category)
                             ? item.equipped
                             : false,
-                        }
+                        })
                       : item,
                   ),
                 })}
@@ -3587,7 +3591,7 @@ export function BuilderEditor({
                   inventoryItems: existing
                     ? draft.inventoryItems.map((item) =>
                         item.id === itemId
-                          ? {
+                          ? normalizeInventoryWeaponItem({
                               ...item,
                               quantity: item.quantity + 1,
                               attackBonus: item.attackBonus || attackBonus || undefined,
@@ -3595,12 +3599,12 @@ export function BuilderEditor({
                               baseItemName: item.baseItemName || baseWeaponDetails.baseItemName || undefined,
                               baseDamage: item.baseDamage || baseWeaponDetails.baseDamage || undefined,
                               damage: item.damage || damage || undefined,
-                            }
+                            })
                           : item,
                       )
                     : [
                         ...draft.inventoryItems,
-                        {
+                        normalizeInventoryWeaponItem({
                           id: itemId,
                           name: entry.name,
                           quantity: 1,
@@ -3625,7 +3629,7 @@ export function BuilderEditor({
                           baseDamage: baseWeaponDetails.baseDamage || undefined,
                           damage: damage || undefined,
                           detailHtml: entry.detailHtml,
-                        },
+                        }),
                       ],
                 });
               }}
@@ -3642,7 +3646,7 @@ export function BuilderEditor({
                   inventoryItems: existing
                     ? draft.inventoryItems.map((item) =>
                         item.id === itemId
-                          ? {
+                          ? normalizeInventoryWeaponItem({
                               ...item,
                               quantity: item.quantity + quantity,
                               attackBonus: attackBonus || item.attackBonus,
@@ -3651,12 +3655,12 @@ export function BuilderEditor({
                               baseDamage: baseDamage || item.baseDamage,
                               damage: damage || item.damage,
                               notes: notes || item.notes,
-                            }
+                            })
                           : item,
                       )
                     : [
                         ...draft.inventoryItems,
-                        {
+                        normalizeInventoryWeaponItem({
                           id: itemId,
                           name: normalizedName,
                           quantity,
@@ -3675,7 +3679,7 @@ export function BuilderEditor({
                           baseDamage: baseDamage || undefined,
                           damage: damage || undefined,
                           notes: notes || undefined,
-                        },
+                        }),
                       ],
                 });
               }}

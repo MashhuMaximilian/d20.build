@@ -205,12 +205,62 @@ function isWeaponLike(item: CharacterInventoryItem) {
   );
 }
 
+function normalizeWeaponLookupText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\s*\+\s*\d+\b/g, "")
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getExactBaseWeaponOption(item: CharacterInventoryItem) {
+  if (!isWeaponLike(item)) {
+    return null;
+  }
+
+  const haystack = normalizeWeaponLookupText([item.name, item.baseItemName ?? ""].filter(Boolean).join(" "));
+  if (!haystack) {
+    return null;
+  }
+
+  return BASE_WEAPON_OPTIONS.find((option) => {
+    const optionName = normalizeWeaponLookupText(option.name);
+    const optionId = normalizeWeaponLookupText(option.id);
+    return haystack === optionName || haystack === optionId;
+  }) ?? null;
+}
+
+export function normalizeInventoryWeaponItem(item: CharacterInventoryItem) {
+  if (!isWeaponLike(item)) {
+    return item;
+  }
+
+  const exactBaseWeapon = item.baseItemId
+    ? BASE_WEAPON_OPTIONS.find((option) => option.id === item.baseItemId) ?? null
+    : getExactBaseWeaponOption(item);
+
+  if (!exactBaseWeapon) {
+    return item;
+  }
+
+  return {
+    ...item,
+    baseItemId: item.baseItemId || exactBaseWeapon.id,
+    baseItemName: item.baseItemName || exactBaseWeapon.name,
+    baseDamage: item.baseDamage || exactBaseWeapon.damage,
+    damage: item.damage || exactBaseWeapon.damage,
+  };
+}
+
 export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryItem) {
   if (!isWeaponLike(item)) {
     return [];
   }
 
-  const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""} ${item.damage ?? ""}`.toLowerCase();
+  const normalizedItem = normalizeInventoryWeaponItem(item);
+  const haystack = `${normalizedItem.name} ${normalizedItem.family ?? ""} ${normalizedItem.itemType ?? ""} ${normalizedItem.damage ?? ""}`.toLowerCase();
   const groups = new Set<BaseWeaponOption["group"]>();
 
   if (/\b(sword|blade|scimitar|rapier)\b/.test(haystack)) {
@@ -247,10 +297,11 @@ export function getBaseWeaponOptionsForInventoryItem(item: CharacterInventoryIte
 }
 
 export function needsBaseWeaponResolution(item: CharacterInventoryItem) {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
   return (
-    isWeaponLike(item) &&
-    !/\d+d\d+/i.test(`${item.damage ?? ""} ${item.baseDamage ?? ""}`) &&
-    getBaseWeaponOptionsForInventoryItem(item).length > 0
+    isWeaponLike(normalizedItem) &&
+    !/\d+d\d+/i.test(`${normalizedItem.damage ?? ""} ${normalizedItem.baseDamage ?? ""}`) &&
+    getBaseWeaponOptionsForInventoryItem(normalizedItem).length > 0
   );
 }
 
@@ -259,10 +310,11 @@ export function isGenericDamageValue(value?: string) {
 }
 
 export function needsBaseWeaponChoice(item: CharacterInventoryItem) {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
   return (
-    getBaseWeaponOptionsForInventoryItem(item).length > 0 &&
-    !item.baseItemId &&
-    (needsBaseWeaponResolution(item) || isGenericDamageValue(item.damage))
+    getBaseWeaponOptionsForInventoryItem(normalizedItem).length > 0 &&
+    !normalizedItem.baseItemId &&
+    (needsBaseWeaponResolution(normalizedItem) || isGenericDamageValue(normalizedItem.damage))
   );
 }
 
@@ -339,12 +391,14 @@ export function getWeaponProficiencyTierForText(value: string) {
 }
 
 function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {
-  if (!isWeaponLike(item)) {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
+
+  if (!isWeaponLike(normalizedItem)) {
     return "";
   }
 
-  const haystack = `${item.name} ${item.family ?? ""} ${item.itemType ?? ""} ${item.baseItemName ?? ""}`.toLowerCase();
-  const baseId = item.baseItemId || BASE_WEAPON_OPTIONS.find((option) => haystack.includes(option.name.toLowerCase()))?.id;
+  const haystack = `${normalizedItem.name} ${normalizedItem.family ?? ""} ${normalizedItem.itemType ?? ""} ${normalizedItem.baseItemName ?? ""}`.toLowerCase();
+  const baseId = normalizedItem.baseItemId || BASE_WEAPON_OPTIONS.find((option) => haystack.includes(option.name.toLowerCase()))?.id;
   if (!baseId) {
     return getWeaponProficiencyTierForText(haystack) || "simple";
   }
@@ -433,7 +487,7 @@ export function buildStartingInventoryFromPlan(
     }
     const previous = preservedByKey.get(id);
     const category = categorizeInventoryItem(parsed.name);
-    items.push({
+    items.push(normalizeInventoryWeaponItem({
       id,
       name: parsed.name,
       quantity: parsed.quantity,
@@ -459,7 +513,7 @@ export function buildStartingInventoryFromPlan(
       damage: previous?.damage,
       notes: previous?.notes,
       detailHtml: previous?.detailHtml,
-    });
+    }));
   }
 
   for (const item of manualItems) {
@@ -531,19 +585,21 @@ function getArmorShieldAcLine(item: CharacterInventoryItem, context: InventoryEf
 }
 
 function getWeaponEffectLine(item: CharacterInventoryItem) {
-  if (!item.equipped || !isWeaponLike(item)) {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
+
+  if (!normalizedItem.equipped || !isWeaponLike(normalizedItem)) {
     return "";
   }
 
-  if (item.attunable && !item.attuned) {
-    return `${item.name}: equipped, attunement required before magic effects apply`;
+  if (normalizedItem.attunable && !normalizedItem.attuned) {
+    return `${normalizedItem.name}: equipped, attunement required before magic effects apply`;
   }
 
-  const enhancement = inferItemEnhancementBonus(item);
-  const baseName = item.baseItemName ? ` (${item.baseItemName})` : "";
-  const damage = item.damage || item.baseDamage;
+  const enhancement = inferItemEnhancementBonus(normalizedItem);
+  const baseName = normalizedItem.baseItemName ? ` (${normalizedItem.baseItemName})` : "";
+  const damage = normalizedItem.damage || normalizedItem.baseDamage;
   const pieces = [
-    `${item.name}${baseName}`,
+    `${normalizedItem.name}${baseName}`,
     enhancement ? `+${enhancement} attack/damage` : "",
     damage ? damage : "damage die unresolved",
   ].filter(Boolean);
@@ -611,13 +667,14 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
   const attunementLimit = context.attunementLimit ?? ATTUNEMENT_LIMIT;
   const armorProficiencies = new Set(context.armorProficiencies ?? []);
   const weaponProficiencies = new Set(context.weaponProficiencies ?? []);
-  const attunedItems = items.filter((item) => item.attuned);
-  const equippedItems = items.filter((item) => item.equipped);
+  const normalizedItems = items.map(normalizeInventoryWeaponItem);
+  const attunedItems = normalizedItems.filter((item) => item.attuned);
+  const equippedItems = normalizedItems.filter((item) => item.equipped);
   const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
   const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
-  const acLines = items.map((item) => getArmorShieldAcLine(item, context)).filter(Boolean);
-  const weaponLines = items.map(getWeaponEffectLine).filter(Boolean);
-  const itemGrantLines = items.flatMap(getItemGrantLines);
+  const acLines = normalizedItems.map((item) => getArmorShieldAcLine(item, context)).filter(Boolean);
+  const weaponLines = normalizedItems.map(getWeaponEffectLine).filter(Boolean);
+  const itemGrantLines = normalizedItems.flatMap(getItemGrantLines);
   const warnings = [
     attunedItems.length > attunementLimit
       ? `Attunement limit exceeded: ${attunedItems.length}/${attunementLimit}.`
@@ -631,13 +688,13 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
     equippedShields.length > 1
       ? `Multiple shields are equipped: ${equippedShields.map((item) => item.name).join(", ")}. Check with your table before stacking shield bonuses.`
       : "",
-    ...items
+    ...normalizedItems
       .filter((item) => item.equipped && item.attunable && !item.attuned)
       .map((item) => `${item.name} is equipped but not attuned; its attunement-gated effects should stay inactive.`),
-    ...items
+    ...normalizedItems
       .filter((item) => item.equipped && needsBaseWeaponChoice(item))
       .map((item) => `${item.name} needs a base weapon or damage value before sheet/PDF attack rows can be complete.`),
-    ...items
+    ...normalizedItems
       .filter((item) => item.equipped)
       .map((item) => {
         const requirement = getArmorProficiencyRequirement(item);
@@ -646,7 +703,7 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
         }
         return `${item.name} is equipped but ${requirement === "shield" ? "shield" : `${requirement} armor`} proficiency is not currently detected.`;
       }),
-    ...items
+    ...normalizedItems
       .filter((item) => item.equipped)
       .map((item) => {
         const requirement = getWeaponProficiencyRequirement(item);

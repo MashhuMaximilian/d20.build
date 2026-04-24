@@ -419,6 +419,10 @@ function formatFeet(value: number) {
 }
 
 function getAbilityModifier(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
   return Math.floor((value - 10) / 2);
 }
 
@@ -438,11 +442,17 @@ function resolveHitDie(className: string) {
 function getNumericRuleBonus(element: BuiltInElement, matcher: RegExp) {
   const ruleTotals = element.rules
     .filter((rule): rule is Extract<BuiltInRule, { kind: "stat" }> => rule.kind === "stat" && matcher.test(rule.name))
-    .reduce((sum, rule) => sum + Number.parseInt(rule.value, 10), 0);
+    .reduce((sum, rule) => {
+      const amount = Number.parseInt(rule.value, 10);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
 
   const setterTotals = element.setters
     .filter((setter) => matcher.test(setter.name))
-    .reduce((sum, setter) => sum + Number.parseInt(setter.value, 10), 0);
+    .reduce((sum, setter) => {
+      const amount = Number.parseInt(setter.value, 10);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
 
   return ruleTotals + setterTotals;
 }
