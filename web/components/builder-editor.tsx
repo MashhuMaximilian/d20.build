@@ -2518,7 +2518,8 @@ export function BuilderEditor({
       });
 
       if (!response.ok) {
-        throw new Error(`PDF export failed with status ${response.status}`);
+        const message = await response.text();
+        throw new Error(message || `PDF export failed with status ${response.status}`);
       }
 
       const blob = await response.blob();

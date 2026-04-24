@@ -1,5 +1,9 @@
-import PDFDocument from "pdfkit";
-import SVGtoPDF from "svg-to-pdfkit";
+import fs from "node:fs";
+import fsPromises from "node:fs/promises";
+import path from "node:path";
+
+import type PDFDocument from "pdfkit";
+import type SVGtoPDF from "svg-to-pdfkit";
 
 import type { PdfSvgAssetBundle } from "@/lib/pdf/svg-assets.server";
 import type {
@@ -37,6 +41,26 @@ const FRONT_PAGE_LAYOUT = {
 
 const FRONT_PAGE_RAIL_CARD = { width: 190, height: 60 };
 const FRONT_PAGE_FEATURE_CARD = { width: 280, height: 78 };
+const PDF_TEXT_FONT_FAMILY = "Noto Sans";
+let svgToPdfImpl: typeof SVGtoPDF | null = null;
+
+async function resolvePdfFontPath() {
+  const candidates = [
+    path.resolve(process.cwd(), "public", "pdf-fonts", "NotoSans-Regular.ttf"),
+    path.resolve(process.cwd(), "web", "public", "pdf-fonts", "NotoSans-Regular.ttf"),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      await fsPromises.access(candidate);
+      return candidate;
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  throw new Error("Unable to locate the PDF font asset.");
+}
 
 function toPlainText(value: string) {
   return value
@@ -102,7 +126,11 @@ function addSvg(
     return;
   }
 
-  SVGtoPDF(doc, svg, x, y, {
+  if (!svgToPdfImpl) {
+    throw new Error("SVG renderer is not initialized.");
+  }
+
+  svgToPdfImpl(doc, svg, x, y, {
     width,
     height,
     preserveAspectRatio: "none",
@@ -123,7 +151,7 @@ function writeText(
   height: number,
   options: TextOptions = {},
 ) {
-  doc.font(options.font || "Helvetica");
+  doc.font(PDF_TEXT_FONT_FAMILY);
   doc.fontSize(options.size || 8.5);
   textColor(doc, options.color);
   doc.text(text, x, y, {
@@ -518,22 +546,58 @@ function renderStandardPage(doc: PDFDocument, assets: PdfSvgAssetBundle, charact
 }
 
 export async function generatePdfBytes(character: ResolvedPdfCharacter, assets: PdfSvgAssetBundle) {
-  const doc = new PDFDocument({
-    size: [PAGE_WIDTH, PAGE_HEIGHT],
-    margin: 0,
-    autoFirstPage: false,
-    compress: true,
-  });
+  const fontPath = await resolvePdfFontPath();
+  const originalReadFileSync = fs.readFileSync;
+  const pdfkitDataCandidates = [
+    path.resolve(process.cwd(), "web", "node_modules/.pnpm/pdfkit@0.18.0/node_modules/pdfkit/js/data"),
+    path.resolve(process.cwd(), "node_modules/.pnpm/pdfkit@0.18.0/node_modules/pdfkit/js/data"),
+  ];
+  const pdfkitDataDir = pdfkitDataCandidates.find((candidate) => fs.existsSync(candidate));
+  if (!pdfkitDataDir) {
+    throw new Error("Unable to locate PDFKit data directory.");
+  }
 
-  const done = collectPdfBytes(doc);
+  fs.readFileSync = ((filePath: fs.PathOrFileDescriptor, options?: BufferEncoding | null) => {
+    const normalized = typeof filePath === "string" ? filePath : String(filePath);
 
-  renderFrontPage(doc, assets, character);
+    if (normalized.includes(`${path.sep}data${path.sep}`) && (normalized.endsWith(".afm") || normalized.endsWith(".icc"))) {
+      const redirected = path.resolve(pdfkitDataDir, path.basename(normalized));
+      if (fs.existsSync(redirected)) {
+        return originalReadFileSync.call(fs, redirected, options as BufferEncoding | undefined);
+      }
+    }
 
-  character.pagePlan
-    .filter((page) => page.kind !== "front")
-    .forEach((page) => renderStandardPage(doc, assets, character, page));
+    return originalReadFileSync.call(fs, filePath, options as BufferEncoding | undefined);
+  }) as typeof fs.readFileSync;
 
-  doc.end();
+  try {
+    const [{ default: PDFDocument }, { default: SVGtoPDF }] = await Promise.all([
+      import("pdfkit"),
+      import("svg-to-pdfkit"),
+    ]);
+    svgToPdfImpl = SVGtoPDF;
 
-  return done;
+    const doc = new PDFDocument({
+      size: [PAGE_WIDTH, PAGE_HEIGHT],
+      margin: 0,
+      autoFirstPage: false,
+      compress: true,
+    });
+    doc.registerFont(PDF_TEXT_FONT_FAMILY, fontPath);
+
+    const done = collectPdfBytes(doc);
+
+    renderFrontPage(doc, assets, character);
+
+    character.pagePlan
+      .filter((page) => page.kind !== "front")
+      .forEach((page) => renderStandardPage(doc, assets, character, page));
+
+    doc.end();
+
+    return await done;
+  } finally {
+    fs.readFileSync = originalReadFileSync;
+    svgToPdfImpl = null;
+  }
 }

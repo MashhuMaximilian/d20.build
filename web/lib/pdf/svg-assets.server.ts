@@ -29,11 +29,26 @@ export type PdfSvgAssetKey = keyof typeof PDF_EXPORT_SVG_ASSET_PATHS;
 export type PdfSvgAssetBundle = Partial<Record<PdfSvgAssetKey, string>>;
 
 function resolvePdfAssetPath(relativePath: string) {
-  return path.resolve(process.cwd(), "public", relativePath);
+  const candidates = [
+    path.resolve(process.cwd(), "public", relativePath),
+    path.resolve(process.cwd(), "web", "public", relativePath),
+  ];
+
+  return candidates;
 }
 
 export async function loadPdfSvgAsset(key: PdfSvgAssetKey) {
-  return fs.readFile(resolvePdfAssetPath(PDF_EXPORT_SVG_ASSET_PATHS[key]), "utf8");
+  const candidates = resolvePdfAssetPath(PDF_EXPORT_SVG_ASSET_PATHS[key]);
+
+  for (const candidate of candidates) {
+    try {
+      return await fs.readFile(candidate, "utf8");
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  throw new Error(`Unable to locate PDF SVG asset: ${PDF_EXPORT_SVG_ASSET_PATHS[key]}`);
 }
 
 export async function loadPdfSvgAssetBundle(keys: PdfSvgAssetKey[]) {

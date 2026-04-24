@@ -25,6 +25,7 @@ declare module "pdfkit" {
     addPage(options?: PDFPageOptions): this;
     text(text: string, x?: number, y?: number, options?: PDFTextOptions): this;
     font(name: string): this;
+    registerFont(name: string, src: string | Buffer): this;
     fontSize(size: number): this;
     fillColor(color: string): this;
     save(): this;
