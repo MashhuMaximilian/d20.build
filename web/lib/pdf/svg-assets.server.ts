@@ -2,34 +2,34 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 export const PDF_EXPORT_SVG_ASSET_PATHS = {
-  frontPageTemplate: "SVGs for PDF/examples with svgs/Design general character sheet p1 v3.svg",
-  frontPageHeader: "SVGs for PDF/Front Page Header.svg",
-  abilityPanel: "SVGs for PDF/Ability scores, Saves, and ability checks.svg",
-  hpPanel: "SVGs for PDF/HP and Bonuses full.svg",
-  passivesAndSpeeds: "SVGs for PDF/Passives and speeds.svg",
-  weaponAttacks: "SVGs for PDF/Weapon attacks.svg",
-  generalContainer: "SVGs for PDF/General Box Container.svg",
-  hitDie: "SVGs for PDF/Hit Die.svg",
-  lines: "SVGs for PDF/Lines.svg",
-  proficiencyBoolean: "SVGs for PDF/Proficiency check boolean.svg",
-  ac: "SVGs for PDF/_AC.svg",
-  bonusBox: "SVGs for PDF/_Bonus Box.svg",
-  hp: "SVGs for PDF/_HP.svg",
-  line: "SVGs for PDF/_Line.svg",
-  lineBonusSkill: "SVGs for PDF/_Line bonus skill.svg",
-  passiveBox: "SVGs for PDF/_Passive box.svg",
-  proficiencyBox: "SVGs for PDF/_Proficiency Box.svg",
-  skillBlock: "SVGs for PDF/_Skill Block.svg",
-  skillLine: "SVGs for PDF/_Skill line.svg",
-  statBlock: "SVGs for PDF/_Stat Block.svg",
-  weaponLine: "SVGs for PDF/Weapon Line.svg",
+  frontPageTemplate: "pdf-svg/examples with svgs/Design general character sheet p1 v3.svg",
+  frontPageHeader: "pdf-svg/Front Page Header.svg",
+  abilityPanel: "pdf-svg/Ability scores, Saves, and ability checks.svg",
+  hpPanel: "pdf-svg/HP and Bonuses full.svg",
+  passivesAndSpeeds: "pdf-svg/Passives and speeds.svg",
+  weaponAttacks: "pdf-svg/Weapon attacks.svg",
+  generalContainer: "pdf-svg/General Box Container.svg",
+  hitDie: "pdf-svg/Hit Die.svg",
+  lines: "pdf-svg/Lines.svg",
+  proficiencyBoolean: "pdf-svg/Proficiency check boolean.svg",
+  ac: "pdf-svg/_AC.svg",
+  bonusBox: "pdf-svg/_Bonus Box.svg",
+  hp: "pdf-svg/_HP.svg",
+  line: "pdf-svg/_Line.svg",
+  lineBonusSkill: "pdf-svg/_Line bonus skill.svg",
+  passiveBox: "pdf-svg/_Passive box.svg",
+  proficiencyBox: "pdf-svg/_Proficiency Box.svg",
+  skillBlock: "pdf-svg/_Skill Block.svg",
+  skillLine: "pdf-svg/_Skill line.svg",
+  statBlock: "pdf-svg/_Stat Block.svg",
+  weaponLine: "pdf-svg/Weapon Line.svg",
 } as const;
 
 export type PdfSvgAssetKey = keyof typeof PDF_EXPORT_SVG_ASSET_PATHS;
 export type PdfSvgAssetBundle = Partial<Record<PdfSvgAssetKey, string>>;
 
 function resolvePdfAssetPath(relativePath: string) {
-  return path.resolve(process.cwd(), "../", relativePath);
+  return path.resolve(process.cwd(), "public", relativePath);
 }
 
 export async function loadPdfSvgAsset(key: PdfSvgAssetKey) {

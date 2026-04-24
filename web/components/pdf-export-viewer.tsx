@@ -8,7 +8,7 @@ import type { ResolvedPdfCharacter } from "@/lib/pdf/types";
 
 type PdfExportViewerProps = {
   svgAssets: PdfSvgAssetBundle;
-  templateSvg: string;
+  templateSvg?: string;
   token: string | null;
 };
 
@@ -943,7 +943,9 @@ export function PdfExportViewer({ svgAssets, templateSvg, token }: PdfExportView
         }
       `}</style>
       <div className="pdf-export__sheet">
-        <div className="pdf-export__templateSvg" aria-hidden="true" dangerouslySetInnerHTML={{ __html: templateSvg }} />
+        {templateSvg ? (
+          <div className="pdf-export__templateSvg" aria-hidden="true" dangerouslySetInnerHTML={{ __html: templateSvg }} />
+        ) : null}
         <PdfFrontPage character={character} svgAssets={svgAssets} />
       </div>
     </div>

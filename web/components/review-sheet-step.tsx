@@ -1564,7 +1564,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         </div>
         {props.onExportPdf ? (
           <button className="button button--secondary review-sheet__exportButton" type="button" onClick={props.onExportPdf}>
-            Export PDF
+            Download PDF
           </button>
         ) : null}
       </div>

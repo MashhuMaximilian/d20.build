@@ -13,13 +13,9 @@ export const metadata: Metadata = {
   title: "Arcanum PDF export",
 };
 
-async function loadFrontPageTemplate() {
-  return loadPdfSvgAsset("frontPageTemplate");
-}
-
 export default async function PdfExportPage({ searchParams }: PdfExportPageProps) {
   const params = searchParams ? await searchParams : undefined;
-  const templateSvg = await loadFrontPageTemplate();
+  const templateSvg = await loadPdfSvgAsset("frontPageTemplate");
   const svgAssets = await loadPdfSvgAssetBundle([
     "frontPageHeader",
     "abilityPanel",

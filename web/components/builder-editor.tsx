@@ -68,10 +68,6 @@ import {
   getSpellValidationMessages,
 } from "@/lib/progression/spellcasting";
 import { buildPdfCharacterFromBuilder } from "@/lib/pdf/from-builder";
-import {
-  createPdfExportToken,
-  storePdfExportPayload,
-} from "@/lib/pdf/session";
 
 type BuilderEditorProps = {
   backgrounds: BuiltInBackgroundRecord[];
@@ -2507,22 +2503,39 @@ export function BuilderEditor({
       selectedBackgroundFeatureElements,
     ],
   );
-  const handleExportPdf = useCallback(() => {
+  const handleExportPdf = useCallback(async () => {
     if (typeof window === "undefined") {
       return;
     }
 
-    const token = createPdfExportToken();
-    storePdfExportPayload(token, pdfCharacter);
+    try {
+      const response = await fetch("/pdf-export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pdfCharacter),
+      });
 
-    const exportWindow = window.open(`/pdf-export?token=${encodeURIComponent(token)}`, "_blank", "width=1200,height=900");
-    if (!exportWindow) {
+      if (!response.ok) {
+        throw new Error(`PDF export failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${pdfCharacter.name || "arcanum-character"}.pdf`;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10_000);
+    } catch (error) {
+      console.error("Failed to export PDF", error);
       setStatusTone("error");
-      setStatus("Allow pop-ups to export the PDF.");
-      window.localStorage.removeItem(`arcanum:pdf-export:${token}`);
-      return;
+      setStatus("PDF export failed. Please try again.");
     }
-    exportWindow.focus();
   }, [pdfCharacter]);
 
   const steps = useMemo<BuilderStep[]>(() => {
@@ -3845,7 +3858,7 @@ export function BuilderEditor({
         <div className="builder-navigation__actions">
           {activeStep.kind === "review" ? (
             <button className="button button--secondary" type="button" onClick={handleExportPdf}>
-              Export PDF
+              Download PDF
             </button>
           ) : null}
           {previousStep ? (
