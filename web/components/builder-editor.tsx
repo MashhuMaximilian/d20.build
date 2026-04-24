@@ -2505,9 +2505,18 @@ export function BuilderEditor({
       return;
     }
 
-    exportWindow.document.open();
-    exportWindow.document.write(buildPdfExportHtml(pdfCharacter));
-    exportWindow.document.close();
+    const html = buildPdfExportHtml(pdfCharacter);
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+
+    exportWindow.location.href = url;
+    exportWindow.addEventListener(
+      "load",
+      () => {
+        URL.revokeObjectURL(url);
+      },
+      { once: true },
+    );
   }, [pdfCharacter]);
 
   const steps = useMemo<BuilderStep[]>(() => {
