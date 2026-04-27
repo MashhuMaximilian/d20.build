@@ -44,7 +44,7 @@ function sentencePreview(value: string, fallback = "No short summary available."
   }
 
   const sentence = cleaned.match(/.+?[.!?](?:\s|$)/)?.[0]?.trim() ?? cleaned;
-  return sentence.length > 180 ? `${sentence.slice(0, 177)}...` : sentence;
+  return sentence.length > 360 ? `${sentence.slice(0, 357)}...` : sentence;
 }
 
 function uniqueById<T extends { id: string }>(items: T[]) {
