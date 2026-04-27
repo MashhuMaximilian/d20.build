@@ -7,6 +7,7 @@ import { generatePdfBytes } from "@/lib/pdf/generate";
 export const runtime = "nodejs";
 
 const PDF_EXPORT_ASSET_KEYS = [
+  "frontPageTemplate",
   "frontPageHeader",
   "abilityPanel",
   "hpPanel",
