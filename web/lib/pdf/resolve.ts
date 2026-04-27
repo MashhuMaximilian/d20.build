@@ -17,6 +17,7 @@ import type {
   PdfPageKind,
   PdfPagePlan,
   PdfPageSection,
+  PdfProficiencyGroups,
   PdfResolveSource,
   PdfStatBlock,
   PdfSkillRow,
@@ -316,6 +317,16 @@ function normalizeAttackRow(row: PdfAttackRow): PdfAttackRow {
   };
 }
 
+function normalizeProficiencyGroups(groups?: PdfProficiencyGroups): PdfProficiencyGroups {
+  return {
+    weapons: uniqueStrings((groups?.weapons ?? []).map(normalizeText).filter(Boolean)),
+    armor: uniqueStrings((groups?.armor ?? []).map(normalizeText).filter(Boolean)),
+    tools: uniqueStrings((groups?.tools ?? []).map(normalizeText).filter(Boolean)),
+    vehicles: uniqueStrings((groups?.vehicles ?? []).map(normalizeText).filter(Boolean)),
+    languages: uniqueStrings((groups?.languages ?? []).map(normalizeText).filter(Boolean)),
+  };
+}
+
 function packCards(cards: PdfPageCard[], capacity: number) {
   return {
     packed: cards.slice(0, capacity),
@@ -357,6 +368,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
   const normalizedAbilityRows = uniqueById((source.abilityRows ?? []).map(normalizeAbilityRow)).sort((left, right) => left.label.localeCompare(right.label));
   const normalizedSkillRows = uniqueById((source.skillRows ?? []).map(normalizeSkillRow)).sort((left, right) => left.label.localeCompare(right.label));
   const normalizedAttackRows = uniqueById((source.attackRows ?? []).map(normalizeAttackRow));
+  const normalizedProficiencyGroups = normalizeProficiencyGroups(source.proficiencyGroups);
 
   const featureCards = uniqueById((source.featureCards ?? []).map(normalizeCard)).sort((left, right) => {
     if (left.priority !== right.priority) {
@@ -394,6 +406,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
     abilityRows: normalizedAbilityRows,
     skillRows: normalizedSkillRows,
     attackRows: normalizedAttackRows,
+    proficiencyGroups: normalizedProficiencyGroups,
     deck: packed.packed,
     deckOverflow: packed.overflow,
     railCards: railCards.sort((left, right) => left.priority - right.priority),

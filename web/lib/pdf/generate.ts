@@ -43,7 +43,6 @@ type FrontEntrySummary = {
   hasAppendixReference: boolean;
 };
 
-const ABILITY_ORDER = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
 const FRONT_DECK_CARD_LIMIT = 8;
 
 const FRONT_PAGE_LAYOUT = {
@@ -57,13 +56,77 @@ const FRONT_PAGE_LAYOUT = {
 } as const;
 
 const FRONT_PAGE_SPELLCASTING_BOXES = [
-  { x: 402, y: 157, width: 48, height: 28, key: "spellcasting bonus" },
-  { x: 466, y: 157, width: 48, height: 28, key: "save dc" },
-  { x: 529, y: 157, width: 48, height: 28, key: "spellcasting ability" },
+  { centerX: 423, centerY: 169, width: 42, height: 18, key: "spellcasting bonus" },
+  { centerX: 488, centerY: 169, width: 42, height: 18, key: "save dc" },
+  { centerX: 554, centerY: 169, width: 42, height: 18, key: "spellcasting ability" },
 ] as const;
 const FRONT_PAGE_GROUPED = {
   rail: { x: 402, y: 196, width: 174, height: 282 },
   deck: { x: 31, y: 535, width: 532, height: 270, columns: 2, columnGap: 16 },
+} as const;
+const FRONT_PAGE_ANCHORS = {
+  statStrip: {
+    proficiencyBonus: { centerX: 40, centerY: 108, width: 34, height: 13 },
+    initiative: { centerX: 92, centerY: 108, width: 34, height: 13 },
+    attacks: { centerX: 144, centerY: 108, width: 34, height: 13 },
+    inspiration: { centerX: 196, centerY: 108, width: 34, height: 13 },
+    exhaustion: { centerX: 248, centerY: 108, width: 34, height: 13 },
+    maxHp: { centerX: 304, centerY: 108, width: 40, height: 14 },
+    hp: { centerX: 356, centerY: 108, width: 40, height: 14 },
+    tempHp: { centerX: 406, centerY: 108, width: 36, height: 14 },
+    hitDice: { centerX: 458, centerY: 108, width: 42, height: 14 },
+    ac: { centerX: 508, centerY: 108, width: 31, height: 15 },
+    defenses: { centerX: 560, centerY: 108, width: 34, height: 13 },
+  },
+  abilities: [
+    { label: "STR", score: { centerX: 44, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 208, width: 24, height: 7 }, save: { centerX: 44, centerY: 154, width: 24, height: 6 } },
+    { label: "DEX", score: { centerX: 112, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 208, width: 24, height: 7 }, save: { centerX: 112, centerY: 154, width: 24, height: 6 } },
+    { label: "CON", score: { centerX: 180, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 208, width: 24, height: 7 }, save: { centerX: 180, centerY: 154, width: 24, height: 6 } },
+    { label: "INT", score: { centerX: 44, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 282, width: 24, height: 7 }, save: { centerX: 44, centerY: 228, width: 24, height: 6 } },
+    { label: "WIS", score: { centerX: 112, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 282, width: 24, height: 7 }, save: { centerX: 112, centerY: 228, width: 24, height: 6 } },
+    { label: "CHA", score: { centerX: 180, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 282, width: 24, height: 7 }, save: { centerX: 180, centerY: 228, width: 24, height: 6 } },
+  ],
+  skillTotals: {
+    athletics: { x: 241, y: 160 },
+    acrobatics: { x: 241, y: 169 },
+    "sleight of hand": { x: 241, y: 178 },
+    stealth: { x: 241, y: 187 },
+    arcana: { x: 331, y: 160 },
+    history: { x: 331, y: 169 },
+    investigation: { x: 331, y: 178 },
+    nature: { x: 331, y: 187 },
+    religion: { x: 331, y: 196 },
+    "animal handling": { x: 241, y: 234 },
+    insight: { x: 241, y: 243 },
+    medicine: { x: 241, y: 252 },
+    perception: { x: 241, y: 261 },
+    survival: { x: 241, y: 270 },
+    deception: { x: 331, y: 234 },
+    intimidation: { x: 331, y: 243 },
+    performance: { x: 331, y: 252 },
+    persuasion: { x: 331, y: 261 },
+  },
+  passivesAndSpeeds: {
+    longJump: { centerX: 23, centerY: 325, width: 24, height: 7 },
+    highJump: { centerX: 52, centerY: 325, width: 24, height: 7 },
+    liftDrag: { centerX: 80, centerY: 325, width: 25, height: 7 },
+    darkvision: { centerX: 108, centerY: 325, width: 28, height: 7 },
+    passivePerception: { centerX: 147, centerY: 325, width: 24, height: 7 },
+    passiveInsight: { centerX: 176, centerY: 325, width: 24, height: 7 },
+    passiveInvestigation: { centerX: 205, centerY: 325, width: 24, height: 7 },
+    walking: { centerX: 253, centerY: 325, width: 27, height: 7 },
+    flying: { centerX: 282, centerY: 325, width: 27, height: 7 },
+    climbing: { centerX: 311, centerY: 325, width: 27, height: 7 },
+    swimming: { centerX: 340, centerY: 325, width: 27, height: 7 },
+    burrowing: { centerX: 369, centerY: 325, width: 27, height: 7 },
+  },
+  proficiencies: {
+    weapons: { x: 24, y: 345, width: 54, height: 21 },
+    armor: { x: 96, y: 345, width: 54, height: 21 },
+    tools: { x: 166, y: 345, width: 54, height: 21 },
+    vehicles: { x: 238, y: 345, width: 54, height: 21 },
+    languages: { x: 310, y: 345, width: 54, height: 21 },
+  },
 } as const;
 const PDF_TEXT_FONT_FAMILY = "Noto Sans";
 let svgToPdfImpl: typeof SVGtoPDF | null = null;
@@ -243,6 +306,21 @@ function writeFittedText(
   });
 }
 
+function writeCenteredText(
+  doc: PDFDocument,
+  text: string,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  options: TextOptions & { maxSize: number; minSize: number },
+) {
+  writeFittedText(doc, text, centerX - width / 2, centerY - height / 2, width, height, {
+    ...options,
+    align: "center",
+  });
+}
+
 function maskRegion(doc: PDFDocument, frame: RenderedPage) {
   const shapeDoc = doc as PdfShapeDocument;
   doc.save();
@@ -250,9 +328,12 @@ function maskRegion(doc: PDFDocument, frame: RenderedPage) {
   doc.restore();
 }
 
-function valueBoxX(index: number) {
-  const columns = [20, 72, 124, 176, 228, 280, 332, 384, 436, 488, 540];
-  return columns[index] ?? 20 + index * 52;
+function formatSignedNumber(value: number) {
+  return `${value >= 0 ? "+" : ""}${value}`;
+}
+
+function normalizeAnchorKey(value: string) {
+  return value.trim().toLowerCase();
 }
 
 function renderFrontHeader(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell = true) {
@@ -289,31 +370,26 @@ function renderStatStrip(doc: PDFDocument, assets: PdfSvgAssetBundle, stats: Res
   }
 
   const statsByLabel = new Map(stats.map((stat) => [stat.label.toLowerCase(), stat]));
-  const values = [
-    statsByLabel.get("proficiency bonus")?.value || "—",
-    statsByLabel.get("initiative")?.value || "—",
-    statsByLabel.get("attacks / action")?.value || "—",
-    "—",
-    "0",
-    statsByLabel.get("hp")?.value || "—",
-    statsByLabel.get("hp")?.value || "—",
-    "—",
-    statsByLabel.get("hit dice")?.value || "—",
-    statsByLabel.get("ac")?.value || "—",
-    "—",
-  ];
+  const anchorValues = [
+    [FRONT_PAGE_ANCHORS.statStrip.proficiencyBonus, statsByLabel.get("proficiency bonus")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.initiative, statsByLabel.get("initiative")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.attacks, statsByLabel.get("attacks / action")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.inspiration, "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.exhaustion, "0"],
+    [FRONT_PAGE_ANCHORS.statStrip.maxHp, statsByLabel.get("hp")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.hp, statsByLabel.get("hp")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.tempHp, "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.hitDice, statsByLabel.get("hit dice")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.ac, statsByLabel.get("ac")?.value || "—"],
+    [FRONT_PAGE_ANCHORS.statStrip.defenses, "—"],
+  ] as const;
 
-  const widths = [40, 40, 40, 40, 40, 48, 48, 44, 44, 40, 40];
-
-  values.forEach((value, index) => {
-    const x = valueBoxX(index);
-    const width = widths[index] ?? 40;
-    const y = index >= 5 ? 100 : 101;
-    writeFittedText(doc, safeNumberText(value), x, y, width, 16, {
-      font: index === 9 ? "Helvetica-Bold" : "Times-Bold",
-      align: "center",
-      maxSize: index >= 5 ? 16 : 13,
-      minSize: 8,
+  anchorValues.forEach(([anchor, value]) => {
+    writeCenteredText(doc, safeNumberText(value), anchor.centerX, anchor.centerY, anchor.width, anchor.height, {
+      font: "Times-Bold",
+      maxSize: 13.5,
+      minSize: 7.5,
+      color: "#000000",
     });
   });
 }
@@ -323,10 +399,9 @@ function renderSpellcastingBoxes(doc: PDFDocument, stats: ResolvedPdfCharacter["
 
   FRONT_PAGE_SPELLCASTING_BOXES.forEach((box) => {
     const value = statsByLabel.get(box.key) || "—";
-    writeFittedText(doc, safeNumberText(value), box.x, box.y, box.width, box.height, {
+    writeCenteredText(doc, safeNumberText(value), box.centerX, box.centerY, box.width, box.height, {
       font: box.key === "spellcasting ability" ? "Helvetica-Bold" : "Times-Bold",
-      align: "center",
-      maxSize: box.key === "spellcasting ability" ? 10 : 16,
+      maxSize: box.key === "spellcasting ability" ? 9.5 : 14,
       minSize: 7,
     });
   });
@@ -342,38 +417,46 @@ function renderAbilityPanel(
     addSvg(doc, assets.abilityPanel, FRONT_PAGE_LAYOUT.abilities.x, FRONT_PAGE_LAYOUT.abilities.y, FRONT_PAGE_LAYOUT.abilities.width, FRONT_PAGE_LAYOUT.abilities.height);
   }
 
-  const abilityAnchors = [
-    { scoreX: 45, scoreY: 184, modX: 45, modY: 214 },
-    { scoreX: 113, scoreY: 184, modX: 113, modY: 214 },
-    { scoreX: 181, scoreY: 184, modX: 181, modY: 214 },
-    { scoreX: 45, scoreY: 258, modX: 45, modY: 288 },
-    { scoreX: 113, scoreY: 258, modX: 113, modY: 288 },
-    { scoreX: 181, scoreY: 258, modX: 181, modY: 288 },
-  ];
-
   const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
+  const skillRowsByLabel = new Map(character.frontPage.skillRows.map((row) => [normalizeAnchorKey(row.label), row]));
 
-  ABILITY_ORDER.forEach((label, index) => {
-    const row = abilityRowsByLabel.get(label);
-    const anchor = abilityAnchors[index];
-    if (!anchor || !row) {
+  FRONT_PAGE_ANCHORS.abilities.forEach((anchor) => {
+    const row = abilityRowsByLabel.get(anchor.label);
+    if (!row) {
       return;
     }
-    writeFittedText(doc, `${row.score}`, anchor.scoreX - 18, anchor.scoreY - 8, 36, 14, {
+    writeCenteredText(doc, `${row.score}`, anchor.score.centerX, anchor.score.centerY, anchor.score.width, anchor.score.height, {
       font: "Times-Bold",
-      maxSize: 14,
-      minSize: 10,
-      align: "center",
+      maxSize: 12.5,
+      minSize: 8,
+      color: "#000000",
     });
-    writeFittedText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, anchor.modX - 14, anchor.modY - 4, 28, 7, {
+    writeCenteredText(doc, formatSignedNumber(row.modifier), anchor.modifier.centerX, anchor.modifier.centerY, anchor.modifier.width, anchor.modifier.height, {
       font: "Helvetica-Bold",
-      maxSize: 6,
-      minSize: 4.8,
-      align: "center",
+      maxSize: 5.4,
+      minSize: 4.2,
+      color: "#000000",
+    });
+    writeCenteredText(doc, formatSignedNumber(row.saveBonus), anchor.save.centerX, anchor.save.centerY, anchor.save.width, anchor.save.height, {
+      font: "Helvetica-Bold",
+      maxSize: 4.8,
+      minSize: 3.8,
+      color: "#000000",
     });
   });
 
-  // Saves and skill micro-values need exact per-line calibration; leaving the template clean is better than noisy misalignment.
+  Object.entries(FRONT_PAGE_ANCHORS.skillTotals).forEach(([label, anchor]) => {
+    const row = skillRowsByLabel.get(label);
+    if (!row) {
+      return;
+    }
+    writeText(doc, formatSignedNumber(row.total), anchor.x, anchor.y, 14, 5.5, {
+      font: row.expertise || row.proficient ? "Helvetica-Bold" : "Helvetica",
+      size: 4.4,
+      align: "right",
+      color: "#000000",
+    });
+  });
 }
 
 function renderPassivesPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell = true) {
@@ -381,8 +464,62 @@ function renderPassivesPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, charac
     addSvg(doc, assets.passivesAndSpeeds, FRONT_PAGE_LAYOUT.passives.x, FRONT_PAGE_LAYOUT.passives.y, FRONT_PAGE_LAYOUT.passives.width, FRONT_PAGE_LAYOUT.passives.height);
   }
 
-  void character;
-  // Passive/speed widgets remain visually present from the SVG shell until their exact centers are mapped.
+  const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
+  const skillRowsByLabel = new Map(character.frontPage.skillRows.map((row) => [normalizeAnchorKey(row.label), row]));
+  const statsByLabel = new Map(character.frontPage.stats.map((stat) => [stat.label.toLowerCase(), stat.value]));
+  const strength = abilityRowsByLabel.get("STR")?.score ?? 10;
+  const walkingSpeed = statsByLabel.get("speed")?.replace(/\s*ft\.?/i, "") || "—";
+  const passivePerception = statsByLabel.get("passive perception") || "—";
+  const passiveInsight = skillRowsByLabel.has("insight") ? `${10 + (skillRowsByLabel.get("insight")?.total ?? 0)}` : "—";
+  const passiveInvestigation = skillRowsByLabel.has("investigation") ? `${10 + (skillRowsByLabel.get("investigation")?.total ?? 0)}` : "—";
+  const anchors = FRONT_PAGE_ANCHORS.passivesAndSpeeds;
+  const values = [
+    [anchors.longJump, `${strength}`],
+    [anchors.highJump, `${Math.max(0, Math.floor((strength + 3) / 4))}`],
+    [anchors.liftDrag, `${strength * 30}`],
+    [anchors.darkvision, "—"],
+    [anchors.passivePerception, passivePerception],
+    [anchors.passiveInsight, passiveInsight],
+    [anchors.passiveInvestigation, passiveInvestigation],
+    [anchors.walking, walkingSpeed],
+    [anchors.flying, "—"],
+    [anchors.climbing, "—"],
+    [anchors.swimming, "—"],
+    [anchors.burrowing, "—"],
+  ] as const;
+
+  values.forEach(([anchor, value]) => {
+    writeCenteredText(doc, safeNumberText(value), anchor.centerX, anchor.centerY, anchor.width, anchor.height, {
+      font: "Helvetica-Bold",
+      maxSize: 5.1,
+      minSize: 3.8,
+      color: "#000000",
+    });
+  });
+}
+
+function renderProficienciesPanel(doc: PDFDocument, character: ResolvedPdfCharacter) {
+  const groups = character.frontPage.proficiencyGroups;
+  const entries = [
+    [FRONT_PAGE_ANCHORS.proficiencies.weapons, groups.weapons],
+    [FRONT_PAGE_ANCHORS.proficiencies.armor, groups.armor],
+    [FRONT_PAGE_ANCHORS.proficiencies.tools, groups.tools],
+    [FRONT_PAGE_ANCHORS.proficiencies.vehicles, groups.vehicles],
+    [FRONT_PAGE_ANCHORS.proficiencies.languages, groups.languages],
+  ] as const;
+
+  entries.forEach(([frame, values]) => {
+    if (!values.length) {
+      return;
+    }
+    writeFittedText(doc, values.slice(0, 3).join(", "), frame.x, frame.y, frame.width, frame.height, {
+      maxSize: 4.4,
+      minSize: 3.2,
+      color: "#000000",
+      align: "center",
+      lineGap: 0,
+    });
+  });
 }
 
 function renderAttacksPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, attacks: ResolvedPdfCharacter["frontPage"]["attackRows"], drawShell = true) {
@@ -694,6 +831,7 @@ function renderFrontPage(doc: PDFDocument, assets: PdfSvgAssetBundle, character:
   renderAbilityPanel(doc, assets, character, !hasFrontTemplate);
   renderSpellcastingBoxes(doc, character.frontPage.stats);
   renderPassivesPanel(doc, assets, character, !hasFrontTemplate);
+  renderProficienciesPanel(doc, character);
   renderAttacksPanel(doc, assets, character.frontPage.attackRows, !hasFrontTemplate);
   renderRailCards(doc, assets, character.frontPage.railCards);
   renderFrontDeck(doc, assets, character.frontPage.deck);

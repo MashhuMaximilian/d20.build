@@ -103,6 +103,18 @@ function normalizeLookupLabel(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+function humanizeGrantedId(value: string) {
+  return value
+    .replace(/^ID_[A-Z0-9_]+?_PROFICIENCY_/, "")
+    .replace(/^ID_PROFICIENCY_/, "")
+    .replace(/^ID_LANGUAGE_/, "")
+    .replace(/^ID_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bCant\b/g, "Cant");
+}
+
 function getProficiencyBonus(level: number) {
   return 2 + Math.floor((Math.max(1, level) - 1) / 4);
 }
@@ -392,6 +404,52 @@ function buildAttackRows(args: BuilderPdfSourceArgs) {
   );
 }
 
+function buildProficiencyGroups(args: BuilderPdfSourceArgs) {
+  const names = uniqueStrings([
+    ...args.selectedProficiencyNames,
+    ...args.selectedProficiencyIds.map(humanizeGrantedId),
+    ...args.manualGrantsByKind.proficiency.map((grant) => grant.name),
+  ]);
+  const languages = uniqueStrings([
+    ...args.selectedLanguageNames,
+    ...args.selectedLanguageIds.map(humanizeGrantedId),
+    ...args.manualGrantsByKind.language.map((grant) => grant.name),
+  ]);
+
+  const groups = {
+    weapons: [] as string[],
+    armor: [] as string[],
+    tools: [] as string[],
+    vehicles: [] as string[],
+    languages,
+  };
+
+  names.forEach((name) => {
+    const normalized = normalizeLookupLabel(name);
+    if (/\b(weapon|sword|bow|crossbow|dagger|rapier|axe|mace|staff|spear|martial|simple)\b/.test(normalized)) {
+      groups.weapons.push(name);
+      return;
+    }
+    if (/\b(armor|armour|shield)\b/.test(normalized)) {
+      groups.armor.push(name);
+      return;
+    }
+    if (/\b(vehicle|mount|waterborne|land)\b/.test(normalized)) {
+      groups.vehicles.push(name);
+      return;
+    }
+    groups.tools.push(name);
+  });
+
+  return {
+    weapons: uniqueStrings(groups.weapons),
+    armor: uniqueStrings(groups.armor),
+    tools: uniqueStrings(groups.tools),
+    vehicles: uniqueStrings(groups.vehicles),
+    languages: uniqueStrings(groups.languages),
+  };
+}
+
 function buildStatCards(args: BuilderPdfSourceArgs) {
   const proficiencyBonus = getProficiencyBonus(args.draft.level);
   const vitals = deriveHitPointSummary({
@@ -505,6 +563,7 @@ export function buildPdfCharacterFromBuilder(args: BuilderPdfSourceArgs): Resolv
     abilityRows: buildAbilityRows(args),
     skillRows: buildSkillRows(args),
     attackRows: buildAttackRows(args),
+    proficiencyGroups: buildProficiencyGroups(args),
     featureCards: buildFeatureCards(args),
     companionCards: buildCompanionCards(args),
     inventoryCards: buildInventoryCards(args),

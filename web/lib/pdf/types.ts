@@ -69,6 +69,14 @@ export type PdfAttackRow = {
   properties?: string;
 };
 
+export type PdfProficiencyGroups = {
+  weapons: string[];
+  armor: string[];
+  tools: string[];
+  vehicles: string[];
+  languages: string[];
+};
+
 export type PdfPageSection = {
   id: string;
   title: string;
@@ -81,6 +89,7 @@ export type PdfFrontPageComposition = {
   abilityRows: PdfAbilityScoreRow[];
   skillRows: PdfSkillRow[];
   attackRows: PdfAttackRow[];
+  proficiencyGroups: PdfProficiencyGroups;
   deck: PdfPageCard[];
   deckOverflow: PdfPageCard[];
   railCards: PdfPageCard[];
@@ -111,6 +120,7 @@ export type PdfResolveSource = {
   abilityRows?: PdfAbilityScoreRow[];
   skillRows?: PdfSkillRow[];
   attackRows?: PdfAttackRow[];
+  proficiencyGroups?: PdfProficiencyGroups;
   featureCards?: PdfPageCard[];
   companionCards?: PdfPageCard[];
   inventoryCards?: PdfPageCard[];
