@@ -26,6 +26,7 @@ type PdfShapeDocument = PDFDocument & {
   rect: (x: number, y: number, width: number, height: number) => PdfShapeDocument;
   fill: (color?: string) => PdfShapeDocument;
   fillAndStroke: (fillColor?: string, strokeColor?: string) => PdfShapeDocument;
+  stroke: (color?: string) => PdfShapeDocument;
 };
 
 type RenderedPage = {
@@ -49,6 +50,9 @@ type FrontCardSummary = {
   hasAppendixReference: boolean;
 };
 
+const ABILITY_ORDER = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
+const FRONT_DECK_CARD_LIMIT = 8;
+
 const FRONT_PAGE_LAYOUT = {
   header: { x: 10, y: 10, width: 575, height: 69 },
   stats: { x: 10, y: 84, width: 570, height: 51 },
@@ -65,8 +69,8 @@ const FRONT_PAGE_SPELLCASTING_BOXES = [
   { x: 529, y: 157, width: 48, height: 28, key: "spellcasting ability" },
 ] as const;
 const FRONT_PAGE_BENTO = {
-  rail: { x: 400, y: 196, width: 178, maxY: 502, gap: 6 },
-  deck: { x: 24, y: 565, width: 546, maxY: 806, columns: 3, gap: 8 },
+  rail: { x: 402, y: 198, width: 174, maxY: 500, gap: 5 },
+  deck: { x: 26, y: 566, width: 542, maxY: 804, columns: 2, gap: 9 },
 } as const;
 const PDF_TEXT_FONT_FAMILY = "Noto Sans";
 let svgToPdfImpl: typeof SVGtoPDF | null = null;
@@ -256,19 +260,19 @@ function renderFrontHeader(doc: PDFDocument, assets: PdfSvgAssetBundle, characte
     addSvg(doc, assets.frontPageHeader, FRONT_PAGE_LAYOUT.header.x, FRONT_PAGE_LAYOUT.header.y, FRONT_PAGE_LAYOUT.header.width, FRONT_PAGE_LAYOUT.header.height);
   }
 
-  writeFittedText(doc, safeText(character.name), 26, 37, 176, 24, {
+  writeFittedText(doc, safeText(character.name), 30, 36, 166, 20, {
     font: "Times-Bold",
-    maxSize: 24,
-    minSize: 15,
+    maxSize: 18,
+    minSize: 11,
   });
 
   const metaRows: Array<{ value: string; x: number; y: number; width: number; maxSize?: number }> = [
-    { value: [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ") || "—", x: 240, y: 28, width: 95, maxSize: 8.5 },
-    { value: `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`, x: 349, y: 28, width: 160, maxSize: 8.5 },
-    { value: character.backgroundLabel || "—", x: 240, y: 50, width: 95, maxSize: 8.2 },
-    { value: "—", x: 349, y: 50, width: 66, maxSize: 8.2 },
-    { value: "—", x: 430, y: 50, width: 48, maxSize: 8.2 },
-    { value: character.playerName || "—", x: 489, y: 50, width: 68, maxSize: 8.2 },
+    { value: [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ") || "—", x: 246, y: 29, width: 86, maxSize: 6.8 },
+    { value: `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`, x: 368, y: 29, width: 134, maxSize: 6.8 },
+    { value: character.backgroundLabel || "—", x: 246, y: 51, width: 86, maxSize: 6.6 },
+    { value: "—", x: 368, y: 51, width: 54, maxSize: 6.6 },
+    { value: "—", x: 452, y: 51, width: 42, maxSize: 6.6 },
+    { value: character.playerName || "—", x: 509, y: 51, width: 45, maxSize: 6.6 },
   ];
 
   for (const row of metaRows) {
@@ -347,34 +351,36 @@ function renderAbilityPanel(
     { x: 197, y: 231 },
   ];
 
-  character.frontPage.abilityRows.slice(0, 6).forEach((row, index) => {
+  const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
+
+  ABILITY_ORDER.forEach((label, index) => {
+    const row = abilityRowsByLabel.get(label);
     const slot = abilityPositions[index];
-    if (!slot) {
+    if (!slot || !row) {
       return;
     }
-    writeFittedText(doc, `${row.score}`, slot.x + 9, slot.y + 38, 50, 18, {
+    writeFittedText(doc, `${row.score}`, slot.x + 10, slot.y + 39, 48, 15, {
       font: "Times-Bold",
-      maxSize: 22,
-      minSize: 14,
+      maxSize: 16,
+      minSize: 11,
       align: "center",
     });
-    writeFittedText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, slot.x + 11, slot.y + 87, 46, 10, {
+    writeFittedText(doc, `${row.modifier >= 0 ? "+" : ""}${row.modifier}`, slot.x + 13, slot.y + 61, 42, 9, {
       font: "Helvetica-Bold",
-      maxSize: 10,
-      minSize: 7,
+      maxSize: 7.8,
+      minSize: 5.8,
       align: "center",
     });
-    writeFittedText(doc, `${row.saveBonus >= 0 ? "+" : ""}${row.saveBonus}`, slot.x + 12, slot.y + 7, 44, 8, {
+    writeFittedText(doc, `${row.saveBonus >= 0 ? "+" : ""}${row.saveBonus}`, slot.x + 13, slot.y + 8, 42, 7, {
       font: "Helvetica-Bold",
-      maxSize: 7.5,
-      minSize: 5.5,
+      maxSize: 6.2,
+      minSize: 4.8,
       align: "center",
     });
   });
 
   const skillGroups = [
-    { title: "STR", abilities: ["Athletics"] },
-    { title: "DEX", abilities: ["Acrobatics", "Sleight of Hand", "Stealth"] },
+    { title: "STR + DEX", abilities: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
     { title: "INT", abilities: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
     { title: "WIS", abilities: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
     { title: "CHA", abilities: ["Deception", "Intimidation", "Performance", "Persuasion"] },
@@ -382,11 +388,10 @@ function renderAbilityPanel(
 
   const skillsByLabel = new Map(character.frontPage.skillRows.map((skill) => [skill.label.toLowerCase(), skill]));
   const groupLayout = [
-    { x: 138, y: 167, width: 114, height: 44 },
-    { x: 257, y: 167, width: 114, height: 44 },
-    { x: 138, y: 218, width: 114, height: 44 },
-    { x: 257, y: 218, width: 114, height: 44 },
-    { x: 138, y: 269, width: 114, height: 44 },
+    { x: 224, y: 166, width: 68, height: 42 },
+    { x: 319, y: 166, width: 66, height: 42 },
+    { x: 224, y: 218, width: 68, height: 42 },
+    { x: 319, y: 218, width: 66, height: 42 },
   ];
 
   skillGroups.forEach((group, index) => {
@@ -400,10 +405,10 @@ function renderAbilityPanel(
       if (!skill) {
         return;
       }
-      writeFittedText(doc, `${skill.total >= 0 ? "+" : ""}${skill.total}`, box.x + box.width - 23, box.y + 2 + skillIndex * 8, 20, 7, {
+      writeFittedText(doc, `${skill.total >= 0 ? "+" : ""}${skill.total}`, box.x + box.width - 18, box.y + 3 + skillIndex * 7.5, 16, 6, {
         font: "Helvetica-Bold",
-        maxSize: 6.4,
-        minSize: 5.2,
+        maxSize: 5.4,
+        minSize: 4.5,
         align: "right",
       });
     });
@@ -432,10 +437,10 @@ function renderPassivesPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, charac
   ];
 
   entries.forEach((entry) => {
-    writeFittedText(doc, safeNumberText(entry.value), entry.x, 316, 38, 9, {
+    writeFittedText(doc, safeNumberText(entry.value), entry.x, 322, 38, 7, {
       font: "Helvetica-Bold",
-      maxSize: 7.2,
-      minSize: 5.5,
+      maxSize: 5.8,
+      minSize: 4.6,
       align: "center",
     });
   });
@@ -470,9 +475,9 @@ function renderAttacksPanel(doc: PDFDocument, assets: PdfSvgAssetBundle, attacks
   });
 
   if (!attacks.length) {
-    writeText(doc, "No equipped weapons detected.", 18, headerY + 8, 320, 18, {
-      size: 8,
-      color: "#7b6a5f",
+    writeText(doc, "No equipped weapons detected.", 20, headerY + 9, 250, 14, {
+      size: 6.5,
+      color: "#8a8a8a",
     });
   }
 }
@@ -561,11 +566,11 @@ function makeFrontCardSummary(card: PdfPageCard): FrontCardSummary {
   const hasAppendixReference = rawDetail.length > rawSummary.length + 45 || rawDetail.length > 220;
   const brief = rawSummary.length ? rawSummary : firstSentence(rawDetail);
 
-  if (brief.length <= 120) {
+  if (brief.length <= 105) {
     return {
       title: safeText(card.title),
-      body: hasAppendixReference ? `${brief}\n[Ref: Appx]` : brief,
-      sourceLabel: card.sourceLabel ? truncateText(card.sourceLabel, 24) : safeText(card.kind),
+      body: truncateText(brief, 105),
+      sourceLabel: card.sourceLabel ? truncateText(card.sourceLabel, 18) : "",
       hasAppendixReference,
     };
   }
@@ -573,12 +578,12 @@ function makeFrontCardSummary(card: PdfPageCard): FrontCardSummary {
   const bullets = extractMechanicalBullets(card);
   const body = bullets.length
     ? bullets.join("\n")
-    : truncateText(firstSentence(brief), 118);
+    : truncateText(firstSentence(brief), 105);
 
   return {
     title: safeText(card.title),
-    body: `${body}${hasAppendixReference ? "\n[Ref: Appx]" : ""}`,
-    sourceLabel: card.sourceLabel ? truncateText(card.sourceLabel, 24) : safeText(card.kind),
+    body,
+    sourceLabel: card.sourceLabel ? truncateText(card.sourceLabel, 18) : "",
     hasAppendixReference,
   };
 }
@@ -592,19 +597,19 @@ function measureBentoCardHeight(
   const contentWidth = width - 16;
   doc.save();
   doc.font(PDF_TEXT_FONT_FAMILY);
-  doc.fontSize(6.8);
+  doc.fontSize(5.8);
   const bodyHeight = doc.heightOfString(summary.body, {
     width: contentWidth,
     lineGap: 0.4,
   });
   doc.font("Helvetica-Bold");
-  doc.fontSize(7.8);
+  doc.fontSize(6.2);
   const titleHeight = doc.heightOfString(summary.title, {
     width: contentWidth - 52,
   });
   doc.restore();
 
-  const measured = 12 + Math.max(9, titleHeight) + 4 + bodyHeight + 9;
+  const measured = 8 + Math.max(7, titleHeight) + 3 + bodyHeight + 7;
   return Math.max(options.minHeight, Math.min(options.maxHeight, Math.ceil(measured)));
 }
 
@@ -621,51 +626,50 @@ function renderBentoCard(
   options: { compact?: boolean } = {},
 ) {
   const compact = Boolean(options.compact);
-  const headerHeight = compact ? 13 : 15;
   const shapeDoc = doc as PdfShapeDocument;
 
   doc.save();
-  shapeDoc.rect(frame.x, frame.y, frame.width, frame.height).fillAndStroke("#ffffff", "#111111");
-  shapeDoc.rect(frame.x + 1, frame.y + 1, frame.width - 2, headerHeight).fill("#1d1d1d");
-  doc.strokeColor("#111111").lineWidth(0.45);
-  doc.moveTo(frame.x + 6, frame.y + frame.height - 3).lineTo(frame.x + frame.width - 6, frame.y + frame.height - 3).stroke();
+  shapeDoc.rect(frame.x, frame.y, frame.width, frame.height).fillAndStroke("#ffffff", "#8f8f8f");
+  doc.strokeColor("#c8c8c8").lineWidth(0.35);
+  doc.moveTo(frame.x + 7, frame.y + 18).lineTo(frame.x + frame.width - 7, frame.y + 18).stroke();
   doc.restore();
 
-  writeFittedText(doc, summary.title.toUpperCase(), frame.x + 7, frame.y + 3, frame.width - 62, headerHeight - 4, {
+  writeFittedText(doc, summary.title.toUpperCase(), frame.x + 8, frame.y + 5, frame.width - 58, 8, {
     font: "Helvetica-Bold",
-    maxSize: compact ? 6.5 : 7.2,
-    minSize: 5,
-    color: "#ffffff",
+    maxSize: compact ? 5.8 : 6.3,
+    minSize: 4.8,
+    color: "#111111",
   });
 
   if (summary.sourceLabel) {
-    writeFittedText(doc, summary.sourceLabel, frame.x + frame.width - 55, frame.y + 4, 48, headerHeight - 5, {
-      maxSize: compact ? 4.8 : 5.2,
-      minSize: 4,
+    writeFittedText(doc, summary.sourceLabel, frame.x + frame.width - 51, frame.y + 6, 43, 6, {
+      maxSize: compact ? 3.9 : 4.4,
+      minSize: 3.4,
       align: "right",
-      color: "#ffffff",
+      color: "#777777",
     });
   }
 
-  writeFittedText(doc, summary.body, frame.x + 8, frame.y + headerHeight + 6, frame.width - 16, frame.height - headerHeight - 12, {
-    maxSize: compact ? 6.6 : 7,
-    minSize: 5.2,
+  writeFittedText(doc, summary.body, frame.x + 8, frame.y + 23, frame.width - 16, frame.height - 29, {
+    maxSize: compact ? 5.8 : 6.2,
+    minSize: 4.8,
     color: "#000000",
-    lineGap: 0.4,
+    lineGap: 0.2,
   });
 }
 
 function renderBentoSectionHeader(doc: PDFDocument, title: string, frame: RenderedPage) {
   const shapeDoc = doc as PdfShapeDocument;
   doc.save();
-  shapeDoc.rect(frame.x, frame.y, frame.width, frame.height).fill("#1d1d1d");
+  doc.strokeColor("#9c9c9c").lineWidth(0.35);
+  shapeDoc.rect(frame.x, frame.y + frame.height - 1, frame.width, 0.35).fill("#9c9c9c");
   doc.restore();
-  writeFittedText(doc, title.toUpperCase(), frame.x + 6, frame.y + 2, frame.width - 12, frame.height - 3, {
+  writeFittedText(doc, title.toUpperCase(), frame.x + 6, frame.y, frame.width - 12, frame.height - 2, {
     font: "Helvetica-Bold",
-    maxSize: 6.6,
-    minSize: 5,
+    maxSize: 5.6,
+    minSize: 4.6,
     align: "center",
-    color: "#ffffff",
+    color: "#333333",
   });
 }
 
@@ -710,15 +714,43 @@ function flowCardsIntoLanes(
   return overflow;
 }
 
+function frontCardText(card: PdfPageCard) {
+  return `${card.title} ${card.summary} ${card.tags.join(" ")} ${card.sourceLabel ?? ""}`.toLowerCase();
+}
+
+function isMinorFrontPageCard(card: PdfPageCard) {
+  const text = frontCardText(card);
+  return (
+    card.kind === "language" ||
+    card.kind === "proficiency" ||
+    /\bproficiency option\b/.test(text) ||
+    /\b(language|tool|instrument|gaming set|artisan's tools|jeweler's tools)\b/.test(text)
+  );
+}
+
+function isMajorFrontPageCard(card: PdfPageCard) {
+  if (isMinorFrontPageCard(card)) {
+    return false;
+  }
+
+  const text = frontCardText(card);
+  return (
+    card.kind === "feature" ||
+    card.kind === "trait" ||
+    /\b(class feature|subclass|feat|race|racial|resistance|spellcasting|inspiration|college|expertise)\b/.test(text)
+  );
+}
+
 function renderRailCards(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["railCards"]) {
   void assets;
   const isSensesOrCondition = (card: PdfPageCard) =>
     card.kind === "condition" ||
     card.kind === "sense" ||
     /\b(condition|sense|vision|darkvision|resistance|resistant|immune|immunity|defense)\b/i.test(`${card.title} ${card.tags.join(" ")} ${card.summary}`);
-  const sensesCards = cards.filter(isSensesOrCondition);
-  const racialCards = cards.filter((card) => card.kind === "trait" && !isSensesOrCondition(card));
-  const otherCards = cards.filter((card) => !sensesCards.includes(card) && !racialCards.includes(card));
+  const frontRailCards = cards.filter((card) => !isMinorFrontPageCard(card));
+  const sensesCards = frontRailCards.filter(isSensesOrCondition).slice(0, 2);
+  const racialCards = frontRailCards.filter((card) => card.kind === "trait" && !isSensesOrCondition(card)).slice(0, 4);
+  const otherCards = frontRailCards.filter((card) => !sensesCards.includes(card) && !racialCards.includes(card));
 
   const lane: BentoLane = {
     x: FRONT_PAGE_BENTO.rail.x,
@@ -740,24 +772,26 @@ function renderRailCards(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: Res
       width: lane.width,
       height: 12,
     });
-    lane.cursorY += 16;
+    lane.cursorY += 14;
     flowCardsIntoLanes(doc, sectionCards, [lane], {
       gap: FRONT_PAGE_BENTO.rail.gap,
-      minHeight: 42,
-      maxHeight: 62,
+      minHeight: 36,
+      maxHeight: 52,
       compact: true,
     });
-    lane.cursorY += 4;
+    lane.cursorY += 3;
   };
 
   renderSection("Senses & Conditions", sensesCards);
   renderSection("Racial Traits", racialCards);
-  renderSection("Other Traits", otherCards.slice(0, 4));
+  renderSection("Other Traits", otherCards.slice(0, 2));
 }
 
 function renderFrontDeck(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: ResolvedPdfCharacter["frontPage"]["deck"]) {
   void assets;
-  if (!cards.length) {
+  const frontCards = cards.filter(isMajorFrontPageCard).slice(0, FRONT_DECK_CARD_LIMIT);
+
+  if (!frontCards.length) {
     return;
   }
 
@@ -780,10 +814,10 @@ function renderFrontDeck(doc: PDFDocument, assets: PdfSvgAssetBundle, cards: Res
     maxY: FRONT_PAGE_BENTO.deck.maxY,
   }));
 
-  flowCardsIntoLanes(doc, cards, lanes, {
+  flowCardsIntoLanes(doc, frontCards, lanes, {
     gap: FRONT_PAGE_BENTO.deck.gap,
-    minHeight: 46,
-    maxHeight: 76,
+    minHeight: 48,
+    maxHeight: 70,
     compact: true,
   });
 }
