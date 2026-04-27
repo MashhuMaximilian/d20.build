@@ -62,7 +62,7 @@ const FRONT_PAGE_SPELLCASTING_BOXES = [
 ] as const;
 const FRONT_PAGE_GROUPED = {
   rail: { x: 402, y: 196, width: 174, height: 282 },
-  deck: { x: 31, y: 535, width: 532, height: 270, columns: 2, columnGap: 16 },
+  deck: { x: 31, y: 535, width: 532, height: 285, columns: 2, columnGap: 16 },
 } as const;
 const FRONT_PAGE_ANCHORS = {
   statStrip: {
@@ -79,32 +79,32 @@ const FRONT_PAGE_ANCHORS = {
     defenses: { centerX: 560, centerY: 108, width: 34, height: 13 },
   },
   abilities: [
-    { label: "STR", score: { centerX: 44, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 208, width: 24, height: 7 }, save: { centerX: 44, centerY: 154, width: 24, height: 6 } },
-    { label: "DEX", score: { centerX: 112, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 208, width: 24, height: 7 }, save: { centerX: 112, centerY: 154, width: 24, height: 6 } },
-    { label: "CON", score: { centerX: 180, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 208, width: 24, height: 7 }, save: { centerX: 180, centerY: 154, width: 24, height: 6 } },
-    { label: "INT", score: { centerX: 44, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 282, width: 24, height: 7 }, save: { centerX: 44, centerY: 228, width: 24, height: 6 } },
-    { label: "WIS", score: { centerX: 112, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 282, width: 24, height: 7 }, save: { centerX: 112, centerY: 228, width: 24, height: 6 } },
-    { label: "CHA", score: { centerX: 180, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 282, width: 24, height: 7 }, save: { centerX: 180, centerY: 228, width: 24, height: 6 } },
+    { label: "STR", score: { centerX: 44, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 209, width: 24, height: 7 }, save: { centerX: 44, centerY: 156, width: 24, height: 6 } },
+    { label: "DEX", score: { centerX: 112, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 209, width: 24, height: 7 }, save: { centerX: 112, centerY: 156, width: 24, height: 6 } },
+    { label: "CON", score: { centerX: 180, centerY: 181, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 209, width: 24, height: 7 }, save: { centerX: 180, centerY: 156, width: 24, height: 6 } },
+    { label: "INT", score: { centerX: 44, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 44, centerY: 283, width: 24, height: 7 }, save: { centerX: 44, centerY: 230, width: 24, height: 6 } },
+    { label: "WIS", score: { centerX: 112, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 112, centerY: 283, width: 24, height: 7 }, save: { centerX: 112, centerY: 230, width: 24, height: 6 } },
+    { label: "CHA", score: { centerX: 180, centerY: 255, width: 30, height: 13 }, modifier: { centerX: 180, centerY: 283, width: 24, height: 7 }, save: { centerX: 180, centerY: 230, width: 24, height: 6 } },
   ],
   skillTotals: {
-    athletics: { x: 241, y: 160 },
-    acrobatics: { x: 241, y: 169 },
-    "sleight of hand": { x: 241, y: 178 },
-    stealth: { x: 241, y: 187 },
-    arcana: { x: 331, y: 160 },
-    history: { x: 331, y: 169 },
-    investigation: { x: 331, y: 178 },
-    nature: { x: 331, y: 187 },
-    religion: { x: 331, y: 196 },
-    "animal handling": { x: 241, y: 234 },
-    insight: { x: 241, y: 243 },
-    medicine: { x: 241, y: 252 },
-    perception: { x: 241, y: 261 },
-    survival: { x: 241, y: 270 },
-    deception: { x: 331, y: 234 },
-    intimidation: { x: 331, y: 243 },
-    performance: { x: 331, y: 252 },
-    persuasion: { x: 331, y: 261 },
+    athletics: { x: 227, y: 160 },
+    acrobatics: { x: 227, y: 169 },
+    "sleight of hand": { x: 227, y: 178 },
+    stealth: { x: 227, y: 187 },
+    arcana: { x: 316, y: 160 },
+    history: { x: 316, y: 169 },
+    investigation: { x: 316, y: 178 },
+    nature: { x: 316, y: 187 },
+    religion: { x: 316, y: 196 },
+    "animal handling": { x: 227, y: 234 },
+    insight: { x: 227, y: 243 },
+    medicine: { x: 227, y: 252 },
+    perception: { x: 227, y: 261 },
+    survival: { x: 227, y: 270 },
+    deception: { x: 316, y: 234 },
+    intimidation: { x: 316, y: 243 },
+    performance: { x: 316, y: 252 },
+    persuasion: { x: 316, y: 261 },
   },
   passivesAndSpeeds: {
     longJump: { centerX: 23, centerY: 325, width: 24, height: 7 },
@@ -121,11 +121,11 @@ const FRONT_PAGE_ANCHORS = {
     burrowing: { centerX: 369, centerY: 325, width: 27, height: 7 },
   },
   proficiencies: {
-    weapons: { x: 24, y: 345, width: 54, height: 21 },
-    armor: { x: 96, y: 345, width: 54, height: 21 },
-    tools: { x: 166, y: 345, width: 54, height: 21 },
-    vehicles: { x: 238, y: 345, width: 54, height: 21 },
-    languages: { x: 310, y: 345, width: 54, height: 21 },
+    weapons: { x: 23, y: 349, width: 55, height: 18 },
+    armor: { x: 95, y: 349, width: 55, height: 18 },
+    tools: { x: 165, y: 349, width: 55, height: 18 },
+    vehicles: { x: 237, y: 349, width: 55, height: 18 },
+    languages: { x: 309, y: 349, width: 55, height: 18 },
   },
 } as const;
 const PDF_TEXT_FONT_FAMILY = "Noto Sans";
@@ -439,8 +439,8 @@ function renderAbilityPanel(
     });
     writeCenteredText(doc, formatSignedNumber(row.saveBonus), anchor.save.centerX, anchor.save.centerY, anchor.save.width, anchor.save.height, {
       font: "Helvetica-Bold",
-      maxSize: 4.8,
-      minSize: 3.8,
+      maxSize: 4.2,
+      minSize: 3.4,
       color: "#000000",
     });
   });
@@ -452,7 +452,7 @@ function renderAbilityPanel(
     }
     writeText(doc, formatSignedNumber(row.total), anchor.x, anchor.y, 14, 5.5, {
       font: row.expertise || row.proficient ? "Helvetica-Bold" : "Helvetica",
-      size: 4.4,
+      size: 3.8,
       align: "right",
       color: "#000000",
     });
@@ -513,8 +513,8 @@ function renderProficienciesPanel(doc: PDFDocument, character: ResolvedPdfCharac
       return;
     }
     writeFittedText(doc, values.slice(0, 3).join(", "), frame.x, frame.y, frame.width, frame.height, {
-      maxSize: 4.4,
-      minSize: 3.2,
+      maxSize: 3.7,
+      minSize: 2.8,
       color: "#000000",
       align: "center",
       lineGap: 0,
@@ -643,19 +643,19 @@ function measureEntryHeight(
 ) {
   doc.save();
   doc.font(PDF_TEXT_FONT_FAMILY);
-  doc.fontSize(4.9);
+  doc.fontSize(4.6);
   const bodyHeight = doc.heightOfString(summary.body, {
     width,
-    lineGap: 0.15,
+    lineGap: 0,
   });
   doc.font("Helvetica-Bold");
-  doc.fontSize(5.3);
+  doc.fontSize(4.8);
   const titleHeight = doc.heightOfString(summary.title, {
     width,
   });
   doc.restore();
 
-  return Math.ceil(Math.max(6, titleHeight) + bodyHeight + 7);
+  return Math.ceil(Math.max(5.5, titleHeight) + bodyHeight + 6);
 }
 
 function renderSummaryEntry(
@@ -666,8 +666,8 @@ function renderSummaryEntry(
 ) {
   writeFittedText(doc, summary.title.toUpperCase(), frame.x, frame.y, frame.width, 6, {
     font: "Helvetica-Bold",
-    maxSize: 5.3,
-    minSize: 4.2,
+    maxSize: 4.8,
+    minSize: 3.9,
     color: "#111111",
   });
 
@@ -681,10 +681,10 @@ function renderSummaryEntry(
   }
 
   writeFittedText(doc, summary.body, frame.x, frame.y + 8, frame.width, frame.height - 10, {
-    maxSize: 4.9,
-    minSize: 3.6,
+    maxSize: 4.6,
+    minSize: 3.4,
     color: "#000000",
-    lineGap: 0.15,
+    lineGap: 0,
   });
 
   if (options.withRule) {
