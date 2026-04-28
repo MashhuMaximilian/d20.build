@@ -46,15 +46,16 @@ const TOP_STATS: StatBoxSpec[] = [
 ];
 
 const ABILITY_VALUE_RECTS = [
-  { label: "STR", score: { x: 25, y: 39, width: 38, height: 18 }, modifier: { x: 27, y: 64, width: 34, height: 11 } },
-  { label: "DEX", score: { x: 87.7, y: 39, width: 38, height: 18 }, modifier: { x: 89.7, y: 64, width: 34, height: 11 } },
-  { label: "CON", score: { x: 150.4, y: 39, width: 38, height: 18 }, modifier: { x: 152.4, y: 64, width: 34, height: 11 } },
-  { label: "INT", score: { x: 25, y: 119, width: 38, height: 18 }, modifier: { x: 27, y: 144, width: 34, height: 8 } },
-  { label: "WIS", score: { x: 87.7, y: 119, width: 38, height: 18 }, modifier: { x: 89.7, y: 144, width: 34, height: 8 } },
-  { label: "CHA", score: { x: 150.4, y: 119, width: 38, height: 18 }, modifier: { x: 152.4, y: 144, width: 34, height: 8 } },
+  { label: "STR", save: { x: 24, y: 7, width: 40, height: 10 }, score: { x: 25, y: 31, width: 38, height: 17 }, modifier: { x: 26, y: 62, width: 36, height: 11 } },
+  { label: "DEX", save: { x: 86.7, y: 7, width: 40, height: 10 }, score: { x: 87.7, y: 31, width: 38, height: 17 }, modifier: { x: 88.7, y: 62, width: 36, height: 11 } },
+  { label: "CON", save: { x: 149.4, y: 7, width: 40, height: 10 }, score: { x: 150.4, y: 31, width: 38, height: 17 }, modifier: { x: 151.4, y: 62, width: 36, height: 11 } },
+  { label: "INT", save: { x: 24, y: 87, width: 40, height: 10 }, score: { x: 25, y: 111, width: 38, height: 17 }, modifier: { x: 26, y: 142, width: 36, height: 10 } },
+  { label: "WIS", save: { x: 86.7, y: 87, width: 40, height: 10 }, score: { x: 87.7, y: 111, width: 38, height: 17 }, modifier: { x: 88.7, y: 142, width: 36, height: 10 } },
+  { label: "CHA", save: { x: 149.4, y: 87, width: 40, height: 10 }, score: { x: 150.4, y: 111, width: 38, height: 17 }, modifier: { x: 151.4, y: 142, width: 36, height: 10 } },
 ] as const;
 
 const ABILITY_PANEL_VIEWBOX = { width: 384, height: 152 } as const;
+const PASSIVES_VIEWBOX = { width: 378, height: 40 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
 const SKILL_DOT_CENTERS = [
@@ -62,6 +63,21 @@ const SKILL_DOT_CENTERS = [
   { x: 317.5, ys: [23.5, 32.5, 41.5, 50.5, 59.5] },
   { x: 231.5, ys: [94.5, 103.5, 112.5, 121.5, 130.5] },
   { x: 317.5, ys: [94.5, 103.5, 112.5, 121.5] },
+] as const;
+
+const PASSIVE_BOXES = [
+  { x: 0, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 29.14, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 58.28, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 87.42, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 131.22, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 160.36, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 189.5, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 233.3, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 262.44, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 291.58, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 320.72, y: 6.04, width: 28.14, height: 33.96 },
+  { x: 349.86, y: 6.04, width: 28.14, height: 33.96 },
 ] as const;
 
 const SPELLCASTING_BOXES = [
@@ -221,15 +237,21 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       return;
     }
 
+    drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.save), {
+      font: "Helvetica-Bold",
+      maxSize: 6.3,
+      minSize: 3.8,
+      color: "#000000",
+    });
     drawCenteredTextInRect(ctx, `${row.score}`, componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.score), {
       font: "Times-Bold",
-      maxSize: 14.5,
+      maxSize: 15.5,
       minSize: 8,
       color: "#000000",
     });
     drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.modifier), {
       font: "Helvetica-Bold",
-      maxSize: 6.6,
+      maxSize: 7.5,
       minSize: 3.8,
       color: "#000000",
     });
@@ -255,6 +277,12 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
       });
       const centerX = center.x;
       const centerY = center.y;
+      maskRect(ctx, {
+        x: centerX + 4.2,
+        y: centerY - 4.0,
+        width: 50,
+        height: 8,
+      });
       if (row.expertise) {
         strokeCircle(ctx, centerX, centerY, 1.8, "#000000", 0.4);
         fillCircle(ctx, centerX, centerY, 0.95, "#000000");
@@ -263,14 +291,24 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
       }
 
       drawCenteredTextInRect(ctx, signed(row.total), {
-        x: centerX + 4.7,
-        y: centerY - 3,
-        width: 10,
-        height: 5.8,
+        x: centerX + 4.8,
+        y: centerY - 4.2,
+        width: 14,
+        height: 8,
       }, {
         font: row.proficient || row.expertise ? "Helvetica-Bold" : "Helvetica",
-        maxSize: 3.7,
+        maxSize: 5.8,
         minSize: 2.6,
+        color: "#000000",
+      });
+      drawFittedText(ctx, skill, {
+        x: centerX + 22.5,
+        y: centerY - 3.6,
+        width: 33,
+        height: 7.2,
+      }, {
+        maxSize: 5.1,
+        minSize: 3.2,
         color: "#000000",
       });
     });
@@ -282,7 +320,6 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
     drawSvg(ctx, assets.passivesAndSpeeds, FRONT_PAGE_REGIONS.passives);
   }
 
-  const cells = splitColumns(FRONT_PAGE_REGIONS.passives, 12, 0);
   const abilityRows = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
   const strength = abilityRows.get("STR")?.score ?? 10;
@@ -305,10 +342,11 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
     if (!value) {
       return;
     }
-    drawCenteredTextInRect(ctx, value, rectFromFractions(cells[index], { x: 0.10, y: 0.36, width: 0.80, height: 0.28 }), {
+    const cell = componentRect(FRONT_PAGE_REGIONS.passives, PASSIVES_VIEWBOX, PASSIVE_BOXES[index]);
+    drawCenteredTextInRect(ctx, value, rectFromFractions(cell, { x: 0.08, y: 0.28, width: 0.84, height: 0.26 }), {
       font: "Helvetica-Bold",
-      maxSize: 6.9,
-      minSize: 3.6,
+      maxSize: 8.2,
+      minSize: 4.2,
       color: "#000000",
     });
   });
