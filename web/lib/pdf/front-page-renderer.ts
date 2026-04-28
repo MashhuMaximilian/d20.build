@@ -211,15 +211,15 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       return;
     }
 
-    drawCenteredTextInRect(ctx, `${row.score}`, rectFromFractions(cell, { x: 0.28, y: 0.44, width: 0.44, height: 0.18 }), {
+    drawCenteredTextInRect(ctx, `${row.score}`, rectFromFractions(cell, { x: 0.28, y: 0.41, width: 0.44, height: 0.22 }), {
       font: "Times-Bold",
-      maxSize: 11.5,
+      maxSize: 12.5,
       minSize: 8,
       color: "#000000",
     });
-    drawCenteredTextInRect(ctx, signed(row.modifier), rectFromFractions(cell, { x: 0.32, y: 0.81, width: 0.36, height: 0.11 }), {
+    drawCenteredTextInRect(ctx, signed(row.modifier), rectFromFractions(cell, { x: 0.31, y: 0.79, width: 0.38, height: 0.14 }), {
       font: "Helvetica-Bold",
-      maxSize: 4.8,
+      maxSize: 5.4,
       minSize: 3.8,
       color: "#000000",
     });
@@ -228,9 +228,9 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
 
 function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
-  const blockArea = { x: 221, y: 152, width: 166, height: 130 };
+  const blockArea = { x: 220, y: 151.5, width: 166, height: 130 };
   const blocks = splitRows(blockArea, 2, 15).flatMap((row) => splitColumns(row, 2, 17));
-  const rowGap = 8.75;
+  const rowGap = 8.7;
 
   SKILL_GROUPS.forEach((skills, blockIndex) => {
     const block = blocks[blockIndex];
@@ -240,13 +240,13 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
         return;
       }
 
-      const centerX = block.x + 9.3;
-      const centerY = block.y + 8.3 + skillIndex * rowGap;
+      const centerX = block.x + 9.0;
+      const centerY = block.y + 8.7 + skillIndex * rowGap;
       if (row.expertise) {
-        strokeCircle(ctx, centerX, centerY, 2.05, "#000000", 0.45);
-        fillCircle(ctx, centerX, centerY, 1.15, "#000000");
+        strokeCircle(ctx, centerX, centerY, 1.8, "#000000", 0.4);
+        fillCircle(ctx, centerX, centerY, 0.95, "#000000");
       } else {
-        fillCircle(ctx, centerX, centerY, 1.55, "#000000");
+        fillCircle(ctx, centerX, centerY, 1.25, "#000000");
       }
     });
   });
@@ -280,10 +280,10 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
     if (!value) {
       return;
     }
-    drawCenteredTextInRect(ctx, value, rectFromFractions(cells[index], { x: 0.15, y: 0.40, width: 0.70, height: 0.20 }), {
+    drawCenteredTextInRect(ctx, value, rectFromFractions(cells[index], { x: 0.10, y: 0.36, width: 0.80, height: 0.28 }), {
       font: "Helvetica-Bold",
-      maxSize: 4.2,
-      minSize: 3.2,
+      maxSize: 5.8,
+      minSize: 3.6,
       color: "#000000",
     });
   });
@@ -298,9 +298,9 @@ function renderProficiencies(ctx: PdfRenderContext, character: ResolvedPdfCharac
     if (!items.length) {
       return;
     }
-    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.06, y: 0.30, width: 0.88, height: 0.36 }), {
-      maxSize: 3.2,
-      minSize: 2.5,
+    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.05, y: 0.25, width: 0.90, height: 0.48 }), {
+      maxSize: 4.2,
+      minSize: 2.8,
       color: "#000000",
       lineGap: 0,
     });
