@@ -46,12 +46,12 @@ const TOP_STATS: StatBoxSpec[] = [
 ];
 
 const ABILITY_VALUE_RECTS = [
-  { label: "STR", save: { x: 24, y: 2.5, width: 40, height: 9 }, score: { x: 25, y: 31, width: 38, height: 17 }, modifier: { x: 26, y: 61, width: 36, height: 12 } },
-  { label: "DEX", save: { x: 86.7, y: 2.5, width: 40, height: 9 }, score: { x: 87.7, y: 31, width: 38, height: 17 }, modifier: { x: 88.7, y: 61, width: 36, height: 12 } },
-  { label: "CON", save: { x: 149.4, y: 2.5, width: 40, height: 9 }, score: { x: 150.4, y: 31, width: 38, height: 17 }, modifier: { x: 151.4, y: 61, width: 36, height: 12 } },
-  { label: "INT", save: { x: 24, y: 82.5, width: 40, height: 9 }, score: { x: 25, y: 111, width: 38, height: 17 }, modifier: { x: 26, y: 141, width: 36, height: 11 } },
-  { label: "WIS", save: { x: 86.7, y: 82.5, width: 40, height: 9 }, score: { x: 87.7, y: 111, width: 38, height: 17 }, modifier: { x: 88.7, y: 141, width: 36, height: 11 } },
-  { label: "CHA", save: { x: 149.4, y: 82.5, width: 40, height: 9 }, score: { x: 150.4, y: 111, width: 38, height: 17 }, modifier: { x: 151.4, y: 141, width: 36, height: 11 } },
+  { label: "STR", save: { x: 24, y: 5, width: 40, height: 8.5 }, score: { x: 25, y: 28.5, width: 38, height: 17 }, modifier: { x: 26, y: 60.5, width: 36, height: 12.5 } },
+  { label: "DEX", save: { x: 86.7, y: 5, width: 40, height: 8.5 }, score: { x: 87.7, y: 28.5, width: 38, height: 17 }, modifier: { x: 88.7, y: 60.5, width: 36, height: 12.5 } },
+  { label: "CON", save: { x: 149.4, y: 5, width: 40, height: 8.5 }, score: { x: 150.4, y: 28.5, width: 38, height: 17 }, modifier: { x: 151.4, y: 60.5, width: 36, height: 12.5 } },
+  { label: "INT", save: { x: 24, y: 85, width: 40, height: 8.5 }, score: { x: 25, y: 108.5, width: 38, height: 17 }, modifier: { x: 26, y: 140.5, width: 36, height: 11.5 } },
+  { label: "WIS", save: { x: 86.7, y: 85, width: 40, height: 8.5 }, score: { x: 87.7, y: 108.5, width: 38, height: 17 }, modifier: { x: 88.7, y: 140.5, width: 36, height: 11.5 } },
+  { label: "CHA", save: { x: 149.4, y: 85, width: 40, height: 8.5 }, score: { x: 150.4, y: 108.5, width: 38, height: 17 }, modifier: { x: 151.4, y: 140.5, width: 36, height: 11.5 } },
 ] as const;
 
 const ABILITY_PANEL_VIEWBOX = { width: 384, height: 152 } as const;
@@ -278,14 +278,14 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
       const centerX = center.x;
       const centerY = center.y;
       maskRect(ctx, {
-        x: centerX - 3.3,
-        y: centerY - 4.4,
-        width: 63,
-        height: 8.8,
+        x: centerX - 7,
+        y: centerY - 5.2,
+        width: 68,
+        height: 10.4,
       });
       strokeCircle(ctx, centerX, centerY, 2.15, "#000000", 0.65);
       if (row.expertise) {
-        strokeCircle(ctx, centerX, centerY, 1.28, "#000000", 0.55);
+        strokeCircle(ctx, centerX, centerY, 1.18, "#000000", 0.55);
       } else if (row.proficient) {
         fillCircle(ctx, centerX, centerY, 1.55, "#000000");
       }
@@ -302,12 +302,12 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
         color: "#000000",
       });
       drawFittedText(ctx, skill, {
-        x: centerX + 22.5,
-        y: centerY - 3.6,
-        width: 33,
+        x: centerX + 21.5,
+        y: centerY - 3.7,
+        width: 37,
         height: 7.2,
       }, {
-        maxSize: 5.1,
+        maxSize: 5,
         minSize: 3.2,
         color: "#000000",
       });
@@ -343,7 +343,7 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
       return;
     }
     const cell = componentRect(FRONT_PAGE_REGIONS.passives, PASSIVES_VIEWBOX, PASSIVE_BOXES[index]);
-    drawCenteredTextInRect(ctx, value, rectFromFractions(cell, { x: 0.06, y: 0.24, width: 0.88, height: 0.30 }), {
+    drawCenteredTextInRect(ctx, value, rectFromFractions(cell, { x: 0.06, y: 0.20, width: 0.88, height: 0.34 }), {
       font: "Helvetica-Bold",
       maxSize: 9.2,
       minSize: 4.2,
