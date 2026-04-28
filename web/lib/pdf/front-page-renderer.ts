@@ -5,12 +5,14 @@ import {
   drawFittedText,
   drawSvg,
   drawText,
+  fillCircle,
   insetRect,
   maskRect,
   type PdfRect,
   type PdfRenderContext,
   splitColumns,
   splitRows,
+  strokeCircle,
   strokeRule,
 } from "@/lib/pdf/drawing";
 import { FRONT_PAGE_REGIONS, PAGE_SIZE, rectFromFractions } from "@/lib/pdf/front-page-layout";
@@ -41,6 +43,20 @@ const TOP_STATS: StatBoxSpec[] = [
   { key: "ac", mode: "normal" },
   { key: "defenses", fallback: "" },
 ];
+
+const TOP_STAT_TRACKS = [
+  { x: 0.010, width: 0.085 },
+  { x: 0.098, width: 0.085 },
+  { x: 0.187, width: 0.085 },
+  { x: 0.276, width: 0.085 },
+  { x: 0.365, width: 0.085 },
+  { x: 0.457, width: 0.060 },
+  { x: 0.526, width: 0.095 },
+  { x: 0.620, width: 0.065 },
+  { x: 0.700, width: 0.090 },
+  { x: 0.800, width: 0.070 },
+  { x: 0.895, width: 0.085 },
+] as const;
 
 const ABILITY_ORDER = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
 
@@ -99,9 +115,9 @@ function drawValueOnlyStatBox(ctx: PdfRenderContext, rect: PdfRect, value: strin
 
   const valueRect = rectFromFractions(rect, {
     x: mode === "wide" ? 0.08 : 0.14,
-    y: 0.20,
+    y: mode === "wide" ? 0.18 : 0.17,
     width: mode === "wide" ? 0.84 : 0.72,
-    height: 0.32,
+    height: 0.34,
   });
   drawCenteredTextInRect(ctx, value, valueRect, {
     font: "Times-Bold",
@@ -145,7 +161,12 @@ function renderStatStrip(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
     drawSvg(ctx, assets.hpPanel, FRONT_PAGE_REGIONS.statStrip);
   }
 
-  const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.statStrip, 10, 0), TOP_STATS.length, 0);
+  const cells = TOP_STAT_TRACKS.map((track) => rectFromFractions(FRONT_PAGE_REGIONS.statStrip, {
+    x: track.x,
+    y: 0,
+    width: track.width,
+    height: 1,
+  }));
   TOP_STATS.forEach((spec, index) => {
     const value = statValue(character, spec.key, spec.fallback);
     drawValueOnlyStatBox(ctx, cells[index], value, spec.mode);
@@ -179,7 +200,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
   }
 
   const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
-  const abilityArea = { x: FRONT_PAGE_REGIONS.abilities.x, y: FRONT_PAGE_REGIONS.abilities.y, width: 205, height: FRONT_PAGE_REGIONS.abilities.height };
+  const abilityArea = { x: FRONT_PAGE_REGIONS.abilities.x + 2, y: FRONT_PAGE_REGIONS.abilities.y + 2, width: 202, height: FRONT_PAGE_REGIONS.abilities.height - 4 };
   const rows = splitRows(abilityArea, 2, 12);
   const abilityCells = rows.flatMap((row) => splitColumns(row, 3, 8));
 
@@ -190,15 +211,15 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       return;
     }
 
-    drawCenteredTextInRect(ctx, `${row.score}`, rectFromFractions(cell, { x: 0.27, y: 0.46, width: 0.46, height: 0.20 }), {
+    drawCenteredTextInRect(ctx, `${row.score}`, rectFromFractions(cell, { x: 0.28, y: 0.44, width: 0.44, height: 0.18 }), {
       font: "Times-Bold",
-      maxSize: 12,
+      maxSize: 11.5,
       minSize: 8,
       color: "#000000",
     });
-    drawCenteredTextInRect(ctx, signed(row.modifier), rectFromFractions(cell, { x: 0.33, y: 0.82, width: 0.34, height: 0.10 }), {
+    drawCenteredTextInRect(ctx, signed(row.modifier), rectFromFractions(cell, { x: 0.32, y: 0.81, width: 0.36, height: 0.11 }), {
       font: "Helvetica-Bold",
-      maxSize: 5,
+      maxSize: 4.8,
       minSize: 3.8,
       color: "#000000",
     });
@@ -207,8 +228,9 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
 
 function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
-  const blockArea = { x: 222, y: 151, width: 166, height: 130 };
-  const blocks = splitRows(blockArea, 2, 15).flatMap((row) => splitColumns(row, 2, 18));
+  const blockArea = { x: 221, y: 152, width: 166, height: 130 };
+  const blocks = splitRows(blockArea, 2, 15).flatMap((row) => splitColumns(row, 2, 17));
+  const rowGap = 8.75;
 
   SKILL_GROUPS.forEach((skills, blockIndex) => {
     const block = blocks[blockIndex];
@@ -218,15 +240,14 @@ function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter)
         return;
       }
 
-      drawText(ctx, row.expertise ? "●" : "◐", {
-        x: block.x + 8,
-        y: block.y + 8 + skillIndex * 8.8,
-        width: 8,
-        height: 7,
-      }, {
-        size: 3.7,
-        color: "#000000",
-      });
+      const centerX = block.x + 9.3;
+      const centerY = block.y + 8.3 + skillIndex * rowGap;
+      if (row.expertise) {
+        strokeCircle(ctx, centerX, centerY, 2.05, "#000000", 0.45);
+        fillCircle(ctx, centerX, centerY, 1.15, "#000000");
+      } else {
+        fillCircle(ctx, centerX, centerY, 1.55, "#000000");
+      }
     });
   });
 }
@@ -259,9 +280,9 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
     if (!value) {
       return;
     }
-    drawCenteredTextInRect(ctx, value, rectFromFractions(cells[index], { x: 0.12, y: 0.48, width: 0.76, height: 0.16 }), {
+    drawCenteredTextInRect(ctx, value, rectFromFractions(cells[index], { x: 0.15, y: 0.40, width: 0.70, height: 0.20 }), {
       font: "Helvetica-Bold",
-      maxSize: 4.4,
+      maxSize: 4.2,
       minSize: 3.2,
       color: "#000000",
     });
@@ -277,8 +298,8 @@ function renderProficiencies(ctx: PdfRenderContext, character: ResolvedPdfCharac
     if (!items.length) {
       return;
     }
-    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.05, y: 0.28, width: 0.9, height: 0.34 }), {
-      maxSize: 3.4,
+    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.06, y: 0.30, width: 0.88, height: 0.36 }), {
+      maxSize: 3.2,
       minSize: 2.5,
       color: "#000000",
       lineGap: 0,

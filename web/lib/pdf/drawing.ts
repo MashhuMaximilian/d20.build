@@ -17,8 +17,13 @@ export type PdfTextOptions = {
 };
 
 type PdfShapeDocument = PDFDocument & {
+  circle: (x: number, y: number, radius: number) => PdfShapeDocument;
   rect: (x: number, y: number, width: number, height: number) => PdfShapeDocument;
   fill: (color?: string) => PdfShapeDocument;
+  fillColor: (color: string) => PdfShapeDocument;
+  lineWidth: (width: number) => PdfShapeDocument;
+  stroke: (color?: string) => PdfShapeDocument;
+  strokeColor: (color: string) => PdfShapeDocument;
 };
 
 export type PdfRenderContext = {
@@ -180,6 +185,20 @@ export function maskRect(ctx: PdfRenderContext, rect: PdfRect, color = "#ffffff"
   const shapeDoc = ctx.doc as PdfShapeDocument;
   ctx.doc.save();
   shapeDoc.rect(rect.x, rect.y, rect.width, rect.height).fill(color);
+  ctx.doc.restore();
+}
+
+export function fillCircle(ctx: PdfRenderContext, centerX: number, centerY: number, radius: number, color = "#111111") {
+  const shapeDoc = ctx.doc as PdfShapeDocument;
+  ctx.doc.save();
+  shapeDoc.circle(centerX, centerY, radius).fillColor(color).fill();
+  ctx.doc.restore();
+}
+
+export function strokeCircle(ctx: PdfRenderContext, centerX: number, centerY: number, radius: number, color = "#111111", width = 0.35) {
+  const shapeDoc = ctx.doc as PdfShapeDocument;
+  ctx.doc.save();
+  shapeDoc.circle(centerX, centerY, radius).strokeColor(color).lineWidth(width).stroke();
   ctx.doc.restore();
 }
 
