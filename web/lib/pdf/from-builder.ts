@@ -99,6 +99,15 @@ const SKILL_ABILITY_MAP: Array<{ id: string; label: string; ability: AbilityKey 
   { id: "survival", label: "Survival", ability: "wisdom" },
 ];
 
+const ABILITY_FULL_LABELS: Record<AbilityKey, string> = {
+  strength: "Strength",
+  dexterity: "Dexterity",
+  constitution: "Constitution",
+  intelligence: "Intelligence",
+  wisdom: "Wisdom",
+  charisma: "Charisma",
+};
+
 function normalizeLookupLabel(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
@@ -332,6 +341,19 @@ function getPrimarySpellcastingAbility(spellGroups: SpellSelectionGroup[]) {
   return spellGroups.find((group) => Boolean(group.spellcastingAbility))?.spellcastingAbility?.toUpperCase() || "";
 }
 
+function getKiSaveDc(args: BuilderPdfSourceArgs, proficiencyBonus: number) {
+  const hasMonkKi = args.draft.classEntries.some((entry, index) => {
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    return /monk/i.test(className) && entry.level >= 2;
+  }) || args.selectedElements.some((element) => /\b(ki|monk'?s focus|focus points)\b/i.test(`${element.name} ${element.description ?? ""}`));
+
+  if (!hasMonkKi) {
+    return "";
+  }
+
+  return `${8 + proficiencyBonus + getAbilityModifier(args.effectiveAbilities.wisdom)}`;
+}
+
 function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, draft: CharacterDraft) {
   const labels = draft.classEntries.map((entry, index) => classRecordsByEntry[index]?.class.name || entry.classId).filter(Boolean);
   return labels.join(" / ");
@@ -343,11 +365,14 @@ function buildAbilityRows(args: BuilderPdfSourceArgs) {
 
   return Object.entries(ABILITY_LABELS).map(([abilityKey, label]) => {
     const ability = abilityKey as AbilityKey;
+    const fullLabel = ABILITY_FULL_LABELS[ability];
     const score = Number.isFinite(args.effectiveAbilities[ability]) ? args.effectiveAbilities[ability] : 10;
     const modifier = getAbilityModifier(score);
     const saveProficient =
       proficiencyLabels.has(normalizeLookupLabel(label)) ||
-      proficiencyLabels.has(normalizeLookupLabel(`${label} saving throw`));
+      proficiencyLabels.has(normalizeLookupLabel(`${label} saving throw`)) ||
+      proficiencyLabels.has(normalizeLookupLabel(fullLabel)) ||
+      proficiencyLabels.has(normalizeLookupLabel(`${fullLabel} saving throw`));
 
     return {
       id: `ability-${ability}`,
@@ -478,15 +503,16 @@ function buildStatCards(args: BuilderPdfSourceArgs) {
     : 0;
   const spellcastingBonus = spellcastingAbility ? proficiencyBonus + spellcastingScore : 0;
   const spellSaveDc = spellcastingAbility ? 8 + proficiencyBonus + spellcastingScore : 0;
+  const kiSaveDc = getKiSaveDc(args, proficiencyBonus);
 
   return [
     { id: "proficiency-bonus", label: "Proficiency Bonus", value: `+${proficiencyBonus}` },
     { id: "initiative", label: "Initiative", value: `${dexMod >= 0 ? "+" : ""}${dexMod}` },
     { id: "attacks", label: "Attacks / Action", value: `${attacksPerAction}` },
     { id: "passive-perception", label: "Passive Perception", value: `${10 + getAbilityModifier(args.effectiveAbilities.wisdom)}` },
-    { id: "spellcasting-bonus", label: "Spellcasting Bonus", value: spellcastingAbility ? `${spellcastingBonus >= 0 ? "+" : ""}${spellcastingBonus}` : "—" },
-    { id: "spell-save-dc", label: "Save DC", value: spellcastingAbility ? `${spellSaveDc}` : "—" },
-    { id: "spellcasting-ability", label: "Spellcasting Ability", value: spellcastingAbilityLabel || "—" },
+    { id: "spellcasting-bonus", label: "Spellcasting Bonus", value: spellcastingAbility ? `${spellcastingBonus >= 0 ? "+" : ""}${spellcastingBonus}` : "" },
+    { id: "spell-save-dc", label: spellcastingAbility ? "Save DC" : "Ki Save DC", value: spellcastingAbility ? `${spellSaveDc}` : kiSaveDc },
+    { id: "spellcasting-ability", label: "Spellcasting Ability", value: spellcastingAbilityLabel },
     { id: "hp", label: "HP", value: vitals.value },
     { id: "ac", label: "AC", value: `${armorClass.value}` },
     { id: "speed", label: "Speed", value: `${speed.total} ft.` },

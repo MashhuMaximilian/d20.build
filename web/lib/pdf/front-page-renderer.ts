@@ -61,10 +61,10 @@ const STAT_BLOCK_VIEWBOX = { width: 55, height: 72 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
 const SKILL_BLOCKS = [
-  { x: 205, y: 8, width: 83, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
-  { x: 294, y: 8, width: 83, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
-  { x: 205, y: 82, width: 83, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
-  { x: 294, y: 82, width: 83, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+  { x: 196, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
+  { x: 290, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+  { x: 196, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+  { x: 290, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
 ] as const;
 
 const STAT_ROW_BACKGROUNDS = [
@@ -279,12 +279,37 @@ function renderStatStrip(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
   });
 }
 
-function renderSpellcasting(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
+function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const stats = [
     statValue(character, "spellcasting bonus"),
     statValue(character, "save dc"),
     statValue(character, "spellcasting ability"),
   ];
+  const kiSaveDc = statValue(character, "ki save dc");
+
+  if (!stats.some(Boolean) && !kiSaveDc) {
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+    return;
+  }
+
+  if (!stats.some(Boolean) && kiSaveDc) {
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+    const box = { x: 431, y: 145, width: 116, height: 44 };
+    drawSvg(ctx, assets.generalContainer, box);
+    drawCenteredTextInRect(ctx, kiSaveDc, rectFromFractions(box, { x: 0.14, y: 0.17, width: 0.72, height: 0.38 }), {
+      font: "Helvetica-Bold",
+      maxSize: 14.5,
+      minSize: 6,
+      color: "#000000",
+    });
+    drawCenteredTextInRect(ctx, "KI SAVE DC", rectFromFractions(box, { x: 0.10, y: 0.70, width: 0.80, height: 0.16 }), {
+      font: "Helvetica",
+      maxSize: 5,
+      minSize: 3.5,
+      color: "#000000",
+    });
+    return;
+  }
 
   stats.forEach((value, index) => {
     if (!value) {
@@ -656,7 +681,7 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderHeader(ctx, character);
   renderStatStrip(ctx, assets, character, !hasTemplate);
   renderAbilities(ctx, assets, character, !hasTemplate);
-  renderSpellcasting(ctx, character);
+  renderSpellcasting(ctx, assets, character);
   renderPassives(ctx, assets, character, !hasTemplate);
   renderProficiencies(ctx, character);
   renderAttacks(ctx, assets, character, !hasTemplate);
