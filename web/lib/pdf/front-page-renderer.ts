@@ -67,6 +67,23 @@ const SKILL_BLOCKS = [
   { x: 306, y: 85, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
 ] as const;
 
+const STAT_VALUE_SLOTS = {
+  save: { x: 14.5, y: 5.2, width: 26, height: 8 },
+  score: { x: 10.5, y: 26.8, width: 34, height: 15.5 },
+  labelMask: { x: 14, y: 43, width: 28, height: 10 },
+  label: { x: 10, y: 45, width: 35, height: 8 },
+  modifier: { x: 13, y: 56.4, width: 29, height: 10.8 },
+} as const;
+
+const SKILL_ROW_SLOTS = {
+  circleX: 11.5,
+  firstCenterY: 9.5,
+  rowGap: 9,
+  bonusMask: { x: 15.6, yOffset: -2.55, width: 8.3, height: 5.1 },
+  bonusValue: { x: 15.35, yOffset: -2.8, width: 8.8, height: 5.6 },
+  label: { x: 34, yOffset: -3.5, width: 40, height: 7 },
+} as const;
+
 const PASSIVE_BOXES = [
   { x: 0, y: 6.04, width: 28.14, height: 33.96 },
   { x: 29.14, y: 6.04, width: 28.14, height: 33.96 },
@@ -137,6 +154,13 @@ function componentRect(region: PdfRect, viewBox: { width: number; height: number
     y: region.y + rect.y * scaleY,
     width: rect.width * scaleX,
     height: rect.height * scaleY,
+  };
+}
+
+function componentPoint(region: PdfRect, viewBox: { width: number; height: number }, point: { x: number; y: number }) {
+  return {
+    x: region.x + point.x * (region.width / viewBox.width),
+    y: region.y + point.y * (region.height / viewBox.height),
   };
 }
 
@@ -243,31 +267,31 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       });
       if (!hasPrintedTemplate) {
         drawSvg(ctx, assets.statBlock, block);
-        maskRect(ctx, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 14, y: 43, width: 28, height: 10 }));
+        maskRect(ctx, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.labelMask));
       }
-      drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, { x: 14, y: 4.6, width: 27, height: 8.8 }), {
+      drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.save), {
         font: "Helvetica-Bold",
-        maxSize: 7.8,
+        maxSize: 8.4,
         minSize: 4,
         color: "#000000",
       });
-      drawCenteredTextInRect(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 11, y: 27, width: 33, height: 16 }), {
+      drawCenteredTextInRect(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.score), {
         font: "Times-Bold",
         maxSize: 16,
         minSize: 8,
         color: "#000000",
       });
       if (!hasPrintedTemplate) {
-        drawCenteredTextInRect(ctx, slot.label, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 10, y: 45, width: 35, height: 8 }), {
+        drawCenteredTextInRect(ctx, slot.label, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.label), {
           font: "Helvetica",
           maxSize: 7.2,
           minSize: 5,
           color: "#000000",
         });
       }
-      drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, { x: 12, y: 57.5, width: 31, height: 12 }), {
+      drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.modifier), {
         font: "Helvetica-Bold",
-        maxSize: 9.5,
+        maxSize: 10.4,
         minSize: 4.5,
         color: "#000000",
       });
@@ -300,28 +324,39 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           return;
         }
 
-        const centerY = 9.5 + index * 9;
-        const circleCenter = componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 11.5, y: centerY, width: 0, height: 0 });
+        const centerY = SKILL_ROW_SLOTS.firstCenterY + index * SKILL_ROW_SLOTS.rowGap;
+        const circleCenter = componentPoint(block, SKILL_BLOCK_VIEWBOX, { x: SKILL_ROW_SLOTS.circleX, y: centerY });
         maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, {
-          x: 15,
-          y: centerY - 3.2,
-          width: hasPrintedTemplate ? 12 : 60,
-          height: 6.4,
+          x: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.x : 15,
+          y: centerY + (hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.yOffset : -3.2),
+          width: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.width : 60,
+          height: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.height : 6.4,
         }));
         if (row.expertise) {
-          strokeCircle(ctx, circleCenter.x, circleCenter.y, 1.35, "#000000", 0.6);
+          strokeCircle(ctx, circleCenter.x, circleCenter.y, 1.95, "#000000", 0.65);
+          fillCircle(ctx, circleCenter.x, circleCenter.y, 0.78, "#000000");
         } else if (row.proficient) {
-          fillCircle(ctx, circleCenter.x, circleCenter.y, 1.45, "#000000");
+          fillCircle(ctx, circleCenter.x, circleCenter.y, 1.92, "#000000");
         }
 
-        drawCenteredTextInRect(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 15.6, y: centerY - 3.3, width: 11.4, height: 6.6 }), {
+        drawCenteredTextInRect(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, {
+          x: SKILL_ROW_SLOTS.bonusValue.x,
+          y: centerY + SKILL_ROW_SLOTS.bonusValue.yOffset,
+          width: SKILL_ROW_SLOTS.bonusValue.width,
+          height: SKILL_ROW_SLOTS.bonusValue.height,
+        }), {
           font: "Helvetica-Bold",
-          maxSize: 4.8,
-          minSize: 3.2,
+          maxSize: 4.6,
+          minSize: 3,
           color: "#000000",
         });
         if (!hasPrintedTemplate) {
-          drawFittedText(ctx, skill, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 34, y: centerY - 3.5, width: 40, height: 7 }), {
+          drawFittedText(ctx, skill, componentRect(block, SKILL_BLOCK_VIEWBOX, {
+            x: SKILL_ROW_SLOTS.label.x,
+            y: centerY + SKILL_ROW_SLOTS.label.yOffset,
+            width: SKILL_ROW_SLOTS.label.width,
+            height: SKILL_ROW_SLOTS.label.height,
+          }), {
             maxSize: 4.9,
             minSize: 3.1,
             color: "#000000",
@@ -369,9 +404,9 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
       return;
     }
     const cell = componentRect(FRONT_PAGE_REGIONS.passives, PASSIVES_VIEWBOX, PASSIVE_BOXES[index]);
-    drawCenteredTextInRect(ctx, value, rectFromFractions(cell, { x: 0.06, y: 0.13, width: 0.88, height: 0.34 }), {
+    drawCenteredTextInRect(ctx, value, rectFromFractions(cell, { x: 0.06, y: 0.07, width: 0.88, height: 0.40 }), {
       font: "Helvetica-Bold",
-      maxSize: 9.2,
+      maxSize: 10.2,
       minSize: 4.2,
       color: "#000000",
     });
@@ -387,10 +422,10 @@ function renderProficiencies(ctx: PdfRenderContext, character: ResolvedPdfCharac
     if (!items.length) {
       return;
     }
-    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.05, y: 0.20, width: 0.86, height: 0.50 }), {
-      maxSize: 4.8,
+    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.10, y: 0.18, width: 0.78, height: 0.52 }), {
+      maxSize: 5.1,
       minSize: 2.8,
-      align: "right",
+      align: "left",
       color: "#000000",
       lineGap: 0,
     });
