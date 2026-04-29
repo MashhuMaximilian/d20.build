@@ -68,11 +68,11 @@ const SKILL_BLOCKS = [
 ] as const;
 
 const STAT_VALUE_SLOTS = {
-  save: { x: 11, y: 4.1, width: 33, height: 7.2 },
+  save: { x: 11, y: 5.3, width: 33, height: 8 },
   score: { x: 10.5, y: 26.8, width: 34, height: 15.5 },
   labelMask: { x: 14, y: 43, width: 28, height: 10 },
   label: { x: 10, y: 45, width: 35, height: 8 },
-  modifier: { x: 12, y: 53.9, width: 31, height: 12.2 },
+  modifier: { x: 12, y: 55.1, width: 31, height: 12.2 },
 } as const;
 
 const SKILL_ROW_SLOTS = {
@@ -80,10 +80,10 @@ const SKILL_ROW_SLOTS = {
   firstCenterY: 9.5,
   rowGap: 9,
   bonusMask: { x: 16, yOffset: -2.5, width: 6.15, height: 5 },
-  bonusValue: { x: 15.65, yOffset: -2.55, width: 6.85, height: 5.1 },
+  bonusValue: { x: 14.8, yOffset: -2.7, width: 10.4, height: 5.4 },
   line: { x: 9, width: 57, height: 5 },
   lineLabelMask: { x: 14, width: 43, height: 5 },
-  label: { x: 24, yOffset: -3.35, width: 49, height: 6.7 },
+  label: { x: 26.4, yOffset: -3.35, width: 46.6, height: 6.7 },
 } as const;
 
 const PASSIVE_BOXES = [
@@ -304,10 +304,13 @@ function drawSkillMarker(ctx: PdfRenderContext, center: { x: number; y: number }
 
 function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell: boolean) {
   const canRecompose = Boolean(assets.statBlock && assets.generalContainer);
+  const abilityRegion = canRecompose
+    ? { ...FRONT_PAGE_REGIONS.abilities, y: 136 }
+    : FRONT_PAGE_REGIONS.abilities;
   if (canRecompose) {
-    maskRect(ctx, FRONT_PAGE_REGIONS.abilities);
+    maskRect(ctx, { x: 0, y: 136, width: 394, height: 164 });
   } else if (drawShell && (!assets.statBlock || !assets.skillBlock)) {
-    drawSvg(ctx, assets.abilityPanel, FRONT_PAGE_REGIONS.abilities);
+    drawSvg(ctx, assets.abilityPanel, abilityRegion);
   }
 
   const hasPrintedTemplate = !drawShell && !canRecompose;
@@ -321,7 +324,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
         return;
       }
 
-      const block = componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, {
+      const block = componentRect(abilityRegion, ABILITY_PANEL_VIEWBOX, {
         x: slot.x,
         y: slot.y,
         width: STAT_BLOCK_VIEWBOX.width,
@@ -333,7 +336,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       }
       drawSocketText(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.save), {
         font: "Helvetica-Bold",
-        maxSize: 7.2,
+        maxSize: 8.2,
         minSize: 4.4,
         color: "#000000",
       });
@@ -353,7 +356,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       }
       drawSocketText(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.modifier), {
         font: "Helvetica-Bold",
-        maxSize: 9.6,
+        maxSize: 10.7,
         minSize: 5,
         color: "#000000",
       });
@@ -362,7 +365,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
 
   if (assets.skillBlock || assets.generalContainer) {
     if (drawShell || canRecompose) {
-      drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 210, y: 140, width: 170, height: 8 }, {
+      drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 210, y: abilityRegion.y - 4, width: 170, height: 8 }, {
         maxSize: 4.4,
         minSize: 3.5,
         color: "#9a9a9a",
@@ -370,7 +373,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
     }
 
     SKILL_BLOCKS.forEach((slot) => {
-      const block = componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, {
+      const block = componentRect(abilityRegion, ABILITY_PANEL_VIEWBOX, {
         x: slot.x,
         y: slot.y,
         width: SKILL_BLOCK_VIEWBOX.width,
@@ -422,7 +425,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           height: SKILL_ROW_SLOTS.bonusValue.height,
         }), {
           font: "Helvetica-Bold",
-          maxSize: 3.8,
+          maxSize: 4.65,
           minSize: 2.5,
           color: "#000000",
         });
