@@ -81,7 +81,9 @@ const SKILL_ROW_SLOTS = {
   rowGap: 9,
   bonusMask: { x: 16, yOffset: -2.5, width: 6.15, height: 5 },
   bonusValue: { x: 15.65, yOffset: -2.55, width: 6.85, height: 5.1 },
-  label: { x: 34, yOffset: -3.5, width: 40, height: 7 },
+  line: { x: 9, width: 57, height: 5 },
+  lineLabelMask: { x: 14, width: 43, height: 5 },
+  label: { x: 24, yOffset: -3.35, width: 49, height: 6.7 },
 } as const;
 
 const PASSIVE_BOXES = [
@@ -288,12 +290,27 @@ function renderSpellcasting(ctx: PdfRenderContext, character: ResolvedPdfCharact
   });
 }
 
+function drawSkillMarker(ctx: PdfRenderContext, center: { x: number; y: number }, row: { proficient: boolean; expertise: boolean }) {
+  if (row.expertise) {
+    strokeCircle(ctx, center.x, center.y, 1.95, "#000000", 0.65);
+    fillCircle(ctx, center.x, center.y, 0.78, "#000000");
+    return;
+  }
+
+  if (row.proficient) {
+    fillCircle(ctx, center.x, center.y, 1.92, "#000000");
+  }
+}
+
 function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell: boolean) {
-  if (drawShell && (!assets.statBlock || !assets.skillBlock)) {
+  const canRecompose = Boolean(assets.statBlock && assets.generalContainer);
+  if (canRecompose) {
+    maskRect(ctx, FRONT_PAGE_REGIONS.abilities);
+  } else if (drawShell && (!assets.statBlock || !assets.skillBlock)) {
     drawSvg(ctx, assets.abilityPanel, FRONT_PAGE_REGIONS.abilities);
   }
 
-  const hasPrintedTemplate = !drawShell;
+  const hasPrintedTemplate = !drawShell && !canRecompose;
   const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
 
@@ -343,8 +360,8 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
     });
   }
 
-  if (assets.skillBlock) {
-    if (drawShell) {
+  if (assets.skillBlock || assets.generalContainer) {
+    if (drawShell || canRecompose) {
       drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 210, y: 140, width: 170, height: 8 }, {
         maxSize: 4.4,
         minSize: 3.5,
@@ -359,7 +376,9 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
         width: SKILL_BLOCK_VIEWBOX.width,
         height: SKILL_BLOCK_VIEWBOX.height,
       });
-      if (!hasPrintedTemplate) {
+      if (canRecompose && assets.generalContainer) {
+        drawSvg(ctx, assets.generalContainer, block);
+      } else if (!hasPrintedTemplate && assets.skillBlock) {
         drawSvg(ctx, assets.skillBlock, block);
       }
 
@@ -371,18 +390,30 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
 
         const centerY = SKILL_ROW_SLOTS.firstCenterY + index * SKILL_ROW_SLOTS.rowGap;
         const circleCenter = componentPoint(block, SKILL_BLOCK_VIEWBOX, { x: SKILL_ROW_SLOTS.circleX, y: centerY });
-        maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, {
-          x: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.x : 15,
-          y: centerY + (hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.yOffset : -3.2),
-          width: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.width : 60,
-          height: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.height : 6.4,
-        }));
-        if (row.expertise) {
-          strokeCircle(ctx, circleCenter.x, circleCenter.y, 1.95, "#000000", 0.65);
-          fillCircle(ctx, circleCenter.x, circleCenter.y, 0.78, "#000000");
-        } else if (row.proficient) {
-          fillCircle(ctx, circleCenter.x, circleCenter.y, 1.92, "#000000");
+
+        if (canRecompose && assets.skillLine) {
+          const lineRect = componentRect(block, SKILL_BLOCK_VIEWBOX, {
+            x: SKILL_ROW_SLOTS.line.x,
+            y: centerY - SKILL_ROW_SLOTS.line.height / 2,
+            width: SKILL_ROW_SLOTS.line.width,
+            height: SKILL_ROW_SLOTS.line.height,
+          });
+          drawSvg(ctx, assets.skillLine, lineRect);
+          maskRect(ctx, componentRect(lineRect, { width: 57, height: 5 }, {
+            x: SKILL_ROW_SLOTS.lineLabelMask.x,
+            y: 0,
+            width: SKILL_ROW_SLOTS.lineLabelMask.width,
+            height: SKILL_ROW_SLOTS.lineLabelMask.height,
+          }));
+        } else {
+          maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, {
+            x: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.x : 15,
+            y: centerY + (hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.yOffset : -3.2),
+            width: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.width : 60,
+            height: hasPrintedTemplate ? SKILL_ROW_SLOTS.bonusMask.height : 6.4,
+          }));
         }
+        drawSkillMarker(ctx, circleCenter, row);
 
         drawSocketText(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, {
           x: SKILL_ROW_SLOTS.bonusValue.x,
@@ -395,7 +426,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           minSize: 2.5,
           color: "#000000",
         });
-        if (!hasPrintedTemplate) {
+        if (!hasPrintedTemplate || canRecompose) {
           drawFittedText(ctx, skill, componentRect(block, SKILL_BLOCK_VIEWBOX, {
             x: SKILL_ROW_SLOTS.label.x,
             y: centerY + SKILL_ROW_SLOTS.label.yOffset,
@@ -408,7 +439,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           });
         }
       });
-      if (!hasPrintedTemplate) {
+      if (!hasPrintedTemplate || canRecompose) {
         maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 24, y: 52, width: 30, height: 8 }));
         drawCenteredTextInRect(ctx, slot.ability, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 0, y: 53, width: 78, height: 7 }), {
           font: "Helvetica-Bold",
