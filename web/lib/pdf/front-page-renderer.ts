@@ -45,24 +45,26 @@ const TOP_STATS: StatBoxSpec[] = [
   { key: "defenses", fallback: "", box: { x: 513.71, y: 4.43, width: 44.52, height: 42 } },
 ];
 
-const ABILITY_VALUE_RECTS = [
-  { label: "STR", save: { x: 32, y: -1, width: 23, height: 8 }, score: { x: 25, y: 28.5, width: 38, height: 17 }, modifier: { x: 25, y: 60.2, width: 38, height: 13 } },
-  { label: "DEX", save: { x: 94.7, y: -1, width: 23, height: 8 }, score: { x: 87.7, y: 28.5, width: 38, height: 17 }, modifier: { x: 87.7, y: 60.2, width: 38, height: 13 } },
-  { label: "CON", save: { x: 157.4, y: -1, width: 23, height: 8 }, score: { x: 150.4, y: 28.5, width: 38, height: 17 }, modifier: { x: 150.4, y: 60.2, width: 38, height: 13 } },
-  { label: "INT", save: { x: 32, y: 79, width: 23, height: 8 }, score: { x: 25, y: 108.5, width: 38, height: 17 }, modifier: { x: 25, y: 140.2, width: 38, height: 11.8 } },
-  { label: "WIS", save: { x: 94.7, y: 79, width: 23, height: 8 }, score: { x: 87.7, y: 108.5, width: 38, height: 17 }, modifier: { x: 87.7, y: 140.2, width: 38, height: 11.8 } },
-  { label: "CHA", save: { x: 157.4, y: 79, width: 23, height: 8 }, score: { x: 150.4, y: 108.5, width: 38, height: 17 }, modifier: { x: 150.4, y: 140.2, width: 38, height: 11.8 } },
+const STAT_BLOCKS = [
+  { label: "STR", x: 16, y: 0 },
+  { label: "DEX", x: 78.7, y: 0 },
+  { label: "CON", x: 141.4, y: 0 },
+  { label: "INT", x: 16, y: 80 },
+  { label: "WIS", x: 78.7, y: 80 },
+  { label: "CHA", x: 141.4, y: 80 },
 ] as const;
 
 const ABILITY_PANEL_VIEWBOX = { width: 384, height: 152 } as const;
 const PASSIVES_VIEWBOX = { width: 378, height: 40 } as const;
+const SKILL_BLOCK_VIEWBOX = { width: 78, height: 63 } as const;
+const STAT_BLOCK_VIEWBOX = { width: 55, height: 72 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
-const SKILL_DOT_CENTERS = [
-  { x: 231.5, ys: [23.5, 32.5, 41.5, 50.5] },
-  { x: 317.5, ys: [23.5, 32.5, 41.5, 50.5, 59.5] },
-  { x: 231.5, ys: [94.5, 103.5, 112.5, 121.5, 130.5] },
-  { x: 317.5, ys: [94.5, 103.5, 112.5, 121.5] },
+const SKILL_BLOCKS = [
+  { x: 220, y: 14, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
+  { x: 306, y: 14, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+  { x: 220, y: 85, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+  { x: 306, y: 85, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
 ] as const;
 
 const PASSIVE_BOXES = [
@@ -84,13 +86,6 @@ const SPELLCASTING_BOXES = [
   { x: 397, y: 145, width: 53, height: 44 },
   { x: 465, y: 145, width: 53, height: 44 },
   { x: 532, y: 145, width: 53, height: 44 },
-] as const;
-
-const SKILL_GROUPS = [
-  ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"],
-  ["Arcana", "History", "Investigation", "Nature", "Religion"],
-  ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"],
-  ["Deception", "Intimidation", "Performance", "Persuasion"],
 ] as const;
 
 function cleanText(value: unknown, fallback = "") {
@@ -225,93 +220,125 @@ function renderSpellcasting(ctx: PdfRenderContext, character: ResolvedPdfCharact
 }
 
 function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell: boolean) {
-  if (drawShell) {
+  if (drawShell && (!assets.statBlock || !assets.skillBlock)) {
     drawSvg(ctx, assets.abilityPanel, FRONT_PAGE_REGIONS.abilities);
   }
 
+  const hasPrintedTemplate = !drawShell;
   const abilityRowsByLabel = new Map(character.frontPage.abilityRows.map((row) => [row.label.toUpperCase(), row]));
-
-  ABILITY_VALUE_RECTS.forEach((slot) => {
-    const row = abilityRowsByLabel.get(slot.label);
-    if (!row) {
-      return;
-    }
-
-    drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.save), {
-      font: "Helvetica-Bold",
-      maxSize: 7.5,
-      minSize: 3.8,
-      color: "#000000",
-    });
-    drawCenteredTextInRect(ctx, `${row.score}`, componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.score), {
-      font: "Times-Bold",
-      maxSize: 15.5,
-      minSize: 8,
-      color: "#000000",
-    });
-    drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, slot.modifier), {
-      font: "Helvetica-Bold",
-      maxSize: 8.6,
-      minSize: 3.8,
-      color: "#000000",
-    });
-  });
-}
-
-function renderSkillDots(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
 
-  SKILL_GROUPS.forEach((skills, blockIndex) => {
-    const centers = SKILL_DOT_CENTERS[blockIndex];
-    skills.forEach((skill, skillIndex) => {
-      const row = skillRows.get(normalizeKey(skill));
+  if (assets.statBlock) {
+    STAT_BLOCKS.forEach((slot) => {
+      const row = abilityRowsByLabel.get(slot.label);
       if (!row) {
         return;
       }
 
-      const center = componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, {
-        x: centers.x,
-        y: centers.ys[skillIndex],
-        width: 0,
-        height: 0,
+      const block = componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, {
+        x: slot.x,
+        y: slot.y,
+        width: STAT_BLOCK_VIEWBOX.width,
+        height: STAT_BLOCK_VIEWBOX.height,
       });
-      const centerX = center.x;
-      const centerY = center.y;
-      maskRect(ctx, {
-        x: centerX + 3.2,
-        y: centerY - 4.6,
-        width: 58,
-        height: 9.2,
-      });
-      if (row.expertise) {
-        strokeCircle(ctx, centerX, centerY, 1.28, "#000000", 0.55);
-      } else if (row.proficient) {
-        fillCircle(ctx, centerX, centerY, 1.55, "#000000");
+      if (!hasPrintedTemplate) {
+        drawSvg(ctx, assets.statBlock, block);
+        maskRect(ctx, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 14, y: 43, width: 28, height: 10 }));
       }
-
-      drawCenteredTextInRect(ctx, signed(row.total), {
-        x: centerX + 4.8,
-        y: centerY - 4.2,
-        width: 14,
-        height: 8,
-      }, {
-        font: "Helvetica",
-        maxSize: 5.8,
-        minSize: 2.6,
+      drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, { x: 14, y: 4.6, width: 27, height: 8.8 }), {
+        font: "Helvetica-Bold",
+        maxSize: 7.8,
+        minSize: 4,
         color: "#000000",
       });
-      drawFittedText(ctx, skill, {
-        x: centerX + 21.5,
-        y: centerY - 3.7,
-        width: 37,
-        height: 7.2,
-      }, {
-        maxSize: 5,
-        minSize: 3.2,
+      drawCenteredTextInRect(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 11, y: 27, width: 33, height: 16 }), {
+        font: "Times-Bold",
+        maxSize: 16,
+        minSize: 8,
+        color: "#000000",
+      });
+      if (!hasPrintedTemplate) {
+        drawCenteredTextInRect(ctx, slot.label, componentRect(block, STAT_BLOCK_VIEWBOX, { x: 10, y: 45, width: 35, height: 8 }), {
+          font: "Helvetica",
+          maxSize: 7.2,
+          minSize: 5,
+          color: "#000000",
+        });
+      }
+      drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, { x: 12, y: 57.5, width: 31, height: 12 }), {
+        font: "Helvetica-Bold",
+        maxSize: 9.5,
+        minSize: 4.5,
         color: "#000000",
       });
     });
-  });
+  }
+
+  if (assets.skillBlock) {
+    if (drawShell) {
+      drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 210, y: 140, width: 170, height: 8 }, {
+        maxSize: 4.4,
+        minSize: 3.5,
+        color: "#9a9a9a",
+      });
+    }
+
+    SKILL_BLOCKS.forEach((slot) => {
+      const block = componentRect(FRONT_PAGE_REGIONS.abilities, ABILITY_PANEL_VIEWBOX, {
+        x: slot.x,
+        y: slot.y,
+        width: SKILL_BLOCK_VIEWBOX.width,
+        height: SKILL_BLOCK_VIEWBOX.height,
+      });
+      if (!hasPrintedTemplate) {
+        drawSvg(ctx, assets.skillBlock, block);
+      }
+
+      slot.skills.forEach((skill, index) => {
+        const row = skillRows.get(normalizeKey(skill));
+        if (!row) {
+          return;
+        }
+
+        const centerY = 9.5 + index * 9;
+        const circleCenter = componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 11.5, y: centerY, width: 0, height: 0 });
+        maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, {
+          x: 15,
+          y: centerY - 3.2,
+          width: hasPrintedTemplate ? 12 : 60,
+          height: 6.4,
+        }));
+        if (row.expertise) {
+          strokeCircle(ctx, circleCenter.x, circleCenter.y, 1.35, "#000000", 0.6);
+        } else if (row.proficient) {
+          fillCircle(ctx, circleCenter.x, circleCenter.y, 1.45, "#000000");
+        }
+
+        drawCenteredTextInRect(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 15.6, y: centerY - 3.3, width: 11.4, height: 6.6 }), {
+          font: "Helvetica-Bold",
+          maxSize: 4.8,
+          minSize: 3.2,
+          color: "#000000",
+        });
+        if (!hasPrintedTemplate) {
+          drawFittedText(ctx, skill, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 34, y: centerY - 3.5, width: 40, height: 7 }), {
+            maxSize: 4.9,
+            minSize: 3.1,
+            color: "#000000",
+          });
+        }
+      });
+      if (!hasPrintedTemplate) {
+        maskRect(ctx, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 24, y: 52, width: 30, height: 8 }));
+        drawCenteredTextInRect(ctx, slot.ability, componentRect(block, SKILL_BLOCK_VIEWBOX, { x: 0, y: 53, width: 78, height: 7 }), {
+          font: "Helvetica-Bold",
+          maxSize: 5.2,
+          minSize: 3.8,
+          color: "#9a9a9a",
+        });
+      }
+    });
+  }
 }
 
 function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell: boolean) {
@@ -495,7 +522,6 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderHeader(ctx, character);
   renderStatStrip(ctx, assets, character, !hasTemplate);
   renderAbilities(ctx, assets, character, !hasTemplate);
-  renderSkillDots(ctx, character);
   renderSpellcasting(ctx, character);
   renderPassives(ctx, assets, character, !hasTemplate);
   renderProficiencies(ctx, character);
