@@ -71,6 +71,7 @@ export const PDF_SVG_COMPONENT_MANIFEST = {
   speedPanel: "pdf-svg/Passives and speeds.svg",
   attackPanel: "pdf-svg/Weapon attacks.svg",
   generalContainer: "pdf-svg/General Box Container.svg",
+  greyBackground: "pdf-svg/_Grey background.svg",
   hitDie: "pdf-svg/Hit Die.svg",
   lines: "pdf-svg/Lines.svg",
   proficiencyBoolean: "pdf-svg/Proficiency check boolean.svg",

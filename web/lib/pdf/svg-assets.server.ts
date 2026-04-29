@@ -9,6 +9,7 @@ export const PDF_EXPORT_SVG_ASSET_PATHS = {
   passivesAndSpeeds: "pdf-svg/Passives and speeds.svg",
   weaponAttacks: "pdf-svg/Weapon attacks.svg",
   generalContainer: "pdf-svg/General Box Container.svg",
+  greyBackground: "pdf-svg/_Grey background.svg",
   hitDie: "pdf-svg/Hit Die.svg",
   lines: "pdf-svg/Lines.svg",
   proficiencyBoolean: "pdf-svg/Proficiency check boolean.svg",

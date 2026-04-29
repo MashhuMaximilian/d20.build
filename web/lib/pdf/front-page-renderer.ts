@@ -61,10 +61,15 @@ const STAT_BLOCK_VIEWBOX = { width: 55, height: 72 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
 const SKILL_BLOCKS = [
-  { x: 202, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
-  { x: 296, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
-  { x: 202, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
-  { x: 296, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+  { x: 188, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
+  { x: 292, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+  { x: 188, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+  { x: 292, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+] as const;
+
+const STAT_ROW_BACKGROUNDS = [
+  { x: -8, y: 9, width: 203, height: 54 },
+  { x: -8, y: 89, width: 203, height: 54 },
 ] as const;
 
 const STAT_VALUE_SLOTS = {
@@ -322,6 +327,12 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
   const skillRows = new Map(character.frontPage.skillRows.map((row) => [normalizeKey(row.label), row]));
 
   if (assets.statBlock) {
+    if (!hasPrintedTemplate && assets.greyBackground) {
+      STAT_ROW_BACKGROUNDS.forEach((background) => {
+        drawSvg(ctx, assets.greyBackground, componentRect(abilityRegion, ABILITY_PANEL_VIEWBOX, background));
+      });
+    }
+
     STAT_BLOCKS.forEach((slot) => {
       const row = abilityRowsByLabel.get(slot.label);
       if (!row) {
@@ -373,7 +384,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
 
   if (assets.skillBlock || assets.generalContainer) {
     if (drawShell || canRecompose) {
-      drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 210, y: abilityRegion.y - 4, width: 170, height: 8 }, {
+      drawCenteredTextInRect(ctx, "ABILITY CHECKS", { x: 200, y: abilityRegion.y - 4, width: 170, height: 8 }, {
         maxSize: 4.4,
         minSize: 3.5,
         color: "#9a9a9a",
