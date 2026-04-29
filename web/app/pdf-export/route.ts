@@ -9,13 +9,11 @@ export const runtime = "nodejs";
 const PDF_EXPORT_ASSET_KEYS = [
   "frontPageTemplate",
   "frontPageHeader",
-  "abilityPanel",
   "hpPanel",
   "passivesAndSpeeds",
   "weaponAttacks",
   "generalContainer",
   "skillLine",
-  "skillBlock",
   "statBlock",
 ] as const satisfies Array<keyof typeof PDF_EXPORT_SVG_ASSET_PATHS>;
 

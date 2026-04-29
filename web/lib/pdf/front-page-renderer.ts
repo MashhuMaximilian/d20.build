@@ -46,12 +46,12 @@ const TOP_STATS: StatBoxSpec[] = [
 ];
 
 const STAT_BLOCKS = [
-  { label: "STR", x: 16, y: 0 },
-  { label: "DEX", x: 78.7, y: 0 },
-  { label: "CON", x: 141.4, y: 0 },
-  { label: "INT", x: 16, y: 80 },
-  { label: "WIS", x: 78.7, y: 80 },
-  { label: "CHA", x: 141.4, y: 80 },
+  { label: "STR", x: 0, y: 0 },
+  { label: "DEX", x: 62, y: 0 },
+  { label: "CON", x: 124, y: 0 },
+  { label: "INT", x: 0, y: 80 },
+  { label: "WIS", x: 62, y: 80 },
+  { label: "CHA", x: 124, y: 80 },
 ] as const;
 
 const ABILITY_PANEL_VIEWBOX = { width: 384, height: 152 } as const;
@@ -61,18 +61,18 @@ const STAT_BLOCK_VIEWBOX = { width: 55, height: 72 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
 const SKILL_BLOCKS = [
-  { x: 220, y: 14, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
-  { x: 306, y: 14, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
-  { x: 220, y: 85, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
-  { x: 306, y: 85, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+  { x: 202, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
+  { x: 296, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+  { x: 202, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+  { x: 296, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
 ] as const;
 
 const STAT_VALUE_SLOTS = {
-  save: { x: 11, y: 5.3, width: 33, height: 8 },
+  save: { x: 11, y: 7.2, width: 33, height: 9.2 },
   score: { x: 10.5, y: 26.8, width: 34, height: 15.5 },
-  labelMask: { x: 14, y: 43, width: 28, height: 10 },
+  labelMask: { x: 14, y: 44.4, width: 28, height: 6.8 },
   label: { x: 10, y: 45, width: 35, height: 8 },
-  modifier: { x: 12, y: 55.1, width: 31, height: 12.2 },
+  modifier: { x: 12, y: 57.2, width: 31, height: 10.6 },
 } as const;
 
 const SKILL_ROW_SLOTS = {
@@ -166,6 +166,10 @@ function componentPoint(region: PdfRect, viewBox: { width: number; height: numbe
   };
 }
 
+function componentRadius(region: PdfRect, viewBox: { width: number; height: number }, radius: number) {
+  return radius * Math.min(region.width / viewBox.width, region.height / viewBox.height);
+}
+
 function fitSingleLineSize(
   ctx: PdfRenderContext,
   text: string,
@@ -223,7 +227,7 @@ function drawValueOnlyStatBox(ctx: PdfRenderContext, rect: PdfRect, value: strin
     height: mode === "shield" ? 0.36 : 0.36,
   });
   drawCenteredTextInRect(ctx, value, valueRect, {
-    font: "Times-Bold",
+    font: "Helvetica-Bold",
     maxSize: mode === "small" ? 11 : mode === "shield" ? 12 : 13.5,
     minSize: 7,
     color: "#000000",
@@ -282,7 +286,7 @@ function renderSpellcasting(ctx: PdfRenderContext, character: ResolvedPdfCharact
       return;
     }
     drawCenteredTextInRect(ctx, value, rectFromFractions(SPELLCASTING_BOXES[index], { x: 0.14, y: 0.18, width: 0.72, height: 0.34 }), {
-      font: index === 2 ? "Helvetica-Bold" : "Times-Bold",
+      font: "Helvetica-Bold",
       maxSize: index === 2 ? 9.8 : 14.5,
       minSize: 6,
       color: "#000000",
@@ -334,15 +338,19 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
         drawSvg(ctx, assets.statBlock, block);
         maskRect(ctx, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.labelMask));
       }
+      if (row.saveProficient) {
+        const saveMarker = componentPoint(block, STAT_BLOCK_VIEWBOX, { x: 27.7, y: 3 });
+        fillCircle(ctx, saveMarker.x, saveMarker.y, componentRadius(block, STAT_BLOCK_VIEWBOX, 2.1), "#000000");
+      }
       drawSocketText(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.save), {
         font: "Helvetica-Bold",
-        maxSize: 8.2,
+        maxSize: 10.4,
         minSize: 4.4,
         color: "#000000",
       });
       drawSocketText(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.score), {
-        font: "Times-Bold",
-        maxSize: 16,
+        font: "Helvetica-Bold",
+        maxSize: 15.4,
         minSize: 8,
         color: "#000000",
       });
@@ -356,7 +364,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       }
       drawSocketText(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.modifier), {
         font: "Helvetica-Bold",
-        maxSize: 10.7,
+        maxSize: 8.6,
         minSize: 5,
         color: "#000000",
       });
@@ -376,8 +384,8 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
       const block = componentRect(abilityRegion, ABILITY_PANEL_VIEWBOX, {
         x: slot.x,
         y: slot.y,
-        width: SKILL_BLOCK_VIEWBOX.width,
-        height: SKILL_BLOCK_VIEWBOX.height,
+        width: slot.width,
+        height: slot.height,
       });
       if (canRecompose && assets.generalContainer) {
         drawSvg(ctx, assets.generalContainer, block);
@@ -425,7 +433,7 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           height: SKILL_ROW_SLOTS.bonusValue.height,
         }), {
           font: "Helvetica-Bold",
-          maxSize: 4.65,
+          maxSize: 5.1,
           minSize: 2.5,
           color: "#000000",
         });
@@ -436,7 +444,8 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
             width: SKILL_ROW_SLOTS.label.width,
             height: SKILL_ROW_SLOTS.label.height,
           }), {
-            maxSize: 4.9,
+            font: "Helvetica",
+            maxSize: 5.45,
             minSize: 3.1,
             color: "#000000",
           });
@@ -601,7 +610,7 @@ function renderRail(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
     return;
   }
 
-  maskRect(ctx, { x: 394, y: 190, width: 194, height: 300 });
+  maskRect(ctx, insetRect(FRONT_PAGE_REGIONS.rail, 7, 4));
   renderFeatureList(ctx, railCards, insetRect(FRONT_PAGE_REGIONS.rail, 8, 4), 1);
 }
 
