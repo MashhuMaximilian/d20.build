@@ -68,19 +68,19 @@ const SKILL_BLOCKS = [
 ] as const;
 
 const STAT_VALUE_SLOTS = {
-  save: { x: 14.5, y: 5.2, width: 26, height: 8 },
+  save: { x: 11, y: 4.1, width: 33, height: 7.2 },
   score: { x: 10.5, y: 26.8, width: 34, height: 15.5 },
   labelMask: { x: 14, y: 43, width: 28, height: 10 },
   label: { x: 10, y: 45, width: 35, height: 8 },
-  modifier: { x: 13, y: 56.4, width: 29, height: 10.8 },
+  modifier: { x: 12, y: 53.9, width: 31, height: 12.2 },
 } as const;
 
 const SKILL_ROW_SLOTS = {
   circleX: 11.5,
   firstCenterY: 9.5,
   rowGap: 9,
-  bonusMask: { x: 15.6, yOffset: -2.55, width: 8.3, height: 5.1 },
-  bonusValue: { x: 15.35, yOffset: -2.8, width: 8.8, height: 5.6 },
+  bonusMask: { x: 16, yOffset: -2.5, width: 6.15, height: 5 },
+  bonusValue: { x: 15.65, yOffset: -2.55, width: 6.85, height: 5.1 },
   label: { x: 34, yOffset: -3.5, width: 40, height: 7 },
 } as const;
 
@@ -162,6 +162,51 @@ function componentPoint(region: PdfRect, viewBox: { width: number; height: numbe
     x: region.x + point.x * (region.width / viewBox.width),
     y: region.y + point.y * (region.height / viewBox.height),
   };
+}
+
+function fitSingleLineSize(
+  ctx: PdfRenderContext,
+  text: string,
+  rect: PdfRect,
+  options: { font?: string; maxSize: number; minSize: number },
+) {
+  for (let size = options.maxSize; size >= options.minSize; size -= 0.25) {
+    ctx.doc.save();
+    ctx.doc.font(options.font || ctx.bodyFont).fontSize(size);
+    const width = ctx.doc.widthOfString(text);
+    ctx.doc.restore();
+    if (width <= rect.width && size * 0.95 <= rect.height) {
+      return size;
+    }
+  }
+
+  return options.minSize;
+}
+
+function drawSocketText(
+  ctx: PdfRenderContext,
+  text: string,
+  rect: PdfRect,
+  options: { font?: string; maxSize: number; minSize: number; color?: string },
+) {
+  if (!text.trim()) {
+    return;
+  }
+
+  const font = options.font || ctx.bodyFont;
+  const size = fitSingleLineSize(ctx, text, rect, options);
+  ctx.doc.save();
+  ctx.doc.font(font).fontSize(size);
+  const width = ctx.doc.widthOfString(text);
+  const x = rect.x + Math.max(0, (rect.width - width) / 2);
+  const y = rect.y + Math.max(0, (rect.height - size * 0.82) / 2) - size * 0.05;
+  ctx.doc.fillColor(options.color || "#000000");
+  ctx.doc.text(text, x, y, {
+    width,
+    height: rect.height,
+    lineBreak: false,
+  });
+  ctx.doc.restore();
 }
 
 function drawValueOnlyStatBox(ctx: PdfRenderContext, rect: PdfRect, value: string, mode: StatBoxSpec["mode"] = "normal") {
@@ -269,13 +314,13 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
         drawSvg(ctx, assets.statBlock, block);
         maskRect(ctx, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.labelMask));
       }
-      drawCenteredTextInRect(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.save), {
+      drawSocketText(ctx, signed(row.saveBonus), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.save), {
         font: "Helvetica-Bold",
-        maxSize: 8.4,
-        minSize: 4,
+        maxSize: 7.2,
+        minSize: 4.4,
         color: "#000000",
       });
-      drawCenteredTextInRect(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.score), {
+      drawSocketText(ctx, `${row.score}`, componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.score), {
         font: "Times-Bold",
         maxSize: 16,
         minSize: 8,
@@ -289,10 +334,10 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           color: "#000000",
         });
       }
-      drawCenteredTextInRect(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.modifier), {
+      drawSocketText(ctx, signed(row.modifier), componentRect(block, STAT_BLOCK_VIEWBOX, STAT_VALUE_SLOTS.modifier), {
         font: "Helvetica-Bold",
-        maxSize: 10.4,
-        minSize: 4.5,
+        maxSize: 9.6,
+        minSize: 5,
         color: "#000000",
       });
     });
@@ -339,15 +384,15 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
           fillCircle(ctx, circleCenter.x, circleCenter.y, 1.92, "#000000");
         }
 
-        drawCenteredTextInRect(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, {
+        drawSocketText(ctx, signed(row.total), componentRect(block, SKILL_BLOCK_VIEWBOX, {
           x: SKILL_ROW_SLOTS.bonusValue.x,
           y: centerY + SKILL_ROW_SLOTS.bonusValue.yOffset,
           width: SKILL_ROW_SLOTS.bonusValue.width,
           height: SKILL_ROW_SLOTS.bonusValue.height,
         }), {
           font: "Helvetica-Bold",
-          maxSize: 4.6,
-          minSize: 3,
+          maxSize: 3.8,
+          minSize: 2.5,
           color: "#000000",
         });
         if (!hasPrintedTemplate) {
