@@ -323,6 +323,12 @@ If implementation resumes, do this next:
 - remaining top-right strip tuning on non-bard / non-caster classes
 - visual verification on multiple character sheets
 
+### Reset Pass R1 + R2e In Progress
+
+- the old template spellcasting shell is now masked again so the new block can stand alone
+- the current goal is to remove the layered-container look without reintroducing label collisions
+- exported visual verification is still required to confirm whether the mask box is tight enough
+
 ### Pass 1 Completed
 
 - `_Proficiency Box.svg` is now part of the runtime PDF asset bundle and is explicitly drawn over the proficiencies row.
