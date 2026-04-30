@@ -277,7 +277,7 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
       valueRect: { x: 244, y: 34.4, width: 80, height: 8.8 },
     },
     {
-      label: "LINEAGE",
+      label: "",
       value: "",
       labelRect: { x: 315, y: 24.2, width: 82, height: 3.2 },
       valueRect: { x: 305, y: 34.4, width: 88, height: 8.8 },
@@ -329,7 +329,7 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     }
     drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: field.label === "CLASS & LEVEL" ? 3.4 : 3.8,
+      maxSize: field.label === "CLASS & LEVEL" ? 3.3 : 3.5,
       minSize: field.label === "CLASS & LEVEL" ? 2.6 : 2.8,
       color: "#000000",
     });
@@ -368,7 +368,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     return;
   }
 
-  maskRect(ctx, { x: 393, y: 142, width: 194, height: 49 });
+  maskRect(ctx, { x: 388, y: 138, width: 204, height: 57 });
 
   if (!hasSpellcasting && hasKiDc) {
     const leftBox = { x: hasClassResource ? 405 : 431, y: 143, width: hasClassResource ? 82 : 116, height: 38 };
@@ -460,7 +460,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     });
   });
 
-  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.18, y: 0.84, width: 0.64, height: 0.08 }), {
+  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.16, y: 0.76, width: 0.68, height: 0.12 }), {
     font: "Helvetica-Bold",
     maxSize: 2.4,
     minSize: 2.1,

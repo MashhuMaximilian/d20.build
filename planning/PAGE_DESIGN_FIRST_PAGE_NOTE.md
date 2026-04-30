@@ -329,6 +329,12 @@ If implementation resumes, do this next:
 - the current goal is to remove the layered-container look without reintroducing label collisions
 - exported visual verification is still required to confirm whether the mask box is tight enough
 
+### Reset Pass R1 + R2f In Progress
+
+- the visible `LINEAGE` label has been removed from the header to reduce top-row clutter
+- the spellcasting mask was expanded further to cover legacy tab text and border bleed in the top-right area
+- the spellcasting caption was nudged lower into the tab so it reads as the only label in that slot
+
 ### Pass 1 Completed
 
 - `_Proficiency Box.svg` is now part of the runtime PDF asset bundle and is explicitly drawn over the proficiencies row.
