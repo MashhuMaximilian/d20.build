@@ -13,7 +13,12 @@ import type {
 } from "@/lib/characters/types";
 import { ABILITY_LABELS } from "@/lib/characters/types";
 import { normalizeInventoryWeaponItem } from "@/lib/equipment/inventory";
-import type { SpellSelectionGroup } from "@/lib/progression/spellcasting";
+import {
+  getSpellCastingTime,
+  getSpellLevel,
+  getSpellRange,
+  type SpellSelectionGroup,
+} from "@/lib/progression/spellcasting";
 
 import {
   resolvePdfCharacter,
@@ -122,6 +127,13 @@ function humanizeGrantedId(value: string) {
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase())
     .replace(/\bCant\b/g, "Cant");
+}
+
+function collectGrantedIds(rules: BuiltInRule[], type: string) {
+  return rules
+    .filter((rule): rule is Extract<BuiltInRule, { kind: "grant" }> => rule.kind === "grant" && rule.type === type)
+    .map((rule) => rule.id)
+    .filter(Boolean);
 }
 
 function getProficiencyBonus(level: number) {
@@ -341,6 +353,155 @@ function getPrimarySpellcastingAbility(spellGroups: SpellSelectionGroup[]) {
   return spellGroups.find((group) => Boolean(group.spellcastingAbility))?.spellcastingAbility?.toUpperCase() || "";
 }
 
+function getSubclassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, draft: CharacterDraft) {
+  return draft.classEntries
+    .flatMap((entry, index) => {
+      const record = classRecordsByEntry[index];
+      if (!record || !entry?.subclassId) {
+        return [];
+      }
+
+      const selectedSubclass =
+        record.subclassSteps
+          .flatMap((step) => step.options)
+          .find((option) => option.archetype.id === entry.subclassId) ?? null;
+
+      return selectedSubclass ? [selectedSubclass.archetype.name] : [];
+    })
+    .join(" / ");
+}
+
+function getSelectedProficiencyLabels(args: BuilderPdfSourceArgs) {
+  return uniqueStrings([
+    ...args.selectedProficiencyNames,
+    ...args.selectedProficiencyIds.map(humanizeGrantedId),
+    ...args.manualGrantsByKind.proficiency.map((grant) => grant.name),
+  ]).map(normalizeLookupLabel);
+}
+
+function isLowSignalFeatureElement(element: BuiltInElement) {
+  const title = element.name.trim();
+  const haystack = `${element.name} ${element.type} ${element.description ?? ""}`.toLowerCase();
+
+  if (
+    /\b(proficiency|language)\b/.test(element.type) ||
+    /(language|proficiency) option/i.test(title) ||
+    /\b(tool|instrument|language)\s+proficiency\b/i.test(haystack)
+  ) {
+    return true;
+  }
+
+  if (/^ability score improvement$/i.test(title)) {
+    return true;
+  }
+
+  if (
+    /^(bard college|roguish archetype|sacred oath|divine domain|druid circle|martial archetype|arcane tradition|primal path|otherworldly patron)$/i.test(
+      title,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function withPdfGroupTag(card: ReturnType<typeof toPdfCardFromElement> | ReturnType<typeof toPdfCardFromGrant>, group: string) {
+  return {
+    ...card,
+    tags: [...card.tags, `pdf-group:${group}`],
+  };
+}
+
+function withPdfTags<T extends { tags: string[] }>(card: T, tags: string[]) {
+  return {
+    ...card,
+    tags: uniqueStrings([...card.tags, ...tags]),
+  };
+}
+
+const FEATURE_ACTION_RULES: Array<{
+  match: RegExp;
+  timing: string;
+  summary: string;
+  cost?: string;
+}> = [
+  { match: /^Action Surge$/i, timing: "Free action", summary: "Take one additional action on your turn.", cost: "1 use" },
+  { match: /^Second Wind$/i, timing: "Bonus action", summary: "Regain hit points using your fighter recovery.", cost: "1 use" },
+  { match: /^Flurry of Blows$/i, timing: "Bonus action", summary: "After Attack, make two unarmed strikes.", cost: "1 ki" },
+  { match: /^Stunning Strike$/i, timing: "On hit", summary: "Force a Constitution save or stun the target until your next turn.", cost: "1 ki" },
+  { match: /^Rage$/i, timing: "Bonus action", summary: "Enter a rage with damage and resilience benefits." },
+  { match: /^Wild Shape$/i, timing: "Action", summary: "Transform into a beast form using your druid training.", cost: "1 use" },
+  { match: /^Channel Divinity$/i, timing: "Action / feature", summary: "Spend one Channel Divinity use on a subclass option.", cost: "1 use" },
+  { match: /^Bardic Inspiration$/i, timing: "Bonus action", summary: "Grant an inspiration die to an ally within range.", cost: "1 use" },
+  { match: /^Lay on Hands$/i, timing: "Action", summary: "Restore hit points from the Lay on Hands pool.", cost: "Pool spend" },
+];
+
+function getPlaySurfaceSummary(element: BuiltInElement) {
+  const rule = FEATURE_ACTION_RULES.find((entry) => entry.match.test(element.name));
+  if (!rule) {
+    return undefined;
+  }
+
+  return [rule.timing, rule.cost, rule.summary].filter(Boolean).join(" | ");
+}
+
+function getPassiveNoteTags(element: BuiltInElement) {
+  const body = `${element.name} ${element.descriptionHtml ?? ""} ${element.description ?? ""}`;
+  const text = body
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<\/p>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const lower = text.toLowerCase();
+  const tags: string[] = [];
+
+  if (/resistance to poison damage|poison resistance/.test(lower)) {
+    tags.push("pdf-note:resistance:Poison");
+  }
+  const resistanceMatch = text.match(/resistance to ([a-z ,/-]+?) damage/i);
+  if (resistanceMatch) {
+    tags.push(`pdf-note:resistance:${resistanceMatch[1].trim()}`);
+  }
+  const vulnerabilityMatch = text.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
+  if (vulnerabilityMatch) {
+    tags.push(`pdf-note:vulnerability:${vulnerabilityMatch[1].trim()}`);
+  }
+  if (/immune to disease/.test(lower)) {
+    tags.push("pdf-note:immunity:Disease");
+  }
+  const immunityMatch = text.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
+  if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
+    tags.push(`pdf-note:immunity:${immunityMatch[1].trim()}`);
+  }
+  const conditionImmunityMatch = text.match(/immune to the ([a-z-]+) condition/i);
+  if (conditionImmunityMatch) {
+    tags.push(`pdf-note:condition:Immune ${conditionImmunityMatch[1]}`);
+  }
+  if (/don'?t need to sleep|sentry'?s rest/.test(lower)) {
+    tags.push("pdf-note:rest:Sentry's Rest");
+  }
+  if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(lower)) {
+    tags.push("pdf-note:condition-edge:Adv. vs Poisoned");
+  }
+  const darkvisionMatch = text.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
+  if (darkvisionMatch) {
+    tags.push(`pdf-note:sense:Darkvision ${darkvisionMatch[1]} ft`);
+  }
+  const speedMatch = text.match(/walking speed is increased by (\d+) feet?/i);
+  if (speedMatch) {
+    tags.push(`pdf-note:speed:+${speedMatch[1]} ft`);
+  }
+  const flightMatch = text.match(/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i);
+  const flightValue = flightMatch?.[1] || flightMatch?.[2];
+  if (flightValue) {
+    tags.push(`pdf-note:speed:Fly ${flightValue} ft`);
+  }
+
+  return uniqueStrings(tags);
+}
+
 function getKiSaveDc(args: BuilderPdfSourceArgs, proficiencyBonus: number) {
   const hasMonkKi = args.draft.classEntries.some((entry, index) => {
     const className = resolveClassName(args.classRecordsByEntry[index], entry);
@@ -354,6 +515,171 @@ function getKiSaveDc(args: BuilderPdfSourceArgs, proficiencyBonus: number) {
   return `${8 + proficiencyBonus + getAbilityModifier(args.effectiveAbilities.wisdom)}`;
 }
 
+function getBardicInspirationDie(level: number) {
+  if (level >= 15) {
+    return 12;
+  }
+  if (level >= 10) {
+    return 10;
+  }
+  if (level >= 5) {
+    return 8;
+  }
+  return 6;
+}
+
+function getBarbarianRageUses(level: number) {
+  if (level >= 20) {
+    return "Unlimited";
+  }
+  if (level >= 17) {
+    return "6 uses";
+  }
+  if (level >= 12) {
+    return "5 uses";
+  }
+  if (level >= 6) {
+    return "4 uses";
+  }
+  if (level >= 3) {
+    return "3 uses";
+  }
+  return "2 uses";
+}
+
+function getChannelDivinityUses(level: number) {
+  if (level >= 18) {
+    return "3 uses";
+  }
+  if (level >= 6) {
+    return "2 uses";
+  }
+  return "1 use";
+}
+
+function getSuperiorityDiceSummary(level: number) {
+  const die = level >= 18 ? 12 : level >= 10 ? 10 : 8;
+  const count = level >= 15 ? 6 : level >= 7 ? 5 : 4;
+  return `${count} d${die}`;
+}
+
+function getClassResourcePriority(label: string) {
+  const normalized = label.toLowerCase();
+  if (normalized === "superiority dice") {
+    return 15;
+  }
+  if (normalized === "starry form") {
+    return 25;
+  }
+  if (normalized === "bardic inspiration") {
+    return 10;
+  }
+  if (normalized === "wild shape") {
+    return 20;
+  }
+  if (normalized === "ki points") {
+    return 30;
+  }
+  if (normalized === "sorcery points") {
+    return 40;
+  }
+  if (normalized === "lay on hands") {
+    return 50;
+  }
+  if (normalized === "channel divinity") {
+    return 60;
+  }
+  if (normalized === "action surge") {
+    return 70;
+  }
+  if (normalized === "second wind") {
+    return 80;
+  }
+  if (normalized === "rage") {
+    return 90;
+  }
+  return 999;
+}
+
+function getClassResources(args: BuilderPdfSourceArgs) {
+  const featureNames = new Set(args.selectedClassFeatureElements.map((feature) => feature.name.toLowerCase()));
+  const resources: Array<{ label: string; value: string }> = [];
+  const pushResource = (label: string, value: string) => {
+    if (!value || resources.some((resource) => resource.label === label)) {
+      return;
+    }
+    resources.push({ label, value });
+  };
+
+  for (let index = 0; index < args.classRecordsByEntry.length; index += 1) {
+    const record = args.classRecordsByEntry[index];
+    const entry = args.draft.classEntries[index];
+    if (!record || !entry?.classId) {
+      continue;
+    }
+
+    const className = record.class.name;
+
+    if (/bard/i.test(className) && featureNames.has("bardic inspiration")) {
+      const uses = Math.max(1, getAbilityModifier(args.effectiveAbilities.charisma));
+      const die = getBardicInspirationDie(entry.level);
+      pushResource("Bardic Inspiration", `${uses} d${die}`);
+    }
+
+    if (/fighter/i.test(className) && (featureNames.has("combat superiority") || featureNames.has("superiority dice"))) {
+      pushResource("Superiority Dice", getSuperiorityDiceSummary(entry.level));
+    }
+
+    if (/druid/i.test(className) && featureNames.has("wild shape")) {
+      pushResource("Wild Shape", "2 uses");
+    }
+
+    if (/druid/i.test(className) && featureNames.has("starry form")) {
+      pushResource("Starry Form", "Uses Wild Shape");
+    }
+
+    if (/monk/i.test(className) && featureNames.has("ki")) {
+      pushResource("Ki Points", `${entry.level}`);
+    }
+
+    if (/sorcerer/i.test(className) && (featureNames.has("font of magic") || featureNames.has("sorcery points"))) {
+      pushResource("Sorcery Points", `${entry.level}`);
+    }
+
+    if (/paladin/i.test(className) && featureNames.has("lay on hands")) {
+      pushResource("Lay on Hands", `${entry.level * 5}`);
+    }
+
+    if (/cleric|paladin/i.test(className) && featureNames.has("channel divinity")) {
+      pushResource("Channel Divinity", getChannelDivinityUses(entry.level));
+    }
+
+    if (/fighter/i.test(className) && featureNames.has("action surge")) {
+      pushResource("Action Surge", "1 use");
+    }
+
+    if (/fighter/i.test(className) && featureNames.has("second wind")) {
+      pushResource("Second Wind", "1 use");
+    }
+
+    if (/barbarian/i.test(className) && featureNames.has("rage")) {
+      pushResource("Rage", getBarbarianRageUses(entry.level));
+    }
+
+    if (/wizard/i.test(className) && featureNames.has("arcane recovery")) {
+      pushResource("Arcane Recovery", "1 use");
+    }
+  }
+
+  return resources.sort((left, right) => {
+    const priorityDelta = getClassResourcePriority(left.label) - getClassResourcePriority(right.label);
+    if (priorityDelta !== 0) {
+      return priorityDelta;
+    }
+    return left.label.localeCompare(right.label);
+  });
+}
+
 function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, draft: CharacterDraft) {
   const labels = draft.classEntries.map((entry, index) => classRecordsByEntry[index]?.class.name || entry.classId).filter(Boolean);
   return labels.join(" / ");
@@ -361,7 +687,7 @@ function getClassLabel(classRecordsByEntry: Array<BuiltInClassRecord | null>, dr
 
 function buildAbilityRows(args: BuilderPdfSourceArgs) {
   const proficiencyBonus = getProficiencyBonus(args.draft.level);
-  const proficiencyLabels = new Set(args.selectedProficiencyNames.map(normalizeLookupLabel));
+  const proficiencyLabels = new Set(getSelectedProficiencyLabels(args));
 
   return Object.entries(ABILITY_LABELS).map(([abilityKey, label]) => {
     const ability = abilityKey as AbilityKey;
@@ -408,8 +734,7 @@ function buildSkillRows(args: BuilderPdfSourceArgs) {
 }
 
 function buildAttackRows(args: BuilderPdfSourceArgs) {
-  return uniqueById(
-    args.draft.inventoryItems
+  const weaponRows = args.draft.inventoryItems
       .map(normalizeInventoryWeaponItem)
       .filter((item): item is CharacterInventoryItem => Boolean(item.equipped && item.category === "weapon"))
       .map((item) => {
@@ -425,8 +750,84 @@ function buildAttackRows(args: BuilderPdfSourceArgs) {
           type,
           properties: properties || undefined,
         };
-      }),
+      });
+
+  const featureActionRows = uniqueById(
+    args.selectedElements.flatMap((element) => {
+      const rule = FEATURE_ACTION_RULES.find((entry) => entry.match.test(element.name));
+      if (!rule) {
+        return [];
+      }
+
+      return [
+        {
+          id: `feature-action-${element.id}`,
+          name: element.name,
+          hit: rule.timing,
+          damage: rule.cost || "At will",
+          type: "Feature",
+          properties: rule.summary,
+        },
+      ];
+    }),
   );
+
+  const spellsById = new Map(args.spells.map((spell) => [spell.id, spell]));
+  const selectedSpellIds = uniqueStrings([
+    ...args.selectedSpellIds,
+    ...args.manualGrantsByKind.spell.map((grant) => grant.refId).filter((id): id is string => Boolean(id)),
+  ]);
+  const cantripRows = uniqueById(
+    selectedSpellIds
+      .map((id) => spellsById.get(id))
+      .filter((spell): spell is BuiltInElement => {
+        if (!spell) {
+          return false;
+        }
+        return spell.type === "Spell" && getSpellLevel(spell) === 0;
+      })
+      .slice(0, 2)
+      .map((spell) => ({
+        id: `spell-action-${spell.id}`,
+        name: spell.name,
+        hit: getSpellCastingTime(spell) || "Action",
+        damage: "Cantrip",
+        type: "Spell",
+        properties: getSpellRange(spell) || undefined,
+      })),
+  );
+
+  const leveledSpellRows = uniqueById(
+    selectedSpellIds
+      .map((id) => spellsById.get(id))
+      .filter((spell): spell is BuiltInElement => {
+        if (!spell) {
+          return false;
+        }
+        return spell.type === "Spell" && getSpellLevel(spell) > 0;
+      })
+      .slice(0, 1)
+      .map((spell) => ({
+        id: `spell-action-level-${spell.id}`,
+        name: spell.name,
+        hit: getSpellCastingTime(spell) || "Action",
+        damage: `L${getSpellLevel(spell)}`,
+        type: "Spell",
+        properties: getSpellRange(spell) || undefined,
+      })),
+  );
+
+  const prioritizedRows = [
+    ...weaponRows.slice(0, 2),
+    ...featureActionRows.slice(0, 2),
+    ...cantripRows.slice(0, 1),
+    ...leveledSpellRows,
+    ...weaponRows.slice(2),
+    ...cantripRows.slice(1),
+    ...featureActionRows.slice(2),
+  ];
+
+  return uniqueById(prioritizedRows).slice(0, 5);
 }
 
 function buildProficiencyGroups(args: BuilderPdfSourceArgs) {
@@ -504,6 +905,7 @@ function buildStatCards(args: BuilderPdfSourceArgs) {
   const spellcastingBonus = spellcastingAbility ? proficiencyBonus + spellcastingScore : 0;
   const spellSaveDc = spellcastingAbility ? 8 + proficiencyBonus + spellcastingScore : 0;
   const kiSaveDc = getKiSaveDc(args, proficiencyBonus);
+  const classResources = getClassResources(args);
 
   return [
     { id: "proficiency-bonus", label: "Proficiency Bonus", value: `+${proficiencyBonus}` },
@@ -517,20 +919,79 @@ function buildStatCards(args: BuilderPdfSourceArgs) {
     { id: "ac", label: "AC", value: `${armorClass.value}` },
     { id: "speed", label: "Speed", value: `${speed.total} ft.` },
     { id: "hit-dice", label: "Hit Dice", value: deriveHitDiceSummary({ draft: args.draft, classRecordsByEntry: args.classRecordsByEntry }) },
+    ...classResources.map((resource, index) => ({
+      id: `class-resource-${index + 1}`,
+      label: "Class Resource",
+      value: resource.value,
+      meta: resource.label,
+    })),
   ];
 }
 
 function buildFeatureCards(args: BuilderPdfSourceArgs) {
+  const raceGrantedTraitIds = new Set(args.selectedRace ? collectGrantedIds(args.selectedRace.race.rules, "Racial Trait") : []);
+  const subraceGrantedTraitIds = new Set(args.selectedSubrace ? collectGrantedIds(args.selectedSubrace.rules, "Racial Trait") : []);
+  const racialTraits = args.selectedRacialTraitElements.filter((element) => raceGrantedTraitIds.has(element.id));
+  const subracialTraits = args.selectedRacialTraitElements.filter((element) => subraceGrantedTraitIds.has(element.id));
+  const unscopedTraits = args.selectedRacialTraitElements.filter(
+    (element) => !raceGrantedTraitIds.has(element.id) && !subraceGrantedTraitIds.has(element.id),
+  );
+  const classFeatures = args.selectedClassFeatureElements.filter((element) => !/archetype/i.test(element.type) && !isLowSignalFeatureElement(element));
+  const subclassFeatures = args.selectedClassFeatureElements.filter((element) => /archetype/i.test(element.type) && !isLowSignalFeatureElement(element));
+  const backgroundFeatures = args.selectedBackgroundFeatureElements.filter((element) => !isLowSignalFeatureElement(element));
+  const featFeatures = args.selectedFeatElements.filter((element) => !isLowSignalFeatureElement(element));
+  const manualFeatures = args.selectedManualFeatureElements.filter((element) => !isLowSignalFeatureElement(element));
+  const progressionFeatures = args.selectedProgressionElements.filter((element) => !isLowSignalFeatureElement(element));
+
   const cards = [
-    ...args.selectedRacialTraitElements.map((element) => toPdfCardFromElement(element, { kind: "trait" })),
-    ...args.selectedClassFeatureElements.map((element) => toPdfCardFromElement(element, { kind: "feature" })),
-    ...args.selectedBackgroundFeatureElements.map((element) => toPdfCardFromElement(element, { kind: "feature" })),
-    ...args.selectedFeatElements.map((element) => toPdfCardFromElement(element, { kind: "feature" })),
-    ...args.selectedManualFeatureElements.map((element) => toPdfCardFromElement(element, { kind: "feature" })),
-    ...args.selectedProgressionElements.map((element) => toPdfCardFromElement(element, { kind: "feature" })),
-    ...args.manualGrantsByKind.feature.map((grant) => toPdfCardFromGrant(grant)),
-    ...args.manualGrantsByKind.feat.map((grant) => toPdfCardFromGrant(grant)),
-    ...args.manualGrantsByKind.asi.map((grant) => toPdfCardFromGrant(grant)),
+    ...racialTraits.map((element) =>
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "race"),
+    ),
+    ...subracialTraits.map((element) =>
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "subrace"),
+    ),
+    ...unscopedTraits.map((element) =>
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "race"),
+    ),
+    ...classFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "class",
+      ),
+    ),
+    ...subclassFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "subclass",
+      ),
+    ),
+    ...backgroundFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "additional",
+      ),
+    ),
+    ...featFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "feat",
+      ),
+    ),
+    ...manualFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "additional",
+      ),
+    ),
+    ...progressionFeatures.map((element) =>
+      withPdfGroupTag(
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        "other",
+      ),
+    ),
+    ...args.manualGrantsByKind.feature.map((grant) => withPdfGroupTag(toPdfCardFromGrant(grant), "additional")),
+    ...args.manualGrantsByKind.feat.map((grant) => withPdfGroupTag(toPdfCardFromGrant(grant), "feat")),
+    ...args.manualGrantsByKind.asi.map((grant) => withPdfGroupTag(toPdfCardFromGrant(grant), "other")),
   ];
 
   return uniqueById(cards);
@@ -583,6 +1044,7 @@ export function buildPdfCharacterFromBuilder(args: BuilderPdfSourceArgs): Resolv
       raceLabel: args.selectedRace?.race.name || "",
       subraceLabel: args.selectedSubrace?.name || "",
       classLabel: getClassLabel(args.classRecordsByEntry, args.draft),
+      subclassLabel: getSubclassLabel(args.classRecordsByEntry, args.draft),
       backgroundLabel: args.selectedBackground?.background.name || "",
     },
     stats: buildStatCards(args),
