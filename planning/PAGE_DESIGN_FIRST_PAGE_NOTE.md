@@ -1263,3 +1263,26 @@ This note is satisfied when page 1 does all of the following:
 - broader `R3` / `R4` cleanup
 - `R5` attack surface redesign
 - confirm the inline sign-in CTA behavior after deploy in the browser
+
+## Reset Pass R1 + R2g
+
+### Completed
+
+- the PDF runtime manifest now uses separate SVG keys for the two proficiency-box variants
+- the proficiencies row now targets `_Proficiency Box 0.svg`
+- the spellcasting / resource strip now targets `_Proficiency box 1.svg`
+- the header identity values were switched to left-aligned fit text so the values stop drifting across slots
+- the `EXP` overlay text was removed so the template label remains the single source of truth
+- the spellcasting resource labels now reserve a smaller `RES` label treatment instead of reusing the old tools wording
+
+### Partial
+
+- header spacing is better, but the exported field widths still need live QA on long race/subclass combinations
+- the new spellcasting shell is cleaner, but the exact internal label/value balance still needs export verification
+- the `RES` treatment is now implemented, but the best final label cadence may still need iteration
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- the final visual balance between the top header and the top-right spell/resource strip
