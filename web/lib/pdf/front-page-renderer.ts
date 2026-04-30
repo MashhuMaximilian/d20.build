@@ -41,7 +41,7 @@ const TOP_STATS: StatBoxSpec[] = [
   { key: "initiative", box: { x: 62.52, y: 4.43, width: 44.52, height: 42 } },
   { key: "attacks / action", box: { x: 113.05, y: 4.43, width: 44.52, height: 42 } },
   { key: "inspiration", fallback: "", box: { x: 163.57, y: 4.43, width: 44.52, height: 42 } },
-  { key: "exhaustion", fallback: "0", box: { x: 214.09, y: 4.43, width: 44.52, height: 42 } },
+  { key: "exhaustion", fallback: "", box: { x: 214.09, y: 4.43, width: 44.52, height: 42 } },
   { key: "hp", mode: "wide", box: { x: 264.61, y: 4.43, width: 36, height: 42 } },
   { key: "current hp", fallback: "", mode: "wide", box: { x: 301.61, y: 4.43, width: 62, height: 42 } },
   { key: "temp hp", fallback: "", mode: "small", box: { x: 363.61, y: 4.43, width: 35, height: 42 } },
@@ -274,25 +274,25 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
       label: "RACE",
       value: raceLine,
       labelRect: { x: 250, y: 24.0, width: 54, height: 3.2 },
-      valueRect: { x: 24, y: 29.8, width: 154, height: 8.4 },
+      valueRect: { x: 24, y: 31.0, width: 154, height: 8.4 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
       labelRect: { x: 406, y: 24.0, width: 92, height: 3.2 },
-      valueRect: { x: 176, y: 29.8, width: 246, height: 8.4 },
+      valueRect: { x: 176, y: 31.0, width: 246, height: 8.4 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
       labelRect: { x: 502, y: 24.0, width: 52, height: 3.2 },
-      valueRect: { x: 488, y: 29.8, width: 76, height: 8.4 },
+      valueRect: { x: 488, y: 31.0, width: 76, height: 8.4 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
       labelRect: { x: 250, y: 47.0, width: 74, height: 3.2 },
-      valueRect: { x: 25, y: 52.8, width: 132, height: 8.2 },
+      valueRect: { x: 25, y: 54.0, width: 132, height: 8.2 },
     },
     {
       label: "EXP",
@@ -314,11 +314,10 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     if (!field.value) {
       return;
     }
-    drawFittedText(ctx, cleanText(field.value), field.valueRect, {
+    drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: field.label === "CLASS & LEVEL" ? 4.6 : 5.0,
+      maxSize: field.label === "CLASS & LEVEL" ? 4.0 : 4.4,
       minSize: field.label === "CLASS & LEVEL" ? 3.0 : 3.2,
-      align: "left",
       color: "#000000",
     });
   });
@@ -384,10 +383,10 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
         minSize: 6,
         color: "#000000",
       });
-      drawCenteredTextInRect(ctx, cleanText(resource.label, "RES").toUpperCase(), rectFromFractions(rightBox, { x: 0.10, y: 0.68, width: 0.80, height: 0.14 }), {
+      drawCenteredTextInRect(ctx, cleanText(resource.label, "Class Resource"), rectFromFractions(rightBox, { x: 0.10, y: 0.62, width: 0.80, height: 0.14 }), {
         font: "Helvetica-Bold",
-        maxSize: 3.7,
-        minSize: 2.8,
+        maxSize: 4.0,
+        minSize: 3.0,
         color: "#000000",
       });
     }
@@ -411,9 +410,9 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
         minSize: 6,
         color: "#000000",
       });
-      drawCenteredTextInRect(ctx, cleanText(resource.label, "RES").toUpperCase(), rectFromFractions(resourceBox, { x: 0.08, y: 0.68, width: 0.84, height: 0.14 }), {
+      drawCenteredTextInRect(ctx, cleanText(resource.label, "Class Resource"), rectFromFractions(resourceBox, { x: 0.08, y: 0.62, width: 0.84, height: 0.14 }), {
         font: "Helvetica-Bold",
-        maxSize: 3.7,
+        maxSize: 4.0,
         minSize: 2.6,
         color: "#000000",
       });
@@ -451,8 +450,8 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   maskRect(ctx, rectFromFractions(spellBox, { x: 0.20, y: 0.86, width: 0.60, height: 0.11 }));
   drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.16, y: 0.82, width: 0.68, height: 0.10 }), {
     font: "Helvetica-Bold",
-    maxSize: 3.7,
-    minSize: 3.0,
+    maxSize: 4.0,
+    minSize: 3.2,
     color: "#000000",
   });
 
@@ -466,9 +465,9 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
       minSize: 5,
       color: "#000000",
     });
-    drawCenteredTextInRect(ctx, cleanText(primaryResource.label, "RES").toUpperCase(), rectFromFractions(rightBox, { x: 0.08, y: 0.68, width: 0.84, height: 0.14 }), {
+    drawCenteredTextInRect(ctx, cleanText(primaryResource.label, "Class Resource"), rectFromFractions(rightBox, { x: 0.08, y: 0.62, width: 0.84, height: 0.14 }), {
       font: "Helvetica-Bold",
-      maxSize: 3.7,
+      maxSize: 4.0,
       minSize: 2.6,
       color: "#000000",
     });
@@ -782,13 +781,7 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
 }
 
 function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
-  maskRect(ctx, { x: FRONT_PAGE_REGIONS.proficiencies.x, y: FRONT_PAGE_REGIONS.proficiencies.y + 1, width: FRONT_PAGE_REGIONS.proficiencies.width, height: FRONT_PAGE_REGIONS.proficiencies.height - 1 });
-  drawCenteredTextInRect(ctx, "PROFICIENCIES AND LANGUAGES", { x: 114, y: 338, width: 170, height: 6 }, {
-    font: "Helvetica-Bold",
-    maxSize: 3.0,
-    minSize: 2.4,
-    color: "#9a9a9a",
-  });
+  maskRect(ctx, { x: FRONT_PAGE_REGIONS.proficiencies.x, y: FRONT_PAGE_REGIONS.proficiencies.y - 2, width: FRONT_PAGE_REGIONS.proficiencies.width, height: FRONT_PAGE_REGIONS.proficiencies.height + 4 });
   const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.proficiencies, 8, 0), 5, 13);
   const groups = character.frontPage.proficiencyGroups;
   const values = [groups.weapons, groups.armor, groups.tools, groups.vehicles, groups.languages];
@@ -797,6 +790,15 @@ function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, c
     if (assets.proficiencyBox0) {
       drawSvg(ctx, assets.proficiencyBox0, cells[index]);
     }
+    const tabMask = rectFromFractions(cells[index], { x: 0.24, y: 0.80, width: 0.52, height: 0.11 });
+    maskRect(ctx, tabMask);
+    const labels = ["Weapons", "Armor", "Tools", "Vehicles", "Languages"];
+    drawCenteredTextInRect(ctx, labels[index], rectFromFractions(cells[index], { x: 0.10, y: 0.80, width: 0.80, height: 0.11 }), {
+      font: "Helvetica",
+      maxSize: 3.4,
+      minSize: 2.4,
+      color: "#333333",
+    });
     if (!items.length) {
       return;
     }
