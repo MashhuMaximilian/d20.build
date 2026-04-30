@@ -1173,3 +1173,23 @@ This note is satisfied when page 1 does all of the following:
 - broader `R3` / `R4` cleanup
 - `R5` attack surface redesign
 - sign-in email path still exists only in the full auth card, not the inline header CTA
+
+## Reset Pass R1 + R2e
+
+### Completed
+
+- header values were tightened again to reduce crowding in the top identity strip
+- class / level value sizing is smaller now to give the `RACE` and `LINEAGE` slots more room
+- the spellcasting block now masks a wider tab region before redrawing
+- the spellcasting label is placed lower and bolder to replace the old tab text more directly
+
+### Partial
+
+- header still needs export QA for very long lineage / subclass combinations
+- spellcasting still needs a real visual pass against multiple caster / martial / resource-only character types
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- confirm the inline sign-in CTA behavior after deploy in the browser
