@@ -261,43 +261,49 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
     color: "#000000",
   });
 
-  const classLevel = `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`;
+  const classLevel = [
+    character.level ? `Lvl ${character.level}` : "",
+    character.subclassLabel,
+    character.classLabel || "Character",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const headerFields = [
     {
       label: "RACE",
       value: character.raceLabel,
-      labelRect: { x: 250, y: 23.5, width: 52, height: 4.8 },
-      valueRect: { x: 246, y: 29, width: 62, height: 9 },
+      labelRect: { x: 250, y: 22.6, width: 54, height: 4.2 },
+      valueRect: { x: 246, y: 28.4, width: 62, height: 9 },
     },
     {
       label: "LINEAGE",
       value: character.subraceLabel,
-      labelRect: { x: 315, y: 23.5, width: 82, height: 4.8 },
-      valueRect: { x: 311, y: 29, width: 90, height: 9 },
+      labelRect: { x: 315, y: 22.6, width: 82, height: 4.2 },
+      valueRect: { x: 311, y: 28.4, width: 90, height: 9 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
-      labelRect: { x: 407, y: 23.5, width: 84, height: 4.8 },
-      valueRect: { x: 403, y: 29, width: 96, height: 9 },
+      labelRect: { x: 406, y: 22.6, width: 92, height: 4.2 },
+      valueRect: { x: 401, y: 28.4, width: 106, height: 9 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
-      labelRect: { x: 503, y: 23.5, width: 48, height: 4.8 },
-      valueRect: { x: 499, y: 29, width: 56, height: 9 },
+      labelRect: { x: 502, y: 22.6, width: 52, height: 4.2 },
+      valueRect: { x: 498, y: 28.4, width: 58, height: 9 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
-      labelRect: { x: 250, y: 45.5, width: 72, height: 4.8 },
-      valueRect: { x: 246, y: 51, width: 82, height: 9 },
+      labelRect: { x: 250, y: 44.7, width: 74, height: 4.2 },
+      valueRect: { x: 246, y: 50.2, width: 84, height: 9 },
     },
     {
-      label: "SUBCLASS",
-      value: character.subclassLabel,
-      labelRect: { x: 350, y: 45.5, width: 72, height: 4.8 },
-      valueRect: { x: 346, y: 51, width: 150, height: 9 },
+      label: "EXP",
+      value: "",
+      labelRect: { x: 350, y: 44.7, width: 36, height: 4.2 },
+      valueRect: { x: 346, y: 50.2, width: 64, height: 9 },
     },
   ];
 
@@ -312,9 +318,10 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
     if (!field.value) {
       return;
     }
-    drawFittedText(ctx, cleanText(field.value), field.valueRect, {
-      maxSize: 6.1,
-      minSize: 4.5,
+    drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
+      font: "Helvetica",
+      maxSize: 5.9,
+      minSize: 4.2,
       color: "#000000",
     });
   });
@@ -349,14 +356,14 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   const hasClassResource = classResources.length > 0;
 
   if (!hasSpellcasting && !hasKiDc && !hasClassResource) {
-    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
     return;
   }
 
   if (!hasSpellcasting && hasKiDc) {
-    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
-    const leftBox = { x: hasClassResource ? 405 : 431, y: 145, width: hasClassResource ? 82 : 116, height: 44 };
-    drawSvg(ctx, assets.generalContainer, leftBox);
+    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
+    const leftBox = { x: hasClassResource ? 405 : 431, y: 143, width: hasClassResource ? 82 : 116, height: 42 };
+    drawSvg(ctx, assets.proficiencyBox, leftBox);
     drawCenteredTextInRect(ctx, kiSaveDc, rectFromFractions(leftBox, { x: 0.14, y: 0.17, width: 0.72, height: 0.38 }), {
       font: "Helvetica-Bold",
       maxSize: 14.5,
@@ -372,7 +379,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
 
     if (hasClassResource) {
       const resource = classResources[0];
-      const rightBox = { x: 495, y: 145, width: 82, height: 44 };
+      const rightBox = { x: 495, y: 143, width: 82, height: 42 };
       drawSvg(ctx, assets.generalContainer, rightBox);
       drawCenteredTextInRect(ctx, resource.value, rectFromFractions(rightBox, { x: 0.12, y: 0.18, width: 0.76, height: 0.34 }), {
         font: "Helvetica-Bold",
@@ -391,14 +398,14 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   }
 
   if (!hasSpellcasting && hasClassResource) {
-    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
     const resourceBoxes =
       classResources.length > 1
         ? [
-            { x: 405, y: 145, width: 82, height: 44 },
-            { x: 495, y: 145, width: 82, height: 44 },
+            { x: 405, y: 143, width: 82, height: 42 },
+            { x: 495, y: 143, width: 82, height: 42 },
           ]
-        : [{ x: 431, y: 145, width: 116, height: 44 }];
+        : [{ x: 431, y: 143, width: 116, height: 42 }];
     classResources.slice(0, resourceBoxes.length).forEach((resource, index) => {
       const resourceBox = resourceBoxes[index];
       drawSvg(ctx, assets.generalContainer, resourceBox);
@@ -422,12 +429,12 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     return;
   }
 
-  maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+  maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
 
-  const spellBox = { x: 398, y: 145, width: hasClassResource ? 120 : 178, height: 44 };
-  drawSvg(ctx, assets.generalContainer, spellBox);
+  const spellBox = { x: 398, y: 143, width: hasClassResource ? 120 : 178, height: 42 };
+  drawSvg(ctx, assets.proficiencyBox, spellBox);
   const thirds = splitColumns(insetRect(spellBox, 10, 6), 3, 8);
-  const labels = ["BONUS", "ABILITY SPELLCASTING", "SAVE DC"];
+  const labels = ["BONUS", "SAVE DC", "ABILITY"];
 
   stats.forEach((value, index) => {
     if (!value) {
@@ -449,7 +456,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
 
   if (hasClassResource) {
     const primaryResource = classResources[0];
-    const rightBox = { x: 523, y: 145, width: 54, height: 44 };
+    const rightBox = { x: 523, y: 143, width: 54, height: 42 };
     drawSvg(ctx, assets.generalContainer, rightBox);
     drawCenteredTextInRect(ctx, primaryResource.value, rectFromFractions(rightBox, { x: 0.08, y: 0.18, width: 0.84, height: 0.34 }), {
       font: "Helvetica-Bold",
