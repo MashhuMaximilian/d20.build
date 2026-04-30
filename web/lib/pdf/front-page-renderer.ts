@@ -272,38 +272,38 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     {
       label: "RACE",
       value: character.raceLabel,
-      labelRect: { x: 250, y: 22.6, width: 54, height: 4.2 },
-      valueRect: { x: 246, y: 28.4, width: 62, height: 9 },
+      labelRect: { x: 250, y: 23.2, width: 54, height: 3.8 },
+      valueRect: { x: 246, y: 28.8, width: 62, height: 8.4 },
     },
     {
       label: "LINEAGE",
       value: character.subraceLabel,
-      labelRect: { x: 315, y: 22.6, width: 82, height: 4.2 },
-      valueRect: { x: 311, y: 28.4, width: 90, height: 9 },
+      labelRect: { x: 315, y: 23.2, width: 82, height: 3.8 },
+      valueRect: { x: 311, y: 28.8, width: 90, height: 8.4 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
-      labelRect: { x: 406, y: 22.6, width: 92, height: 4.2 },
-      valueRect: { x: 401, y: 28.4, width: 106, height: 9 },
+      labelRect: { x: 406, y: 23.2, width: 92, height: 3.8 },
+      valueRect: { x: 401, y: 28.8, width: 106, height: 8.4 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
-      labelRect: { x: 502, y: 22.6, width: 52, height: 4.2 },
-      valueRect: { x: 498, y: 28.4, width: 58, height: 9 },
+      labelRect: { x: 502, y: 23.2, width: 52, height: 3.8 },
+      valueRect: { x: 498, y: 28.8, width: 58, height: 8.4 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
-      labelRect: { x: 250, y: 44.7, width: 74, height: 4.2 },
-      valueRect: { x: 246, y: 50.2, width: 84, height: 9 },
+      labelRect: { x: 250, y: 45.0, width: 74, height: 3.8 },
+      valueRect: { x: 246, y: 50.6, width: 84, height: 8.4 },
     },
     {
       label: "EXP",
       value: "",
-      labelRect: { x: 350, y: 44.7, width: 36, height: 4.2 },
-      valueRect: { x: 346, y: 50.2, width: 64, height: 9 },
+      labelRect: { x: 350, y: 45.0, width: 36, height: 3.8 },
+      valueRect: { x: 346, y: 50.6, width: 64, height: 8.4 },
     },
   ];
 
@@ -311,14 +311,14 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     if (drawShell) {
       drawCenteredTextInRect(ctx, field.label, field.labelRect, {
         font: "Helvetica-Bold",
-        maxSize: 3.7,
+        maxSize: 3.1,
         minSize: 3,
         color: "#9a9a9a",
       });
     } else if (field.label === "EXP") {
       drawCenteredTextInRect(ctx, field.label, field.labelRect, {
         font: "Helvetica-Bold",
-        maxSize: 3.7,
+        maxSize: 3.1,
         minSize: 3,
         color: "#9a9a9a",
       });
@@ -328,7 +328,7 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     }
     drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: field.label === "CLASS & LEVEL" ? 5.3 : 5.7,
+      maxSize: field.label === "CLASS & LEVEL" ? 4.8 : 5.2,
       minSize: 4,
       color: "#000000",
     });
@@ -364,12 +364,12 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   const hasClassResource = classResources.length > 0;
 
   if (!hasSpellcasting && !hasKiDc && !hasClassResource) {
-    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
     return;
   }
 
   if (!hasSpellcasting && hasKiDc) {
-    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
     const leftBox = { x: hasClassResource ? 405 : 431, y: 143, width: hasClassResource ? 82 : 116, height: 42 };
     drawSvg(ctx, assets.proficiencyBox, leftBox);
     drawCenteredTextInRect(ctx, kiSaveDc, rectFromFractions(leftBox, { x: 0.14, y: 0.17, width: 0.72, height: 0.38 }), {
@@ -406,7 +406,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   }
 
   if (!hasSpellcasting && hasClassResource) {
-    maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
     const resourceBoxes =
       classResources.length > 1
         ? [
@@ -437,10 +437,11 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     return;
   }
 
-  maskRect(ctx, { x: 393, y: 139, width: 194, height: 52 });
+  maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
 
   const spellBox = { x: 398, y: 143, width: hasClassResource ? 120 : 178, height: 42 };
   drawSvg(ctx, assets.proficiencyBox, spellBox);
+  maskRect(ctx, rectFromFractions(spellBox, { x: 0.18, y: 0.68, width: 0.64, height: 0.20 }));
   const thirds = splitColumns(insetRect(spellBox, 10, 6), 3, 8);
   const labels = ["BONUS", "SAVE DC", "ABILITY"];
 
@@ -462,6 +463,7 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     });
   });
 
+  maskRect(ctx, rectFromFractions(spellBox, { x: 0.24, y: 0.73, width: 0.52, height: 0.16 }));
   drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.18, y: 0.70, width: 0.64, height: 0.16 }), {
     font: "Helvetica",
     maxSize: 4.3,
@@ -494,14 +496,17 @@ function cardHasGroup(card: PdfPageCard, group: string) {
 
 function extractRailNotes(cards: PdfPageCard[]) {
   const lines: RailNote[] = [];
+  const seen = new Set<string>();
   const pushLine = (title: string, value: string) => {
     const normalized = value.trim();
     if (!normalized) {
       return;
     }
-    if (lines.some((line) => line.title === title && line.value === normalized)) {
+    const key = `${title.toLowerCase()}::${normalized.toLowerCase()}`;
+    if (seen.has(key)) {
       return;
     }
+    seen.add(key);
     lines.push({ title, value: normalized });
   };
 

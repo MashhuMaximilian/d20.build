@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { getPublicAppUrl } from "@/lib/env";
@@ -123,9 +122,14 @@ export function AuthControls({
           <span className="auth-card__label">Account</span>
           <strong>Anonymous</strong>
         </div>
-        <Link className="button button--compact" href="/#sign-in">
-          Sign in
-        </Link>
+        <button
+          className="button button--compact"
+          type="button"
+          disabled={isSubmitting}
+          onClick={handleGoogleSignIn}
+        >
+          {isSubmitting ? "Redirecting..." : "Sign in"}
+        </button>
       </div>
     );
   }

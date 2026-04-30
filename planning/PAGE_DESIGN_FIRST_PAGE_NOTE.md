@@ -1152,3 +1152,24 @@ This note is satisfied when page 1 does all of the following:
   - top-right strip
   - right-column racial / subracial area
   - lower grouped feature area
+
+## Reset Pass R1 + R2d
+
+### Completed
+
+- the anonymous inline sign-in CTA now calls Google OAuth instead of linking to `/#sign-in`
+- the spellcasting shell masks the old bottom-tab label more aggressively before redrawing
+- the passive rail dedupe now normalizes `title + value` case-insensitively
+- header label/value sizing was tightened again to reduce crowding
+
+### Partial
+
+- header fields are cleaner, but the long class/subclass line still needs export QA on more characters
+- spellcasting shell is now less polluted, but still needs more visual checking on non-caster and martial/resource-only cases
+- passive rail dedupe is stronger, but the underlying source extraction still needs a more deterministic pass
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- sign-in email path still exists only in the full auth card, not the inline header CTA
