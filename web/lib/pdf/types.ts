@@ -136,6 +136,7 @@ export type PdfResolveSource = {
     raceLabel?: string;
     subraceLabel?: string;
     classLabel?: string;
+    subclassLabel?: string;
     backgroundLabel?: string;
   };
 };
@@ -148,6 +149,7 @@ export type ResolvedPdfCharacter = {
   raceLabel: string;
   subraceLabel: string;
   classLabel: string;
+  subclassLabel: string;
   backgroundLabel: string;
   stats: PdfStatBlock[];
   frontPage: PdfFrontPageComposition;

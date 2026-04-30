@@ -31,6 +31,11 @@ type FeatureSummary = {
   body: string;
 };
 
+type RailNote = {
+  title: string;
+  value: string;
+};
+
 const TOP_STATS: StatBoxSpec[] = [
   { key: "proficiency bonus", box: { x: 12, y: 4.43, width: 44.52, height: 42 } },
   { key: "initiative", box: { x: 62.52, y: 4.43, width: 44.52, height: 42 } },
@@ -153,6 +158,15 @@ function statValue(character: ResolvedPdfCharacter, key: string, fallback = "") 
   return cleanText(stat?.value, fallback);
 }
 
+function findStat(character: ResolvedPdfCharacter, key: string) {
+  return character.frontPage.stats.find((candidate) => normalizeKey(candidate.label) === key);
+}
+
+function findStatsByIdPrefix(character: ResolvedPdfCharacter, prefix: string) {
+  const normalizedPrefix = normalizeKey(prefix);
+  return character.frontPage.stats.filter((candidate) => normalizeKey(candidate.id).startsWith(normalizedPrefix));
+}
+
 function componentRect(region: PdfRect, viewBox: { width: number; height: number }, rect: PdfRect): PdfRect {
   const scaleX = region.width / viewBox.width;
   const scaleY = region.height / viewBox.height;
@@ -249,10 +263,13 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
 
   const race = [character.raceLabel, character.subraceLabel].filter(Boolean).join(" / ");
   const classLabel = `${character.classLabel || "Character"}${character.level ? ` ${character.level}` : ""}`;
+  const subclassLabel = character.subclassLabel;
   const meta = [
-    { text: race, rect: { x: 246, y: 29, width: 92, height: 9 } },
-    { text: classLabel, rect: { x: 371, y: 29, width: 130, height: 9 } },
-    { text: character.backgroundLabel, rect: { x: 246, y: 51, width: 92, height: 9 } },
+    { text: race, rect: { x: 246, y: 29, width: 88, height: 9 } },
+    { text: classLabel, rect: { x: 343, y: 29, width: 86, height: 9 } },
+    { text: character.backgroundLabel, rect: { x: 246, y: 51, width: 88, height: 9 } },
+    { text: character.subraceLabel, rect: { x: 343, y: 51, width: 70, height: 9 } },
+    { text: subclassLabel, rect: { x: 425, y: 51, width: 78, height: 9 } },
     { text: character.playerName, rect: { x: 508, y: 51, width: 48, height: 9 } },
   ];
 
@@ -286,42 +303,238 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     statValue(character, "spellcasting ability"),
   ];
   const kiSaveDc = statValue(character, "ki save dc");
+  const classResources = findStatsByIdPrefix(character, "class-resource-")
+    .map((resource) => ({
+      label: cleanText(resource.meta, "Class Resource"),
+      value: cleanText(resource.value, ""),
+    }))
+    .filter((resource) => resource.value);
+  const hasSpellcasting = stats.some(Boolean);
+  const hasKiDc = Boolean(kiSaveDc);
+  const hasClassResource = classResources.length > 0;
 
-  if (!stats.some(Boolean) && !kiSaveDc) {
+  if (!hasSpellcasting && !hasKiDc && !hasClassResource) {
     maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
     return;
   }
 
-  if (!stats.some(Boolean) && kiSaveDc) {
+  if (!hasSpellcasting && hasKiDc) {
     maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
-    const box = { x: 431, y: 145, width: 116, height: 44 };
-    drawSvg(ctx, assets.generalContainer, box);
-    drawCenteredTextInRect(ctx, kiSaveDc, rectFromFractions(box, { x: 0.14, y: 0.17, width: 0.72, height: 0.38 }), {
+    const leftBox = { x: hasClassResource ? 405 : 431, y: 145, width: hasClassResource ? 82 : 116, height: 44 };
+    drawSvg(ctx, assets.generalContainer, leftBox);
+    drawCenteredTextInRect(ctx, kiSaveDc, rectFromFractions(leftBox, { x: 0.14, y: 0.17, width: 0.72, height: 0.38 }), {
       font: "Helvetica-Bold",
       maxSize: 14.5,
       minSize: 6,
       color: "#000000",
     });
-    drawCenteredTextInRect(ctx, "KI SAVE DC", rectFromFractions(box, { x: 0.10, y: 0.70, width: 0.80, height: 0.16 }), {
+    drawCenteredTextInRect(ctx, "KI SAVE DC", rectFromFractions(leftBox, { x: 0.10, y: 0.70, width: 0.80, height: 0.16 }), {
       font: "Helvetica",
       maxSize: 5,
       minSize: 3.5,
       color: "#000000",
     });
+
+    if (hasClassResource) {
+      const resource = classResources[0];
+      const rightBox = { x: 495, y: 145, width: 82, height: 44 };
+      drawSvg(ctx, assets.generalContainer, rightBox);
+      drawCenteredTextInRect(ctx, resource.value, rectFromFractions(rightBox, { x: 0.12, y: 0.18, width: 0.76, height: 0.34 }), {
+        font: "Helvetica-Bold",
+        maxSize: 13.4,
+        minSize: 6,
+        color: "#000000",
+      });
+      drawCenteredTextInRect(ctx, resource.label.toUpperCase(), rectFromFractions(rightBox, { x: 0.10, y: 0.67, width: 0.80, height: 0.20 }), {
+        font: "Helvetica",
+        maxSize: 4.8,
+        minSize: 3.1,
+        color: "#000000",
+      });
+    }
     return;
   }
+
+  if (!hasSpellcasting && hasClassResource) {
+    maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+    const resourceBoxes =
+      classResources.length > 1
+        ? [
+            { x: 405, y: 145, width: 82, height: 44 },
+            { x: 495, y: 145, width: 82, height: 44 },
+          ]
+        : [{ x: 431, y: 145, width: 116, height: 44 }];
+    classResources.slice(0, resourceBoxes.length).forEach((resource, index) => {
+      const resourceBox = resourceBoxes[index];
+      drawSvg(ctx, assets.generalContainer, resourceBox);
+      drawCenteredTextInRect(ctx, resource.value, rectFromFractions(resourceBox, { x: 0.10, y: 0.16, width: 0.80, height: 0.34 }), {
+        font: "Helvetica-Bold",
+        maxSize: resourceBox.width > 100 ? 13.8 : 12.2,
+        minSize: 6,
+        color: "#000000",
+      });
+      drawCenteredTextInRect(ctx, resource.label.toUpperCase(), rectFromFractions(resourceBox, { x: 0.08, y: 0.62, width: 0.84, height: 0.24 }), {
+        font: "Helvetica",
+        maxSize: resourceBox.width > 100 ? 4.8 : 3.9,
+        minSize: 2.8,
+        color: "#000000",
+      });
+    });
+    return;
+  }
+
+  if (!hasSpellcasting) {
+    return;
+  }
+
+  maskRect(ctx, { x: 393, y: 141, width: 194, height: 50 });
+
+  const spellBox = { x: 398, y: 145, width: hasClassResource ? 118 : 178, height: 44 };
+  drawSvg(ctx, assets.generalContainer, spellBox);
+  const thirds = splitColumns(insetRect(spellBox, 10, 6), 3, 8);
+  const labels = ["BONUS", "ABILITY SPELLCASTING", "SAVE DC"];
 
   stats.forEach((value, index) => {
     if (!value) {
       return;
     }
-    drawCenteredTextInRect(ctx, value, rectFromFractions(SPELLCASTING_BOXES[index], { x: 0.14, y: 0.18, width: 0.72, height: 0.34 }), {
+    drawCenteredTextInRect(ctx, value, rectFromFractions(thirds[index], { x: 0.05, y: 0.14, width: 0.90, height: 0.38 }), {
       font: "Helvetica-Bold",
-      maxSize: index === 2 ? 9.8 : 14.5,
+      maxSize: index === 1 ? 11 : 14.2,
       minSize: 6,
       color: "#000000",
     });
+    drawCenteredTextInRect(ctx, labels[index], rectFromFractions(thirds[index], { x: 0.02, y: 0.68, width: 0.96, height: 0.18 }), {
+      font: "Helvetica",
+      maxSize: index === 1 ? 4.1 : 4.8,
+      minSize: 2.8,
+      color: "#000000",
+    });
   });
+
+  if (hasClassResource) {
+    const primaryResource = classResources[0];
+    const secondaryResource = classResources[1];
+    const rightBox = { x: 523, y: 145, width: 54, height: 44 };
+    drawSvg(ctx, assets.generalContainer, rightBox);
+    drawCenteredTextInRect(ctx, primaryResource.value, rectFromFractions(rightBox, { x: 0.08, y: secondaryResource ? 0.08 : 0.18, width: 0.84, height: secondaryResource ? 0.22 : 0.34 }), {
+      font: "Helvetica-Bold",
+      maxSize: secondaryResource ? 9.8 : 12.6,
+      minSize: 5,
+      color: "#000000",
+    });
+    drawCenteredTextInRect(ctx, primaryResource.label.toUpperCase(), rectFromFractions(rightBox, { x: 0.06, y: secondaryResource ? 0.33 : 0.60, width: 0.88, height: secondaryResource ? 0.12 : 0.18 }), {
+      font: "Helvetica",
+      maxSize: secondaryResource ? 2.9 : 3.5,
+      minSize: 2.1,
+      color: "#000000",
+    });
+    if (secondaryResource) {
+      strokeRule(ctx, rightBox.x + 5, rightBox.y + 24, rightBox.width - 10);
+      drawCenteredTextInRect(ctx, secondaryResource.value, rectFromFractions(rightBox, { x: 0.08, y: 0.58, width: 0.84, height: 0.16 }), {
+        font: "Helvetica-Bold",
+        maxSize: 7.2,
+        minSize: 3.5,
+        color: "#000000",
+      });
+      drawCenteredTextInRect(ctx, secondaryResource.label.toUpperCase(), rectFromFractions(rightBox, { x: 0.06, y: 0.78, width: 0.88, height: 0.10 }), {
+        font: "Helvetica",
+        maxSize: 2.5,
+        minSize: 1.8,
+        color: "#000000",
+      });
+    }
+  }
+}
+
+function cardHasGroup(card: PdfPageCard, group: string) {
+  return card.tags.includes(`pdf-group:${group}`);
+}
+
+function extractRailNotes(cards: PdfPageCard[]) {
+  const lines: RailNote[] = [];
+  const pushLine = (title: string, value: string) => {
+    const normalized = value.trim();
+    if (!normalized) {
+      return;
+    }
+    if (lines.some((line) => line.title === title && line.value === normalized)) {
+      return;
+    }
+    lines.push({ title, value: normalized });
+  };
+
+  cards.forEach((card) => {
+    card.tags
+      .filter((tag) => tag.startsWith("pdf-note:"))
+      .forEach((tag) => {
+        const [, title, ...rest] = tag.split(":");
+        if (!title || !rest.length) {
+          return;
+        }
+        const value = rest.join(":").trim();
+        const titleMap: Record<string, string> = {
+          resistance: "Resistance",
+          vulnerability: "Vulnerability",
+          immunity: "Immunity",
+          condition: "Condition",
+          "condition-edge": "Condition Edge",
+          rest: "Rest",
+          sense: "Sense",
+          speed: "Speed",
+        };
+        pushLine(titleMap[title] ?? title, value);
+      });
+
+    const body = cleanText(card.detail || card.summary || "");
+    const source = `${card.title} ${body}`.toLowerCase();
+
+    if (/resistance to poison damage|poison resistance/.test(source)) {
+      pushLine("Resistance", "Poison");
+    }
+    const resistanceMatch = body.match(/resistance to ([a-z ,/-]+?) damage/i);
+    if (resistanceMatch) {
+      pushLine("Resistance", resistanceMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
+    }
+    const vulnerabilityMatch = body.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
+    if (vulnerabilityMatch) {
+      pushLine("Vulnerability", vulnerabilityMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
+    }
+    const immunityMatch = body.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
+    if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
+      pushLine("Immunity", immunityMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
+    }
+    if (/immune to disease/.test(source)) {
+      pushLine("Immunity", "Disease");
+    }
+    if (/don'?t need to sleep|sentry'?s rest/.test(source)) {
+      pushLine("Rest", "Sentry's Rest");
+    }
+    if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(source)) {
+      pushLine("Condition Edge", "Adv. vs Poisoned");
+    }
+    const darkvisionMatch = body.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
+    if (darkvisionMatch) {
+      pushLine("Sense", `Darkvision ${darkvisionMatch[1]} ft`);
+    }
+    const conditionImmunityMatch = body.match(/immune to the ([a-z-]+) condition/i);
+    if (conditionImmunityMatch) {
+      pushLine("Condition", `Immune ${conditionImmunityMatch[1]}`);
+    }
+    const speedMatch = body.match(/walking speed is increased by (\d+) feet?/i);
+    if (speedMatch) {
+      pushLine("Speed", `+${speedMatch[1]} ft`);
+    }
+    if (/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i.test(body)) {
+      const match = body.match(/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i);
+      const value = match?.[1] || match?.[2];
+      if (value) {
+        pushLine("Speed", `Fly ${value} ft`);
+      }
+    }
+  });
+
+  return lines.slice(0, 8);
 }
 
 function drawSkillMarker(ctx: PdfRenderContext, center: { x: number; y: number }, row: { proficient: boolean; expertise: boolean }) {
@@ -537,12 +750,15 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
   });
 }
 
-function renderProficiencies(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
+function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.proficiencies, 8, 0), 5, 13);
   const groups = character.frontPage.proficiencyGroups;
   const values = [groups.weapons, groups.armor, groups.tools, groups.vehicles, groups.languages];
 
   values.forEach((items, index) => {
+    if (assets.proficiencyBox) {
+      drawSvg(ctx, assets.proficiencyBox, cells[index]);
+    }
     if (!items.length) {
       return;
     }
@@ -567,11 +783,35 @@ function renderAttacks(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charact
     drawFittedText(ctx, cleanText(attack.name), { x: row.x, y: row.y, width: 105, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
     drawCenteredTextInRect(ctx, cleanText(attack.hit), { x: row.x + 110, y: row.y, width: 30, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
     drawFittedText(ctx, cleanText(attack.damage), { x: row.x + 148, y: row.y, width: 72, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
-    drawFittedText(ctx, cleanText(attack.properties), { x: row.x + 230, y: row.y, width: 130, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
+    drawFittedText(ctx, cleanText(attack.type), { x: row.x + 225, y: row.y, width: 40, height: row.height }, { maxSize: 5.2, minSize: 3.6, color: "#000000" });
+    drawFittedText(ctx, cleanText(attack.properties), { x: row.x + 268, y: row.y, width: 92, height: row.height }, { maxSize: 5.0, minSize: 3.5, color: "#000000" });
   });
 }
 
 function cardCategory(card: PdfPageCard) {
+  const explicitGroup = card.tags.find((tag) => tag.startsWith("pdf-group:"))?.slice("pdf-group:".length);
+  if (explicitGroup === "race") {
+    return "Racial";
+  }
+  if (explicitGroup === "subrace") {
+    return "Subracial";
+  }
+  if (explicitGroup === "class") {
+    return "Class";
+  }
+  if (explicitGroup === "subclass") {
+    return "Subclass";
+  }
+  if (explicitGroup === "feat") {
+    return "Feat";
+  }
+  if (explicitGroup === "additional") {
+    return "Additional";
+  }
+  if (explicitGroup === "other") {
+    return "Other";
+  }
+
   const text = `${card.title} ${card.summary} ${card.tags.join(" ")} ${card.sourceLabel ?? ""}`.toLowerCase();
   if (card.kind === "trait" || /\b(race|racial|subrace|lineage|dragonmark)\b/.test(text)) {
     return "Race";
@@ -640,21 +880,126 @@ function renderFeatureList(ctx: PdfRenderContext, cards: PdfPageCard[], rect: Pd
   });
 }
 
+type FeatureGroupSection = {
+  id: string;
+  title: string;
+  cards: PdfPageCard[];
+};
+
+function toFeatureDeckGroupId(card: PdfPageCard) {
+  if (cardHasGroup(card, "class")) {
+    return "class";
+  }
+  if (cardHasGroup(card, "subclass")) {
+    return "subclass";
+  }
+  if (cardHasGroup(card, "feat")) {
+    return "feat";
+  }
+  if (cardHasGroup(card, "additional")) {
+    return "additional";
+  }
+  return "other";
+}
+
+function buildFeatureDeckGroups(cards: PdfPageCard[]) {
+  const groups = new Map<string, FeatureGroupSection>([
+    ["class", { id: "class", title: "CLASS FEATURES", cards: [] }],
+    ["subclass", { id: "subclass", title: "SUBCLASS FEATURES", cards: [] }],
+    ["feat", { id: "feat", title: "FEATS", cards: [] }],
+    ["additional", { id: "additional", title: "ADDITIONAL FEATURES", cards: [] }],
+    ["other", { id: "other", title: "OTHER / CONDITIONAL", cards: [] }],
+  ]);
+
+  cards.forEach((card) => {
+    groups.get(toFeatureDeckGroupId(card))?.cards.push(card);
+  });
+
+  return [...groups.values()].filter((group) => group.cards.length);
+}
+
+function estimateFeatureListHeight(cards: PdfPageCard[]) {
+  return cards
+    .map(summarizeCard)
+    .reduce((total, summary) => total + Math.max(18, Math.min(42, 12 + Math.ceil(summary.body.length / 55) * 6)) + 5, 0);
+}
+
+function renderGroupedFeatureDeck(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect) {
+  const groups = buildFeatureDeckGroups(cards);
+  const columns = splitColumns(rect, 2, 16);
+  let columnIndex = 0;
+  let cursorY = columns[0].y;
+
+  groups.forEach((group) => {
+    const requiredHeight = 10 + estimateFeatureListHeight(group.cards) + 6;
+    const column = columns[columnIndex];
+    if (cursorY + requiredHeight > column.y + column.height && columnIndex < columns.length - 1) {
+      columnIndex += 1;
+      cursorY = columns[columnIndex].y;
+    }
+
+    const activeColumn = columns[columnIndex];
+    drawFittedText(ctx, group.title, { x: activeColumn.x, y: cursorY, width: activeColumn.width, height: 6 }, {
+      font: "Helvetica-Bold",
+      maxSize: 4.8,
+      minSize: 3.8,
+      color: "#444444",
+    });
+    strokeRule(ctx, activeColumn.x, cursorY + 7, activeColumn.width);
+
+    const listRect = {
+      x: activeColumn.x,
+      y: cursorY + 10,
+      width: activeColumn.width,
+      height: Math.max(18, activeColumn.y + activeColumn.height - (cursorY + 10)),
+    };
+    renderFeatureList(ctx, group.cards, listRect, 1);
+    cursorY += Math.min(requiredHeight, activeColumn.height) + 6;
+  });
+}
+
 function renderRail(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   const railCards = character.frontPage.railCards.filter((card) => card.kind !== "proficiency" && card.kind !== "language");
-  if (!railCards.length) {
+  const noteCards = railCards.filter((card) => card.kind === "condition" || card.kind === "sense");
+  const racialCards = railCards.filter((card) => cardHasGroup(card, "race") || cardHasGroup(card, "subrace") || card.kind === "trait");
+  const noteLines = extractRailNotes([...noteCards, ...racialCards]);
+
+  const notesRect = { x: FRONT_PAGE_REGIONS.rail.x + 8, y: FRONT_PAGE_REGIONS.rail.y + 10, width: FRONT_PAGE_REGIONS.rail.width - 16, height: 86 };
+  const traitsRect = { x: FRONT_PAGE_REGIONS.rail.x + 8, y: FRONT_PAGE_REGIONS.rail.y + 106, width: FRONT_PAGE_REGIONS.rail.width - 16, height: FRONT_PAGE_REGIONS.rail.height - 114 };
+
+  maskRect(ctx, notesRect);
+  noteLines.forEach((line, index) => {
+    const y = notesRect.y + index * 10;
+    if (y + 8 > notesRect.y + notesRect.height) {
+      return;
+    }
+    drawFittedText(ctx, `${line.title}: ${line.value}`, { x: notesRect.x + 2, y, width: notesRect.width - 4, height: 8 }, {
+      font: "Helvetica",
+      maxSize: 5.5,
+      minSize: 3.8,
+      color: "#000000",
+    });
+  });
+
+  if (!racialCards.length) {
     return;
   }
 
-  maskRect(ctx, insetRect(FRONT_PAGE_REGIONS.rail, 7, 4));
-  renderFeatureList(ctx, railCards, insetRect(FRONT_PAGE_REGIONS.rail, 8, 4), 1);
+  maskRect(ctx, traitsRect);
+  renderFeatureList(ctx, racialCards, traitsRect, 1);
 }
 
 function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   const cards = [
     ...character.frontPage.deck,
     ...character.frontPage.deckOverflow,
-  ].filter((card) => card.kind !== "proficiency" && card.kind !== "language");
+  ].filter(
+    (card) =>
+      card.kind !== "proficiency" &&
+      card.kind !== "language" &&
+      !cardHasGroup(card, "race") &&
+      !cardHasGroup(card, "subrace"),
+  );
 
   if (!cards.length) {
     return;
@@ -667,7 +1012,7 @@ function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacte
     minSize: 4.3,
     color: "#222222",
   });
-  renderFeatureList(ctx, cards, { x: 31, y: 542, width: 532, height: 274 }, 2);
+  renderGroupedFeatureDeck(ctx, cards, { x: 31, y: 542, width: 532, height: 274 });
 }
 
 export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
@@ -683,7 +1028,7 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderAbilities(ctx, assets, character, !hasTemplate);
   renderSpellcasting(ctx, assets, character);
   renderPassives(ctx, assets, character, !hasTemplate);
-  renderProficiencies(ctx, character);
+  renderProficiencies(ctx, assets, character);
   renderAttacks(ctx, assets, character, !hasTemplate);
   renderRail(ctx, character);
   renderFeatureDeck(ctx, character);

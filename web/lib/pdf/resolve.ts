@@ -470,6 +470,7 @@ export function resolvePdfCharacter(source: PdfResolveSource): ResolvedPdfCharac
     classLabel:
       normalizeText(source.identity?.classLabel || "") ||
       uniqueStrings(source.draft.classEntries.map((entry) => entry.classId).filter(Boolean)).join(" / "),
+    subclassLabel: normalizeText(source.identity?.subclassLabel || ""),
     backgroundLabel: normalizeText(source.identity?.backgroundLabel || source.draft.backgroundId || ""),
     stats: frontPage.stats,
     frontPage,
