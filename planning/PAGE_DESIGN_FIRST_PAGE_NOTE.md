@@ -1310,6 +1310,28 @@ This note is satisfied when page 1 does all of the following:
 - `R5` attack surface redesign
 - final tuning of the top-right spell/resource strip after this asset switch
 
+## Reset Pass R1 + R2j
+
+### Completed
+
+- the header values were nudged down slightly so they sit farther from the labels
+- the spellcasting resource value was lowered to better line up with the left-side CHA rhythm
+- the spellcasting resource label was lowered so it sits closer to the `SPELLCASTING` caption cadence
+- the proficiencies row mask was raised to cover more of the old shell/title bleed-through
+- the proficiencies tab mask was widened so the box no longer shows duplicated background artifacts as aggressively
+
+### Partial
+
+- the header is still in the right general place, but the long identity strings still need export QA across more character types
+- the spellcasting card is cleaner, but the right-side resource text still needs one more visual verification pass
+- the proficiencies row is cleaner, but the row should be checked against a non-bard character to confirm the shell is fully gone
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- final tuning of the top-right spell/resource strip after this geometry shift
+
 ## Reset Pass R1 + R2i
 
 ### Completed
