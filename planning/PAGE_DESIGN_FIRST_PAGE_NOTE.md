@@ -248,6 +248,21 @@ If implementation resumes, do this next:
 
 ## Pass Status
 
+### Reset Pass R1 + R2b Completed
+
+- header values are now centered rather than left-flowed inside the identity slots
+- the header class field now folds subclass into the displayed class line:
+  - `Lvl X [Subclass] [Class]`
+- the previous `SUBCLASS` slot is now reserved as `EXP`
+- the EXP slot intentionally remains blank until experience is wired into the resolved PDF model
+- the top-right spellcasting block now uses `_Proficiency Box.svg` as its shell
+- the spellcasting block was raised slightly to reduce overlap with the row below
+- the spellcasting labels were simplified to:
+  - `BONUS`
+  - `SAVE DC`
+  - `ABILITY`
+- the old spellcasting shell text is now masked before drawing the replacement block
+
 ### Reset Pass R1 + R2 Completed
 
 - header rendering now uses an explicit field model instead of stuffing values into loosely reused slots
