@@ -14,7 +14,8 @@ const PDF_EXPORT_ASSET_KEYS = [
   "weaponAttacks",
   "generalContainer",
   "greyBackground",
-  "proficiencyBox",
+  "proficiencyBox0",
+  "proficiencyBox1",
   "skillLine",
   "statBlock",
 ] as const satisfies Array<keyof typeof PDF_EXPORT_SVG_ASSET_PATHS>;
