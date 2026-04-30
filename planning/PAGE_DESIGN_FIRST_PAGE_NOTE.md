@@ -248,6 +248,14 @@ If implementation resumes, do this next:
 
 ## Pass Status
 
+### Reset Pass R1 + R2c Completed
+
+- the header no longer draws a second label layer over the template labels in template mode
+- the header now only overlays the `EXP` tag where needed
+- header value text was tightened slightly to reduce crowding in the top strip
+- the spellcasting box now explicitly renders the `SPELLCASTING` label instead of the leftover `Tools`-style label
+- the spellcasting shell remains lifted to reduce overlap with the row below
+
 ### Reset Pass R1 + R2b Completed
 
 - header values are now centered rather than left-flowed inside the identity slots
