@@ -66,10 +66,10 @@ const STAT_BLOCK_VIEWBOX = { width: 55, height: 72 } as const;
 const TOP_STAT_VIEWBOX = { width: 570, height: 51 } as const;
 
 const SKILL_BLOCKS = [
-  { x: 196, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
-  { x: 290, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
-  { x: 196, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
-  { x: 290, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
+  { x: 190, y: 8, width: 88, height: 70, ability: "STR + DEX", skills: ["Athletics", "Acrobatics", "Sleight of Hand", "Stealth"] },
+  { x: 284, y: 8, width: 88, height: 70, ability: "INT", skills: ["Arcana", "History", "Investigation", "Nature", "Religion"] },
+  { x: 190, y: 82, width: 88, height: 70, ability: "WIS", skills: ["Animal Handling", "Insight", "Medicine", "Perception", "Survival"] },
+  { x: 284, y: 82, width: 88, height: 70, ability: "CHA", skills: ["Deception", "Intimidation", "Performance", "Persuasion"] },
 ] as const;
 
 const STAT_ROW_BACKGROUNDS = [
@@ -274,25 +274,25 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
       label: "RACE",
       value: raceLine,
       labelRect: { x: 250, y: 24.0, width: 54, height: 3.2 },
-      valueRect: { x: 24, y: 31.2, width: 142, height: 7.0 },
+      valueRect: { x: 24, y: 29.8, width: 154, height: 8.4 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
       labelRect: { x: 406, y: 24.0, width: 92, height: 3.2 },
-      valueRect: { x: 175, y: 31.2, width: 260, height: 7.0 },
+      valueRect: { x: 176, y: 29.8, width: 246, height: 8.4 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
       labelRect: { x: 502, y: 24.0, width: 52, height: 3.2 },
-      valueRect: { x: 488, y: 31.2, width: 72, height: 7.0 },
+      valueRect: { x: 488, y: 29.8, width: 76, height: 8.4 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
       labelRect: { x: 250, y: 47.0, width: 74, height: 3.2 },
-      valueRect: { x: 25, y: 53.4, width: 128, height: 7.0 },
+      valueRect: { x: 25, y: 52.8, width: 132, height: 8.2 },
     },
     {
       label: "EXP",
@@ -316,8 +316,8 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     }
     drawFittedText(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: field.label === "CLASS & LEVEL" ? 3.1 : 3.3,
-      minSize: field.label === "CLASS & LEVEL" ? 2.4 : 2.6,
+      maxSize: field.label === "CLASS & LEVEL" ? 4.6 : 5.0,
+      minSize: field.label === "CLASS & LEVEL" ? 3.0 : 3.2,
       align: "left",
       color: "#000000",
     });
@@ -384,17 +384,10 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
         minSize: 6,
         color: "#000000",
       });
-      drawFittedText(ctx, cleanText(resource.label, "RES"), rectFromFractions(rightBox, { x: 0.10, y: 0.50, width: 0.80, height: 0.14 }), {
-        font: "Helvetica",
-        maxSize: 4.0,
-        minSize: 2.8,
-        align: "center",
-        color: "#000000",
-      });
-      drawCenteredTextInRect(ctx, "RES", rectFromFractions(rightBox, { x: 0.12, y: 0.74, width: 0.76, height: 0.12 }), {
+      drawCenteredTextInRect(ctx, cleanText(resource.label, "RES").toUpperCase(), rectFromFractions(rightBox, { x: 0.10, y: 0.68, width: 0.80, height: 0.14 }), {
         font: "Helvetica-Bold",
-        maxSize: 3.6,
-        minSize: 2.6,
+        maxSize: 3.7,
+        minSize: 2.8,
         color: "#000000",
       });
     }
@@ -418,16 +411,9 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
         minSize: 6,
         color: "#000000",
       });
-      drawFittedText(ctx, cleanText(resource.label, "RES"), rectFromFractions(resourceBox, { x: 0.08, y: 0.50, width: 0.84, height: 0.14 }), {
-        font: "Helvetica",
-        maxSize: resourceBox.width > 100 ? 4.1 : 3.6,
-        minSize: 2.4,
-        align: "center",
-        color: "#000000",
-      });
-      drawCenteredTextInRect(ctx, "RES", rectFromFractions(resourceBox, { x: 0.12, y: 0.74, width: 0.76, height: 0.12 }), {
+      drawCenteredTextInRect(ctx, cleanText(resource.label, "RES").toUpperCase(), rectFromFractions(resourceBox, { x: 0.08, y: 0.68, width: 0.84, height: 0.14 }), {
         font: "Helvetica-Bold",
-        maxSize: 3.6,
+        maxSize: 3.7,
         minSize: 2.6,
         color: "#000000",
       });
@@ -463,10 +449,10 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
   });
 
   maskRect(ctx, rectFromFractions(spellBox, { x: 0.20, y: 0.86, width: 0.60, height: 0.11 }));
-  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.16, y: 0.83, width: 0.68, height: 0.10 }), {
+  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.16, y: 0.82, width: 0.68, height: 0.10 }), {
     font: "Helvetica-Bold",
-    maxSize: 2.4,
-    minSize: 2.1,
+    maxSize: 3.7,
+    minSize: 3.0,
     color: "#000000",
   });
 
@@ -480,16 +466,9 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
       minSize: 5,
       color: "#000000",
     });
-    drawFittedText(ctx, cleanText(primaryResource.label, "RES"), rectFromFractions(rightBox, { x: 0.08, y: 0.49, width: 0.84, height: 0.14 }), {
-      font: "Helvetica",
-      maxSize: 3.8,
-      minSize: 2.5,
-      align: "center",
-      color: "#000000",
-    });
-    drawCenteredTextInRect(ctx, "RES", rectFromFractions(rightBox, { x: 0.12, y: 0.74, width: 0.76, height: 0.12 }), {
+    drawCenteredTextInRect(ctx, cleanText(primaryResource.label, "RES").toUpperCase(), rectFromFractions(rightBox, { x: 0.08, y: 0.68, width: 0.84, height: 0.14 }), {
       font: "Helvetica-Bold",
-      maxSize: 3.6,
+      maxSize: 3.7,
       minSize: 2.6,
       color: "#000000",
     });
@@ -688,8 +667,8 @@ function renderAbilities(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
         width: slot.width,
         height: slot.height,
       });
-      if (canRecompose && assets.generalContainer) {
-        drawSvg(ctx, assets.generalContainer, block);
+      if (canRecompose && assets.proficiencyBox1) {
+        drawSvg(ctx, assets.proficiencyBox1, block);
       } else if (!hasPrintedTemplate && assets.skillBlock) {
         drawSvg(ctx, assets.skillBlock, block);
       }
@@ -803,6 +782,13 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
 }
 
 function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  maskRect(ctx, { x: FRONT_PAGE_REGIONS.proficiencies.x, y: FRONT_PAGE_REGIONS.proficiencies.y + 1, width: FRONT_PAGE_REGIONS.proficiencies.width, height: FRONT_PAGE_REGIONS.proficiencies.height - 1 });
+  drawCenteredTextInRect(ctx, "PROFICIENCIES AND LANGUAGES", { x: 114, y: 338, width: 170, height: 6 }, {
+    font: "Helvetica-Bold",
+    maxSize: 3.0,
+    minSize: 2.4,
+    color: "#9a9a9a",
+  });
   const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.proficiencies, 8, 0), 5, 13);
   const groups = character.frontPage.proficiencyGroups;
   const values = [groups.weapons, groups.armor, groups.tools, groups.vehicles, groups.languages];

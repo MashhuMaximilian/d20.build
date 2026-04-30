@@ -1286,3 +1286,26 @@ This note is satisfied when page 1 does all of the following:
 - broader `R3` / `R4` cleanup
 - `R5` attack surface redesign
 - the final visual balance between the top header and the top-right spell/resource strip
+
+## Reset Pass R1 + R2h
+
+### Completed
+
+- the top header values were resized upward so they remain legible instead of disappearing
+- the race, class, player, and background values are now left-aligned in their slots with wider fit bounds
+- the spellcasting caption now matches the save-dc caption scale more closely
+- the class-resource label now uses the real resource name instead of `RES`
+- the ability-check blocks now use the new proficiency-box shell instead of the older generic container
+- the proficiencies row now masks the duplicate top shell and redraws only the intended box layer
+
+### Partial
+
+- the header is cleaner, but it still needs export QA on longer class/subclass strings
+- the ability-check blocks are now on the new shell, but the final left/right balance still needs visual verification
+- the proficiencies row is de-duplicated, but the exact text padding still needs tuning
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- final tuning of the top-right spell/resource strip after this asset switch
