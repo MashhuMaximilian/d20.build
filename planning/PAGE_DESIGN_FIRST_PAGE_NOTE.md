@@ -18,7 +18,267 @@ It tightens:
 - first-page data filtering
 - first-page rendering tasks still left to solve
 
+## Current Reassessment
+
+This section overrides any optimistic reading of the pass log below.
+
+The exported page shown in current testing proves that many items previously marked as “done” are only partially implemented, visually broken, semantically wrong, or not yet acceptable.
+
+From now on, status should be judged by exported output quality, not by whether a code path exists.
+
+### What Is Actually Working
+
+- the page shell / overall template anchor is present
+- the numeric combat strip is directionally better than the earliest versions
+- ability blocks and skill blocks are at least rendered in the intended zones
+- the PDF has begun separating:
+  - right-column passive notes
+  - racial / subracial area
+  - lower feature area
+- the system can now surface some class resources and some feature/action summaries
+
+### What Is Not Actually Done
+
+- header identity is not solved:
+  - fields are crowded
+  - values are placed in the wrong slots
+  - subclass / lineage / class data is still visually confused
+- spellcasting / resource strip is not solved:
+  - the current compact resource box is too cramped
+  - label/value hierarchy is weak
+  - multi-resource handling is still not visually reliable
+- passive notes box is not solved:
+  - duplicate entries still appear
+  - capitalization / normalization is inconsistent
+  - content is still partly heuristic and not authoritative enough
+- racial / subracial right-column body is not solved:
+  - text density is poor
+  - grouping clarity is weak
+  - content still reads like dumped cards, not a controlled first-page summary
+- lower feature area is not solved:
+  - wrong items still appear there
+  - proficiency/tool/language-adjacent noise still leaks in
+  - category grouping exists in code but is not yet good enough in output
+- attacks / actions surface is not solved:
+  - the current table is semantically wrong for mixed actions
+  - `Hit`, `Damage`, `Type`, `Properties` are being abused to show timing/uses/effect
+  - feature actions and spell actions are not yet represented in a clean first-page pattern
+- proficiencies row is not solved:
+  - the screenshot suggests incorrect box labeling / ownership
+  - tools/weapons/languages grouping needs a truth pass against rendered output
+- duplicate mechanical information still exists across:
+  - passive notes
+  - right-column feature body
+  - lower feature deck
+  - action/attack rows
+
+### Design Conclusion
+
+The current state is not “finish with tweaks”.
+
+It needs a controlled second-stage cleanup with these rules:
+
+1. stop marking items done when only the data pipe exists
+2. validate each section against rendered PDF output
+3. fix semantic correctness before adding more feature coverage
+4. remove duplication before adding more density
+
+## Corrected Implementation Strategy
+
+We should not keep expanding feature coverage on top of a semantically unstable first page.
+
+The right order now is:
+
+### Stage 1. Semantic Cleanup
+
+Fix sections that are currently using the wrong structure, even if they technically render.
+
+- header identity mapping
+- spell/resource strip semantics
+- passive note deduplication and normalization
+- attack/action surface semantics
+- lower feature filtering truth
+
+### Stage 2. Visual Cleanup
+
+Once semantics are correct:
+
+- tighten spacing
+- improve text hierarchy
+- fix density
+- reduce visual clutter
+- make grouped content readable in one scan
+
+### Stage 3. Coverage Expansion
+
+Only after stages 1 and 2:
+
+- more subclasses
+- more race/subrace special cases
+- more resource edge cases
+- more spell/action prioritization rules
+
+## Reset Plan
+
+This is the plan that should drive the next implementation work.
+
+### Phase R1. Header Truth
+
+Goal:
+- make the top identity row factually correct and clearly assigned
+
+Tasks:
+- remap each identity field to the correct slot
+- verify:
+  - race
+  - subrace / lineage
+  - class
+  - subclass
+  - background
+  - level
+  - experience
+- prevent cross-field overflow and accidental value collisions
+
+Acceptance:
+- no field appears in the wrong slot
+- subclass is visible and not merged ambiguously
+- header can be parsed in under 3 seconds
+
+### Phase R2. Top-Right Strip Semantics
+
+Goal:
+- make the spellcasting/resource strip structurally correct before tuning visuals
+
+Tasks:
+- define one correct spellcaster pattern
+- define one correct martial/resource pattern
+- define monk as a controlled special case
+- prevent over-compression of multi-resource states
+- remove “resource exists in code but is unreadable in PDF” cases
+
+Acceptance:
+- spellcasters show a readable casting block
+- martials do not show fake casting UI
+- resource boxes are readable and not overloaded
+
+### Phase R3. Right Column Truth
+
+Goal:
+- make the right column non-duplicative and category-correct
+
+Tasks:
+- passive notes box:
+  - dedupe
+  - normalize capitalization
+  - normalize wording
+  - prefer one canonical line per mechanic
+- racial/subracial body:
+  - only race/subrace features
+  - no spill from class/proficiency/build-choice noise
+
+Acceptance:
+- no duplicate `Resistance: Poison` style lines
+- no mixed class/proficiency junk in racial space
+- content reads as controlled summary, not dump
+
+### Phase R4. Lower Feature Deck Truth
+
+Goal:
+- make the big lower feature area actually reflect meaningful gameplay features
+
+Tasks:
+- keep only:
+  - class features
+  - subclass features
+  - feats
+  - additional features
+  - other / conditional only if truly useful
+- remove:
+  - tools
+  - instruments
+  - languages
+  - proficiency picks
+  - generic build-option filler
+  - weak pseudo-features
+
+Acceptance:
+- no `Flute`, `Horn`, `Lyre`, `Jeweler's Tools`, raw proficiencies, etc. in the lower feature body unless explicitly justified
+- lower feature area feels like gameplay information, not build bookkeeping
+
+### Phase R5. Actions Surface Redesign
+
+Goal:
+- stop misusing the attack table for mixed semantics
+
+Tasks:
+- decide whether the current attack shell can survive
+- if yes:
+  - use columns with coherent meaning
+- if no:
+  - redesign the area into:
+    - actions
+    - attacks
+    - spellcasting shortlist
+- keep page-1 content usable at the table
+
+Acceptance:
+- no row should put “Bonus action” in a hit column unless the layout intentionally supports that semantic
+- action rows must be structurally honest
+
+### Phase R6. Coverage Expansion
+
+Goal:
+- only after R1-R5 are stable
+
+Tasks:
+- subclass-specific resources
+- more race/subrace passive-note rules
+- better action prioritization rules
+- spell shortlist / slot representation if needed
+
+## Immediate Next Priority
+
+If implementation resumes, do this next:
+
+1. fix header truth
+2. fix top-right strip semantics
+3. fix duplicate / wrong right-column content
+4. fix lower feature filtering
+5. only then revisit attack/action layout
+
 ## Pass Status
+
+### Reset Pass R1 + R2 Completed
+
+- header rendering now uses an explicit field model instead of stuffing values into loosely reused slots
+- the header now separates:
+  - race
+  - lineage
+  - class & level
+  - player
+  - background
+  - subclass
+- misleading merged header values such as `Race / Subrace` in the race slot were removed from the renderer
+- top-right strip semantics were simplified into three clean render states:
+  - spellcaster
+  - martial / resource-only
+  - monk (`Ki Save DC` + `Ki Points`)
+- unreadable stacked secondary spellcaster resources were removed from the top-right strip
+- spellcasters now show one combined casting block plus one readable primary resource box
+- martials now show one centered resource box or two side-by-side resource boxes instead of fake spellcasting UI
+
+### Reset Pass R1 + R2 Partial
+
+- header truth is much better in code, but still needs exported visual verification against real characters
+- lineage and subclass are now structurally separated, but long multiclass / long subclass cases may still need tighter width handling
+- the top-right strip is now semantically cleaner, but resource priority and naming may still need tuning per class
+
+### Reset Pass R1 + R2 Still Open
+
+- experience is still not surfaced in the header
+- broader class / subclass resource coverage still needs more cases
+- spellcasters with more than one important resource still need a better long-term surface than a single primary resource box
+- header density and hierarchy still need final visual tuning after export review
 
 ### Pass 1 Completed
 
