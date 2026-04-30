@@ -368,6 +368,8 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     return;
   }
 
+  maskRect(ctx, { x: 393, y: 142, width: 194, height: 49 });
+
   if (!hasSpellcasting && hasKiDc) {
     const leftBox = { x: hasClassResource ? 405 : 431, y: 143, width: hasClassResource ? 82 : 116, height: 38 };
     drawSvg(ctx, assets.proficiencyBox, leftBox);
