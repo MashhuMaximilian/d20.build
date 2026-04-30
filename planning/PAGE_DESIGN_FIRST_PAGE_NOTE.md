@@ -1309,3 +1309,25 @@ This note is satisfied when page 1 does all of the following:
 - broader `R3` / `R4` cleanup
 - `R5` attack surface redesign
 - final tuning of the top-right spell/resource strip after this asset switch
+
+## Reset Pass R1 + R2i
+
+### Completed
+
+- the header values are back on the page and centered inside their slots
+- exhaustion is now intentionally blank again
+- the spellcasting / class-resource block now only shows the resource name once
+- the proficiencies row title mask was widened to remove the duplicated shell text
+- the proficiencies row tabs now get their own label treatment instead of inheriting the old `Tools`-style artifact
+
+### Partial
+
+- the header is readable again, but longer identity strings still need export QA
+- the proficiency-row tab labels are cleaner, but their exact bottom spacing may still need tuning
+- the ability-check background still needs one more visual pass against several real characters
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- final tuning of the top-right spell/resource strip after this asset switch
