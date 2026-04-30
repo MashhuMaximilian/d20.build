@@ -253,7 +253,7 @@ function drawValueOnlyStatBox(ctx: PdfRenderContext, rect: PdfRect, value: strin
   });
 }
 
-function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
+function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, drawShell: boolean) {
   drawFittedText(ctx, cleanText(character.name, "Unnamed character"), { x: 30, y: 37, width: 166, height: 17 }, {
     font: "Times-Bold",
     maxSize: 17,
@@ -308,20 +308,28 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
   ];
 
   headerFields.forEach((field) => {
-    maskRect(ctx, field.labelRect);
-    drawCenteredTextInRect(ctx, field.label, field.labelRect, {
-      font: "Helvetica-Bold",
-      maxSize: 3.7,
-      minSize: 3,
-      color: "#9a9a9a",
-    });
+    if (drawShell) {
+      drawCenteredTextInRect(ctx, field.label, field.labelRect, {
+        font: "Helvetica-Bold",
+        maxSize: 3.7,
+        minSize: 3,
+        color: "#9a9a9a",
+      });
+    } else if (field.label === "EXP") {
+      drawCenteredTextInRect(ctx, field.label, field.labelRect, {
+        font: "Helvetica-Bold",
+        maxSize: 3.7,
+        minSize: 3,
+        color: "#9a9a9a",
+      });
+    }
     if (!field.value) {
       return;
     }
     drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: 5.9,
-      minSize: 4.2,
+      maxSize: field.label === "CLASS & LEVEL" ? 5.3 : 5.7,
+      minSize: 4,
       color: "#000000",
     });
   });
@@ -452,6 +460,13 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
       minSize: 2.8,
       color: "#000000",
     });
+  });
+
+  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.18, y: 0.70, width: 0.64, height: 0.16 }), {
+    font: "Helvetica",
+    maxSize: 4.3,
+    minSize: 2.9,
+    color: "#000000",
   });
 
   if (hasClassResource) {
@@ -1049,7 +1064,7 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
     drawSvg(ctx, assets.frontPageTemplate, { x: 0, y: 0, width: PAGE_SIZE.width, height: PAGE_SIZE.height }, "contain");
   }
 
-  renderHeader(ctx, character);
+  renderHeader(ctx, character, !hasTemplate);
   renderStatStrip(ctx, assets, character, !hasTemplate);
   renderAbilities(ctx, assets, character, !hasTemplate);
   renderSpellcasting(ctx, assets, character);
