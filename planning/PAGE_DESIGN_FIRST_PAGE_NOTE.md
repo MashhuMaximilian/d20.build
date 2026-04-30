@@ -303,6 +303,26 @@ If implementation resumes, do this next:
 - spellcasters with more than one important resource still need a better long-term surface than a single primary resource box
 - header density and hierarchy still need final visual tuning after export review
 
+
+### Reset Pass R1 + R2d Completed
+
+- the header values were moved down further and the race field now absorbs subrace/lineage text instead of leaking into the class field
+- the `LINEAGE` slot is now visually quiet when it is not needed, reducing the accidental collision with class-level text
+- the spellcasting capsule was shifted slightly upward and its internal caption was pushed into the tab area instead of sitting across the main body
+- the spellcasting and resource boxes now use a tighter vertical footprint to reduce overlap with the next row
+
+### Reset Pass R1 + R2d Partial
+
+- the geometry is cleaner, but exported layout still needs another visual audit against real character PDFs
+- the spellcasting tab caption is now better placed, but may still need final optical tuning
+- the top header hierarchy is improved, but still not final
+
+### Reset Pass R1 + R2d Still Open
+
+- final header typography and spacing
+- remaining top-right strip tuning on non-bard / non-caster classes
+- visual verification on multiple character sheets
+
 ### Pass 1 Completed
 
 - `_Proficiency Box.svg` is now part of the runtime PDF asset bundle and is explicitly drawn over the proficiencies row.
