@@ -1193,3 +1193,23 @@ This note is satisfied when page 1 does all of the following:
 - broader `R3` / `R4` cleanup
 - `R5` attack surface redesign
 - confirm the inline sign-in CTA behavior after deploy in the browser
+
+## Reset Pass R1 + R3b
+
+### Completed
+
+- identity strip values were dropped lower and narrowed to stop label collisions
+- the center class line was widened slightly so long class/subclass combinations have more room
+- the spellcasting capsule was dropped lower in its band and its content stack was nudged upward
+- the spellcasting replacement tab region now masks a larger area before redrawing
+
+### Partial
+
+- header spacing is improved, but long lineage/subclass combinations still need export QA
+- spellcasting now has less obvious bleed-through, but it still needs one more visual verification pass on live exports
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- confirm the inline sign-in CTA behavior after deploy in the browser
