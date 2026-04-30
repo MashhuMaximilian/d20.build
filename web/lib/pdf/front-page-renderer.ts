@@ -274,25 +274,25 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
       label: "RACE",
       value: raceLine,
       labelRect: { x: 250, y: 24.0, width: 54, height: 3.2 },
-      valueRect: { x: 24, y: 31.0, width: 154, height: 8.4 },
+      valueRect: { x: 24, y: 33.0, width: 154, height: 8.0 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
       labelRect: { x: 406, y: 24.0, width: 92, height: 3.2 },
-      valueRect: { x: 176, y: 31.0, width: 246, height: 8.4 },
+      valueRect: { x: 176, y: 33.0, width: 246, height: 8.0 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
       labelRect: { x: 502, y: 24.0, width: 52, height: 3.2 },
-      valueRect: { x: 488, y: 31.0, width: 76, height: 8.4 },
+      valueRect: { x: 488, y: 33.0, width: 76, height: 8.0 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
       labelRect: { x: 250, y: 47.0, width: 74, height: 3.2 },
-      valueRect: { x: 25, y: 54.0, width: 132, height: 8.2 },
+      valueRect: { x: 25, y: 56.0, width: 132, height: 8.0 },
     },
     {
       label: "EXP",
@@ -459,13 +459,13 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     const primaryResource = classResources[0];
     const rightBox = { x: 527, y: 142, width: 62, height: 43 };
     drawSvg(ctx, assets.proficiencyBox1, rightBox);
-    drawCenteredTextInRect(ctx, primaryResource.value, rectFromFractions(rightBox, { x: 0.08, y: 0.18, width: 0.84, height: 0.34 }), {
+    drawCenteredTextInRect(ctx, primaryResource.value, rectFromFractions(rightBox, { x: 0.08, y: 0.26, width: 0.84, height: 0.26 }), {
       font: "Helvetica-Bold",
       maxSize: 12.4,
       minSize: 5,
       color: "#000000",
     });
-    drawCenteredTextInRect(ctx, cleanText(primaryResource.label, "Class Resource"), rectFromFractions(rightBox, { x: 0.08, y: 0.62, width: 0.84, height: 0.14 }), {
+    drawCenteredTextInRect(ctx, cleanText(primaryResource.label, "Class Resource"), rectFromFractions(rightBox, { x: 0.08, y: 0.70, width: 0.84, height: 0.11 }), {
       font: "Helvetica-Bold",
       maxSize: 4.0,
       minSize: 2.6,
@@ -781,7 +781,7 @@ function renderPassives(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, charac
 }
 
 function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
-  maskRect(ctx, { x: FRONT_PAGE_REGIONS.proficiencies.x, y: FRONT_PAGE_REGIONS.proficiencies.y - 2, width: FRONT_PAGE_REGIONS.proficiencies.width, height: FRONT_PAGE_REGIONS.proficiencies.height + 4 });
+  maskRect(ctx, { x: FRONT_PAGE_REGIONS.proficiencies.x, y: FRONT_PAGE_REGIONS.proficiencies.y - 8, width: FRONT_PAGE_REGIONS.proficiencies.width, height: FRONT_PAGE_REGIONS.proficiencies.height + 12 });
   const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.proficiencies, 8, 0), 5, 13);
   const groups = character.frontPage.proficiencyGroups;
   const values = [groups.weapons, groups.armor, groups.tools, groups.vehicles, groups.languages];
@@ -790,10 +790,10 @@ function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, c
     if (assets.proficiencyBox0) {
       drawSvg(ctx, assets.proficiencyBox0, cells[index]);
     }
-    const tabMask = rectFromFractions(cells[index], { x: 0.24, y: 0.80, width: 0.52, height: 0.11 });
+    const tabMask = rectFromFractions(cells[index], { x: 0.20, y: 0.70, width: 0.60, height: 0.20 });
     maskRect(ctx, tabMask);
     const labels = ["Weapons", "Armor", "Tools", "Vehicles", "Languages"];
-    drawCenteredTextInRect(ctx, labels[index], rectFromFractions(cells[index], { x: 0.10, y: 0.80, width: 0.80, height: 0.11 }), {
+    drawCenteredTextInRect(ctx, labels[index], rectFromFractions(cells[index], { x: 0.10, y: 0.76, width: 0.80, height: 0.10 }), {
       font: "Helvetica",
       maxSize: 3.4,
       minSize: 2.4,
