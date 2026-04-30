@@ -1194,6 +1194,24 @@ This note is satisfied when page 1 does all of the following:
 - `R5` attack surface redesign
 - confirm the inline sign-in CTA behavior after deploy in the browser
 
+## Reset Pass R1 + R3c
+
+### Completed
+
+- top identity values were pushed down again and reduced slightly to create a cleaner label/value separation
+- the spellcasting footer label was lifted inside the capsule so it sits further from the lower flourish
+
+### Partial
+
+- the header strip is cleaner, but the class / lineage / race spacing still needs export QA
+- the spellcasting capsule is still a visual risk area and needs another export-based check after this pass
+
+### Still Open
+
+- broader `R3` / `R4` cleanup
+- `R5` attack surface redesign
+- confirm the inline sign-in CTA behavior after deploy in the browser
+
 ## Reset Pass R1 + R3b
 
 ### Completed

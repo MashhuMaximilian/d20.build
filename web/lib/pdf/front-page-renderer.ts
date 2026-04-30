@@ -273,37 +273,37 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
       label: "RACE",
       value: character.raceLabel,
       labelRect: { x: 250, y: 22.8, width: 54, height: 3.5 },
-      valueRect: { x: 246, y: 30.0, width: 64, height: 7.2 },
+      valueRect: { x: 246, y: 30.8, width: 64, height: 6.8 },
     },
     {
       label: "LINEAGE",
       value: character.subraceLabel,
       labelRect: { x: 315, y: 22.8, width: 82, height: 3.5 },
-      valueRect: { x: 311, y: 30.0, width: 90, height: 7.2 },
+      valueRect: { x: 311, y: 30.8, width: 92, height: 6.8 },
     },
     {
       label: "CLASS & LEVEL",
       value: classLevel,
       labelRect: { x: 406, y: 22.8, width: 92, height: 3.5 },
-      valueRect: { x: 401, y: 30.0, width: 112, height: 7.2 },
+      valueRect: { x: 401, y: 30.8, width: 112, height: 6.8 },
     },
     {
       label: "PLAYER",
       value: character.playerName,
       labelRect: { x: 502, y: 22.8, width: 52, height: 3.5 },
-      valueRect: { x: 498, y: 30.0, width: 58, height: 7.2 },
+      valueRect: { x: 498, y: 30.8, width: 58, height: 6.8 },
     },
     {
       label: "BACKGROUND",
       value: character.backgroundLabel,
       labelRect: { x: 250, y: 44.7, width: 74, height: 3.5 },
-      valueRect: { x: 246, y: 52.0, width: 84, height: 7.0 },
+      valueRect: { x: 246, y: 52.6, width: 84, height: 6.6 },
     },
     {
       label: "EXP",
       value: "",
       labelRect: { x: 350, y: 44.7, width: 36, height: 3.5 },
-      valueRect: { x: 346, y: 52.0, width: 64, height: 7.0 },
+      valueRect: { x: 346, y: 52.6, width: 64, height: 6.6 },
     },
   ];
 
@@ -311,14 +311,14 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     if (drawShell) {
       drawCenteredTextInRect(ctx, field.label, field.labelRect, {
         font: "Helvetica-Bold",
-        maxSize: 2.6,
+        maxSize: 2.4,
         minSize: 3,
         color: "#9a9a9a",
       });
     } else if (field.label === "EXP") {
       drawCenteredTextInRect(ctx, field.label, field.labelRect, {
         font: "Helvetica-Bold",
-        maxSize: 2.6,
+        maxSize: 2.4,
         minSize: 3,
         color: "#9a9a9a",
       });
@@ -328,7 +328,7 @@ function renderHeader(ctx: PdfRenderContext, character: ResolvedPdfCharacter, dr
     }
     drawCenteredTextInRect(ctx, cleanText(field.value), field.valueRect, {
       font: "Helvetica",
-      maxSize: field.label === "CLASS & LEVEL" ? 3.8 : 4.4,
+      maxSize: field.label === "CLASS & LEVEL" ? 3.5 : 4.0,
       minSize: 4,
       color: "#000000",
     });
@@ -463,9 +463,9 @@ function renderSpellcasting(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, ch
     });
   });
 
-  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.15, y: 0.73, width: 0.70, height: 0.11 }), {
+  drawCenteredTextInRect(ctx, "SPELLCASTING", rectFromFractions(spellBox, { x: 0.15, y: 0.68, width: 0.70, height: 0.10 }), {
     font: "Helvetica-Bold",
-    maxSize: 3.4,
+    maxSize: 3.2,
     minSize: 2.4,
     color: "#000000",
   });
