@@ -52,20 +52,11 @@ export const PDF_REFERENCE_LIBRARY: PdfAssetGroup[] = [
       "Treat these as the puzzle pieces, not as the whole page.",
     ],
   },
-  {
-    id: "svg-template",
-    label: "SVGs for PDF examples",
-    files: ["SVGs for PDF/examples with svgs/Design general character sheet p1 v3.svg"],
-    notes: [
-      "This is the strongest composition target for page 1.",
-      "Use it to snap together the numeric side and the feature card deck.",
-    ],
-  },
 ];
 
 export const PDF_SVG_COMPONENT_MANIFEST = {
-  frontPageTemplate: "pdf-svg/examples with svgs/Design general character sheet p1 v3.svg",
   pageShell: "pdf-svg/Front Page Header.svg",
+  frontPageHeaderShell: "pdf-svg/Front Page Header Shell.svg",
   abilityPanel: "pdf-svg/Ability scores, Saves, and ability checks.svg",
   hpPanel: "pdf-svg/HP and Bonuses full.svg",
   speedPanel: "pdf-svg/Passives and speeds.svg",

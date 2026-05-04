@@ -2501,7 +2501,6 @@ export function BuilderEditor({
       selectedSubrace,
       spells,
       selectedFeatElements,
-      selectedBackgroundFeatureElements,
     ],
   );
   const handleExportPdf = useCallback(async () => {

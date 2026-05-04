@@ -7,8 +7,8 @@ import { generatePdfBytes } from "@/lib/pdf/generate";
 export const runtime = "nodejs";
 
 const PDF_EXPORT_ASSET_KEYS = [
-  "frontPageTemplate",
   "frontPageHeader",
+  "frontPageHeaderShell",
   "hpPanel",
   "passivesAndSpeeds",
   "weaponAttacks",
@@ -16,6 +16,7 @@ const PDF_EXPORT_ASSET_KEYS = [
   "greyBackground",
   "proficiencyBox0",
   "proficiencyBox1",
+  "line",
   "skillLine",
   "statBlock",
 ] as const satisfies Array<keyof typeof PDF_EXPORT_SVG_ASSET_PATHS>;

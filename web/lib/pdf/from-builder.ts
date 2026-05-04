@@ -603,12 +603,12 @@ function getClassResourcePriority(label: string) {
 
 function getClassResources(args: BuilderPdfSourceArgs) {
   const featureNames = new Set(args.selectedClassFeatureElements.map((feature) => feature.name.toLowerCase()));
-  const resources: Array<{ label: string; value: string }> = [];
-  const pushResource = (label: string, value: string) => {
+  const resources: Array<{ label: string; value: string; cadence?: string }> = [];
+  const pushResource = (label: string, value: string, cadence?: string) => {
     if (!value || resources.some((resource) => resource.label === label)) {
       return;
     }
-    resources.push({ label, value });
+    resources.push({ label, value, cadence });
   };
 
   for (let index = 0; index < args.classRecordsByEntry.length; index += 1) {
@@ -623,19 +623,19 @@ function getClassResources(args: BuilderPdfSourceArgs) {
     if (/bard/i.test(className) && featureNames.has("bardic inspiration")) {
       const uses = Math.max(1, getAbilityModifier(args.effectiveAbilities.charisma));
       const die = getBardicInspirationDie(entry.level);
-      pushResource("Bardic Inspiration", `${uses} d${die}`);
+      pushResource("Bardic Inspiration", `${uses} d${die}`, entry.level >= 5 ? "SR" : "LR");
     }
 
     if (/fighter/i.test(className) && (featureNames.has("combat superiority") || featureNames.has("superiority dice"))) {
-      pushResource("Superiority Dice", getSuperiorityDiceSummary(entry.level));
+      pushResource("Superiority Dice", getSuperiorityDiceSummary(entry.level), "SR");
     }
 
     if (/druid/i.test(className) && featureNames.has("wild shape")) {
-      pushResource("Wild Shape", "2 uses");
+      pushResource("Wild Shape", "2 uses", "SR");
     }
 
     if (/druid/i.test(className) && featureNames.has("starry form")) {
-      pushResource("Starry Form", "Uses Wild Shape");
+      pushResource("Starry Form", "Uses Wild Shape", "SR");
     }
 
     if (/monk/i.test(className) && featureNames.has("ki")) {
@@ -651,15 +651,15 @@ function getClassResources(args: BuilderPdfSourceArgs) {
     }
 
     if (/cleric|paladin/i.test(className) && featureNames.has("channel divinity")) {
-      pushResource("Channel Divinity", getChannelDivinityUses(entry.level));
+      pushResource("Channel Divinity", getChannelDivinityUses(entry.level), "SR");
     }
 
     if (/fighter/i.test(className) && featureNames.has("action surge")) {
-      pushResource("Action Surge", "1 use");
+      pushResource("Action Surge", "1 use", "SR");
     }
 
     if (/fighter/i.test(className) && featureNames.has("second wind")) {
-      pushResource("Second Wind", "1 use");
+      pushResource("Second Wind", "1 use", "SR");
     }
 
     if (/barbarian/i.test(className) && featureNames.has("rage")) {
@@ -667,7 +667,7 @@ function getClassResources(args: BuilderPdfSourceArgs) {
     }
 
     if (/wizard/i.test(className) && featureNames.has("arcane recovery")) {
-      pushResource("Arcane Recovery", "1 use");
+      pushResource("Arcane Recovery", "1 use", "LR");
     }
   }
 
@@ -923,7 +923,7 @@ function buildStatCards(args: BuilderPdfSourceArgs) {
       id: `class-resource-${index + 1}`,
       label: "Class Resource",
       value: resource.value,
-      meta: resource.label,
+      meta: resource.cadence ? `${resource.label}\n${resource.cadence}` : resource.label,
     })),
   ];
 }

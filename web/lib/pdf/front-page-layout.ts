@@ -6,7 +6,7 @@ export const PAGE_SIZE = {
 } as const;
 
 export const FRONT_PAGE_REGIONS = {
-  header: { x: 10, y: 10, width: 575, height: 69 },
+  header: { x: 10, y: 0, width: 575, height: 69 },
   statStrip: { x: 10, y: 84, width: 570, height: 51 },
   abilities: { x: 10, y: 144, width: 384, height: 152 },
   passives: { x: 10, y: 302, width: 378, height: 40 },

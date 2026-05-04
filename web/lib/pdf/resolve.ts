@@ -583,6 +583,5 @@ export function buildPdfPagePlan(character: ResolvedPdfCharacter): PdfPagePlan[]
 export function mapPdfSvgUsage() {
   return {
     ...PDF_SVG_COMPONENT_MANIFEST,
-    frontPageTemplate: "pdf-svg/examples with svgs/Design general character sheet p1 v3.svg",
   } as const;
 }

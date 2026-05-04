@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 export const PDF_EXPORT_SVG_ASSET_PATHS = {
-  frontPageTemplate: "pdf-svg/examples with svgs/Design general character sheet p1 v3.svg",
   frontPageHeader: "pdf-svg/Front Page Header.svg",
+  frontPageHeaderShell: "pdf-svg/Front Page Header Shell.svg",
   abilityPanel: "pdf-svg/Ability scores, Saves, and ability checks.svg",
   hpPanel: "pdf-svg/HP and Bonuses full.svg",
   passivesAndSpeeds: "pdf-svg/Passives and speeds.svg",
