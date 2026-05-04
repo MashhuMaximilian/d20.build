@@ -20,6 +20,26 @@ type BackstoryFieldConfig = {
   slashContext: string;
 };
 
+const TEXT_FIELDS: Array<{
+  key: "alignment" | "deity";
+  label: string;
+  description: string;
+  placeholder: string;
+}> = [
+  {
+    key: "alignment",
+    label: "Alignment",
+    description: "Short moral and ethical outlook label for the sheet header.",
+    placeholder: "Chaotic Good, Lawful Neutral...",
+  },
+  {
+    key: "deity",
+    label: "Deity",
+    description: "God, patron, philosophy, pantheon, or faith tradition.",
+    placeholder: "Tymora, The Raven Queen, None...",
+  },
+];
+
 const SMALL_FIELDS: BackstoryFieldConfig[] = [
   {
     key: "personalityTraits",
@@ -136,6 +156,26 @@ export function BackstoryStep({ value, onChange }: BackstoryStepProps) {
         <p className="builder-summary__meta">
           Use Markdown shortcuts or type <code>/</code> for headings, lists, quotes, and D&amp;D note templates.
         </p>
+      </div>
+
+      <div className="backstory-step__smallGrid">
+        {TEXT_FIELDS.map((field) => (
+          <label className="builder-field" key={field.key}>
+            <span className="builder-panel__label">{field.label}</span>
+            <span className="builder-summary__meta">{field.description}</span>
+            <input
+              className="input"
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  [field.key]: event.target.value,
+                })
+              }
+              placeholder={field.placeholder}
+              value={value[field.key]}
+            />
+          </label>
+        ))}
       </div>
 
       <div className="backstory-step__smallGrid">

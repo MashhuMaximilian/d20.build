@@ -563,8 +563,8 @@ export function EquipmentStep({
                                 >
                                   <strong>{option.label}</strong>
                                   <div className="equipment-step__optionItems">
-                                    {option.items.map((item) => (
-                                      <span key={`${option.id}-${item}`}>{item}</span>
+                                    {option.items.map((item, itemIndex) => (
+                                      <span key={`${option.id}-${itemIndex}-${item}`}>{item}</span>
                                     ))}
                                   </div>
                                 </button>
@@ -603,8 +603,8 @@ export function EquipmentStep({
                               >
                                 <strong>{option.label}</strong>
                                 <div className="equipment-step__optionItems">
-                                  {option.items.map((item) => (
-                                    <span key={`${option.id}-${item}`}>{item}</span>
+                                  {option.items.map((item, itemIndex) => (
+                                    <span key={`${option.id}-${itemIndex}-${item}`}>{item}</span>
                                   ))}
                                 </div>
                               </button>

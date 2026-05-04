@@ -321,8 +321,8 @@ function renderHeader(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, characte
     race: raceLine,
     class: classLevel,
     background: character.backgroundLabel,
-    alignment: "",
-    deity: "",
+    alignment: character.alignment,
+    deity: character.deity,
     exp: "",
     player: character.playerName,
   } satisfies Record<(typeof HEADER_FIELD_SLOTS)[number]["key"], string>;

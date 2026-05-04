@@ -472,6 +472,8 @@ export function resolvePdfCharacter(source: PdfResolveSource): ResolvedPdfCharac
       uniqueStrings(source.draft.classEntries.map((entry) => entry.classId).filter(Boolean)).join(" / "),
     subclassLabel: normalizeText(source.identity?.subclassLabel || ""),
     backgroundLabel: normalizeText(source.identity?.backgroundLabel || source.draft.backgroundId || ""),
+    alignment: normalizeText((source.backstory ?? source.draft.backstory).alignment || ""),
+    deity: normalizeText((source.backstory ?? source.draft.backstory).deity || ""),
     stats: frontPage.stats,
     frontPage,
     companionCards,

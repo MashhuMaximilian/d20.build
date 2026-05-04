@@ -34,6 +34,8 @@ export type CharacterImprovementSelection = {
 };
 
 export type CharacterBackstory = {
+  alignment: string;
+  deity: string;
   personalityTraits: string;
   ideals: string;
   bonds: string;
@@ -210,6 +212,8 @@ export function createEmptyCharacterDraft(): CharacterDraft {
     },
     manualGrants: [],
     backstory: {
+      alignment: "",
+      deity: "",
       personalityTraits: "",
       ideals: "",
       bonds: "",

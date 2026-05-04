@@ -151,6 +151,8 @@ export type ResolvedPdfCharacter = {
   classLabel: string;
   subclassLabel: string;
   backgroundLabel: string;
+  alignment: string;
+  deity: string;
   stats: PdfStatBlock[];
   frontPage: PdfFrontPageComposition;
   companionCards: PdfPageCard[];
