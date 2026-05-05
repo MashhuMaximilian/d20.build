@@ -89,6 +89,24 @@ function noteKey(title: string, value: string) {
   return `${title.toLowerCase()}::${normalizedValue}`;
 }
 
+const CONDITION_NAMES = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "exhaustion",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const;
+
 function getCardPriority(kind: PdfCardKind, contentKind: PdfContentKind, pageHint?: PdfPageKind | "front-rail") {
   const kindWeight: Record<PdfCardKind, number> = {
     trait: 10,
@@ -330,6 +348,23 @@ function pushRightColumnNote(
   });
 }
 
+function pushConditionImmunityNotes(body: string, source: string, pushLine: (title: string, value: string) => void) {
+  CONDITION_NAMES.forEach((condition) => {
+    const conditionPattern = condition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const patterns = [
+      new RegExp(`immune to (?:being |the )?${conditionPattern}(?: condition)?\\b`, "i"),
+      new RegExp(`immune to the ${conditionPattern} condition\\b`, "i"),
+    ];
+    if (patterns.some((pattern) => pattern.test(body))) {
+      pushLine("Condition", `Immune ${titleCase(condition)}`);
+    }
+  });
+
+  if (/immune to (?:being )?(?:put to )?sleep|magic can'?t put you to sleep|magical sleep/i.test(source)) {
+    pushLine("Condition", "Immune Sleep");
+  }
+}
+
 function extractRightColumnNotesFromCard(card: PdfPageCard) {
   const lines: PdfRightColumnNoteLine[] = [];
   const seen = new Set<string>();
@@ -373,14 +408,11 @@ function extractRightColumnNotesFromCard(card: PdfPageCard) {
   if (/immune to disease/.test(source)) {
     pushLine("Immunity", "Disease");
   }
-  const immunityMatch = body.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
-  if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
+  const immunityMatch = body.match(/immune to ([a-z ,/-]+?) damage/i);
+  if (immunityMatch) {
     pushLine("Immunity", titleCase(immunityMatch[1]));
   }
-  const conditionImmunityMatch = body.match(/immune to the ([a-z-]+) condition/i);
-  if (conditionImmunityMatch) {
-    pushLine("Condition", `Immune ${titleCase(conditionImmunityMatch[1])}`);
-  }
+  pushConditionImmunityNotes(body, source, pushLine);
   if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(source)) {
     pushLine("Condition", "Adv. vs Poisoned");
   }
@@ -455,13 +487,16 @@ function toCompactTrait(card: PdfPageCard): PdfRightColumnCompactTrait {
   };
 }
 
-function buildRightColumnComposition(railCards: PdfPageCard[]): PdfFrontPageComposition["rightColumn"] {
-  const noteCards = railCards.filter((card) => card.kind === "condition" || card.kind === "sense");
+function buildRightColumnComposition(railCards: PdfPageCard[], featureCards: PdfPageCard[]): PdfFrontPageComposition["rightColumn"] {
+  const noteCards = uniqueById([
+    ...railCards.filter((card) => card.kind === "condition" || card.kind === "sense"),
+    ...featureCards.filter((card) => card.kind !== "proficiency" && card.kind !== "language"),
+  ]);
   const traitCards = railCards.filter((card) => card.kind === "trait" && (cardHasGroup(card, "race") || cardHasGroup(card, "subrace")));
   const notes: PdfRightColumnNoteLine[] = [];
   const noteSeen = new Set<string>();
 
-  [...noteCards, ...traitCards].forEach((card) => {
+  noteCards.forEach((card) => {
     extractRightColumnNotesFromCard(card).forEach((line) => {
       pushRightColumnNote(notes, noteSeen, line.title, line.value);
     });
@@ -609,7 +644,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
         card.kind === "language",
     ),
   ]).sort((left, right) => left.priority - right.priority);
-  const rightColumn = buildRightColumnComposition(railCards);
+  const rightColumn = buildRightColumnComposition(railCards, featureCards);
 
   const deckOnly = featureCards.filter(
     (card) =>

@@ -270,13 +270,13 @@ function headerRect(rect: PdfRect) {
   return componentRect(FRONT_PAGE_REGIONS.header, HEADER_SHELL_VIEWBOX, rect);
 }
 
-function drawHeaderUnderline(ctx: PdfRenderContext, rect: PdfRect) {
+function drawHeaderUnderline(ctx: PdfRenderContext, rect: PdfRect, color = "#999999", width = 0.2) {
   const doc = ctx.doc as DashedLineDocument;
   const y = rect.y + rect.height / 2;
   doc.save();
   doc
-    .lineWidth(0.2)
-    .strokeColor("#999999")
+    .lineWidth(width)
+    .strokeColor(color)
     .lineCap("round")
     .lineJoin("round")
     .dash(0.5, { space: 0.5 })
@@ -971,12 +971,12 @@ function renderGroupedFeatureDeck(ctx: PdfRenderContext, cards: PdfPageCard[], r
 
 function renderRightColumnCardShell(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, title: string, rect: PdfRect) {
   maskRect(ctx, rect);
-  drawSvg(ctx, assets.proficiencyBox1, rect);
-  const content = insetRect(rect, 5, 4);
-  drawFittedText(ctx, title, { x: content.x, y: content.y + 1, width: content.width, height: 6 }, {
+  drawSvg(ctx, assets.generalContainer, rect);
+  const content = insetRect(rect, 6, 7);
+  drawFittedText(ctx, title, { x: content.x, y: content.y + 1.5, width: content.width, height: 6 }, {
     font: "Helvetica-Bold",
-    maxSize: 4.9,
-    minSize: 3.5,
+    maxSize: 4.7,
+    minSize: 3.4,
     color: "#000000",
   });
   return content;
@@ -990,14 +990,14 @@ function renderRightColumnNotesCard(
 ) {
   const content = renderRightColumnCardShell(ctx, assets, "Senses & Conditions", rect);
   notes.forEach((line, index) => {
-    const y = content.y + 9 + index * 6.4;
+    const y = content.y + 11.2 + index * 6;
     if (y + 6 > content.y + content.height) {
       return;
     }
     drawFittedText(ctx, `${line.title}: ${line.value}`, { x: content.x, y, width: content.width, height: 6 }, {
       font: "Helvetica",
-      maxSize: 4.4,
-      minSize: 3.2,
+      maxSize: 4.15,
+      minSize: 3,
       color: "#111111",
     });
   });
@@ -1009,31 +1009,41 @@ function renderCompactTraitLines(
   cards: PdfRightColumnCompactTrait[],
   content: PdfRect,
   cursorY: number,
-  showSubtitle: boolean,
 ) {
   let nextY = cursorY;
-  if (showSubtitle && cards.length) {
-    drawFittedText(ctx, title, { x: content.x, y: nextY, width: content.width, height: 5 }, {
+  if (cards.length) {
+    drawFittedText(ctx, `${title} Traits`, { x: content.x, y: nextY, width: content.width, height: 5 }, {
       font: "Helvetica-Bold",
-      maxSize: 3.9,
-      minSize: 3.0,
+      maxSize: 3.8,
+      minSize: 2.9,
       color: "#333333",
     });
-    nextY += 5.4;
+    strokeRule(ctx, content.x, nextY + 5.4, content.width, "#777777");
+    nextY += 7.2;
   }
 
-  cards.forEach((card) => {
-    if (nextY + 10 > content.y + content.height) {
+  cards.forEach((card, index) => {
+    const entryHeight = 16.2;
+    if (nextY + entryHeight > content.y + content.height) {
       return;
     }
-    drawFittedText(ctx, `${card.title}: ${card.summary}`, { x: content.x, y: nextY, width: content.width, height: 9.4 }, {
-      font: "Helvetica",
+    drawFittedText(ctx, card.title, { x: content.x, y: nextY, width: content.width, height: 4.8 }, {
+      font: "Helvetica-Bold",
       maxSize: 3.85,
-      minSize: 2.85,
+      minSize: 2.9,
+      color: "#000000",
+    });
+    drawFittedText(ctx, card.summary, { x: content.x, y: nextY + 5.1, width: content.width, height: 8.6 }, {
+      font: "Helvetica",
+      maxSize: 3.35,
+      minSize: 2.55,
       color: "#111111",
       lineGap: 0,
     });
-    nextY += 10.2;
+    nextY += entryHeight;
+    if (index < cards.length - 1 && nextY + 1.2 < content.y + content.height) {
+      drawHeaderUnderline(ctx, { x: content.x, y: nextY - 2.9, width: content.width, height: 2.4 }, "#999999", 0.22);
+    }
   });
 
   return nextY;
@@ -1042,24 +1052,29 @@ function renderCompactTraitLines(
 function renderRightColumnFeatureCard(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, rect: PdfRect) {
   const { racialCards, subracialCards } = character.frontPage.rightColumn;
   const content = renderRightColumnCardShell(ctx, assets, "Racial & Subracial Features", rect);
-  const bothGroups = racialCards.length > 0 && subracialCards.length > 0;
-  let cursorY = content.y + 9;
-  cursorY = renderCompactTraitLines(ctx, "Racial", racialCards, content, cursorY, bothGroups);
-  if (bothGroups) {
-    cursorY += 1.4;
+  let cursorY = content.y + 11.2;
+  cursorY = renderCompactTraitLines(ctx, "Racial", racialCards, content, cursorY);
+  if (racialCards.length && subracialCards.length) {
+    cursorY += 1.8;
   }
-  renderCompactTraitLines(ctx, "Subracial", subracialCards, content, cursorY, bothGroups);
+  renderCompactTraitLines(ctx, "Subracial", subracialCards, content, cursorY);
 }
 
 function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const { rightColumn } = character.frontPage;
-  const rail = insetRect(FRONT_PAGE_REGIONS.rail, 8, 8);
-  const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: 78 };
+  const headerRight = FRONT_PAGE_REGIONS.header.x + FRONT_PAGE_REGIONS.header.width;
+  const rail = {
+    x: FRONT_PAGE_REGIONS.rail.x,
+    y: FRONT_PAGE_REGIONS.rail.y + 2,
+    width: headerRight - FRONT_PAGE_REGIONS.rail.x,
+    height: FRONT_PAGE_REGIONS.rail.height - 6,
+  };
+  const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: 82 };
   const featureRect = {
     x: rail.x,
     y: notesRect.y + notesRect.height + 6,
     width: rail.width,
-    height: Math.max(0, rail.y + rail.height - (notesRect.y + notesRect.height + 6)),
+    height: Math.min(174, Math.max(0, rail.y + rail.height - (notesRect.y + notesRect.height + 6))),
   };
 
   renderRightColumnNotesCard(ctx, assets, rightColumn.sensesAndConditions, notesRect);
