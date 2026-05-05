@@ -969,99 +969,101 @@ function renderGroupedFeatureDeck(ctx: PdfRenderContext, cards: PdfPageCard[], r
   });
 }
 
-function renderRailSectionTitle(ctx: PdfRenderContext, title: string, rect: PdfRect) {
-  drawFittedText(ctx, title.toUpperCase(), rect, {
+function renderRightColumnCardShell(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, title: string, rect: PdfRect) {
+  maskRect(ctx, rect);
+  drawSvg(ctx, assets.proficiencyBox1, rect);
+  const content = insetRect(rect, 5, 4);
+  drawFittedText(ctx, title, { x: content.x, y: content.y + 1, width: content.width, height: 6 }, {
     font: "Helvetica-Bold",
-    maxSize: 5.6,
-    minSize: 4.2,
-    color: "#222222",
+    maxSize: 4.9,
+    minSize: 3.5,
+    color: "#000000",
   });
-  strokeRule(ctx, rect.x, rect.y + rect.height + 1.5, rect.width);
+  return content;
 }
 
-function renderRightColumnNotes(ctx: PdfRenderContext, notes: PdfRightColumnNoteLine[], rect: PdfRect) {
-  maskRect(ctx, rect);
-  renderRailSectionTitle(ctx, "Senses & Conditions", { x: rect.x, y: rect.y, width: rect.width, height: 7 });
-
+function renderRightColumnNotesCard(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  notes: PdfRightColumnNoteLine[],
+  rect: PdfRect,
+) {
+  const content = renderRightColumnCardShell(ctx, assets, "Senses & Conditions", rect);
   notes.forEach((line, index) => {
-    const y = rect.y + 13 + index * 8.1;
-    if (y + 7 > rect.y + rect.height) {
+    const y = content.y + 9 + index * 6.4;
+    if (y + 6 > content.y + content.height) {
       return;
     }
-    drawFittedText(ctx, `${line.title}: ${line.value}`, { x: rect.x + 2, y, width: rect.width - 4, height: 7 }, {
+    drawFittedText(ctx, `${line.title}: ${line.value}`, { x: content.x, y, width: content.width, height: 6 }, {
       font: "Helvetica",
-      maxSize: 5.1,
-      minSize: 3.7,
-      color: "#000000",
+      maxSize: 4.4,
+      minSize: 3.2,
+      color: "#111111",
     });
   });
 }
 
-function renderCompactTraitCard(
+function renderCompactTraitLines(
   ctx: PdfRenderContext,
-  assets: PdfSvgAssetBundle,
-  card: PdfRightColumnCompactTrait,
-  rect: PdfRect,
-) {
-  drawSvg(ctx, assets.proficiencyBox1, rect);
-  const content = insetRect(rect, 5, 4);
-  drawFittedText(ctx, cleanText(card.title).toUpperCase(), { x: content.x, y: content.y + 1, width: content.width, height: 6 }, {
-    font: "Helvetica-Bold",
-    maxSize: 4.7,
-    minSize: 3.5,
-    color: "#000000",
-  });
-  drawFittedText(ctx, cleanText(card.summary), { x: content.x, y: content.y + 8.3, width: content.width, height: content.height - 8.3 }, {
-    font: "Helvetica",
-    maxSize: 4.25,
-    minSize: 3.15,
-    color: "#111111",
-    lineGap: 0,
-  });
-}
-
-function renderRightColumnTraitSection(
-  ctx: PdfRenderContext,
-  assets: PdfSvgAssetBundle,
   title: string,
   cards: PdfRightColumnCompactTrait[],
-  rect: PdfRect,
+  content: PdfRect,
+  cursorY: number,
+  showSubtitle: boolean,
 ) {
-  if (!cards.length) {
-    return;
+  let nextY = cursorY;
+  if (showSubtitle && cards.length) {
+    drawFittedText(ctx, title, { x: content.x, y: nextY, width: content.width, height: 5 }, {
+      font: "Helvetica-Bold",
+      maxSize: 3.9,
+      minSize: 3.0,
+      color: "#333333",
+    });
+    nextY += 5.4;
   }
 
-  maskRect(ctx, rect);
-  renderRailSectionTitle(ctx, title, { x: rect.x, y: rect.y, width: rect.width, height: 7 });
-  let cursorY = rect.y + 12;
   cards.forEach((card) => {
-    const cardHeight = 35;
-    if (cursorY + cardHeight > rect.y + rect.height) {
+    if (nextY + 10 > content.y + content.height) {
       return;
     }
-    renderCompactTraitCard(ctx, assets, card, { x: rect.x, y: cursorY, width: rect.width, height: cardHeight });
-    cursorY += cardHeight + 5;
+    drawFittedText(ctx, `${card.title}: ${card.summary}`, { x: content.x, y: nextY, width: content.width, height: 9.4 }, {
+      font: "Helvetica",
+      maxSize: 3.85,
+      minSize: 2.85,
+      color: "#111111",
+      lineGap: 0,
+    });
+    nextY += 10.2;
   });
+
+  return nextY;
+}
+
+function renderRightColumnFeatureCard(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, rect: PdfRect) {
+  const { racialCards, subracialCards } = character.frontPage.rightColumn;
+  const content = renderRightColumnCardShell(ctx, assets, "Racial & Subracial Features", rect);
+  const bothGroups = racialCards.length > 0 && subracialCards.length > 0;
+  let cursorY = content.y + 9;
+  cursorY = renderCompactTraitLines(ctx, "Racial", racialCards, content, cursorY, bothGroups);
+  if (bothGroups) {
+    cursorY += 1.4;
+  }
+  renderCompactTraitLines(ctx, "Subracial", subracialCards, content, cursorY, bothGroups);
 }
 
 function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const { rightColumn } = character.frontPage;
   const rail = insetRect(FRONT_PAGE_REGIONS.rail, 8, 8);
   const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: 78 };
-  const traitTop = rail.y + 86;
-  const subracialCount = rightColumn.subracialCards.length;
-  const racialHeight = subracialCount ? 108 : rail.y + rail.height - traitTop;
-  const racialRect = { x: rail.x, y: traitTop, width: rail.width, height: racialHeight };
-  const subracialRect = {
+  const featureRect = {
     x: rail.x,
-    y: traitTop + racialHeight + 8,
+    y: notesRect.y + notesRect.height + 6,
     width: rail.width,
-    height: Math.max(0, rail.y + rail.height - (traitTop + racialHeight + 8)),
+    height: Math.max(0, rail.y + rail.height - (notesRect.y + notesRect.height + 6)),
   };
 
-  renderRightColumnNotes(ctx, rightColumn.sensesAndConditions, notesRect);
-  renderRightColumnTraitSection(ctx, assets, "Racial", rightColumn.racialCards, racialRect);
-  renderRightColumnTraitSection(ctx, assets, "Subracial", rightColumn.subracialCards, subracialRect);
+  renderRightColumnNotesCard(ctx, assets, rightColumn.sensesAndConditions, notesRect);
+  renderRightColumnFeatureCard(ctx, assets, character, featureRect);
 }
 
 function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
