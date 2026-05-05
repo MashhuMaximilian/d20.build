@@ -84,6 +84,27 @@ export type PdfPageSection = {
   description?: string;
 };
 
+export type PdfRightColumnNoteLine = {
+  id: string;
+  title: string;
+  value: string;
+};
+
+export type PdfRightColumnCompactTrait = {
+  id: string;
+  title: string;
+  summary: string;
+  sourceCardId: string;
+  priority: number;
+};
+
+export type PdfRightColumnComposition = {
+  sensesAndConditions: PdfRightColumnNoteLine[];
+  racialCards: PdfRightColumnCompactTrait[];
+  subracialCards: PdfRightColumnCompactTrait[];
+  overflow: PdfPageCard[];
+};
+
 export type PdfFrontPageComposition = {
   stats: PdfStatBlock[];
   abilityRows: PdfAbilityScoreRow[];
@@ -93,6 +114,7 @@ export type PdfFrontPageComposition = {
   deck: PdfPageCard[];
   deckOverflow: PdfPageCard[];
   railCards: PdfPageCard[];
+  rightColumn: PdfRightColumnComposition;
   notes: string[];
   capacity: number;
 };

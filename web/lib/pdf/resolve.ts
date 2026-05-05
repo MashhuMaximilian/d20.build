@@ -19,6 +19,8 @@ import type {
   PdfPageSection,
   PdfProficiencyGroups,
   PdfResolveSource,
+  PdfRightColumnCompactTrait,
+  PdfRightColumnNoteLine,
   PdfStatBlock,
   PdfSkillRow,
   ResolvedPdfCharacter,
@@ -69,6 +71,22 @@ function normalizeTags(tags: string[] | undefined) {
 
 function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function titleCase(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\b[a-z]/g, (char) => char.toUpperCase());
+}
+
+function noteKey(title: string, value: string) {
+  const normalizedValue = normalizeText(value)
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/\bfeet\b/g, "ft")
+    .replace(/\s+/g, " ");
+  return `${title.toLowerCase()}::${normalizedValue}`;
 }
 
 function getCardPriority(kind: PdfCardKind, contentKind: PdfContentKind, pageHint?: PdfPageKind | "front-rail") {
@@ -284,6 +302,209 @@ function normalizeCard(card: PdfPageCard) {
   };
 }
 
+function cardHasGroup(card: PdfPageCard, group: string) {
+  return card.tags.includes(`pdf-group:${group}`);
+}
+
+function pushRightColumnNote(
+  lines: PdfRightColumnNoteLine[],
+  seen: Set<string>,
+  title: string,
+  value: string,
+) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return;
+  }
+
+  const key = noteKey(title, normalized);
+  if (seen.has(key)) {
+    return;
+  }
+
+  seen.add(key);
+  lines.push({
+    id: `r3-note-${key.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    title,
+    value: normalized,
+  });
+}
+
+function extractRightColumnNotesFromCard(card: PdfPageCard) {
+  const lines: PdfRightColumnNoteLine[] = [];
+  const seen = new Set<string>();
+  const pushLine = (title: string, value: string) => pushRightColumnNote(lines, seen, title, value);
+
+  card.tags
+    .filter((tag) => tag.startsWith("pdf-note:"))
+    .forEach((tag) => {
+      const [, kind, ...rest] = tag.split(":");
+      if (!kind || !rest.length) {
+        return;
+      }
+
+      const titleMap: Record<string, string> = {
+        resistance: "Resistance",
+        vulnerability: "Vulnerability",
+        immunity: "Immunity",
+        condition: "Condition",
+        "condition-edge": "Condition",
+        rest: "Rest",
+        sense: "Sense",
+        speed: "Speed",
+      };
+      pushLine(titleMap[kind] ?? titleCase(kind), rest.join(":"));
+    });
+
+  const body = stripHtml(card.detail || card.summary || "");
+  const source = `${card.title} ${body}`.toLowerCase();
+
+  if (/resistance to poison damage|poison resistance/.test(source)) {
+    pushLine("Resistance", "Poison");
+  }
+  const resistanceMatch = body.match(/resistance to ([a-z ,/-]+?) damage/i);
+  if (resistanceMatch) {
+    pushLine("Resistance", titleCase(resistanceMatch[1]));
+  }
+  const vulnerabilityMatch = body.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
+  if (vulnerabilityMatch) {
+    pushLine("Vulnerability", titleCase(vulnerabilityMatch[1]));
+  }
+  if (/immune to disease/.test(source)) {
+    pushLine("Immunity", "Disease");
+  }
+  const immunityMatch = body.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
+  if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
+    pushLine("Immunity", titleCase(immunityMatch[1]));
+  }
+  const conditionImmunityMatch = body.match(/immune to the ([a-z-]+) condition/i);
+  if (conditionImmunityMatch) {
+    pushLine("Condition", `Immune ${titleCase(conditionImmunityMatch[1])}`);
+  }
+  if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(source)) {
+    pushLine("Condition", "Adv. vs Poisoned");
+  }
+  if (/don'?t need to sleep|sentry'?s rest/.test(source)) {
+    pushLine("Rest", "Sentry's Rest");
+  }
+  const darkvisionMatch = body.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
+  if (darkvisionMatch) {
+    pushLine("Sense", `Darkvision ${darkvisionMatch[1]} ft`);
+  }
+  const speedMatch = body.match(/walking speed is increased by (\d+) feet?/i);
+  if (speedMatch) {
+    pushLine("Speed", `+${speedMatch[1]} ft`);
+  }
+  const flightMatch = body.match(/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i);
+  const flightValue = flightMatch?.[1] || flightMatch?.[2];
+  if (flightValue) {
+    pushLine("Speed", `Fly ${flightValue} ft`);
+  }
+
+  return lines;
+}
+
+function compactTraitSummary(card: PdfPageCard) {
+  const cleaned = stripHtml(card.summary || card.detail || "")
+    .replace(/\b(?:d6|d8|d10|d12)\s+Damage Type\s+Breath Weapon\b/gi, "")
+    .replace(/\bPrerequisite:\s*[^.]+\.?/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const activeSentence = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .find((sentence) => /\b(action|bonus action|reaction|cast|use|regain|saving throw|advantage|resistance|immune|once|rest|damage|speed)\b/i.test(sentence));
+  const summary = activeSentence || cleaned;
+
+  if (!summary) {
+    return "See full feature text.";
+  }
+  return summary.length > 118 ? `${summary.slice(0, 115).trim()}...` : summary;
+}
+
+function isNoteOnlyTrait(card: PdfPageCard, notes: PdfRightColumnNoteLine[]) {
+  if (!notes.length) {
+    return false;
+  }
+
+  const body = stripHtml(card.detail || card.summary || "").toLowerCase();
+  const fullText = `${card.title} ${body}`;
+
+  if (/^(darkvision|damage resistance|damage vulnerability|damage immunity|dwarven resilience|hellish resistance)$/i.test(card.title)) {
+    return true;
+  }
+  if (/\b(fey ancestry|trance|breath weapon|draconic ancestry|lucky|brave|nimbleness)\b/i.test(fullText)) {
+    return false;
+  }
+  if (/proficienc|language|weapon training|tool/i.test(fullText)) {
+    return true;
+  }
+  if (body.length <= 260 && /\b(darkvision|resistance|immune|vulnerable|speed is increased|flying speed|don'?t need to sleep|advantage .* poisoned)\b/.test(body)) {
+    return !/\b(action|bonus action|reaction|attack|cast|spell|damage roll|saving throw dc|once per|short rest|long rest)\b/.test(body) || /poisoned/.test(body);
+  }
+
+  return /darkvision|resistance/.test(card.title.toLowerCase());
+}
+
+function toCompactTrait(card: PdfPageCard): PdfRightColumnCompactTrait {
+  return {
+    id: `r3-trait-${card.id}`,
+    title: card.title,
+    summary: compactTraitSummary(card),
+    sourceCardId: card.id,
+    priority: card.priority,
+  };
+}
+
+function buildRightColumnComposition(railCards: PdfPageCard[]): PdfFrontPageComposition["rightColumn"] {
+  const noteCards = railCards.filter((card) => card.kind === "condition" || card.kind === "sense");
+  const traitCards = railCards.filter((card) => card.kind === "trait" && (cardHasGroup(card, "race") || cardHasGroup(card, "subrace")));
+  const notes: PdfRightColumnNoteLine[] = [];
+  const noteSeen = new Set<string>();
+
+  [...noteCards, ...traitCards].forEach((card) => {
+    extractRightColumnNotesFromCard(card).forEach((line) => {
+      pushRightColumnNote(notes, noteSeen, line.title, line.value);
+    });
+  });
+
+  const racialCards: PdfRightColumnCompactTrait[] = [];
+  const subracialCards: PdfRightColumnCompactTrait[] = [];
+  traitCards.forEach((card) => {
+    const cardNotes = extractRightColumnNotesFromCard(card);
+    if (isNoteOnlyTrait(card, cardNotes)) {
+      return;
+    }
+
+    if (cardHasGroup(card, "subrace")) {
+      subracialCards.push(toCompactTrait(card));
+      return;
+    }
+    racialCards.push(toCompactTrait(card));
+  });
+
+  const maxNotes = 8;
+  const maxTraitCards = 5;
+  const orderedRacialCards = racialCards.sort((left, right) => left.priority - right.priority || left.title.localeCompare(right.title));
+  const orderedSubracialCards = subracialCards.sort((left, right) => left.priority - right.priority || left.title.localeCompare(right.title));
+  const racialVisibleCount = orderedSubracialCards.length ? 2 : maxTraitCards;
+  const visibleRacialCards = orderedRacialCards.slice(0, racialVisibleCount);
+  const visibleSubracialCards = orderedSubracialCards.slice(0, maxTraitCards - visibleRacialCards.length);
+  const visibleTraitIds = new Set([...visibleRacialCards, ...visibleSubracialCards].map((card) => card.sourceCardId));
+  const overflow = traitCards.filter((card) => {
+    if (isNoteOnlyTrait(card, extractRightColumnNotesFromCard(card))) {
+      return false;
+    }
+    return !visibleTraitIds.has(card.id);
+  });
+
+  return {
+    sensesAndConditions: notes.slice(0, maxNotes),
+    racialCards: visibleRacialCards,
+    subracialCards: visibleSubracialCards,
+    overflow: uniqueById(overflow),
+  };
+}
+
 function normalizeAbilityRow(row: PdfAbilityScoreRow): PdfAbilityScoreRow {
   return {
     ...row,
@@ -387,7 +608,8 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
         card.kind === "proficiency" ||
         card.kind === "language",
     ),
-  ]);
+  ]).sort((left, right) => left.priority - right.priority);
+  const rightColumn = buildRightColumnComposition(railCards);
 
   const deckOnly = featureCards.filter(
     (card) =>
@@ -409,7 +631,8 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
     proficiencyGroups: normalizedProficiencyGroups,
     deck: packed.packed,
     deckOverflow: packed.overflow,
-    railCards: railCards.sort((left, right) => left.priority - right.priority),
+    railCards,
+    rightColumn,
     notes: uniqueStrings([
       ...(source.notes ?? []),
       "Front page is split between a numeric/stat zone and a generated feature-card deck.",
@@ -457,7 +680,10 @@ export function resolvePdfCharacter(source: PdfResolveSource): ResolvedPdfCharac
     featureCards,
   });
 
-  const overflowAppendixEntries = frontPage.deckOverflow.map(toPdfAppendixEntryFromCard);
+  const overflowAppendixEntries = [
+    ...frontPage.deckOverflow,
+    ...frontPage.rightColumn.overflow,
+  ].map(toPdfAppendixEntryFromCard);
   const allAppendixEntries = uniqueById([...appendixEntries, ...overflowAppendixEntries]);
 
   const resolved: ResolvedPdfCharacter = {

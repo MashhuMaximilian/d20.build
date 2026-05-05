@@ -1,5 +1,5 @@
 import type { PdfSvgAssetBundle } from "@/lib/pdf/svg-assets.server";
-import type { PdfPageCard, ResolvedPdfCharacter } from "@/lib/pdf/types";
+import type { PdfPageCard, PdfRightColumnCompactTrait, PdfRightColumnNoteLine, ResolvedPdfCharacter } from "@/lib/pdf/types";
 import {
   drawCenteredTextInRect,
   drawFittedText,
@@ -29,11 +29,6 @@ type FeatureSummary = {
   category: string;
   source: string;
   body: string;
-};
-
-type RailNote = {
-  title: string;
-  value: string;
 };
 
 type DashedLineDocument = PdfRenderContext["doc"] & {
@@ -548,95 +543,6 @@ function cardHasGroup(card: PdfPageCard, group: string) {
   return card.tags.includes(`pdf-group:${group}`);
 }
 
-function extractRailNotes(cards: PdfPageCard[]) {
-  const lines: RailNote[] = [];
-  const seen = new Set<string>();
-  const pushLine = (title: string, value: string) => {
-    const normalized = value.trim();
-    if (!normalized) {
-      return;
-    }
-    const key = `${title.toLowerCase()}::${normalized.toLowerCase()}`;
-    if (seen.has(key)) {
-      return;
-    }
-    seen.add(key);
-    lines.push({ title, value: normalized });
-  };
-
-  cards.forEach((card) => {
-    card.tags
-      .filter((tag) => tag.startsWith("pdf-note:"))
-      .forEach((tag) => {
-        const [, title, ...rest] = tag.split(":");
-        if (!title || !rest.length) {
-          return;
-        }
-        const value = rest.join(":").trim();
-        const titleMap: Record<string, string> = {
-          resistance: "Resistance",
-          vulnerability: "Vulnerability",
-          immunity: "Immunity",
-          condition: "Condition",
-          "condition-edge": "Condition Edge",
-          rest: "Rest",
-          sense: "Sense",
-          speed: "Speed",
-        };
-        pushLine(titleMap[title] ?? title, value);
-      });
-
-    const body = cleanText(card.detail || card.summary || "");
-    const source = `${card.title} ${body}`.toLowerCase();
-
-    if (/resistance to poison damage|poison resistance/.test(source)) {
-      pushLine("Resistance", "Poison");
-    }
-    const resistanceMatch = body.match(/resistance to ([a-z ,/-]+?) damage/i);
-    if (resistanceMatch) {
-      pushLine("Resistance", resistanceMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
-    }
-    const vulnerabilityMatch = body.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
-    if (vulnerabilityMatch) {
-      pushLine("Vulnerability", vulnerabilityMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
-    }
-    const immunityMatch = body.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
-    if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
-      pushLine("Immunity", immunityMatch[1].replace(/\b\w/g, (char) => char.toUpperCase()));
-    }
-    if (/immune to disease/.test(source)) {
-      pushLine("Immunity", "Disease");
-    }
-    if (/don'?t need to sleep|sentry'?s rest/.test(source)) {
-      pushLine("Rest", "Sentry's Rest");
-    }
-    if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(source)) {
-      pushLine("Condition Edge", "Adv. vs Poisoned");
-    }
-    const darkvisionMatch = body.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
-    if (darkvisionMatch) {
-      pushLine("Sense", `Darkvision ${darkvisionMatch[1]} ft`);
-    }
-    const conditionImmunityMatch = body.match(/immune to the ([a-z-]+) condition/i);
-    if (conditionImmunityMatch) {
-      pushLine("Condition", `Immune ${conditionImmunityMatch[1]}`);
-    }
-    const speedMatch = body.match(/walking speed is increased by (\d+) feet?/i);
-    if (speedMatch) {
-      pushLine("Speed", `+${speedMatch[1]} ft`);
-    }
-    if (/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i.test(body)) {
-      const match = body.match(/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i);
-      const value = match?.[1] || match?.[2];
-      if (value) {
-        pushLine("Speed", `Fly ${value} ft`);
-      }
-    }
-  });
-
-  return lines.slice(0, 8);
-}
-
 function drawSkillMarker(ctx: PdfRenderContext, center: { x: number; y: number }, row: { proficient: boolean; expertise: boolean }) {
   if (row.expertise) {
     strokeCircle(ctx, center.x, center.y, 1.95, "#000000", 0.65);
@@ -1063,35 +969,99 @@ function renderGroupedFeatureDeck(ctx: PdfRenderContext, cards: PdfPageCard[], r
   });
 }
 
-function renderRail(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
-  const railCards = character.frontPage.railCards.filter((card) => card.kind !== "proficiency" && card.kind !== "language");
-  const noteCards = railCards.filter((card) => card.kind === "condition" || card.kind === "sense");
-  const racialCards = railCards.filter((card) => cardHasGroup(card, "race") || cardHasGroup(card, "subrace") || card.kind === "trait");
-  const noteLines = extractRailNotes([...noteCards, ...racialCards]);
+function renderRailSectionTitle(ctx: PdfRenderContext, title: string, rect: PdfRect) {
+  drawFittedText(ctx, title.toUpperCase(), rect, {
+    font: "Helvetica-Bold",
+    maxSize: 5.6,
+    minSize: 4.2,
+    color: "#222222",
+  });
+  strokeRule(ctx, rect.x, rect.y + rect.height + 1.5, rect.width);
+}
 
-  const notesRect = { x: FRONT_PAGE_REGIONS.rail.x + 8, y: FRONT_PAGE_REGIONS.rail.y + 10, width: FRONT_PAGE_REGIONS.rail.width - 16, height: 86 };
-  const traitsRect = { x: FRONT_PAGE_REGIONS.rail.x + 8, y: FRONT_PAGE_REGIONS.rail.y + 106, width: FRONT_PAGE_REGIONS.rail.width - 16, height: FRONT_PAGE_REGIONS.rail.height - 114 };
+function renderRightColumnNotes(ctx: PdfRenderContext, notes: PdfRightColumnNoteLine[], rect: PdfRect) {
+  maskRect(ctx, rect);
+  renderRailSectionTitle(ctx, "Senses & Conditions", { x: rect.x, y: rect.y, width: rect.width, height: 7 });
 
-  maskRect(ctx, notesRect);
-  noteLines.forEach((line, index) => {
-    const y = notesRect.y + index * 10;
-    if (y + 8 > notesRect.y + notesRect.height) {
+  notes.forEach((line, index) => {
+    const y = rect.y + 13 + index * 8.1;
+    if (y + 7 > rect.y + rect.height) {
       return;
     }
-    drawFittedText(ctx, `${line.title}: ${line.value}`, { x: notesRect.x + 2, y, width: notesRect.width - 4, height: 8 }, {
+    drawFittedText(ctx, `${line.title}: ${line.value}`, { x: rect.x + 2, y, width: rect.width - 4, height: 7 }, {
       font: "Helvetica",
-      maxSize: 5.5,
-      minSize: 3.8,
+      maxSize: 5.1,
+      minSize: 3.7,
       color: "#000000",
     });
   });
+}
 
-  if (!racialCards.length) {
+function renderCompactTraitCard(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  card: PdfRightColumnCompactTrait,
+  rect: PdfRect,
+) {
+  drawSvg(ctx, assets.proficiencyBox1, rect);
+  const content = insetRect(rect, 5, 4);
+  drawFittedText(ctx, cleanText(card.title).toUpperCase(), { x: content.x, y: content.y + 1, width: content.width, height: 6 }, {
+    font: "Helvetica-Bold",
+    maxSize: 4.7,
+    minSize: 3.5,
+    color: "#000000",
+  });
+  drawFittedText(ctx, cleanText(card.summary), { x: content.x, y: content.y + 8.3, width: content.width, height: content.height - 8.3 }, {
+    font: "Helvetica",
+    maxSize: 4.25,
+    minSize: 3.15,
+    color: "#111111",
+    lineGap: 0,
+  });
+}
+
+function renderRightColumnTraitSection(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  title: string,
+  cards: PdfRightColumnCompactTrait[],
+  rect: PdfRect,
+) {
+  if (!cards.length) {
     return;
   }
 
-  maskRect(ctx, traitsRect);
-  renderFeatureList(ctx, racialCards, traitsRect, 1);
+  maskRect(ctx, rect);
+  renderRailSectionTitle(ctx, title, { x: rect.x, y: rect.y, width: rect.width, height: 7 });
+  let cursorY = rect.y + 12;
+  cards.forEach((card) => {
+    const cardHeight = 35;
+    if (cursorY + cardHeight > rect.y + rect.height) {
+      return;
+    }
+    renderCompactTraitCard(ctx, assets, card, { x: rect.x, y: cursorY, width: rect.width, height: cardHeight });
+    cursorY += cardHeight + 5;
+  });
+}
+
+function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  const { rightColumn } = character.frontPage;
+  const rail = insetRect(FRONT_PAGE_REGIONS.rail, 8, 8);
+  const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: 78 };
+  const traitTop = rail.y + 86;
+  const subracialCount = rightColumn.subracialCards.length;
+  const racialHeight = subracialCount ? 108 : rail.y + rail.height - traitTop;
+  const racialRect = { x: rail.x, y: traitTop, width: rail.width, height: racialHeight };
+  const subracialRect = {
+    x: rail.x,
+    y: traitTop + racialHeight + 8,
+    width: rail.width,
+    height: Math.max(0, rail.y + rail.height - (traitTop + racialHeight + 8)),
+  };
+
+  renderRightColumnNotes(ctx, rightColumn.sensesAndConditions, notesRect);
+  renderRightColumnTraitSection(ctx, assets, "Racial", rightColumn.racialCards, racialRect);
+  renderRightColumnTraitSection(ctx, assets, "Subracial", rightColumn.subracialCards, subracialRect);
 }
 
 function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
@@ -1130,6 +1100,6 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderPassives(ctx, assets, character, true);
   renderProficiencies(ctx, assets, character);
   renderAttacks(ctx, assets, character, true);
-  renderRail(ctx, character);
+  renderRail(ctx, assets, character);
   renderFeatureDeck(ctx, character);
 }
