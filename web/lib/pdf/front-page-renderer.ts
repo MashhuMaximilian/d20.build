@@ -1023,17 +1023,17 @@ function renderCompactTraitLines(
   }
 
   cards.forEach((card, index) => {
-    const entryHeight = 16.2;
+    const entryHeight = 14.2;
     if (nextY + entryHeight > content.y + content.height) {
       return;
     }
-    drawFittedText(ctx, card.title, { x: content.x, y: nextY, width: content.width, height: 4.8 }, {
+    drawFittedText(ctx, card.title, { x: content.x, y: nextY, width: content.width, height: 4.4 }, {
       font: "Helvetica-Bold",
       maxSize: 3.85,
       minSize: 2.9,
       color: "#000000",
     });
-    drawFittedText(ctx, card.summary, { x: content.x, y: nextY + 5.1, width: content.width, height: 8.6 }, {
+    drawFittedText(ctx, card.summary, { x: content.x, y: nextY + 4.6, width: content.width, height: 7.4 }, {
       font: "Helvetica",
       maxSize: 3.35,
       minSize: 2.55,
@@ -1042,7 +1042,7 @@ function renderCompactTraitLines(
     });
     nextY += entryHeight;
     if (index < cards.length - 1 && nextY + 1.2 < content.y + content.height) {
-      drawHeaderUnderline(ctx, { x: content.x, y: nextY - 2.9, width: content.width, height: 2.4 }, "#999999", 0.22);
+      drawHeaderUnderline(ctx, { x: content.x, y: nextY - 2.3, width: content.width, height: 1.8 }, "#999999", 0.22);
     }
   });
 

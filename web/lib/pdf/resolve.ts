@@ -107,6 +107,80 @@ const CONDITION_NAMES = [
   "unconscious",
 ] as const;
 
+const DAMAGE_TYPES = [
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder",
+] as const;
+
+const INVALID_NOTE_VALUE_PATTERN =
+  /\b(?:being|one of the following|following|your choice|of your choice|chosen type|chosen damage type|damage of the chosen type|associated with|determined by|gm chooses|dm chooses|randomly|any type|a type)\b/i;
+
+function canonicalizeDamageList(value: string) {
+  const normalized = normalizeText(value)
+    .replace(/\bdamage\b/gi, "")
+    .replace(/\btypes?\b/gi, "")
+    .replace(/\bfrom\b.*$/i, "")
+    .replace(/\.$/, "")
+    .trim();
+
+  if (!normalized || INVALID_NOTE_VALUE_PATTERN.test(normalized)) {
+    return null;
+  }
+
+  const parts = normalized
+    .toLowerCase()
+    .replace(/\bor\b/g, ",")
+    .replace(/\band\b/g, ",")
+    .replace(/\//g, ",")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const canonical = parts
+    .map((part) => DAMAGE_TYPES.find((damageType) => damageType === part))
+    .filter((part): part is (typeof DAMAGE_TYPES)[number] => Boolean(part));
+
+  if (!canonical.length || canonical.length !== parts.length) {
+    return null;
+  }
+
+  return uniqueStrings(canonical.map(titleCase)).join(", ");
+}
+
+function selfGrantSentences(text: string) {
+  return stripHtml(text)
+    .split(/(?<=[.!?])\s+/)
+    .map(normalizeText)
+    .filter((sentence) =>
+      /\b(?:you (?:are|become|have|gain|gains|can't|cannot|can not|don't|do not)|your .* grants you|makes you|make you|grants you)\b/i.test(sentence),
+    );
+}
+
+function pushCanonicalDamageNote(
+  pushLine: (title: string, value: string) => void,
+  title: string,
+  value: string | undefined,
+) {
+  if (!value) {
+    return;
+  }
+
+  const canonical = canonicalizeDamageList(value);
+  if (canonical) {
+    pushLine(title, canonical);
+  }
+}
+
 function getCardPriority(kind: PdfCardKind, contentKind: PdfContentKind, pageHint?: PdfPageKind | "front-rail") {
   const kindWeight: Record<PdfCardKind, number> = {
     trait: 10,
@@ -331,7 +405,7 @@ function pushRightColumnNote(
   value: string,
 ) {
   const normalized = normalizeText(value);
-  if (!normalized) {
+  if (!normalized || INVALID_NOTE_VALUE_PATTERN.test(normalized)) {
     return;
   }
 
@@ -348,29 +422,32 @@ function pushRightColumnNote(
   });
 }
 
-function pushConditionImmunityNotes(body: string, source: string, pushLine: (title: string, value: string) => void) {
-  CONDITION_NAMES.forEach((condition) => {
-    const conditionPattern = condition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const patterns = [
-      new RegExp(`immune to (?:being |the )?${conditionPattern}(?: condition)?\\b`, "i"),
-      new RegExp(`immune to the ${conditionPattern} condition\\b`, "i"),
-    ];
-    if (patterns.some((pattern) => pattern.test(body))) {
-      pushLine("Condition", `Immune ${titleCase(condition)}`);
+function pushConditionImmunityNotes(sentences: string[], pushLine: (title: string, value: string) => void) {
+  sentences.forEach((sentence) => {
+    CONDITION_NAMES.forEach((condition) => {
+      const conditionPattern = condition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const patterns = [
+        new RegExp(`\\byou (?:are|become) immune to (?:being |the )?${conditionPattern}(?: condition)?\\b`, "i"),
+        new RegExp(`\\byou have immunity to (?:being |the )?${conditionPattern}(?: condition)?\\b`, "i"),
+        new RegExp(`\\b(?:makes you|make you|grants you) immune to (?:being |the )?${conditionPattern}(?: condition)?\\b`, "i"),
+      ];
+      if (patterns.some((pattern) => pattern.test(sentence))) {
+        pushLine("Condition", `Immune ${titleCase(condition)}`);
+      }
+    });
+
+    if (/magic can'?t put you to sleep|you (?:are|become) immune to (?:being )?(?:put to )?sleep|you have immunity to sleep/i.test(sentence)) {
+      pushLine("Condition", "Immune Sleep");
     }
   });
-
-  if (/immune to (?:being )?(?:put to )?sleep|magic can'?t put you to sleep|magical sleep/i.test(source)) {
-    pushLine("Condition", "Immune Sleep");
-  }
 }
 
-function extractRightColumnNotesFromCard(card: PdfPageCard) {
+function extractRightColumnNotesFromText(title: string, text: string, tags: string[] = []) {
   const lines: PdfRightColumnNoteLine[] = [];
   const seen = new Set<string>();
   const pushLine = (title: string, value: string) => pushRightColumnNote(lines, seen, title, value);
 
-  card.tags
+  tags
     .filter((tag) => tag.startsWith("pdf-note:"))
     .forEach((tag) => {
       const [, kind, ...rest] = tag.split(":");
@@ -388,35 +465,53 @@ function extractRightColumnNotesFromCard(card: PdfPageCard) {
         sense: "Sense",
         speed: "Speed",
       };
-      pushLine(titleMap[kind] ?? titleCase(kind), rest.join(":"));
+      const title = titleMap[kind] ?? titleCase(kind);
+      const value = rest.join(":");
+      if (title === "Resistance" || title === "Vulnerability") {
+        pushCanonicalDamageNote(pushLine, title, value);
+        return;
+      }
+      if (title === "Immunity" && !/^Disease$/i.test(value)) {
+        pushCanonicalDamageNote(pushLine, title, value);
+        return;
+      }
+      pushLine(title, value);
     });
 
-  const body = stripHtml(card.detail || card.summary || "");
-  const source = `${card.title} ${body}`.toLowerCase();
+  const body = stripHtml(text);
+  const source = `${title} ${body}`.toLowerCase();
+  const sentences = selfGrantSentences(body);
 
-  if (/resistance to poison damage|poison resistance/.test(source)) {
+  if (sentences.some((sentence) => /(?:resistance (?:to|against) poison damage|poison resistance|resistant to poison damage)/i.test(sentence))) {
     pushLine("Resistance", "Poison");
   }
-  const resistanceMatch = body.match(/resistance to ([a-z ,/-]+?) damage/i);
-  if (resistanceMatch) {
-    pushLine("Resistance", titleCase(resistanceMatch[1]));
-  }
-  const vulnerabilityMatch = body.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
-  if (vulnerabilityMatch) {
-    pushLine("Vulnerability", titleCase(vulnerabilityMatch[1]));
-  }
-  if (/immune to disease/.test(source)) {
-    pushLine("Immunity", "Disease");
-  }
-  const immunityMatch = body.match(/immune to ([a-z ,/-]+?) damage/i);
-  if (immunityMatch) {
-    pushLine("Immunity", titleCase(immunityMatch[1]));
-  }
-  pushConditionImmunityNotes(body, source, pushLine);
-  if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(source)) {
+  sentences.forEach((sentence) => {
+    const resistanceMatch = sentence.match(/resistance (?:to|against) ([a-z ,/-]+?) damage/i);
+    pushCanonicalDamageNote(pushLine, "Resistance", resistanceMatch?.[1]);
+
+    const resistantMatch = sentence.match(/resistant to ([a-z ,/-]+?) damage/i);
+    pushCanonicalDamageNote(pushLine, "Resistance", resistantMatch?.[1]);
+
+    const vulnerabilityMatch = sentence.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
+    pushCanonicalDamageNote(pushLine, "Vulnerability", vulnerabilityMatch?.[1]);
+
+    if (/immune to disease|immunity to disease/i.test(sentence)) {
+      pushLine("Immunity", "Disease");
+    }
+
+    const immunityDamageMatch = sentence.match(/immune to ([a-z ,/-]+?) damage/i);
+    pushCanonicalDamageNote(pushLine, "Immunity", immunityDamageMatch?.[1]);
+
+    const immunityListMatch = sentence.match(/(?:immune to|immunity to) ([a-z ,/-]+?)(?:\.|$)/i);
+    if (immunityListMatch && /poison/i.test(immunityListMatch[1])) {
+      pushLine("Immunity", "Poison");
+    }
+  });
+  pushConditionImmunityNotes(sentences, pushLine);
+  if (sentences.some((sentence) => /advantage on saving throws against being poisoned|advantage .* poisoned/i.test(sentence))) {
     pushLine("Condition", "Adv. vs Poisoned");
   }
-  if (/don'?t need to sleep|sentry'?s rest/.test(source)) {
+  if (sentences.some((sentence) => /don'?t need to sleep|sentry'?s rest/i.test(sentence))) {
     pushLine("Rest", "Sentry's Rest");
   }
   const darkvisionMatch = body.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
@@ -434,6 +529,15 @@ function extractRightColumnNotesFromCard(card: PdfPageCard) {
   }
 
   return lines;
+}
+
+function extractRightColumnNotesFromCard(card: PdfPageCard) {
+  return extractRightColumnNotesFromText(card.title, card.detail || card.summary || "", card.tags);
+}
+
+export function getPassivePdfNoteTagsFromText(title: string, detail?: string) {
+  return extractRightColumnNotesFromText(title, detail || "")
+    .map((line) => `pdf-note:${line.title.toLowerCase().replace(/\s+/g, "-")}:${line.value}`);
 }
 
 function compactTraitSummary(card: PdfPageCard) {

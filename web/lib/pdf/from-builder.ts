@@ -22,6 +22,7 @@ import {
 
 import {
   resolvePdfCharacter,
+  getPassivePdfNoteTagsFromText,
   toPdfCardFromElement,
   toPdfCardFromGrant,
   toPdfCardFromInventoryItem,
@@ -447,59 +448,7 @@ function getPlaySurfaceSummary(element: BuiltInElement) {
 }
 
 function getPassiveNoteTags(element: BuiltInElement) {
-  const body = `${element.name} ${element.descriptionHtml ?? ""} ${element.description ?? ""}`;
-  const text = body
-    .replace(/<br\s*\/?>/gi, " ")
-    .replace(/<\/p>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const lower = text.toLowerCase();
-  const tags: string[] = [];
-
-  if (/resistance to poison damage|poison resistance/.test(lower)) {
-    tags.push("pdf-note:resistance:Poison");
-  }
-  const resistanceMatch = text.match(/resistance to ([a-z ,/-]+?) damage/i);
-  if (resistanceMatch) {
-    tags.push(`pdf-note:resistance:${resistanceMatch[1].trim()}`);
-  }
-  const vulnerabilityMatch = text.match(/vulnerab(?:le|ility) to ([a-z ,/-]+?) damage/i);
-  if (vulnerabilityMatch) {
-    tags.push(`pdf-note:vulnerability:${vulnerabilityMatch[1].trim()}`);
-  }
-  if (/immune to disease/.test(lower)) {
-    tags.push("pdf-note:immunity:Disease");
-  }
-  const immunityMatch = text.match(/immune to ([a-z ,/-]+?)(?: damage|\b)/i);
-  if (immunityMatch && !/disease/i.test(immunityMatch[1])) {
-    tags.push(`pdf-note:immunity:${immunityMatch[1].trim()}`);
-  }
-  const conditionImmunityMatch = text.match(/immune to the ([a-z-]+) condition/i);
-  if (conditionImmunityMatch) {
-    tags.push(`pdf-note:condition:Immune ${conditionImmunityMatch[1]}`);
-  }
-  if (/don'?t need to sleep|sentry'?s rest/.test(lower)) {
-    tags.push("pdf-note:rest:Sentry's Rest");
-  }
-  if (/advantage on saving throws against being poisoned|advantage .* poisoned/.test(lower)) {
-    tags.push("pdf-note:condition-edge:Adv. vs Poisoned");
-  }
-  const darkvisionMatch = text.match(/darkvision(?:\s+out\s+to|\s+to|\s+of)?\s+(\d+)\s*feet?/i);
-  if (darkvisionMatch) {
-    tags.push(`pdf-note:sense:Darkvision ${darkvisionMatch[1]} ft`);
-  }
-  const speedMatch = text.match(/walking speed is increased by (\d+) feet?/i);
-  if (speedMatch) {
-    tags.push(`pdf-note:speed:+${speedMatch[1]} ft`);
-  }
-  const flightMatch = text.match(/flying speed of (\d+) feet|you have a flying speed of (\d+) feet/i);
-  const flightValue = flightMatch?.[1] || flightMatch?.[2];
-  if (flightValue) {
-    tags.push(`pdf-note:speed:Fly ${flightValue} ft`);
-  }
-
-  return uniqueStrings(tags);
+  return uniqueStrings(getPassivePdfNoteTagsFromText(element.name, `${element.descriptionHtml ?? ""} ${element.description ?? ""}`));
 }
 
 function getKiSaveDc(args: BuilderPdfSourceArgs, proficiencyBonus: number) {
