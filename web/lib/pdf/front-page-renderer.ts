@@ -6,6 +6,7 @@ import {
   drawSvg,
   drawText,
   fillCircle,
+  fitTextSize,
   insetRect,
   maskRect,
   type PdfRect,
@@ -16,6 +17,54 @@ import {
   strokeRule,
 } from "@/lib/pdf/drawing";
 import { FRONT_PAGE_REGIONS, PAGE_SIZE, rectFromFractions } from "@/lib/pdf/front-page-layout";
+
+// --- Constants extracted from inline magic numbers ---
+
+const COLORS = {
+  textPrimary: "#000000",      // main text
+  textSecondary: "#333333",    // defenses label side
+  textTertiary: "#555555",     // skill level label
+  textDark: "#222222",         // spell names
+  pipe: "#aaaaaa",             // vertical divider lines
+  underline: "#999999",        // header underline
+  stroke: "#231f20",           // circle markers
+} as const;
+
+const FONT_SIZES = {
+  statBoxNormal: 13.5,
+  statBoxSmall: 11,
+  statBoxShield: 12,
+  statBoxMin: 7,
+  headerName: { max: 18, min: 10 },
+  defenses: { maxMulti: 2.8, maxSingle: 3.3, min: 2.0 },
+  spellLevel: { max: 3.8, min: 2.8 },
+  spellName: { max: 3.5, min: 2.4 },
+  labelRect: { max: 5.0, min: 3.0 },
+} as const;
+
+const LAYOUT = {
+  defenses: {
+    leftPad: 5,
+    rightPad: 5,
+    contentFrac: { x: 0.06, y: 0.12, width: 0.88, height: 0.76 },
+    rowGap: 0.3,
+    midpointFrac: 0.5,
+  },
+  spellZones: {
+    contentPadding: 3,
+    zoneMarkerW: 30,
+    zoneLabelW: 20,
+    markerSize: 4.4,
+    markerGap: 1.8,
+    rowGap: 1.4,
+  },
+  spellColumns: {
+    gap: 12,
+    leftLevels: [0, 1, 2, 3, 4],
+    rightLevels: [5, 6, 7, 8, 9],
+  },
+  pipeLineWidth: 0.4,
+} as const;
 
 type StatBoxSpec = {
   key: string;
@@ -266,6 +315,92 @@ function drawValueOnlyStatBox(ctx: PdfRenderContext, rect: PdfRect, value: strin
   });
 }
 
+function drawDefensesStatBox(ctx: PdfRenderContext, rect: PdfRect, rawValue: string) {
+  const lines = String(rawValue ?? "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>|<\/div>|<\/li>/gi, "\n")
+    .split(/\n/)
+    .flatMap((line) =>
+      cleanText(line)
+        // If upstream/newline handling ever flattens AC contributors into one string,
+        // split after each completed AC value before the next "Name | Value" row.
+        .replace(/\bAC\s*,?\s+(?=[^|]{1,48}\|\s*[+-]?\d)/g, "AC\n")
+        .split(/\n/),
+    )
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (!lines.length) {
+    return;
+  }
+
+  // Guard against NaN/Infinity with finite fallbacks for every dimension.
+  const safeRect: PdfRect = {
+    x: Number.isFinite(rect.x) ? rect.x : 0,
+    y: Number.isFinite(rect.y) ? rect.y : 0,
+    width: Number.isFinite(rect.width) && rect.width > 0 ? rect.width : 100,
+    height: Number.isFinite(rect.height) && rect.height > 0 ? rect.height : 20,
+  };
+
+  // Reserve bottom ~24% of card height so rows do not overlap DEFENSES label.
+  // This is a bottom reserve only; insetRect would remove the same amount from top and bottom.
+  const bottomPadFrac = 0.24;
+  const bottomPad = Number.isFinite(safeRect.height) && safeRect.height > 0
+    ? safeRect.height * bottomPadFrac
+    : 5;
+  const contentRect: PdfRect = {
+    x: safeRect.x + 5,
+    y: safeRect.y + 3,
+    width: Math.max(1, safeRect.width - 10),
+    height: Math.max(1, safeRect.height - 3 - bottomPad),
+  };
+
+  const rowCount = lines.length;
+  const maxFontSize = Math.min(7.2, (contentRect.height / Math.max(1, rowCount)) * 0.85);
+  const minFontSize = 1.5;
+  const fittedFontSize = Math.min(
+    maxFontSize,
+    ...lines.map((line) =>
+      fitTextSize(ctx, line.includes("|") ? line : `${line} | `, { ...contentRect, height: maxFontSize + 2 }, {
+        font: "Helvetica",
+        maxSize: maxFontSize,
+        minSize: minFontSize,
+        align: "left",
+        lineGap: 0,
+        lineBreak: false,
+      }),
+    ),
+  );
+  const effectiveFontSize = Number.isFinite(fittedFontSize) && fittedFontSize > 0 ? fittedFontSize : minFontSize;
+  const rowHeight = Math.max(effectiveFontSize + 1.1, effectiveFontSize * 1.35);
+  const totalRowsHeight = rowHeight * lines.length;
+  const startY = contentRect.y + Math.max(0, (contentRect.height - totalRowsHeight) / 2);
+
+  lines.forEach((line, index) => {
+    const rowTop = startY + index * rowHeight;
+    const rowRect: PdfRect = {
+      x: contentRect.x,
+      y: rowTop,
+      width: contentRect.width,
+      height: rowHeight,
+    };
+
+    if (!line.includes("|")) {
+      line = line + " | ";
+    }
+
+    drawText(ctx, line, rowRect, {
+      font: "Helvetica",
+      size: effectiveFontSize,
+      align: "left",
+      color: COLORS.textPrimary,
+      lineGap: 0,
+      lineBreak: false,
+    });
+  });
+}
+
 function headerRect(rect: PdfRect) {
   return componentRect(FRONT_PAGE_REGIONS.header, HEADER_SHELL_VIEWBOX, rect);
 }
@@ -353,8 +488,14 @@ function renderStatStrip(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, chara
   }
 
   TOP_STATS.forEach((spec) => {
+    const rect = componentRect(FRONT_PAGE_REGIONS.statStrip, TOP_STAT_VIEWBOX, spec.box);
+    if (spec.key === "defenses") {
+      const defensesValue = findStat(character, spec.key)?.value ?? spec.fallback ?? "";
+      drawDefensesStatBox(ctx, rect, defensesValue);
+      return;
+    }
     const value = statValue(character, spec.key, spec.fallback);
-    drawValueOnlyStatBox(ctx, componentRect(FRONT_PAGE_REGIONS.statStrip, TOP_STAT_VIEWBOX, spec.box), value, spec.mode);
+    drawValueOnlyStatBox(ctx, rect, value, spec.mode);
   });
 }
 
@@ -773,9 +914,10 @@ function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, c
     if (!items.length) {
       return;
     }
-    drawCenteredTextInRect(ctx, items.slice(0, 3).join(", "), rectFromFractions(cells[index], { x: 0.10, y: 0.24, width: 0.78, height: 0.46 }), {
-      maxSize: 5.8,
-      minSize: 2.8,
+    const itemText = items.join(", ");
+    drawCenteredTextInRect(ctx, itemText, rectFromFractions(cells[index], { x: 0.08, y: 0.18, width: 0.82, height: 0.56 }), {
+      maxSize: index === 2 ? 4.6 : 5.4,
+      minSize: 2.3,
       align: "left",
       color: "#000000",
       lineGap: 0,
@@ -783,20 +925,294 @@ function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, c
   });
 }
 
-function renderAttacks(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, drawShell: boolean) {
-  if (drawShell) {
-    drawSvg(ctx, assets.weaponAttacks, FRONT_PAGE_REGIONS.attacks);
+function drawWeaponCell(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  rect: PdfRect,
+  value: string,
+  options: { maxSize?: number; minSize?: number; bold?: boolean; align?: "left" | "center" } = {},
+) {
+  if (assets.weaponBg) {
+    drawSvg(ctx, assets.weaponBg, rect);
+  } else {
+    maskRect(ctx, rect, "#ececec");
   }
 
-  const rows = splitRows({ x: 18, y: 409, width: 360, height: 50 }, 5, 1);
-  character.frontPage.attackRows.slice(0, 5).forEach((attack, index) => {
-    const row = rows[index];
-    drawFittedText(ctx, cleanText(attack.name), { x: row.x, y: row.y, width: 105, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
-    drawCenteredTextInRect(ctx, cleanText(attack.hit), { x: row.x + 110, y: row.y, width: 30, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
-    drawFittedText(ctx, cleanText(attack.damage), { x: row.x + 148, y: row.y, width: 72, height: row.height }, { maxSize: 5.5, minSize: 4, color: "#000000" });
-    drawFittedText(ctx, cleanText(attack.type), { x: row.x + 225, y: row.y, width: 40, height: row.height }, { maxSize: 5.2, minSize: 3.6, color: "#000000" });
-    drawFittedText(ctx, cleanText(attack.properties), { x: row.x + 268, y: row.y, width: 92, height: row.height }, { maxSize: 5.0, minSize: 3.5, color: "#000000" });
+  const cleanedValue = cleanText(value);
+  if (!cleanedValue) {
+    return;
+  }
+
+  const textRect = rectFromFractions(rect, { x: 0.06, y: 0.12, width: 0.88, height: 0.68 });
+  const textOptions = {
+    font: options.bold === false ? "Helvetica" : "Helvetica-Bold",
+    maxSize: options.maxSize ?? 5.2,
+    minSize: options.minSize ?? 3.2,
+    color: "#000000",
+  };
+  if (options.align === "left") {
+    drawFittedText(ctx, cleanedValue, textRect, { ...textOptions, align: "left", lineGap: 0 });
+    return;
+  }
+
+  drawCenteredTextInRect(ctx, cleanedValue, textRect, textOptions);
+}
+
+function renderWeaponAttackRows(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  rect: PdfRect,
+  rows: { name: string; hit: string; damage: string; type?: string; properties?: string }[],
+) {
+  const maxRows = 5;
+  const displayRows = rows.slice(0, maxRows);
+  const columnGap = 3;
+  const rowGap = 1.4;
+  const headerHeight = 7;
+  const columnSpecs = [
+    { key: "name", label: "NAME", width: 0.29 },
+    { key: "hit", label: "HIT", width: 0.12 },
+    { key: "damage", label: "DAMAGE", width: 0.20 },
+    { key: "type", label: "TYPE", width: 0.14 },
+    { key: "properties", label: "PROPERTIES", width: 0.25 },
+  ] as const;
+  const totalGap = columnGap * (columnSpecs.length - 1);
+  const availableWidth = rect.width - totalGap;
+  let cursorX = rect.x;
+  const columns = columnSpecs.map((column) => {
+    const width = availableWidth * column.width;
+    const colRect = { x: cursorX, y: rect.y, width, height: rect.height };
+    cursorX += width + columnGap;
+    return { ...column, rect: colRect };
   });
+
+  // Headers render once; all data rows below still draw blank cells when empty.
+  columns.forEach((column) => {
+    drawCenteredTextInRect(
+      ctx,
+      column.label,
+      { x: column.rect.x, y: rect.y, width: column.rect.width, height: headerHeight },
+      { font: "Helvetica-Bold", maxSize: 3.5, minSize: 2.4, color: "#555555" },
+    );
+  });
+
+  const rowArea = {
+    x: rect.x,
+    y: rect.y + headerHeight + 1.5,
+    width: rect.width,
+    height: Math.min(46, rect.height - headerHeight - 1.5),
+  };
+  const rowRects = splitRows(rowArea, maxRows, rowGap);
+
+  rowRects.forEach((dataRowRect, index) => {
+    const row = displayRows[index];
+
+    columns.forEach((column) => {
+      const cell = { x: column.rect.x, y: dataRowRect.y, width: column.rect.width, height: dataRowRect.height };
+
+      let value = "";
+      if (column.key === "name") value = row?.name ?? "";
+      else if (column.key === "hit") value = row?.hit ?? "";
+      else if (column.key === "damage") value = row?.damage ?? "";
+      else if (column.key === "type") value = row?.type ?? "";
+      else if (column.key === "properties") value = row?.properties ?? "";
+
+      if (column.key === "name") {
+        drawWeaponCell(ctx, assets, cell, value, { maxSize: 4.6, minSize: 3, align: "left" });
+      } else if (column.key === "hit") {
+        drawWeaponCell(ctx, assets, cell, value, { maxSize: 5.3, minSize: 3.3 });
+      } else if (column.key === "damage") {
+        drawWeaponCell(ctx, assets, cell, value, { maxSize: 4.9, minSize: 3.1 });
+      } else if (column.key === "type") {
+        drawWeaponCell(ctx, assets, cell, value, { maxSize: 3.7, minSize: 2.4, bold: false, align: "left" });
+      } else {
+        drawWeaponCell(ctx, assets, cell, value, { maxSize: 3.6, minSize: 2.4, bold: false, align: "left" });
+      }
+    });
+  });
+}
+
+function renderSpellTracker(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  rect: PdfRect,
+  spellColumn: NonNullable<ResolvedPdfCharacter["frontPage"]["combatHub"]>["spellColumn"],
+) {
+  if (!spellColumn) return;
+
+  const { cantrips, slots, spellsByLevel } = spellColumn;
+  const contentPadding = 3;
+  const contentRect = {
+    x: rect.x + contentPadding,
+    y: rect.y + 2,
+    width: rect.width - contentPadding * 2,
+    height: rect.height - 4,
+  };
+
+  drawCenteredTextInRect(ctx, "Spell List", { x: contentRect.x, y: contentRect.y, width: contentRect.width, height: 6 }, {
+    font: "Helvetica-Bold",
+    maxSize: 4.2,
+    minSize: 3,
+    color: "#555555",
+  });
+
+  // --- Cantrips row (two-cell layout matching leveled spell rows) ---
+  const cantripNames = cantrips.map((s) => s.name).join(", ") || "—";
+  const cantripY = contentRect.y + 9;
+  const leftCellW = 36;
+  // Left cell: "Cantrips" label at top, no circles
+  drawFittedText(ctx, "Cantrips", { x: contentRect.x, y: cantripY, width: leftCellW, height: 8 }, {
+    font: "Helvetica-Bold",
+    maxSize: 4.0,
+    minSize: 3,
+    align: "right",
+    color: "#222222",
+    lineBreak: false,
+  });
+  // Right cell: cantrip spell names
+  drawFittedText(
+    ctx,
+    cantripNames,
+    { x: contentRect.x + leftCellW + 2, y: cantripY, width: contentRect.width - leftCellW - 2, height: 8 },
+    { font: "Helvetica", maxSize: 3.7, minSize: 2.5, align: "left", color: "#222222", lineBreak: false },
+  );
+
+  // --- Spell slots and spell names by level ---
+  const slotsY = cantripY + 11;
+  const slotsAreaHeight = contentRect.height - (slotsY - contentRect.y);
+
+  if (slots.maxLevel > 0) {
+    // Split levels into two groups: 1-4 and 5-9
+    const leftLevels = [1, 2, 3, 4].filter((l) => l <= slots.maxLevel);
+    const rightLevels = [5, 6, 7, 8, 9].filter((l) => l <= slots.maxLevel);
+
+    // Tight gap between level groups (left 1-4, right 5-9)
+    const gap = 7;
+    const leftWidth = leftLevels.length > 0
+      ? (rightLevels.length > 0 ? (contentRect.width - gap) / 2 : contentRect.width)
+      : 0;
+    const rightWidth = rightLevels.length > 0 ? (contentRect.width - gap) / 2 : 0;
+
+    // Left sub-column: levels 1-4
+    if (leftLevels.length > 0) {
+      const leftX = contentRect.x;
+      const leftRect = { x: leftX, y: slotsY, width: leftWidth, height: slotsAreaHeight };
+      renderSpellLevelGroup(ctx, assets, leftRect, leftLevels, slots.slots, spellsByLevel);
+    }
+
+    // Right sub-column: levels 5-9
+    if (rightLevels.length > 0) {
+      const rightX = contentRect.x + leftWidth + gap;
+      const rightRect = { x: rightX, y: slotsY, width: rightWidth, height: slotsAreaHeight };
+      renderSpellLevelGroup(ctx, assets, rightRect, rightLevels, slots.slots, spellsByLevel);
+    }
+  }
+}
+
+function renderSpellLevelGroup(
+  ctx: PdfRenderContext,
+  assets: PdfSvgAssetBundle,
+  rect: PdfRect,
+  levels: number[],
+  slotLevels: { level: number; slots: number }[],
+  spellsByLevel: { level: number; spells: { id: string; name: string; level: number; sourceLabel?: string }[] }[],
+) {
+  // Use the same rowGap as weapon attack rows for consistent heights across columns.
+  const rowGap = 1.4;
+  const levelRects = splitRows(rect, levels.length, rowGap);
+
+  // Two-cell row layout per spell level:
+  // LEFT CELL (leftCellW): Lvl N: label at top, circles below.
+  // Circles NOT on same baseline as label — they are vertically separated below the label.
+  // RIGHT CELL: spell names.
+  const leftCellW = 36; // left cell wide enough for 4 circles (4*4 + 3*2 = 22, plus margin)
+  const circleSize = 4;
+  const circleGap = 2;
+
+  levels.forEach((level, idx) => {
+    const rowRect = levelRects[idx];
+    const rowTop = rowRect.y;
+    const rowHeight = rowRect.height;
+    const slotCount = slotLevels.find((s) => s.level === level)?.slots ?? 0;
+    const spells = spellsByLevel.find((e) => e.level === level)?.spells ?? [];
+    const spellNames = spells.map((s) => s.name).join(", ") || "—";
+
+    // LEFT CELL — "Level N" label right-aligned at top, circles directly below
+    const labelH = Math.min(4.5, rowHeight * 0.45); // compact label height
+    const labelRect: PdfRect = {
+      x: rowRect.x,
+      y: rowTop,
+      width: leftCellW,
+      height: labelH,
+    };
+    drawFittedText(ctx, `Level ${level}`, labelRect, {
+      font: "Helvetica-Bold",
+      maxSize: 3.8,
+      minSize: 2.8,
+      align: "right",
+      color: "#555555",
+      lineBreak: false,
+    });
+
+    // Circles sit directly below the right-aligned label, making the left cell a compact unit.
+    const circleAreaTop = labelRect.y + labelRect.height + 0.6;
+    const circleAreaBottom = rowRect.y + rowHeight;
+    const circleY = Math.min(circleAreaBottom - circleSize, circleAreaTop);
+
+    const markerTotalW = slotCount * (circleSize + circleGap) - circleGap;
+    let markerCursorX = rowRect.x + leftCellW - markerTotalW; // right-align circles in left cell
+    for (let i = 0; i < slotCount; i += 1) {
+      const markerX = markerCursorX + circleSize / 2;
+      strokeCircle(ctx, markerX, circleY + circleSize / 2, circleSize / 2, "#231f20", 0.5);
+      markerCursorX += circleSize + circleGap;
+    }
+
+    // RIGHT CELL — spell names, positioned between the Level label and the circles.
+    // This places names roughly centered between top of row and top of circles.
+    const namesX = rowRect.x + leftCellW + 2;
+    const namesBlockTop = rowTop + labelH + 0.4;
+    const namesBlockBottom = circleAreaTop;
+    const namesBlockHeight = Math.max(0, namesBlockBottom - namesBlockTop);
+    const namesRect: PdfRect = {
+      x: namesX,
+      y: namesBlockTop,
+      width: rowRect.width - leftCellW - 2,
+      height: namesBlockHeight > 0 ? namesBlockHeight : rowHeight,
+    };
+    drawCenteredTextInRect(ctx, spellNames === "—" && slotCount === 0 ? "" : spellNames, namesRect, {
+      font: "Helvetica",
+      maxSize: 3.3,
+      minSize: 3.3,
+      align: "left",
+      color: "#222222",
+      lineGap: 0,
+      lineBreak: true,
+    });
+  });
+}
+
+function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
+  const rect = FRONT_PAGE_REGIONS.attacks;
+  maskRect(ctx, rect);
+  drawSvg(ctx, assets.generalContainer, rect);
+
+  const content = insetRect(rect, 9, 8);
+  const combatHub = character.frontPage.combatHub;
+
+  if (!combatHub.hasSpells) {
+    // Non-spellcaster: full-width weapon column
+    renderWeaponAttackRows(ctx, assets, content, combatHub.weaponRows);
+    return;
+  }
+
+  // Spellcaster: equal-width weapon and spell regions with a tight gutter.
+  const columnGap = 7;
+  const columns = splitColumns(content, 2, columnGap);
+  const weaponRect = columns[0];
+  const spellRect = columns[1];
+
+  renderWeaponAttackRows(ctx, assets, weaponRect, combatHub.weaponRows);
+  renderSpellTracker(ctx, assets, spellRect, combatHub.spellColumn);
 }
 
 function cardCategory(card: PdfPageCard) {
@@ -1063,18 +1479,21 @@ function renderRightColumnFeatureCard(ctx: PdfRenderContext, assets: PdfSvgAsset
 function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const { rightColumn } = character.frontPage;
   const headerRight = FRONT_PAGE_REGIONS.header.x + FRONT_PAGE_REGIONS.header.width;
+  const railY = FRONT_PAGE_REGIONS.rail.y + 2;
+  const railBottom = FRONT_PAGE_REGIONS.attacks.y - 6;
   const rail = {
     x: FRONT_PAGE_REGIONS.rail.x,
-    y: FRONT_PAGE_REGIONS.rail.y + 2,
+    y: railY,
     width: headerRight - FRONT_PAGE_REGIONS.rail.x,
-    height: FRONT_PAGE_REGIONS.rail.height - 6,
+    height: Math.max(0, railBottom - railY),
   };
-  const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: 82 };
+  const notesHeight = Math.min(70, Math.max(34, 20 + rightColumn.sensesAndConditions.length * 6));
+  const notesRect = { x: rail.x, y: rail.y, width: rail.width, height: notesHeight };
   const featureRect = {
     x: rail.x,
     y: notesRect.y + notesRect.height + 6,
     width: rail.width,
-    height: Math.min(174, Math.max(0, rail.y + rail.height - (notesRect.y + notesRect.height + 6))),
+    height: Math.max(0, rail.y + rail.height - (notesRect.y + notesRect.height + 6)),
   };
 
   renderRightColumnNotesCard(ctx, assets, rightColumn.sensesAndConditions, notesRect);
@@ -1116,7 +1535,7 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderSpellcasting(ctx, assets, character);
   renderPassives(ctx, assets, character, true);
   renderProficiencies(ctx, assets, character);
-  renderAttacks(ctx, assets, character, true);
   renderRail(ctx, assets, character);
+  renderCombatSpellcastingHub(ctx, assets, character);
   renderFeatureDeck(ctx, character);
 }

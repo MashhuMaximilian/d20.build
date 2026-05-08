@@ -105,6 +105,44 @@ export type PdfRightColumnComposition = {
   overflow: PdfPageCard[];
 };
 
+export type PdfSpellSlotLevel = {
+  level: number; // 1-9 for leveled spells, 0 for cantrips
+  slots: number; // number of slots at this level
+};
+
+export type PdfSpellSlots = {
+  maxLevel: number; // highest spell level the character can cast (derived from character level for full casters)
+  slots: PdfSpellSlotLevel[]; // slot counts per level (excludes cantrips — they have unlimited)
+  isFullCaster: boolean;
+  isHalfCaster: boolean;
+  isWarlock: boolean;
+  hasPactMagic: boolean;
+};
+
+export type PdfSpellListEntry = {
+  id: string;
+  name: string;
+  level: number; // 0 = cantrip
+  sourceLabel?: string;
+};
+
+export type PdfSpellListByLevel = {
+  level: number;
+  spells: PdfSpellListEntry[];
+};
+
+export type PdfCombatHubSpellColumn = {
+  cantrips: PdfSpellListEntry[];
+  slots: PdfSpellSlots;
+  spellsByLevel: PdfSpellListByLevel[]; // one entry per spell level
+};
+
+export type PdfCombatHub = {
+  hasSpells: boolean;
+  weaponRows: PdfAttackRow[];
+  spellColumn?: PdfCombatHubSpellColumn;
+};
+
 export type PdfFrontPageComposition = {
   stats: PdfStatBlock[];
   abilityRows: PdfAbilityScoreRow[];
@@ -117,6 +155,7 @@ export type PdfFrontPageComposition = {
   rightColumn: PdfRightColumnComposition;
   notes: string[];
   capacity: number;
+  combatHub: PdfCombatHub;
 };
 
 export type PdfPagePlan = {
@@ -147,6 +186,8 @@ export type PdfResolveSource = {
   companionCards?: PdfPageCard[];
   inventoryCards?: PdfPageCard[];
   spellCards?: PdfPageCard[];
+  spellSlots?: PdfSpellSlots;
+  spellList?: PdfSpellListEntry[];
   backstoryCards?: PdfPageCard[];
   appendixEntries?: PdfAppendixEntry[];
   notes?: string[];

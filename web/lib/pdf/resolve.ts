@@ -11,6 +11,8 @@ import type {
   PdfAttackRow,
   PdfAbilityScoreRow,
   PdfCardKind,
+  PdfCombatHub,
+  PdfCombatHubSpellColumn,
   PdfContentKind,
   PdfFrontPageComposition,
   PdfPageCard,
@@ -21,6 +23,8 @@ import type {
   PdfResolveSource,
   PdfRightColumnCompactTrait,
   PdfRightColumnNoteLine,
+  PdfSpellListEntry,
+  PdfSpellSlots,
   PdfStatBlock,
   PdfSkillRow,
   ResolvedPdfCharacter,
@@ -717,6 +721,56 @@ function buildPage(kind: PdfPageKind, number: number, title: string, sections: A
   };
 }
 
+function buildCombatHub(source: PdfResolveSource): PdfCombatHub {
+  const spellSlots = source.spellSlots;
+  const spellList = source.spellList ?? [];
+
+  // Weapon rows: only equipped weapons, not spells or features
+  const weaponRows = (source.attackRows ?? []).filter((row) => {
+    const t = (row.type ?? "").toLowerCase();
+    return t !== "spell" && t !== "feature";
+  });
+
+  if (!spellSlots || spellSlots.maxLevel === 0) {
+    // Non-spellcaster: full-width weapon column
+    return {
+      hasSpells: false,
+      weaponRows,
+    };
+  }
+
+  // Build spells by level
+  const spellsByLevel: { level: number; spells: PdfSpellListEntry[] }[] = [];
+  for (let lvl = 1; lvl <= spellSlots.maxLevel; lvl++) {
+    spellsByLevel.push({ level: lvl, spells: [] });
+  }
+
+  const cantrips: PdfSpellListEntry[] = [];
+
+  for (const spell of spellList) {
+    if (spell.level === 0) {
+      cantrips.push(spell);
+    } else if (spell.level <= spellSlots.maxLevel) {
+      const entry = spellsByLevel.find((e) => e.level === spell.level);
+      if (entry) {
+        entry.spells.push(spell);
+      }
+    }
+  }
+
+  const spellColumn: PdfCombatHubSpellColumn = {
+    cantrips,
+    slots: spellSlots,
+    spellsByLevel,
+  };
+
+  return {
+    hasSpells: true,
+    weaponRows,
+    spellColumn,
+  };
+}
+
 export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPageComposition {
   const normalizedStats = uniqueById(source.stats.map((stat) => ({
     ...stat,
@@ -762,6 +816,8 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
   );
   const packed = packCards(deckOnly, FRONT_PAGE_DECK_CAPACITY);
 
+  const combatHub = buildCombatHub(source);
+
   return {
     stats: normalizedStats,
     abilityRows: normalizedAbilityRows,
@@ -777,6 +833,7 @@ export function buildFrontPageComposition(source: PdfResolveSource): PdfFrontPag
       "Front page is split between a numeric/stat zone and a generated feature-card deck.",
     ]),
     capacity: FRONT_PAGE_DECK_CAPACITY,
+    combatHub,
   };
 }
 

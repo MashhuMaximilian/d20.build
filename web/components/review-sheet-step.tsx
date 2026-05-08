@@ -16,7 +16,7 @@ import {
   type CharacterManualGrant,
   type CharacterManualGrantKind,
 } from "@/lib/characters/types";
-import { getInventoryEffectSummary } from "@/lib/equipment/inventory";
+import { getInventoryEffectSummary, resolveInventoryArmorClass } from "@/lib/equipment/inventory";
 import {
   getPreparationCapacity,
   getSpellCastingTime,
@@ -30,6 +30,12 @@ import {
   isSpellRitual,
   type SpellSelectionGroup,
 } from "@/lib/progression/spellcasting";
+import {
+  buildProficiencyFacts,
+  hasSavingThrowProficiency,
+  hasSkillProficiency,
+  type ProficiencyFact,
+} from "@/lib/proficiencies/facts";
 
 type ReviewSheetTab = "character" | "actions" | "features" | "inventory" | "personality";
 
@@ -52,6 +58,7 @@ type ReviewSheetProps = {
   selectedBackground: BuiltInBackgroundRecord | null;
   selectedBackgroundFeatureElements: BuiltInElement[];
   selectedClassFeatureElements: BuiltInElement[];
+  selectedExpertiseIds: string[];
   selectedExpertiseLabels: string[];
   selectedFeatElements: BuiltInElement[];
   selectedLanguageIds: string[];
@@ -134,6 +141,12 @@ type ReviewDetailState =
       badges: string[];
     };
 
+type ReviewEquipmentEffectLine = {
+  id: string;
+  label: string;
+  value: string;
+};
+
 const TAB_OPTIONS: Array<{ id: ReviewSheetTab; label: string; eyebrow: string }> = [
   { id: "character", label: "Character", eyebrow: "Overview" },
   { id: "actions", label: "Actions & Spells", eyebrow: "Play surface" },
@@ -180,25 +193,6 @@ const HIT_DIE_BY_CLASS_NAME: Record<string, number> = {
   warlock: 8,
   wizard: 6,
 };
-
-const ARMOR_BASE_RULES: Array<{
-  match: RegExp;
-  base: number;
-  dexCap?: number;
-}> = [
-  { match: /\bpadded\b/i, base: 11 },
-  { match: /\bleather\b/i, base: 11 },
-  { match: /\bstudded leather\b/i, base: 12 },
-  { match: /\bhide\b/i, base: 12, dexCap: 2 },
-  { match: /\bchain shirt\b/i, base: 13, dexCap: 2 },
-  { match: /\bscale mail\b/i, base: 14, dexCap: 2 },
-  { match: /\bbreastplate\b/i, base: 14, dexCap: 2 },
-  { match: /\bhalf plate\b/i, base: 15, dexCap: 2 },
-  { match: /\bring mail\b/i, base: 14, dexCap: 0 },
-  { match: /\bchain mail\b/i, base: 16, dexCap: 0 },
-  { match: /\bsplint\b/i, base: 17, dexCap: 0 },
-  { match: /\bplate\b/i, base: 18, dexCap: 0 },
-];
 
 const FULL_CASTER_SLOT_TABLE: Record<number, number[]> = {
   1: [2],
@@ -575,43 +569,9 @@ function deriveArmorClass(args: {
   draft: CharacterDraft;
   effectiveAbilities: Record<AbilityKey, number>;
 }) {
-  const dexMod = getAbilityModifier(args.effectiveAbilities.dexterity);
-  const equippedItems = args.draft.inventoryItems.filter((item) => item.equipped);
-  const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
-  const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
-
-  const armorTotals = equippedArmor.map((item) => {
-    const sourceName = item.baseItemName || item.name;
-    const rule = ARMOR_BASE_RULES.find((entry) => entry.match.test(sourceName));
-    if (!rule) {
-      return null;
-    }
-    const dexContribution = Math.min(dexMod, rule.dexCap ?? dexMod);
-    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
-    return {
-      item,
-      total: rule.base + dexContribution + magic,
-      detail: `${sourceName}: ${rule.base}${rule.dexCap === 0 ? "" : `, Dex ${dexContribution >= 0 ? "+" : ""}${dexContribution}`}${magic ? `, magic ${magic >= 0 ? "+" : ""}${magic}` : ""}`,
-    };
-  }).filter((entry): entry is { item: CharacterDraft["inventoryItems"][number]; total: number; detail: string } => Boolean(entry));
-
-  const chosenArmor = armorTotals.sort((left, right) => right.total - left.total)[0];
-  const shieldBonus = equippedShields.reduce((sum, item) => {
-    const magic = item.attackBonus ? Number.parseInt(item.attackBonus.replace(/[^\d-]/g, ""), 10) || 0 : 0;
-    return sum + 2 + magic;
-  }, 0);
-
-  if (chosenArmor) {
-    return {
-      value: chosenArmor.total + shieldBonus,
-      meta: `${chosenArmor.item.name}${shieldBonus ? ` + shield ${shieldBonus}` : ""}`,
-    };
-  }
-
-  return {
-    value: 10 + dexMod + shieldBonus,
-    meta: `${shieldBonus ? `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod} + shield ${shieldBonus}` : `10 + Dex ${dexMod >= 0 ? "+" : ""}${dexMod}`}`,
-  };
+  return resolveInventoryArmorClass(args.draft.inventoryItems, {
+    abilities: args.effectiveAbilities,
+  });
 }
 
 function deriveHitPointSummary(args: {
@@ -758,6 +718,25 @@ function FeatureContent({ element }: { element: BuiltInElement }) {
   return <p className="builder-summary__meta">No additional reference text in the current source.</p>;
 }
 
+function formatReviewEquipmentEffectLine(line: string, index: number): ReviewEquipmentEffectLine {
+  const cleaned = line.trim();
+  const match = cleaned.match(/^(.+?)\s+\(([-+]\d+)\)$/);
+  if (match) {
+    return {
+      id: `${match[1]}-${match[2]}-${index}`,
+      label: match[1],
+      value: match[2],
+    };
+  }
+
+  const [label, ...rest] = cleaned.split(":");
+  return {
+    id: `${cleaned}-${index}`,
+    label: rest.length ? label.trim() : cleaned,
+    value: rest.length ? rest.join(":").trim() : "",
+  };
+}
+
 function deriveReviewResources(args: {
   classRecordsByEntry: Array<BuiltInClassRecord | null>;
   draft: CharacterDraft;
@@ -854,12 +833,11 @@ function deriveReviewResources(args: {
 function deriveSavingThrowRows(args: {
   draft: CharacterDraft;
   effectiveAbilities: Record<AbilityKey, number>;
-  selectedProficiencyLabels: string[];
+  proficiencyFacts: ProficiencyFact[];
 }) {
   const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
-  const labels = new Set(args.selectedProficiencyLabels.map((value) => value.toLowerCase()));
   return ABILITY_KEYS.map((ability) => {
-    const proficient = labels.has(ABILITY_LABELS[ability].toLowerCase()) || labels.has(`${ABILITY_LABELS[ability].toLowerCase()} saving throw`);
+    const proficient = hasSavingThrowProficiency(args.proficiencyFacts, ability);
     const total = getAbilityModifier(args.effectiveAbilities[ability]) + (proficient ? proficiencyBonus : 0);
     return {
       id: `save-${ability}`,
@@ -875,14 +853,13 @@ function deriveSkillRows(args: {
   draft: CharacterDraft;
   effectiveAbilities: Record<AbilityKey, number>;
   selectedExpertiseLabels: string[];
-  selectedProficiencyLabels: string[];
+  proficiencyFacts: ProficiencyFact[];
 }) {
   const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
-  const labels = new Set(args.selectedProficiencyLabels.map((value) => value.toLowerCase()));
   const expertiseLabels = new Set(args.selectedExpertiseLabels.map((value) => value.toLowerCase()));
   return SKILL_ABILITY_MAP.map((skill) => {
     const expertise = expertiseLabels.has(skill.label.toLowerCase());
-    const proficient = expertise || labels.has(skill.label.toLowerCase());
+    const proficient = expertise || hasSkillProficiency(args.proficiencyFacts, skill.id);
     const tier = expertise ? 2 : proficient ? 1 : 0;
     const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + proficiencyBonus * tier;
     return {
@@ -1458,6 +1435,35 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     ...props.navigationWarnings,
   ].filter(Boolean);
 
+  const selectedProficiencyFacts = useMemo(
+    () =>
+      buildProficiencyFacts([
+        // Proficient sources
+        ...props.selectedProficiencyIds.map((id) => ({ id, tier: "proficient" as const })),
+        ...props.selectedProficiencyNames.map((label) => ({ label: normalizeReviewLabel(label), tier: "proficient" as const })),
+        ...props.manualGrantsByKind.proficiency.map((grant) => ({
+          id: grant.refId,
+          label: normalizeReviewLabel(grant.name),
+          tier: "proficient" as const,
+        })),
+        // Equipment-tab grants (armor + weapons from gear)
+        ...props.equipmentProficiencies.armor.map((value) => ({ label: normalizeReviewLabel(value), tier: "proficient" as const })),
+        ...props.equipmentProficiencies.weapons.map((value) => ({ label: normalizeReviewLabel(value), tier: "proficient" as const })),
+        // Expertise sources — tier explicitly "expertise" (higher than proficient)
+        ...props.selectedExpertiseIds.map((id) => ({ id, tier: "expertise" as const })),
+        ...props.selectedExpertiseLabels.map((label) => ({ label, tier: "expertise" as const })),
+      ]),
+    [
+      props.equipmentProficiencies.armor,
+      props.equipmentProficiencies.weapons,
+      props.manualGrantsByKind.proficiency,
+      props.selectedExpertiseIds,
+      props.selectedExpertiseLabels,
+      props.selectedProficiencyIds,
+      props.selectedProficiencyNames,
+    ],
+  );
+
   const selectedProficiencyLabels = useMemo(
     () => {
       const equipmentLabels = new Set(
@@ -1467,18 +1473,14 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         ].map((value) => value.toLowerCase()),
       );
 
-      return uniqueStrings([
-        ...props.selectedProficiencyNames.map(normalizeReviewLabel),
-        ...props.selectedProficiencyIds.map(humanizeGrantedId).map(normalizeReviewLabel),
-        ...props.manualGrantsByKind.proficiency.map((grant) => normalizeReviewLabel(grant.name)),
-      ]).filter((value) => !equipmentLabels.has(value.toLowerCase()));
+      return uniqueStrings(selectedProficiencyFacts.map((fact) => normalizeReviewLabel(fact.label))).filter(
+        (value) => !equipmentLabels.has(value.toLowerCase()),
+      );
     },
     [
       props.equipmentProficiencies.armor,
       props.equipmentProficiencies.weapons,
-      props.manualGrantsByKind.proficiency,
-      props.selectedProficiencyIds,
-      props.selectedProficiencyNames,
+      selectedProficiencyFacts,
     ],
   );
 
@@ -1507,6 +1509,7 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
     ...props.equipmentEffectSummary.weaponLines,
     ...props.equipmentEffectSummary.itemGrantLines,
   ];
+  const formattedEffectLines = allEffectLines.map(formatReviewEquipmentEffectLine);
 
   const spellTableRows = useMemo(
     () =>
@@ -1526,9 +1529,9 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
       deriveSavingThrowRows({
         draft: props.draft,
         effectiveAbilities: props.effectiveAbilities,
-        selectedProficiencyLabels,
+        proficiencyFacts: selectedProficiencyFacts,
       }),
-    [props.draft, props.effectiveAbilities, selectedProficiencyLabels],
+    [props.draft, props.effectiveAbilities, selectedProficiencyFacts],
   );
 
   const skillRows = useMemo(
@@ -1537,9 +1540,9 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         draft: props.draft,
         effectiveAbilities: props.effectiveAbilities,
         selectedExpertiseLabels: props.selectedExpertiseLabels,
-        selectedProficiencyLabels,
+        proficiencyFacts: selectedProficiencyFacts,
       }),
-    [props.draft, props.effectiveAbilities, props.selectedExpertiseLabels, selectedProficiencyLabels],
+    [props.draft, props.effectiveAbilities, props.selectedExpertiseLabels, selectedProficiencyFacts],
   );
 
   const passivePerception = useMemo(() => derivePassivePerception(skillRows), [skillRows]);
@@ -2146,10 +2149,13 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
 
           <article className="builder-review__card">
             <span className="builder-panel__label">Equipment effects</span>
-            {allEffectLines.length ? (
+            {formattedEffectLines.length ? (
               <ul className="route-shell__list">
-                {allEffectLines.map((line) => (
-                  <li key={line}>{line}</li>
+                {formattedEffectLines.map((line) => (
+                  <li key={line.id}>
+                    <strong>{line.label}</strong>
+                    {line.value ? ` ${line.value}` : null}
+                  </li>
                 ))}
               </ul>
             ) : (

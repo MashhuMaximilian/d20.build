@@ -130,6 +130,47 @@ type InventoryEffectContext = {
   weaponProficiencies?: string[];
 };
 
+export type InventoryAcTrace = {
+  id: string;
+  itemId?: string;
+  label: string;
+  value: number;
+  active: boolean;
+  reason: string;
+};
+
+export type ResolvedInventoryArmorClass = {
+  value: number;
+  meta: string;
+  traces: InventoryAcTrace[];
+};
+
+type InventoryAcEffect =
+  | {
+      kind: "armor-formula";
+      item: CharacterInventoryItem;
+      armorRule: BaseArmorRule;
+      baseAc: number;
+      dexContribution: number;
+      active: boolean;
+      reason: string;
+    }
+  | {
+      kind: "shield-normal";
+      item: CharacterInventoryItem;
+      bonus: number;
+      active: boolean;
+      reason: string;
+    }
+  | {
+      kind: "ac-bonus";
+      item: CharacterInventoryItem;
+      bonus: number;
+      label: string;
+      active: boolean;
+      reason: string;
+    };
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -415,6 +456,224 @@ function getArmorDexContribution(rule: BaseArmorRule, dexModifier: number) {
   return dexModifier;
 }
 
+function getAttunementGatedEffectState(item: CharacterInventoryItem) {
+  if (item.attunable && !item.attuned) {
+    return { active: false, reason: "requires attunement" };
+  }
+
+  if (item.equippable && !item.equipped) {
+    return { active: false, reason: "not equipped" };
+  }
+
+  return { active: true, reason: "active" };
+}
+
+function getEquippedEffectState(item: CharacterInventoryItem) {
+  return item.equipped
+    ? { active: true, reason: "equipped" }
+    : { active: false, reason: "not equipped" };
+}
+
+function parseAcBonusFromText(value: string) {
+  const normalized = stripMarkup(value);
+  const matches = [...normalized.matchAll(/(?:gain|grants?|have|has|provid(?:e|es|ing)|bonus is|bonus of)?\s*\+(\d+)\s+(?:[^.]{0,48}?\s)?bonus to AC\b/gi)];
+  return matches
+    .map((match) => Number(match[1]))
+    .filter((bonus) => Number.isFinite(bonus) && bonus > 0)
+    .sort((left, right) => right - left)[0] ?? 0;
+}
+
+function getInventoryAcEffects(item: CharacterInventoryItem, context: InventoryEffectContext): InventoryAcEffect[] {
+  const effects: InventoryAcEffect[] = [];
+  const equippedState = getEquippedEffectState(item);
+  const magicState = getAttunementGatedEffectState(item);
+  const dexModifier = getAbilityModifier(context.abilities?.dexterity);
+
+  if (item.category === "armor" && !/\bshield\b/i.test(item.name)) {
+    const armorRule = getBaseArmorRule(item);
+    if (armorRule) {
+      effects.push({
+        kind: "armor-formula",
+        item,
+        armorRule,
+        baseAc: armorRule.baseAc,
+        dexContribution: getArmorDexContribution(armorRule, dexModifier),
+        active: equippedState.active,
+        reason: equippedState.reason,
+      });
+    }
+  }
+
+  if (item.category === "shield" || /\bshield\b/i.test(item.name)) {
+    effects.push({
+      kind: "shield-normal",
+      item,
+      bonus: 2,
+      active: equippedState.active,
+      reason: equippedState.reason,
+    });
+  }
+
+  const itemText = `${item.name}. ${item.detailHtml ?? ""} ${item.notes ?? ""}`;
+  const enhancement = inferItemEnhancementBonus(item);
+  const parsedAcBonus = parseAcBonusFromText(itemText);
+  const acBonus =
+    item.category === "armor" || item.category === "shield" || /\bshield\b/i.test(item.name)
+      ? Math.max(enhancement, parsedAcBonus)
+      : parsedAcBonus;
+  if (acBonus > 0) {
+    effects.push({
+      kind: "ac-bonus",
+      item,
+      bonus: acBonus,
+      label: item.category === "armor" || item.category === "shield" ? "magic" : "AC bonus",
+      active: magicState.active,
+      reason: magicState.reason,
+    });
+  }
+
+  return effects;
+}
+
+function formatAcTraceLabel(effect: InventoryAcEffect): string {
+  if (effect.kind === "armor-formula") {
+    const dexText =
+      effect.armorRule.dexMode === "none"
+        ? ""
+        : effect.armorRule.dexMode === "max2"
+          ? ` + DEX (${formatModifier(effect.dexContribution)}) max 2`
+          : ` + DEX (${formatModifier(effect.dexContribution)})`;
+    return `${effect.item.name} | ${effect.baseAc}${dexText} AC`;
+  }
+
+  if (effect.kind === "shield-normal") {
+    const value = formatModifier(effect.bonus);
+    return `${effect.item.name} | ${value} AC`;
+  }
+
+  return `${effect.item.name} | ${formatModifier(effect.bonus)} AC`;
+}
+
+function acEffectValue(effect: InventoryAcEffect) {
+  if (effect.kind === "armor-formula") {
+    return effect.baseAc + effect.dexContribution;
+  }
+  return effect.bonus;
+}
+
+export function resolveInventoryArmorClass(
+  items: CharacterInventoryItem[],
+  context: InventoryEffectContext = {},
+): ResolvedInventoryArmorClass {
+  const dexMod = getAbilityModifier(context.abilities?.dexterity);
+  const normalizedItems = items.map(normalizeInventoryWeaponItem);
+  const effects = normalizedItems.flatMap((item) => getInventoryAcEffects(item, context));
+  const armorEffects = effects.filter(
+    (effect): effect is Extract<InventoryAcEffect, { kind: "armor-formula" }> =>
+      effect.kind === "armor-formula" && effect.active,
+  );
+  const chosenArmor = armorEffects
+    .map((effect) => ({ effect, value: acEffectValue(effect) }))
+    .sort((left, right) => right.value - left.value)[0];
+  const activeShield = effects
+    .filter(
+      (effect): effect is Extract<InventoryAcEffect, { kind: "shield-normal" }> =>
+        effect.kind === "shield-normal" && effect.active,
+    )
+    .map((effect) => {
+      const shieldMagic = effects
+        .filter(
+          (candidate): candidate is Extract<InventoryAcEffect, { kind: "ac-bonus" }> =>
+            candidate.kind === "ac-bonus" && candidate.active && candidate.item.id === effect.item.id,
+        )
+        .reduce((sum, candidate) => sum + candidate.bonus, 0);
+      return { effect, value: effect.bonus + shieldMagic };
+    })
+    .sort((left, right) => right.value - left.value)[0];
+  const shieldMagicIds = new Set(activeShield ? [activeShield.effect.item.id] : []);
+  const standaloneBonuses = effects.filter(
+    (effect): effect is Extract<InventoryAcEffect, { kind: "ac-bonus" }> =>
+      effect.kind === "ac-bonus" &&
+      effect.active &&
+      !(effect.item.category === "shield" || /\bshield\b/i.test(effect.item.name)) &&
+      effect.item.id !== chosenArmor?.effect.item.id,
+  );
+  const armorMagic = chosenArmor
+    ? effects
+        .filter(
+          (effect): effect is Extract<InventoryAcEffect, { kind: "ac-bonus" }> =>
+            effect.kind === "ac-bonus" && effect.active && effect.item.id === chosenArmor.effect.item.id,
+        )
+        .reduce((sum, effect) => sum + effect.bonus, 0)
+    : 0;
+  const baseValue = chosenArmor ? chosenArmor.value + armorMagic : 10 + dexMod;
+  const shieldValue = activeShield?.value ?? 0;
+  const standaloneValue = standaloneBonuses.reduce((sum, effect) => sum + effect.bonus, 0);
+  const activeTraces: InventoryAcTrace[] = [];
+
+  if (chosenArmor) {
+    activeTraces.push({
+      id: `armor-${chosenArmor.effect.item.id}`,
+      itemId: chosenArmor.effect.item.id,
+      label: formatAcTraceLabel(chosenArmor.effect),
+      value: chosenArmor.value,
+      active: true,
+      reason: chosenArmor.effect.reason,
+    });
+    if (armorMagic) {
+      activeTraces.push({
+        id: `armor-magic-${chosenArmor.effect.item.id}`,
+        itemId: chosenArmor.effect.item.id,
+        label: `${chosenArmor.effect.item.name}: magic`,
+        value: armorMagic,
+        active: true,
+        reason: "active",
+      });
+    }
+  } else {
+    activeTraces.push({
+      id: "unarmored",
+      label: `Unarmored | 10 ${formatModifier(dexMod)} AC`,
+      value: 10 + dexMod,
+      active: true,
+      reason: "base formula",
+    });
+  }
+
+  if (activeShield) {
+    activeTraces.push({
+      id: `shield-${activeShield.effect.item.id}`,
+      itemId: activeShield.effect.item.id,
+      label: `${activeShield.effect.item.name} | ${formatModifier(activeShield.value)} AC`,
+      value: activeShield.value,
+      active: true,
+      reason: activeShield.effect.reason,
+    });
+  }
+
+  standaloneBonuses.forEach((effect) => {
+    if (shieldMagicIds.has(effect.item.id)) {
+      return;
+    }
+    activeTraces.push({
+      id: `ac-bonus-${effect.item.id}`,
+      itemId: effect.item.id,
+      label: formatAcTraceLabel(effect),
+      value: effect.bonus,
+      active: true,
+      reason: effect.reason,
+    });
+  });
+
+  return {
+    value: baseValue + shieldValue + standaloneValue,
+    meta: activeTraces
+      .map((trace) => trace.label)
+      .join("\n"),
+    traces: activeTraces,
+  };
+}
+
 export function createEmptyCurrency(): CharacterCurrency {
   return { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 };
 }
@@ -546,44 +805,6 @@ export function summarizeInventory(items: CharacterInventoryItem[], attunementLi
   };
 }
 
-function getArmorShieldAcLine(item: CharacterInventoryItem, context: InventoryEffectContext) {
-  if (!item.equipped || !["armor", "shield"].includes(item.category)) {
-    return "";
-  }
-
-  if (item.attunable && !item.attuned) {
-    return `${item.name}: equipped, attunement required before magic effects apply`;
-  }
-
-  if (item.category === "shield" || /\bshield\b/i.test(item.name)) {
-    const enhancement = inferItemEnhancementBonus(item);
-    const total = 2 + enhancement;
-    return `${item.name}: +${total} AC while equipped${enhancement ? ` (+2 shield, +${enhancement} magic)` : ""}`;
-  }
-
-  const enhancement = inferItemEnhancementBonus(item);
-  const armorRule = getBaseArmorRule(item);
-  if (!armorRule) {
-    return enhancement
-      ? `${item.name}: +${enhancement} armor bonus while equipped`
-      : `${item.name}: armor equipped; base armor formula unresolved`;
-  }
-
-  const dexModifier = getAbilityModifier(context.abilities?.dexterity);
-  const dexContribution = getArmorDexContribution(armorRule, dexModifier);
-  const armorAc = armorRule.baseAc + dexContribution + enhancement;
-  const dexText =
-    armorRule.dexMode === "none"
-      ? ""
-      : armorRule.dexMode === "max2"
-        ? `, Dex ${formatModifier(dexContribution)} max 2`
-        : `, Dex ${formatModifier(dexContribution)}`;
-  const magicText = enhancement ? `, +${enhancement} magic` : "";
-  const strengthText = armorRule.strengthRequirement ? `, Str ${armorRule.strengthRequirement} recommended` : "";
-
-  return `${item.name}: AC ${armorAc} while equipped (${armorRule.name}: ${armorRule.baseAc}${dexText}${magicText}${strengthText})`;
-}
-
 function getWeaponEffectLine(item: CharacterInventoryItem) {
   const normalizedItem = normalizeInventoryWeaponItem(item);
 
@@ -672,7 +893,8 @@ export function getInventoryEffectSummary(items: CharacterInventoryItem[], conte
   const equippedItems = normalizedItems.filter((item) => item.equipped);
   const equippedArmor = equippedItems.filter((item) => item.category === "armor" && !/\bshield\b/i.test(item.name));
   const equippedShields = equippedItems.filter((item) => item.category === "shield" || /\bshield\b/i.test(item.name));
-  const acLines = normalizedItems.map((item) => getArmorShieldAcLine(item, context)).filter(Boolean);
+  const armorClass = resolveInventoryArmorClass(normalizedItems, context);
+  const acLines = armorClass.traces.map((trace) => `${trace.label} (${trace.value >= 0 ? "+" : ""}${trace.value})`);
   const weaponLines = normalizedItems.map(getWeaponEffectLine).filter(Boolean);
   const itemGrantLines = normalizedItems.flatMap(getItemGrantLines);
   const warnings = [

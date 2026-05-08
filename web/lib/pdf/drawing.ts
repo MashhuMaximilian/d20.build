@@ -14,6 +14,7 @@ export type PdfTextOptions = {
   color?: string;
   align?: "left" | "center" | "right";
   lineGap?: number;
+  lineBreak?: boolean;
 };
 
 type PdfShapeDocument = PDFDocument & {
@@ -95,17 +96,19 @@ export function fitTextSize(
     ctx.doc.save();
     ctx.doc.font(resolveFont(ctx, options.font));
     ctx.doc.fontSize(size);
+    const lineBreak = options.lineBreak ?? true;
     const measuredHeight = ctx.doc.heightOfString(text, {
       width: rect.width,
       height: rect.height,
       align: options.align || "left",
-      lineBreak: true,
+      lineBreak,
       ellipsis: true,
       lineGap: options.lineGap ?? size * 0.12,
     });
+    const measuredWidth = lineBreak ? 0 : ctx.doc.widthOfString(text);
     ctx.doc.restore();
 
-    if (measuredHeight <= rect.height) {
+    if (measuredHeight <= rect.height && (lineBreak || measuredWidth <= rect.width)) {
       return size;
     }
   }
@@ -127,7 +130,7 @@ export function drawText(
     width: rect.width,
     height: rect.height,
     align: options.align || "left",
-    lineBreak: true,
+    lineBreak: options.lineBreak ?? true,
     ellipsis: true,
     lineGap: options.lineGap ?? size * 0.12,
   });

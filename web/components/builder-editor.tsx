@@ -461,7 +461,12 @@ function humanizeGrantedId(value: string) {
     .replace(/_/g, " ")
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase())
-    .replace(/\bCant\b/g, "Cant");
+    .replace(/\bCant\b/g, "Cant")
+    // For saving throw proficiency IDs like ID_PROFICIENCY_SAVINGTHROW_STRENGTH,
+    // the generic strip leaves "Savingthrow Strength". Re-format to "Strength Saving Throw"
+    // so the ability name ("Strength") is preserved as a separate token for matching.
+    .replace(/^Savingthrow (.+)$/, "$1 Saving Throw")
+    .replace(/^Savingthrow$/, "Saving Throw");
 }
 
 const EXPERTISE_SKILL_LABELS: Record<string, string> = {
@@ -2105,6 +2110,24 @@ export function BuilderEditor({
         .map((element) => element.name),
     [activeProgressionElements],
   );
+  const selectedExpertiseIds = useMemo(
+    () =>
+      [
+        ...activeProgressionElements,
+        ...selectedClassFeatureElements,
+        ...allSelectedFeatElements,
+        ...selectedBackgroundFeatureElements,
+        ...selectedRacialTraitElements,
+      ]
+        .flatMap((e) => collectGrantedIds(e.rules, "Expertise")),
+    [
+      activeProgressionElements,
+      allSelectedFeatElements,
+      selectedBackgroundFeatureElements,
+      selectedClassFeatureElements,
+      selectedRacialTraitElements,
+    ],
+  );
   const selectedExpertiseLabels = useMemo(
     () =>
       [...new Set(
@@ -3743,6 +3766,7 @@ export function BuilderEditor({
             selectedBackground={selectedBackground}
             selectedBackgroundFeatureElements={selectedBackgroundFeatureElements}
             selectedClassFeatureElements={selectedClassFeatureElements}
+            selectedExpertiseIds={selectedExpertiseIds}
             selectedFeatElements={allSelectedFeatElements}
             selectedLanguageIds={selectedLanguageIds}
             selectedLanguageNames={selectedLanguageNames}

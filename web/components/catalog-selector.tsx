@@ -719,9 +719,9 @@ export function CatalogSelector({
               <div className="catalog-selector__filterGroup">
                 <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                 <div className="catalog-selector__filterTags">
-                  {primaryTagOptions.map((tag) => (
+                  {primaryTagOptions.map((tag, index) => (
                     <button
-                      key={tag}
+                      key={`${tag}-${index}`}
                       className={`catalog-selector__filterChip${primaryTagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() => setPrimaryTagFilter((current) => (current === tag ? null : tag))}
@@ -737,9 +737,9 @@ export function CatalogSelector({
               <div className="catalog-selector__filterGroup">
                 <span className="catalog-selector__sectionLabel">Extra filters</span>
                 <div className="catalog-selector__filterTags">
-                  {secondaryTagOptions.map((tag) => (
+                  {secondaryTagOptions.map((tag, index) => (
                     <button
-                      key={tag}
+                      key={`${tag}-${index}`}
                       className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
                       type="button"
                       onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
@@ -760,8 +760,8 @@ export function CatalogSelector({
                 </p>
                 {previewItem.impactLines?.length ? (
                   <ul className="catalog-selector__impactList">
-                    {previewItem.impactLines.slice(0, 4).map((line) => (
-                      <li key={line}>{line}</li>
+                    {previewItem.impactLines.slice(0, 4).map((line, index) => (
+                      <li key={`${line}-${index}`}>{line}</li>
                     ))}
                   </ul>
                 ) : (
@@ -920,9 +920,9 @@ export function CatalogSelector({
                       <div className="catalog-selector__filterGroup catalog-selector__tableTags">
                         <span className="catalog-selector__sectionLabel">{tagSectionLabel}</span>
                         <div className="catalog-selector__filterTags">
-                          {primaryTagOptions.map((tag) => (
+                          {primaryTagOptions.map((tag, index) => (
                             <button
-                              key={tag}
+                              key={`${tag}-${index}`}
                               className={`catalog-selector__filterChip${primaryTagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
                               type="button"
                               onClick={() => setPrimaryTagFilter((current) => (current === tag ? null : tag))}
@@ -938,9 +938,9 @@ export function CatalogSelector({
                       <div className="catalog-selector__filterGroup catalog-selector__tableTags">
                         <span className="catalog-selector__sectionLabel">Extra filters</span>
                         <div className="catalog-selector__filterTags">
-                          {secondaryTagOptions.map((tag) => (
+                          {secondaryTagOptions.map((tag, index) => (
                             <button
-                              key={tag}
+                              key={`${tag}-${index}`}
                               className={`catalog-selector__filterChip${tagFilter === tag ? " catalog-selector__filterChip--active" : ""}`}
                               type="button"
                               onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
@@ -958,8 +958,8 @@ export function CatalogSelector({
 
           {activeFilters.length ? (
             <div className="catalog-selector__appliedFilters">
-              {activeFilters.map((filter) => (
-                <span className="catalog-selector__filterChip catalog-selector__appliedFilter" key={filter}>
+              {activeFilters.map((filter, index) => (
+                <span className="catalog-selector__filterChip catalog-selector__appliedFilter" key={`${filter}-${index}`}>
                   {filter}
                 </span>
               ))}
@@ -994,15 +994,15 @@ export function CatalogSelector({
                       {item.source ? <span className="catalog-selector__source">{item.source}</span> : null}
                       {item.summaryLines?.length ? (
                         <div className="catalog-selector__summaryList">
-                          {item.summaryLines.slice(0, 3).map((line) => (
-                            <span key={line}>{line}</span>
+                          {item.summaryLines.slice(0, 3).map((line, index) => (
+                            <span key={`${line}-${index}`}>{line}</span>
                           ))}
                         </div>
                       ) : null}
                       {item.impactLines?.length ? (
                         <div className="catalog-selector__rowImpact">
-                          {item.impactLines.slice(0, 2).map((line) => (
-                            <span className="catalog-selector__impactChip" key={line}>
+                          {item.impactLines.slice(0, 2).map((line, index) => (
+                            <span className="catalog-selector__impactChip" key={`${line}-${index}`}>
                               {line}
                             </span>
                           ))}
@@ -1113,8 +1113,8 @@ export function CatalogSelector({
                 <div className="catalog-selector__detailSection">
                   <span className="catalog-selector__sectionLabel">Key traits</span>
                   <div className="catalog-selector__tagList">
-                    {previewItem.detailTags.slice(0, 8).map((tag) => (
-                      <span className="catalog-selector__tag" key={tag}>
+                    {previewItem.detailTags.slice(0, 8).map((tag, index) => (
+                      <span className="catalog-selector__tag" key={`${tag}-${index}`}>
                         {tag}
                       </span>
                     ))}
@@ -1151,8 +1151,8 @@ export function CatalogSelector({
                     <>
                       <span className="catalog-selector__sectionLabel">This changes your build</span>
                       <ul className="catalog-selector__impactList">
-                        {previewItem.impactLines.map((line) => (
-                          <li key={line}>{line}</li>
+                        {previewItem.impactLines.map((line, index) => (
+                          <li key={`${line}-${index}`}>{line}</li>
                         ))}
                       </ul>
                     </>
@@ -1172,8 +1172,8 @@ export function CatalogSelector({
                     <>
                       <span className="catalog-selector__sectionLabel">Mechanical breakdown</span>
                       <ul className="catalog-selector__impactList">
-                        {(previewItem.mechanicsLines ?? previewItem.impactLines ?? []).map((line) => (
-                          <li key={line}>{line}</li>
+                        {(previewItem.mechanicsLines ?? previewItem.impactLines ?? []).map((line, index) => (
+                          <li key={`${line}-${index}`}>{line}</li>
                         ))}
                       </ul>
                     </>
@@ -1186,13 +1186,13 @@ export function CatalogSelector({
                   <span className="catalog-selector__sectionLabel">Feature details</span>
                   {previewItem.featureDetails?.length ? (
                     <div className="catalog-selector__featureList">
-                      {previewItem.featureDetails.map((feature) => {
+                      {previewItem.featureDetails.map((feature, index) => {
                         const featureMarkup = feature.detailHtml?.trim()
                           ? sanitizeRichHtml(feature.detailHtml)
                           : formatPlainTextAsHtml(feature.description);
 
                         return (
-                          <article className="catalog-selector__featureCard" key={feature.name}>
+                          <article className="catalog-selector__featureCard" key={`${feature.name}-${index}`}>
                             <div className="catalog-selector__featureHeader">
                               <strong className="catalog-selector__featureTitle">{feature.name}</strong>
                               {feature.source ? (

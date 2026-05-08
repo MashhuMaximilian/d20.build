@@ -11,7 +11,7 @@ export const FRONT_PAGE_REGIONS = {
   abilities: { x: 10, y: 144, width: 384, height: 152 },
   passives: { x: 10, y: 302, width: 378, height: 40 },
   proficiencies: { x: 10, y: 342, width: 378, height: 50 },
-  attacks: { x: 10, y: 392, width: 378, height: 92 },
+  attacks: { x: 10, y: 392, width: 575, height: 112 },
   spellcasting: { x: 394, y: 144, width: 190, height: 45 },
   rail: { x: 394, y: 194, width: 190, height: 282 },
   features: { x: 16, y: 520, width: 563, height: 300 },
