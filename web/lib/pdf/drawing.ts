@@ -15,6 +15,7 @@ export type PdfTextOptions = {
   align?: "left" | "center" | "right";
   lineGap?: number;
   lineBreak?: boolean;
+  ellipsis?: boolean;
 };
 
 type PdfShapeDocument = PDFDocument & {
@@ -102,7 +103,7 @@ export function fitTextSize(
       height: rect.height,
       align: options.align || "left",
       lineBreak,
-      ellipsis: true,
+      ellipsis: options.ellipsis ?? true,
       lineGap: options.lineGap ?? size * 0.12,
     });
     const measuredWidth = lineBreak ? 0 : ctx.doc.widthOfString(text);
@@ -131,7 +132,7 @@ export function drawText(
     height: rect.height,
     align: options.align || "left",
     lineBreak: options.lineBreak ?? true,
-    ellipsis: true,
+    ellipsis: options.ellipsis ?? true,
     lineGap: options.lineGap ?? size * 0.12,
   });
 }
@@ -170,7 +171,7 @@ export function drawCenteredTextInRect(
     width: rect.width,
     align: options.align || "center",
     lineBreak: true,
-    ellipsis: true,
+    ellipsis: options.ellipsis ?? true,
     lineGap,
   });
   ctx.doc.restore();

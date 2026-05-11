@@ -66,6 +66,11 @@ const LAYOUT = {
   pipeLineWidth: 0.4,
 } as const;
 
+const SPELL_LEFT_CELL_W = 18;
+const SPELL_TEXT_GAP = 1.4;
+const SPELL_LEVEL_CIRCLE_GAP = 0.65;
+const SPELL_TEXT_LINE_GAP = 0.9;
+
 type StatBoxSpec = {
   key: string;
   fallback?: string;
@@ -964,10 +969,10 @@ function renderWeaponAttackRows(
   rect: PdfRect,
   rows: { name: string; hit: string; damage: string; type?: string; properties?: string }[],
 ) {
-  const maxRows = 5;
+  const maxRows = 6;
   const displayRows = rows.slice(0, maxRows);
   const columnGap = 3;
-  const rowGap = 1.4;
+  const rowGap = 1.0;
   const headerHeight = 7;
   const columnSpecs = [
     { key: "name", label: "NAME", width: 0.29 },
@@ -1000,7 +1005,7 @@ function renderWeaponAttackRows(
     x: rect.x,
     y: rect.y + headerHeight + 1.5,
     width: rect.width,
-    height: Math.min(46, rect.height - headerHeight - 1.5),
+    height: Math.min(52, rect.height - headerHeight - 1.5),
   };
   const rowRects = splitRows(rowArea, maxRows, rowGap);
 
@@ -1037,11 +1042,12 @@ function renderSpellTracker(
   assets: PdfSvgAssetBundle,
   rect: PdfRect,
   spellColumn: NonNullable<ResolvedPdfCharacter["frontPage"]["combatHub"]>["spellColumn"],
+  targetBottomY: number,
 ) {
   if (!spellColumn) return;
 
   const { cantrips, slots, spellsByLevel } = spellColumn;
-  const contentPadding = 3;
+  const contentPadding = 2;
   const contentRect = {
     x: rect.x + contentPadding,
     y: rect.y + 2,
@@ -1059,12 +1065,12 @@ function renderSpellTracker(
   // --- Cantrips row (two-cell layout matching leveled spell rows) ---
   const cantripNames = cantrips.map((s) => s.name).join(", ") || "—";
   const cantripY = contentRect.y + 9;
-  const leftCellW = 36;
+  const leftCellW = SPELL_LEFT_CELL_W;
   // Left cell: "Cantrips" label at top, no circles
   drawFittedText(ctx, "Cantrips", { x: contentRect.x, y: cantripY, width: leftCellW, height: 8 }, {
     font: "Helvetica-Bold",
     maxSize: 4.0,
-    minSize: 3,
+    minSize: 4.0,
     align: "right",
     color: "#222222",
     lineBreak: false,
@@ -1073,39 +1079,40 @@ function renderSpellTracker(
   drawFittedText(
     ctx,
     cantripNames,
-    { x: contentRect.x + leftCellW + 2, y: cantripY, width: contentRect.width - leftCellW - 2, height: 8 },
-    { font: "Helvetica", maxSize: 3.7, minSize: 2.5, align: "left", color: "#222222", lineBreak: false },
+    {
+      x: contentRect.x + leftCellW + SPELL_TEXT_GAP,
+      y: cantripY,
+      width: contentRect.width - leftCellW - SPELL_TEXT_GAP,
+      height: 8,
+    },
+    { font: "Helvetica", maxSize: 3.7, minSize: 3.7, align: "left", color: "#222222", lineBreak: false },
   );
 
   // --- Spell slots and spell names by level ---
-  const slotsY = cantripY + 11;
-  const slotsAreaHeight = contentRect.height - (slotsY - contentRect.y);
+  const slotsY = cantripY + 6.5;
+  const slotsAreaHeight = Math.max(1, Math.min(contentRect.height - (slotsY - contentRect.y), targetBottomY - slotsY));
 
   if (slots.maxLevel > 0) {
-    // Split levels into two groups: 1-4 and 5-9
-    const leftLevels = [1, 2, 3, 4].filter((l) => l <= slots.maxLevel);
-    const rightLevels = [5, 6, 7, 8, 9].filter((l) => l <= slots.maxLevel);
+    // Three compact level groups: 1-3, 4-6, 7-9. Cantrips stay full-width above.
+    const levelGroups = [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+    ]
+      .map((group) => group.filter((level) => level <= slots.maxLevel))
+      .filter((group) => group.length > 0);
+    const gap = 0.2;
+    const groupWidth = (contentRect.width - gap * (levelGroups.length - 1)) / levelGroups.length;
 
-    // Tight gap between level groups (left 1-4, right 5-9)
-    const gap = 7;
-    const leftWidth = leftLevels.length > 0
-      ? (rightLevels.length > 0 ? (contentRect.width - gap) / 2 : contentRect.width)
-      : 0;
-    const rightWidth = rightLevels.length > 0 ? (contentRect.width - gap) / 2 : 0;
-
-    // Left sub-column: levels 1-4
-    if (leftLevels.length > 0) {
-      const leftX = contentRect.x;
-      const leftRect = { x: leftX, y: slotsY, width: leftWidth, height: slotsAreaHeight };
-      renderSpellLevelGroup(ctx, assets, leftRect, leftLevels, slots.slots, spellsByLevel);
-    }
-
-    // Right sub-column: levels 5-9
-    if (rightLevels.length > 0) {
-      const rightX = contentRect.x + leftWidth + gap;
-      const rightRect = { x: rightX, y: slotsY, width: rightWidth, height: slotsAreaHeight };
-      renderSpellLevelGroup(ctx, assets, rightRect, rightLevels, slots.slots, spellsByLevel);
-    }
+    levelGroups.forEach((levels, index) => {
+      const groupRect = {
+        x: contentRect.x + index * (groupWidth + gap),
+        y: slotsY,
+        width: groupWidth,
+        height: slotsAreaHeight,
+      };
+      renderSpellLevelGroup(ctx, assets, groupRect, levels, slots.slots, spellsByLevel);
+    });
   }
 }
 
@@ -1117,17 +1124,22 @@ function renderSpellLevelGroup(
   slotLevels: { level: number; slots: number }[],
   spellsByLevel: { level: number; spells: { id: string; name: string; level: number; sourceLabel?: string }[] }[],
 ) {
-  // Use the same rowGap as weapon attack rows for consistent heights across columns.
-  const rowGap = 1.4;
-  const levelRects = splitRows(rect, levels.length, rowGap);
+  const rowGap = 0.35;
+  const rowHeight = (rect.height - rowGap * (levels.length - 1)) / levels.length;
+  const levelRects = levels.map((_, index) => ({
+    x: rect.x,
+    y: rect.y + index * (rowHeight + rowGap),
+    width: rect.width,
+    height: rowHeight,
+  }));
 
   // Two-cell row layout per spell level:
   // LEFT CELL (leftCellW): Lvl N: label at top, circles below.
   // Circles NOT on same baseline as label — they are vertically separated below the label.
   // RIGHT CELL: spell names.
-  const leftCellW = 36; // left cell wide enough for 4 circles (4*4 + 3*2 = 22, plus margin)
-  const circleSize = 4;
-  const circleGap = 2;
+  const leftCellW = SPELL_LEFT_CELL_W; // minimum viable label/slots cell; maximizes spell-name width
+  const circleSize = 3.4;
+  const circleGap = 1.4;
 
   levels.forEach((level, idx) => {
     const rowRect = levelRects[idx];
@@ -1138,7 +1150,7 @@ function renderSpellLevelGroup(
     const spellNames = spells.map((s) => s.name).join(", ") || "—";
 
     // LEFT CELL — "Level N" label right-aligned at top, circles directly below
-    const labelH = Math.min(4.5, rowHeight * 0.45); // compact label height
+    const labelH = Math.min(4, rowHeight * 0.42); // same target size as cantrip label
     const labelRect: PdfRect = {
       x: rowRect.x,
       y: rowTop,
@@ -1147,15 +1159,15 @@ function renderSpellLevelGroup(
     };
     drawFittedText(ctx, `Level ${level}`, labelRect, {
       font: "Helvetica-Bold",
-      maxSize: 3.8,
-      minSize: 2.8,
+      maxSize: 4.0,
+      minSize: 4.0,
       align: "right",
       color: "#555555",
       lineBreak: false,
     });
 
     // Circles sit directly below the right-aligned label, making the left cell a compact unit.
-    const circleAreaTop = labelRect.y + labelRect.height + 0.6;
+    const circleAreaTop = labelRect.y + labelRect.height + SPELL_LEVEL_CIRCLE_GAP;
     const circleAreaBottom = rowRect.y + rowHeight;
     const circleY = Math.min(circleAreaBottom - circleSize, circleAreaTop);
 
@@ -1167,36 +1179,46 @@ function renderSpellLevelGroup(
       markerCursorX += circleSize + circleGap;
     }
 
-    // RIGHT CELL — spell names, positioned between the Level label and the circles.
-    // This places names roughly centered between top of row and top of circles.
-    const namesX = rowRect.x + leftCellW + 2;
-    const namesBlockTop = rowTop + labelH + 0.4;
-    const namesBlockBottom = circleAreaTop;
-    const namesBlockHeight = Math.max(0, namesBlockBottom - namesBlockTop);
+    // RIGHT CELL — spell names can wrap to two lines inside the full level row.
+    const namesX = rowRect.x + leftCellW + SPELL_TEXT_GAP;
     const namesRect: PdfRect = {
       x: namesX,
-      y: namesBlockTop,
-      width: rowRect.width - leftCellW - 2,
-      height: namesBlockHeight > 0 ? namesBlockHeight : rowHeight,
+      y: rowTop,
+      width: rowRect.width - leftCellW - SPELL_TEXT_GAP,
+      height: rowHeight,
     };
     drawCenteredTextInRect(ctx, spellNames === "—" && slotCount === 0 ? "" : spellNames, namesRect, {
       font: "Helvetica",
-      maxSize: 3.3,
-      minSize: 3.3,
+      maxSize: 3.7,
+      minSize: 3.7,
       align: "left",
       color: "#222222",
-      lineGap: 0,
+      lineGap: SPELL_TEXT_LINE_GAP,
       lineBreak: true,
+      ellipsis: false,
     });
   });
 }
 
 function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
-  const rect = FRONT_PAGE_REGIONS.attacks;
+  const contentTopPad = 8;
+  const contentBottomPad = 4;
+  const weaponHeaderHeight = 7;
+  const weaponHeaderGap = 1.5;
+  const weaponRowAreaTargetHeight = 52;
+  const rect = {
+    ...FRONT_PAGE_REGIONS.attacks,
+    height: contentTopPad + weaponHeaderHeight + weaponHeaderGap + weaponRowAreaTargetHeight + contentBottomPad,
+  };
   maskRect(ctx, rect);
   drawSvg(ctx, assets.generalContainer, rect);
 
-  const content = insetRect(rect, 9, 8);
+  const content = {
+    x: rect.x + 9,
+    y: rect.y + contentTopPad,
+    width: rect.width - 18,
+    height: rect.height - contentTopPad - contentBottomPad,
+  };
   const combatHub = character.frontPage.combatHub;
 
   if (!combatHub.hasSpells) {
@@ -1206,13 +1228,18 @@ function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetB
   }
 
   // Spellcaster: equal-width weapon and spell regions with a tight gutter.
-  const columnGap = 7;
+  const columnGap = 4;
   const columns = splitColumns(content, 2, columnGap);
   const weaponRect = columns[0];
   const spellRect = columns[1];
 
   renderWeaponAttackRows(ctx, assets, weaponRect, combatHub.weaponRows);
-  renderSpellTracker(ctx, assets, spellRect, combatHub.spellColumn);
+  const weaponRowAreaY = weaponRect.y + weaponHeaderHeight + weaponHeaderGap;
+  const weaponRowAreaHeight = Math.min(weaponRowAreaTargetHeight, weaponRect.height - weaponHeaderHeight - weaponHeaderGap);
+  const weaponRowRects = splitRows({ x: weaponRect.x, y: weaponRowAreaY, width: weaponRect.width, height: weaponRowAreaHeight }, 6, 1.0);
+  const weaponSixthRow = weaponRowRects[5] ?? weaponRowRects[weaponRowRects.length - 1];
+  const spellTargetBottomY = weaponSixthRow ? weaponSixthRow.y + weaponSixthRow.height : spellRect.y + spellRect.height;
+  renderSpellTracker(ctx, assets, spellRect, combatHub.spellColumn, spellTargetBottomY);
 }
 
 function cardCategory(card: PdfPageCard) {
