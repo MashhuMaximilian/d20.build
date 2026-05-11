@@ -80,6 +80,12 @@ const WEAPON_LABEL_OVERRIDES: Record<string, string> = {
 };
 
 const TOOL_LABEL_OVERRIDES: Record<string, string> = {
+  ARTISAN_TOOLS: "Artisan's Tools",
+  ARTISANS_TOOLS: "Artisan's Tools",
+  GAMING_SET: "Gaming Set",
+  GAMING_SETS: "Gaming Sets",
+  MUSICAL_INSTRUMENT: "Musical Instrument",
+  MUSICAL_INSTRUMENTS: "Musical Instruments",
   THIEVES_TOOLS: "Thieves' Tools",
 };
 
@@ -220,6 +226,14 @@ function factFromId(sourceId: string): ProficiencyFact | null {
   const idHandlers: Record<string, () => ProficiencyFact | null> = {
     "manual-prof-armor-shields": () =>
       ({ id: toFactId("armor", "Shields"), kind: "armor", label: "Shields", tier: "proficient", sourceId }),
+    "ID_INTERNAL_TOOL_MUSICAL_INSTRUMENT": () =>
+      ({
+        id: toFactId("tool", "Musical Instrument"),
+        kind: "tool",
+        label: "Musical Instrument",
+        tier: "proficient",
+        sourceId,
+      }),
     "ID_INTERNAL_PROFICIENCY_SPELLFOCUS_GROUP_ARCANE_FOCUS": () => null, // purely internal equipment marker
   };
   const handler = idHandlers[sourceId];

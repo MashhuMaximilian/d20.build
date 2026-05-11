@@ -115,6 +115,83 @@ function uniqueStrings(values: string[]) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function splitFreeTextList(value: string | undefined) {
+  return (value ?? "")
+    .split(/[\n,;]+/)
+    .map((entry) => entry.replace(/^[-*]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+const MUSICAL_INSTRUMENT_NAMES = new Set([
+  "bagpipes",
+  "drum",
+  "dulcimer",
+  "flute",
+  "guitar",
+  "harp",
+  "horn",
+  "lute",
+  "lyre",
+  "pan flute",
+  "panflute",
+  "shawm",
+  "viol",
+  "violin",
+]);
+
+const TOOL_LIKE_TEXT_RE = /\b(instrument|tool|set|kit|supplies|utensils|dice|cards|chess|dragonchess|three\s*dragon|artisan)\b/i;
+const NON_TOOL_EQUIPMENT_RE = /\b(weapon|armor|armour|shield|vehicle|pack|clothing|clothes|book|treasure|pouch|focus|symbol|ammo|ammunition|consumable)\b/i;
+
+function isToolLikeValue(rawValue: string, label = normalizeLabel(rawValue)) {
+  const raw = rawValue.toLowerCase().replace(/[-_]+/g, " ");
+  const normalizedLabel = label.toLowerCase();
+  return TOOL_LIKE_TEXT_RE.test(raw) || TOOL_LIKE_TEXT_RE.test(normalizedLabel) || MUSICAL_INSTRUMENT_NAMES.has(normalizedLabel);
+}
+
+function collectInventoryToolLabels(draft: CharacterDraft) {
+  const removedIds = new Set(draft.removedInventoryItemIds);
+  const inventoryLabels = draft.inventoryItems
+    .filter((item) => !removedIds.has(item.id))
+    .filter((item) => {
+      const haystack = `${item.category} ${item.family ?? ""} ${item.itemType ?? ""} ${item.name}`.toLowerCase();
+      if (NON_TOOL_EQUIPMENT_RE.test(haystack) && !isToolLikeValue(haystack, item.name)) {
+        return false;
+      }
+      return isToolLikeValue(haystack, item.name);
+    })
+    .map((item) => normalizeLabel(item.baseItemName || item.name));
+  const selectionLabels = Object.values(draft.equipmentSelections)
+    .map((value) => normalizeLabel(value))
+    .filter((label) => {
+      const haystack = label.toLowerCase();
+      if (NON_TOOL_EQUIPMENT_RE.test(haystack) && !isToolLikeValue(haystack, label)) {
+        return false;
+      }
+      return isToolLikeValue(haystack, label);
+    });
+
+  return uniqueStrings([...inventoryLabels, ...selectionLabels]);
+}
+
+function collectChoiceToolLabels(args: BuilderPdfSourceArgs) {
+  const rawChoiceValues = [
+    ...Object.values(args.draft.progressionSelections).flat(),
+    ...args.selectedProficiencyIds,
+    ...args.selectedProficiencyNames,
+    ...args.selectedProgressionElements.flatMap((element) =>
+      element.type === "Proficiency" && isToolLikeValue(`${element.id} ${element.name} ${element.supports.join(" ")}`)
+        ? [element.id, element.name]
+        : [],
+    ),
+  ];
+
+  return uniqueStrings(
+    rawChoiceValues
+      .filter((value) => isToolLikeValue(value))
+      .map((value) => normalizeLabel(value)),
+  );
+}
+
 function emptyAbilityMap() {
   return {
     strength: 0,
@@ -493,7 +570,8 @@ function normalizeLabel(value: string): string {
 
   cleaned = cleaned
     .replace(/^ID_/, "")
-    .replace(/_/g, " ")
+    .replace(/[-_]/g, " ")
+    .replace(/\bINTERNAL\b/gi, "")
     .replace(/\bPROFICIENCY\b/gi, "")
     .replace(/\bLANGUAGE\b/gi, "")
     .replace(/\bSAVINGTHROW\b/gi, "Saving Throw ")
@@ -517,6 +595,10 @@ function getSelectedProficiencyFacts(args: BuilderPdfSourceArgs): ProficiencyFac
     ...(args.manualGrantsByKind.proficiency ?? []).map((grant) => ({
       id: grant.refId,
       label: normalizeLabel(grant.name),
+      tier: "proficient" as const,
+    })),
+    ...splitFreeTextList(args.draft.equipmentNotes.additionalProficiencies).map((label) => ({
+      label: normalizeLabel(label),
       tier: "proficient" as const,
     })),
     // Equipment-tab grants (armor + weapons from gear) — also proficient tier
@@ -926,14 +1008,28 @@ function buildProficiencyGroups(args: BuilderPdfSourceArgs) {
     ...args.selectedLanguageNames,
     ...args.selectedLanguageIds.map(humanizeGrantedId),
     ...args.manualGrantsByKind.language.map((grant) => grant.name),
+    ...splitFreeTextList(args.draft.equipmentNotes.additionalLanguages),
   ]);
 
   const grouped = groupProficiencies(facts);
+  const proficiencyTools = grouped.tools.map((f) => f.label);
+  const equipmentTools = collectInventoryToolLabels(args.draft);
+  const choiceTools = collectChoiceToolLabels(args);
+  const tools = uniqueStrings([...proficiencyTools, ...equipmentTools, ...choiceTools]);
+
+  console.info("[pdf/proficiencies] Tools & Instr.", {
+    tools,
+    sources: {
+      proficiencies: proficiencyTools,
+      equipment: equipmentTools,
+      choices: choiceTools,
+    },
+  });
 
   return {
     weapons: uniqueStrings(grouped.weapons.map((f) => f.label)),
     armor: uniqueStrings(grouped.armor.map((f) => f.label)),
-    tools: uniqueStrings(grouped.tools.map((f) => f.label)),
+    tools,
     vehicles: uniqueStrings(grouped.vehicles.map((f) => f.label)),
     languages,
   };

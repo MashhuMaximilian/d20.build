@@ -66,10 +66,11 @@ const LAYOUT = {
   pipeLineWidth: 0.4,
 } as const;
 
-const SPELL_LEFT_CELL_W = 18;
-const SPELL_TEXT_GAP = 1.4;
-const SPELL_LEVEL_CIRCLE_GAP = 0.65;
-const SPELL_TEXT_LINE_GAP = 0.9;
+const SPELL_LEFT_CELL_W = 20;
+const SPELL_TEXT_GAP = 2.6;
+const SPELL_LEVEL_CIRCLE_GAP = 1.1;
+const SPELL_CIRCLE_GAP = 1.8;
+const SPELL_TEXT_LINE_GAP = 1.0;
 
 type StatBoxSpec = {
   key: string;
@@ -906,23 +907,30 @@ function renderProficiencies(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, c
   const cells = splitColumns(insetRect(FRONT_PAGE_REGIONS.proficiencies, 8, 0), 5, 13);
   const groups = character.frontPage.proficiencyGroups;
   const values = [groups.weapons, groups.armor, groups.tools, groups.vehicles, groups.languages];
-  const labels = ["WEAPONS", "ARMOR", "TOOLS", "VEHICLES", "LANGUAGES"];
+  const labels = ["WEAPONS", "ARMOR", "TOOLS & INSTR.", "VEHICLES", "LANGUAGES"];
 
   values.forEach((items, index) => {
     drawSvg(ctx, assets.proficiencyBox0, cells[index]);
     drawCenteredTextInRect(ctx, labels[index], rectFromFractions(cells[index], { x: 0.22, y: 0.87, width: 0.56, height: 0.08 }), {
       font: "Helvetica-Bold",
       maxSize: 3.0,
-      minSize: 2.4,
+      minSize: 2.0,
       color: "#333333",
     });
     if (!items.length) {
       return;
     }
     const itemText = items.join(", ");
+    const itemMaxSize = itemText.length <= 18
+      ? 6.4
+      : itemText.length <= 40
+        ? 5.6
+        : itemText.length <= 70
+          ? 4.8
+          : 4.2;
     drawCenteredTextInRect(ctx, itemText, rectFromFractions(cells[index], { x: 0.08, y: 0.18, width: 0.82, height: 0.56 }), {
-      maxSize: index === 2 ? 4.6 : 5.4,
-      minSize: 2.3,
+      maxSize: itemMaxSize,
+      minSize: 2.1,
       align: "left",
       color: "#000000",
       lineGap: 0,
@@ -1047,7 +1055,7 @@ function renderSpellTracker(
   if (!spellColumn) return;
 
   const { cantrips, slots, spellsByLevel } = spellColumn;
-  const contentPadding = 2;
+  const contentPadding = 1;
   const contentRect = {
     x: rect.x + contentPadding,
     y: rect.y + 2,
@@ -1101,7 +1109,7 @@ function renderSpellTracker(
     ]
       .map((group) => group.filter((level) => level <= slots.maxLevel))
       .filter((group) => group.length > 0);
-    const gap = 0.2;
+    const gap = 0.1;
     const groupWidth = (contentRect.width - gap * (levelGroups.length - 1)) / levelGroups.length;
 
     levelGroups.forEach((levels, index) => {
@@ -1125,13 +1133,6 @@ function renderSpellLevelGroup(
   spellsByLevel: { level: number; spells: { id: string; name: string; level: number; sourceLabel?: string }[] }[],
 ) {
   const rowGap = 0.35;
-  const rowHeight = (rect.height - rowGap * (levels.length - 1)) / levels.length;
-  const levelRects = levels.map((_, index) => ({
-    x: rect.x,
-    y: rect.y + index * (rowHeight + rowGap),
-    width: rect.width,
-    height: rowHeight,
-  }));
 
   // Two-cell row layout per spell level:
   // LEFT CELL (leftCellW): Lvl N: label at top, circles below.
@@ -1139,18 +1140,70 @@ function renderSpellLevelGroup(
   // RIGHT CELL: spell names.
   const leftCellW = SPELL_LEFT_CELL_W; // minimum viable label/slots cell; maximizes spell-name width
   const circleSize = 3.4;
-  const circleGap = 1.4;
+  const circleGap = SPELL_CIRCLE_GAP;
+  const labelH = 4;
+  const minLeftBlockHeight = labelH + SPELL_LEVEL_CIRCLE_GAP + circleSize;
+  const nameWidth = rect.width - leftCellW - SPELL_TEXT_GAP;
+  const availableRowsHeight = Math.max(1, rect.height - rowGap * (levels.length - 1));
 
-  levels.forEach((level, idx) => {
-    const rowRect = levelRects[idx];
+  const rowData = levels.map((level) => {
+    const slotCount = slotLevels.find((s) => s.level === level)?.slots ?? 0;
+    const spells = spellsByLevel.find((entry) => entry.level === level)?.spells ?? [];
+    const spellNames = spells.map((spell) => spell.name).join(", ") || "—";
+    ctx.doc.save();
+    ctx.doc.font("Helvetica");
+    ctx.doc.fontSize(3.7);
+    const measuredTextHeight = ctx.doc.heightOfString(spellNames === "—" && slotCount === 0 ? "" : spellNames, {
+      width: nameWidth,
+      lineBreak: true,
+      ellipsis: false,
+      lineGap: SPELL_TEXT_LINE_GAP,
+    });
+    ctx.doc.restore();
+
+    return {
+      level,
+      slotCount,
+      spellNames,
+      minHeight: minLeftBlockHeight,
+      desiredHeight: Math.max(minLeftBlockHeight, measuredTextHeight + 0.6),
+    };
+  });
+
+  const minHeightTotal = rowData.reduce((sum, row) => sum + row.minHeight, 0);
+  const desiredHeightTotal = rowData.reduce((sum, row) => sum + row.desiredHeight, 0);
+  const extraAvailable = Math.max(0, availableRowsHeight - minHeightTotal);
+  const desiredExtra = Math.max(0, desiredHeightTotal - minHeightTotal);
+  const rowHeights = rowData.map((row) => {
+    if (minHeightTotal >= availableRowsHeight) {
+      return availableRowsHeight / rowData.length;
+    }
+    if (desiredHeightTotal <= availableRowsHeight) {
+      const spare = (availableRowsHeight - desiredHeightTotal) / rowData.length;
+      return row.desiredHeight + spare;
+    }
+    if (desiredExtra <= 0) {
+      return availableRowsHeight / rowData.length;
+    }
+    return row.minHeight + (row.desiredHeight - row.minHeight) * (extraAvailable / desiredExtra);
+  });
+
+  let cursorY = rect.y;
+  rowData.forEach((row, idx) => {
+    const level = row.level;
+    const rowRect = {
+      x: rect.x,
+      y: cursorY,
+      width: rect.width,
+      height: rowHeights[idx],
+    };
+    cursorY += rowRect.height + rowGap;
     const rowTop = rowRect.y;
     const rowHeight = rowRect.height;
-    const slotCount = slotLevels.find((s) => s.level === level)?.slots ?? 0;
-    const spells = spellsByLevel.find((e) => e.level === level)?.spells ?? [];
-    const spellNames = spells.map((s) => s.name).join(", ") || "—";
+    const slotCount = row.slotCount;
+    const spellNames = row.spellNames;
 
     // LEFT CELL — "Level N" label right-aligned at top, circles directly below
-    const labelH = Math.min(4, rowHeight * 0.42); // same target size as cantrip label
     const labelRect: PdfRect = {
       x: rowRect.x,
       y: rowTop,
@@ -1190,7 +1243,7 @@ function renderSpellLevelGroup(
     drawCenteredTextInRect(ctx, spellNames === "—" && slotCount === 0 ? "" : spellNames, namesRect, {
       font: "Helvetica",
       maxSize: 3.7,
-      minSize: 3.7,
+      minSize: 3.2,
       align: "left",
       color: "#222222",
       lineGap: SPELL_TEXT_LINE_GAP,
@@ -1201,13 +1254,15 @@ function renderSpellLevelGroup(
 }
 
 function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
-  const contentTopPad = 8;
-  const contentBottomPad = 4;
+  const topMargin = 6;
+  const contentTopPad = 6;
+  const contentBottomPad = 6;
   const weaponHeaderHeight = 7;
   const weaponHeaderGap = 1.5;
   const weaponRowAreaTargetHeight = 52;
   const rect = {
     ...FRONT_PAGE_REGIONS.attacks,
+    y: FRONT_PAGE_REGIONS.attacks.y + topMargin,
     height: contentTopPad + weaponHeaderHeight + weaponHeaderGap + weaponRowAreaTargetHeight + contentBottomPad,
   };
   maskRect(ctx, rect);
@@ -1227,11 +1282,16 @@ function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetB
     return;
   }
 
-  // Spellcaster: equal-width weapon and spell regions with a tight gutter.
-  const columnGap = 4;
-  const columns = splitColumns(content, 2, columnGap);
-  const weaponRect = columns[0];
-  const spellRect = columns[1];
+  // Spellcaster: give the spell list extra width while keeping the weapon table stable.
+  const columnGap = 3;
+  const weaponWidth = content.width * 0.48;
+  const weaponRect = { x: content.x, y: content.y, width: weaponWidth, height: content.height };
+  const spellRect = {
+    x: weaponRect.x + weaponRect.width + columnGap,
+    y: content.y,
+    width: content.x + content.width - (weaponRect.x + weaponRect.width + columnGap),
+    height: content.height,
+  };
 
   renderWeaponAttackRows(ctx, assets, weaponRect, combatHub.weaponRows);
   const weaponRowAreaY = weaponRect.y + weaponHeaderHeight + weaponHeaderGap;
@@ -1507,7 +1567,7 @@ function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character:
   const { rightColumn } = character.frontPage;
   const headerRight = FRONT_PAGE_REGIONS.header.x + FRONT_PAGE_REGIONS.header.width;
   const railY = FRONT_PAGE_REGIONS.rail.y + 2;
-  const railBottom = FRONT_PAGE_REGIONS.attacks.y - 6;
+  const railBottom = FRONT_PAGE_REGIONS.proficiencies.y + FRONT_PAGE_REGIONS.proficiencies.height;
   const rail = {
     x: FRONT_PAGE_REGIONS.rail.x,
     y: railY,
