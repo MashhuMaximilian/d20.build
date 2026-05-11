@@ -311,6 +311,25 @@ function collectGrantedIdsFromElements(elements: BuiltInElement[], type: string)
   return elements.flatMap((element) => collectGrantedIds(element.rules, type));
 }
 
+function isRawProficiencySelection(value: string) {
+  const normalized = value.trim().toUpperCase();
+  return (
+    normalized.startsWith("ID_PROFICIENCY_") ||
+    normalized.startsWith("ID_EXPERTISE_") ||
+    normalized.startsWith("ID_INTERNAL_TOOL_") ||
+    /^PROFICIENCY\s*[:_-]/i.test(value)
+  );
+}
+
+function isRawLanguageSelection(value: string) {
+  return value.trim().toUpperCase().startsWith("ID_LANGUAGE_") || /^LANGUAGE\s*[:_-]/i.test(value);
+}
+
+function selectionLabelFromId(value: string) {
+  const customChoice = value.match(/^(?:Proficiency|Language)\s*[:_-]\s*(.+)$/i)?.[1];
+  return customChoice ? normalizeLabel(customChoice) : humanizeGrantedId(value);
+}
+
 function collectAllGrantedIdsFromElements(elements: BuiltInElement[]) {
   return elements.flatMap((element) =>
     element.rules.flatMap((rule) => (rule.kind === "grant" ? [rule.id] : [])),
@@ -888,21 +907,35 @@ function buildAbilityRows(args: BuilderPdfSourceArgs) {
 function buildSkillRows(args: BuilderPdfSourceArgs) {
   const proficiencyBonus = getProficiencyBonus(args.draft.level);
   const proficiencyFacts = getSelectedProficiencyFacts(args);
+  const expertiseLabels = new Set(args.selectedExpertiseLabels.map((value) => normalizeLookupLabel(value)));
+  const hasJackOfAllTrades = args.selectedClassFeatureElements.some((feature) => /jack of all trades/i.test(feature.name));
 
-  return SKILL_ABILITY_MAP.map((skill) => {
-    const fact = proficiencyFacts.find((f) => f.kind === "skill" && f.skillId === skill.id);
-    const tier = fact?.tier === "expertise" ? 2 : fact?.tier === "proficient" ? 1 : 0;
+  const rows = SKILL_ABILITY_MAP.map((skill) => {
+    const expertise = expertiseLabels.has(normalizeLookupLabel(skill.label)) ||
+      hasSkillProficiency(proficiencyFacts, skill.id, "expertise");
+    const proficient = expertise || hasSkillProficiency(proficiencyFacts, skill.id, "proficient");
     const score = Number.isFinite(args.effectiveAbilities[skill.ability]) ? args.effectiveAbilities[skill.ability] : 10;
     const modifier = getAbilityModifier(score);
+    const jackBonus = !proficient && hasJackOfAllTrades ? Math.floor(proficiencyBonus / 2) : 0;
+    const tier = expertise ? 2 : proficient ? 1 : 0;
     return {
       id: `skill-${skill.id}`,
       label: skill.label,
       ability: ABILITY_LABELS[skill.ability],
-      total: modifier + (proficiencyBonus * tier),
-      proficient: tier >= 1,
-      expertise: tier >= 2,
+      total: modifier + (proficiencyBonus * tier) + jackBonus,
+      proficient,
+      expertise,
     };
   });
+
+  console.info("[pdf/skills] Ability check rows", {
+    strDex: rows.filter((row) => ["STR", "DEX"].includes(row.ability)).map((row) => ({ label: row.label, proficient: row.proficient, expertise: row.expertise, total: row.total })),
+    int: rows.filter((row) => row.ability === "INT").map((row) => ({ label: row.label, proficient: row.proficient, expertise: row.expertise, total: row.total })),
+    wis: rows.filter((row) => row.ability === "WIS").map((row) => ({ label: row.label, proficient: row.proficient, expertise: row.expertise, total: row.total })),
+    cha: rows.filter((row) => row.ability === "CHA").map((row) => ({ label: row.label, proficient: row.proficient, expertise: row.expertise, total: row.total })),
+  });
+
+  return rows;
 }
 
 function buildAttackRows(args: BuilderPdfSourceArgs) {
@@ -1422,6 +1455,9 @@ export function buildPdfCharacterFromDraft(args: BuilderPdfDraftCatalogs & { dra
     .flat()
     .map((id) => elementPool.get(id))
     .filter((entry): entry is BuiltInElement => Boolean(entry));
+  const rawProgressionSelectionIds = uniqueStrings(Object.values(draft.progressionSelections).flat());
+  const rawProficiencySelectionIds = rawProgressionSelectionIds.filter(isRawProficiencySelection);
+  const rawLanguageSelectionIds = rawProgressionSelectionIds.filter(isRawLanguageSelection);
   const selectedProgressionGrantElements = collectAllNestedGrantedElements(elementPool, [
     ...(selectedRace ? [selectedRace.race] : []),
     ...(selectedSubrace ? [selectedSubrace] : []),
@@ -1493,6 +1529,7 @@ export function buildPdfCharacterFromDraft(args: BuilderPdfDraftCatalogs & { dra
     ...collectGrantedIdsFromElements(selectedBackgroundFeatureElements, "Proficiency"),
     ...collectGrantedIdsFromElements(allSelectedFeatElements, "Proficiency"),
     ...collectGrantedIdsFromElements(selectedManualFeatureElements, "Proficiency"),
+    ...rawProficiencySelectionIds.filter((id) => id.trim().toUpperCase().startsWith("ID_")),
     ...selectedProgressionElements.flatMap((element) =>
       element.type === "Proficiency" ? [element.id] : collectGrantedIds(element.rules, "Proficiency"),
     ),
@@ -1503,6 +1540,7 @@ export function buildPdfCharacterFromDraft(args: BuilderPdfDraftCatalogs & { dra
     ...(selectedBackground ? collectGrantedIds(selectedBackground.background.rules, "Language") : []),
     ...collectGrantedIdsFromElements(allSelectedFeatElements, "Language"),
     ...collectGrantedIdsFromElements(selectedManualFeatureElements, "Language"),
+    ...rawLanguageSelectionIds.filter((id) => id.trim().toUpperCase().startsWith("ID_")),
     ...selectedProgressionElements.flatMap((element) =>
       element.type === "Language" ? [element.id] : collectGrantedIds(element.rules, "Language"),
     ),
@@ -1560,6 +1598,7 @@ export function buildPdfCharacterFromDraft(args: BuilderPdfDraftCatalogs & { dra
     selectedLanguageIds,
     selectedLanguageNames: [
       ...selectedLanguageIds.map(humanizeGrantedId),
+      ...rawLanguageSelectionIds.map(selectionLabelFromId),
       ...manualGrantsByKind.language.map((grant) => grant.name),
     ],
     selectedManualFeatureElements,
@@ -1567,6 +1606,7 @@ export function buildPdfCharacterFromDraft(args: BuilderPdfDraftCatalogs & { dra
     selectedProficiencyIds,
     selectedProficiencyNames: [
       ...selectedProficiencyIds.map(humanizeGrantedId),
+      ...rawProficiencySelectionIds.map(selectionLabelFromId),
       ...manualGrantsByKind.proficiency.map((grant) => grant.name),
     ],
     selectedRace,

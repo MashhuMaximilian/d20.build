@@ -853,15 +853,19 @@ function deriveSkillRows(args: {
   draft: CharacterDraft;
   effectiveAbilities: Record<AbilityKey, number>;
   selectedExpertiseLabels: string[];
+  selectedClassFeatureElements: BuiltInElement[];
   proficiencyFacts: ProficiencyFact[];
 }) {
   const proficiencyBonus = 2 + Math.floor((Math.max(1, args.draft.level) - 1) / 4);
   const expertiseLabels = new Set(args.selectedExpertiseLabels.map((value) => value.toLowerCase()));
+  const hasJackOfAllTrades = args.selectedClassFeatureElements.some((feature) => /jack of all trades/i.test(feature.name));
   return SKILL_ABILITY_MAP.map((skill) => {
-    const expertise = expertiseLabels.has(skill.label.toLowerCase());
-    const proficient = expertise || hasSkillProficiency(args.proficiencyFacts, skill.id);
+    const expertise = expertiseLabels.has(skill.label.toLowerCase()) ||
+      hasSkillProficiency(args.proficiencyFacts, skill.id, "expertise");
+    const proficient = expertise || hasSkillProficiency(args.proficiencyFacts, skill.id, "proficient");
     const tier = expertise ? 2 : proficient ? 1 : 0;
-    const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + proficiencyBonus * tier;
+    const jackBonus = !proficient && hasJackOfAllTrades ? Math.floor(proficiencyBonus / 2) : 0;
+    const total = getAbilityModifier(args.effectiveAbilities[skill.ability]) + proficiencyBonus * tier + jackBonus;
     return {
       id: `skill-${skill.id}`,
       label: skill.label,
@@ -1540,9 +1544,10 @@ export function ReviewSheetStep(props: ReviewSheetProps) {
         draft: props.draft,
         effectiveAbilities: props.effectiveAbilities,
         selectedExpertiseLabels: props.selectedExpertiseLabels,
+        selectedClassFeatureElements: props.selectedClassFeatureElements,
         proficiencyFacts: selectedProficiencyFacts,
       }),
-    [props.draft, props.effectiveAbilities, props.selectedExpertiseLabels, selectedProficiencyFacts],
+    [props.draft, props.effectiveAbilities, props.selectedClassFeatureElements, props.selectedExpertiseLabels, selectedProficiencyFacts],
   );
 
   const passivePerception = useMemo(() => derivePassivePerception(skillRows), [skillRows]);
