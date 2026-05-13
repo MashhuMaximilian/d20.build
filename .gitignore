@@ -19,3 +19,7 @@ web/dist/
 web/*.log
 web/tsconfig.tsbuildinfo
 
+# Local AI agent/session state
+.aionrs/
+.codex/
+.gemini/
