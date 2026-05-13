@@ -10,6 +10,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Arcanum",
   description: "Aurora web character builder scaffold",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 type RootLayoutProps = {

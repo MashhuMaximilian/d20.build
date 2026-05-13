@@ -19,6 +19,9 @@ export async function SiteShell({ children }: SiteShellProps) {
       <div className="site-shell__inner">
         <header className="site-shell__header">
           <div className="site-shell__topbar">
+            <div className="site-shell__logo">
+              <img src="/logo-arcanum.png" alt="Arcanum" className="site-shell__logo-img" />
+            </div>
             <div className="site-shell__brand">
               <span className="site-shell__eyebrow">d20.build</span>
               <h1 className="site-shell__title">Arcanum</h1>
