@@ -82,8 +82,9 @@ type StatBoxSpec = {
 type FeatureSummary = {
   title: string;
   category: string;
-  source: string;
   body: string;
+  actionHint?: string;
+  tags: string[];
 };
 
 type DashedLineDocument = PdfRenderContext["doc"] & {
@@ -1343,54 +1344,335 @@ function cardCategory(card: PdfPageCard) {
 }
 
 function summarizeCard(card: PdfPageCard): FeatureSummary {
+  const parts = (card.summary || "").split(" | ");
+  let actionHint: string | undefined;
+  let body: string;
+
+  if (card.detail) {
+    // Full detail for body; no truncation
+    if (parts.length >= 2) actionHint = parts[0];
+    body = cleanText(card.detail);
+  } else if (parts.length >= 3) {
+    // Format: "Timing | Cost | Summary"
+    actionHint = parts[0];
+    const cost = parts[1];
+    const summary = parts.slice(2).join(" | ");
+    body = cleanText(cost ? `${summary} (${cost})` : summary);
+  } else if (parts.length === 2) {
+    // Format: "Timing | Summary"
+    actionHint = parts[0];
+    body = cleanText(parts[1]);
+  } else {
+    // Fallback: use summary as-is, no truncation
+    body = cleanText(card.summary || "");
+  }
+
   return {
     title: cleanText(card.title, "Feature"),
     category: cardCategory(card),
-    source: truncateText(cleanText(card.sourceLabel), 16),
-    body: truncateText(cleanText(card.summary || card.detail), 220),
+    body,
+    actionHint,
+    tags: card.tags || [],
   };
 }
 
-function renderFeatureList(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect, columns: number) {
+/** Section-level layout config shared between measure and render passes */
+interface FeatureLayoutConfig {
+  bodyMaxSize: number;
+  bodyMinSize: number;
+  lineGap: number;
+  featureGap: number;
+  bottomPadding: number;
+  compact: boolean;
+}
+
+const DEFAULT_FEATURE_CONFIG: FeatureLayoutConfig = {
+  bodyMaxSize: 5.8,
+  bodyMinSize: 3.2,
+  lineGap: 1.2,
+  featureGap: 8,
+  bottomPadding: 10,
+  compact: false,
+};
+
+const MIN_FEATURE_CONFIG: FeatureLayoutConfig = {
+  bodyMaxSize: 3.5,
+  bodyMinSize: 2.5,
+  lineGap: 0.8,
+  featureGap: 5,
+  bottomPadding: 8,
+  compact: true,
+};
+
+/** Compute the effective config to use, running a fit pass to ensure all groups fit in rect.height */
+function computeFitConfig(
+  ctx: PdfRenderContext,
+  groups: ReturnType<typeof buildFeatureDeckGroups>,
+  rect: PdfRect,
+  columnCount: number,
+  gap: number,
+  cellWidth: number,
+): FeatureLayoutConfig {
+  let config = { ...DEFAULT_FEATURE_CONFIG };
+  // Max iterations: reduce lineGap, then bodyMaxSize
+  for (let iter = 0; iter < 20; iter++) {
+    const listW = cellWidth - 10;
+    // Simulate exact 2-column masonry placement (shortest-column-first)
+    const colHeights = new Array(columnCount).fill(0);
+    groups.forEach((g) => {
+      const listRect = { x: 0, y: 0, width: listW, height: rect.height };
+      const contentH = measureFeatureListHeightWithConfig(ctx, g.cards, listRect, config);
+      const minCol = idxForShortestColumn(colHeights);
+      colHeights[minCol] += contentH + gap;
+    });
+    const maxBottom = Math.max(...colHeights);
+    if (maxBottom <= rect.height) break;
+    // First try reducing lineGap
+    if (config.lineGap > MIN_FEATURE_CONFIG.lineGap + 0.1) {
+      config = { ...config, lineGap: Math.max(MIN_FEATURE_CONFIG.lineGap, config.lineGap - 0.2) };
+    } else if (config.bodyMaxSize > MIN_FEATURE_CONFIG.bodyMaxSize + 0.1) {
+      // Then reduce font size
+      config = {
+        ...config,
+        bodyMaxSize: Math.max(MIN_FEATURE_CONFIG.bodyMaxSize, config.bodyMaxSize - 0.5),
+        bodyMinSize: Math.min(config.bodyMinSize, Math.max(MIN_FEATURE_CONFIG.bodyMinSize, config.bodyMinSize - 0.3)),
+      };
+    } else {
+      config = { ...MIN_FEATURE_CONFIG };
+      break;
+    }
+  }
+  return config;
+}
+
+/** Measure feature list height using a given config */
+function measureFeatureListHeightWithConfig(
+  ctx: PdfRenderContext,
+  cards: PdfPageCard[],
+  rect: PdfRect,
+  cfg: FeatureLayoutConfig,
+): number {
+  const summaries = cards.map(summarizeCard);
+  let cursorY = rect.y;
+  const maxW = rect.width;
+  const fSize = cfg.bodyMaxSize * 0.85;
+  const lineH = fSize + cfg.lineGap;
+  const doc = ctx.doc;
+
+  summaries.forEach((summary, sIdx) => {
+    cursorY += 5.5; // title height
+    let lineX = rect.x;
+    const actionWords: [string][] = [
+      ["bonus action"], ["legendary action"], ["reaction"],
+      ["free object interaction"], ["object interaction"], ["action"],
+    ];
+    let remaining = summary.body;
+    const runs: { text: string; bold: boolean }[] = [];
+    while (remaining.length > 0) {
+      let matched = false;
+      for (const [phrase] of actionWords) {
+        const idx = remaining.toLowerCase().indexOf(phrase);
+        if (idx !== -1) {
+          if (idx > 0) runs.push({ text: remaining.slice(0, idx), bold: false });
+          runs.push({ text: remaining.slice(idx, idx + phrase.length), bold: true });
+          remaining = remaining.slice(idx + phrase.length);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) { runs.push({ text: remaining, bold: false }); break; }
+    }
+    const merged: { text: string; bold: boolean }[] = [];
+    for (const r of runs) {
+      const prev = merged[merged.length - 1];
+      if (prev && prev.bold === r.bold) { prev.text += r.text; }
+      else { merged.push({ ...r }); }
+    }
+    for (const run of merged) {
+      const words = run.text.split(/(\s+)/);
+      for (const w of words) {
+        if (w.length === 0) continue;
+        doc.save();
+        doc.font(run.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fSize);
+        const w2 = doc.widthOfString(w);
+        doc.restore();
+        if (lineX + w2 > rect.x + maxW && lineX > rect.x) {
+          cursorY += lineH;
+          lineX = rect.x;
+        }
+        lineX += w2;
+      }
+    }
+    cursorY += lineH;
+    if (sIdx < summaries.length - 1) {
+      cursorY += cfg.featureGap;
+    }
+    // bottomPadding handled by renderGroupedFeatureDeck (counted once in groupHeight)
+  });
+  return Math.max(30, cursorY - rect.y + 18);
+}
+
+/** Draw text with action-economy words bolded: bonus action, reaction, action. Returns { cursorY } for height measurement. */
+function drawTextWithBoldActionWords(
+  ctx: PdfRenderContext,
+  text: string,
+  opts: { x: number; y: number; width: number; height: number; fontSize: number; minFontSize: number; color: string; lineGap: number },
+): { cursorY: number } {
+  interface TextRun {
+    text: string;
+    bold: boolean;
+  }
+  // Tokenize: longest phrase first, case-insensitive
+  const tokens: TextRun[] = [];
+  const actionWords: [string][] = [
+    ["bonus action"],
+    ["legendary action"],
+    ["reaction"],
+    ["free object interaction"],
+    ["object interaction"],
+    ["action"],
+  ];
+  let remaining = text;
+  while (remaining.length > 0) {
+    let matched = false;
+    for (const [phrase] of actionWords) {
+      const idx = remaining.toLowerCase().indexOf(phrase);
+      if (idx !== -1) {
+        if (idx > 0) tokens.push({ text: remaining.slice(0, idx), bold: false });
+        tokens.push({ text: remaining.slice(idx, idx + phrase.length), bold: true });
+        remaining = remaining.slice(idx + phrase.length);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      tokens.push({ text: remaining, bold: false });
+      break;
+    }
+  }
+  // Merge adjacent bold/non-bold runs
+  const runs: TextRun[] = [];
+  for (const token of tokens) {
+    const prev = runs[runs.length - 1];
+    if (prev && prev.bold === token.bold) {
+      prev.text += token.text;
+    } else {
+      runs.push({ ...token });
+    }
+  }
+
+  // Render runs sequentially, wrapping lines manually
+  const fSize = Math.max(opts.minFontSize, opts.fontSize * 0.85);
+  const lineH = fSize + opts.lineGap;
+  let cursorY = opts.y;
+  let lineX = opts.x;
+  let lineRemaining = opts.width;
+  const maxW = opts.width;
+  const doc = ctx.doc;
+
+  interface RenderedRun {
+    text: string;
+    bold: boolean;
+    width: number;
+  }
+
+  for (const run of runs) {
+    const words = run.text.split(/(\s+)/);
+    for (const w of words) {
+      if (w.length === 0) continue;
+      // Measure width with correct font set (PDFKit API)
+      doc.save();
+      doc.font(run.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fSize);
+      const w2 = doc.widthOfString(w);
+      doc.restore();
+
+      if (lineX + w2 > opts.x + maxW && lineX > opts.x) {
+        // Start new line
+        cursorY += lineH;
+        lineX = opts.x;
+        lineRemaining = maxW;
+      }
+
+      // Render this run with lineBreak: false to prevent PDFKit auto page breaks
+      if (cursorY > opts.y + opts.height) break;
+      doc.save();
+      doc.font(run.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fSize).fillColor(opts.color).text(w, lineX, cursorY, { lineBreak: false });
+      doc.restore();
+      lineX += w2;
+      lineRemaining -= w2;
+    }
+  }
+  return { cursorY };
+}
+
+function renderFeatureList(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect, columns: number, compactOrConfig?: boolean | FeatureLayoutConfig) {
+  let cfg: FeatureLayoutConfig = DEFAULT_FEATURE_CONFIG;
+  let compact = false;
+  if (typeof compactOrConfig === "object" && compactOrConfig !== null) {
+    cfg = compactOrConfig as FeatureLayoutConfig;
+    compact = cfg.compact;
+  } else if (typeof compactOrConfig === "boolean") {
+    compact = compactOrConfig;
+  }
   const summaries = cards.map(summarizeCard);
   const columnRects = splitColumns(rect, columns, 16);
   const cursors = columnRects.map((column) => ({ ...column, y: column.y }));
 
-  summaries.forEach((summary) => {
+  summaries.forEach((summary, i) => {
+    const isLast = i === summaries.length - 1;
     const column = cursors.sort((left, right) => left.y - right.y)[0];
-    const entryHeight = Math.max(18, Math.min(42, 12 + Math.ceil(summary.body.length / 55) * 6));
-    if (column.y + entryHeight > rect.y + rect.height) {
-      return;
-    }
+    const estimatedBodyLines = Math.ceil(summary.body.length / 55);
+    const estimatedEntryH = Math.max(14, 6 + estimatedBodyLines * 6);
 
-    drawFittedText(ctx, summary.title.toUpperCase(), { x: column.x, y: column.y, width: column.width, height: 5.5 }, {
+    const actionHintWidth = summary.actionHint ? 48 : 0;
+    const titleWidth = column.width - actionHintWidth - 2;
+    const bodyMaxSize = cfg.bodyMaxSize;
+    const bodyMinSize = cfg.bodyMinSize;
+    const actionMaxSize = cfg.bodyMaxSize * 0.7;
+
+    drawFittedText(ctx, summary.title.toUpperCase(), { x: column.x, y: column.y, width: titleWidth, height: 5 }, {
       font: "Helvetica-Bold",
-      maxSize: 4.9,
-      minSize: 3.8,
+      maxSize: 4.8,
+      minSize: 3.5,
       color: "#000000",
     });
-    drawFittedText(ctx, summary.category.toUpperCase(), { x: column.x, y: column.y + 6, width: 48, height: 4 }, {
-      font: "Helvetica-Bold",
-      maxSize: 3,
-      minSize: 2.4,
-      color: "#777777",
-    });
-    if (summary.source) {
-      drawFittedText(ctx, summary.source, { x: column.x + column.width - 54, y: column.y + 6, width: 54, height: 4 }, {
-        maxSize: 2.8,
-        minSize: 2.2,
+    if (summary.actionHint) {
+      drawFittedText(ctx, summary.actionHint, { x: column.x + titleWidth + 2, y: column.y, width: actionHintWidth, height: 5 }, {
+        font: "Helvetica-Oblique",
+        maxSize: actionMaxSize,
+        minSize: 2.8,
         align: "right",
-        color: "#8a8a8a",
+        color: "#444444",
       });
     }
-    drawFittedText(ctx, summary.body, { x: column.x, y: column.y + 11, width: column.width, height: entryHeight - 13 }, {
-      maxSize: 4.5,
-      minSize: 3.2,
-      color: "#000000",
-      lineGap: 0,
+
+    // Draw body text with action-economy words bolded, use actual column height for available space
+    const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+      x: column.x,
+      y: column.y + 5.5,
+      width: column.width,
+      height: column.height - 5.5,
+      fontSize: bodyMaxSize,
+      minFontSize: bodyMinSize,
+      color: "#111111",
+      lineGap: cfg.lineGap,
     });
-    strokeRule(ctx, column.x, column.y + entryHeight - 1.5, column.width);
-    column.y += entryHeight + 5;
+    const fSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
+    const computedLineH = fSize + cfg.lineGap;
+    const bodyHeight = bodyResult.cursorY - (column.y + 5.5) + computedLineH;
+    const separatorY = column.y + 5.5 + bodyHeight;
+    // Separator: #bdbdbd, tight against body bottom
+    ctx.doc.save();
+    ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+      .moveTo(column.x, separatorY)
+      .lineTo(column.x + column.width, separatorY)
+      .stroke();
+    ctx.doc.restore();
+    // Last entry: no post-separator gap (card hugs the last separator)
+    // Intermediate entries: 8pt gap before next feature title
+    if (!isLast) {
+      column.y = separatorY + cfg.featureGap;
+    }
   });
 }
 
@@ -1435,41 +1717,141 @@ function buildFeatureDeckGroups(cards: PdfPageCard[]) {
 function estimateFeatureListHeight(cards: PdfPageCard[]) {
   return cards
     .map(summarizeCard)
-    .reduce((total, summary) => total + Math.max(18, Math.min(42, 12 + Math.ceil(summary.body.length / 55) * 6)) + 5, 0);
+    .reduce((total, summary) => total + Math.max(16, Math.min(48, 8 + Math.ceil(summary.body.length / 55) * 6)) + 8, 0);
 }
 
-function renderGroupedFeatureDeck(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect) {
+function renderGroupedFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, cards: PdfPageCard[], rect: PdfRect) {
   const groups = buildFeatureDeckGroups(cards);
-  const columns = splitColumns(rect, 2, 16);
-  let columnIndex = 0;
-  let cursorY = columns[0].y;
+  const numGroups = Math.min(groups.length, 4);
+  const gap = 7;
+  const columnCount = Math.min(2, numGroups);
+  const totalGapWidth = (columnCount - 1) * gap;
+  const cellWidth = Math.floor((rect.width - totalGapWidth) / columnCount);
 
-  groups.forEach((group) => {
-    const requiredHeight = 10 + estimateFeatureListHeight(group.cards) + 6;
-    const column = columns[columnIndex];
-    if (cursorY + requiredHeight > column.y + column.height && columnIndex < columns.length - 1) {
-      columnIndex += 1;
-      cursorY = columns[columnIndex].y;
-    }
+  // Fit pass: compute config that makes all groups fit in rect.height
+  const fitCfg = computeFitConfig(ctx, groups.slice(0, numGroups), rect, columnCount, gap, cellWidth);
 
-    const activeColumn = columns[columnIndex];
-    drawFittedText(ctx, group.title, { x: activeColumn.x, y: cursorY, width: activeColumn.width, height: 6 }, {
+  // Measure using the fit config
+  const measuredHeights = groups.slice(0, numGroups).map((g) => {
+    const listRect = { x: 0, y: 0, width: cellWidth - 10, height: rect.height };
+    return measureFeatureListHeightWithConfig(ctx, g.cards, listRect, fitCfg);
+  });
+
+  // Masonry/column-flow: 2-column grid, place each group in shortest column
+  const colHeights = new Array(columnCount).fill(rect.y);
+
+  groups.slice(0, numGroups).forEach((group, gIdx) => {
+    const col = idxForShortestColumn(colHeights);
+    const groupHeight = measuredHeights[gIdx] + fitCfg.bottomPadding;
+    const groupY = colHeights[col];
+    const groupRect: PdfRect = {
+      x: rect.x + col * (cellWidth + gap),
+      y: groupY,
+      width: cellWidth,
+      height: groupHeight,
+    };
+    colHeights[col] += groupHeight + gap;
+
+    maskRect(ctx, groupRect);
+    drawSvg(ctx, assets.generalContainer, groupRect);
+
+    const titleY = groupRect.y + 12;
+    const displayTitle = group.title.replace(" FEATURES", "").replace(" FEATS", " FEATS").trim();
+    drawFittedText(ctx, displayTitle.toUpperCase(), { x: groupRect.x + 5, y: titleY, width: groupRect.width - 10, height: 5 }, {
       font: "Helvetica-Bold",
-      maxSize: 4.8,
-      minSize: 3.8,
-      color: "#444444",
+      maxSize: 3.8,
+      minSize: 3.0,
+      color: "#1a1a1a",
     });
-    strokeRule(ctx, activeColumn.x, cursorY + 7, activeColumn.width);
 
     const listRect = {
-      x: activeColumn.x,
-      y: cursorY + 10,
-      width: activeColumn.width,
-      height: Math.max(18, activeColumn.y + activeColumn.height - (cursorY + 10)),
+      x: groupRect.x + 5,
+      y: groupRect.y + 18,
+      width: groupRect.width - 10,
+      height: groupRect.height - fitCfg.bottomPadding - 6,
     };
-    renderFeatureList(ctx, group.cards, listRect, 1);
-    cursorY += Math.min(requiredHeight, activeColumn.height) + 6;
+    renderFeatureList(ctx, group.cards, listRect, 1, fitCfg);
   });
+}
+
+/** Measure actual rendered height of a feature list. Last item has no post-separator gap; card hugs last separator. */
+function measureFeatureListHeight(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect): number {
+  const summaries = cards.map(summarizeCard);
+  let cursorY = rect.y;
+  const maxW = rect.width;
+  const fSize = 5.8 * 0.85; // matches body maxSize in renderFeatureList
+  const lineH = fSize + 1.2;
+  const doc = ctx.doc;
+
+  summaries.forEach((summary, sIdx) => {
+    // Title row
+    cursorY += 5.5; // title height
+
+    // Body - measure wrapped lines using PDFKit widthOfString
+    let lineX = rect.x;
+    const actionWords: [string][] = [
+      ["bonus action"], ["legendary action"], ["reaction"],
+      ["free object interaction"], ["object interaction"], ["action"],
+    ];
+    // Tokenize to get bold/plain runs
+    let remaining = summary.body;
+    const runs: { text: string; bold: boolean }[] = [];
+    while (remaining.length > 0) {
+      let matched = false;
+      for (const [phrase] of actionWords) {
+        const idx = remaining.toLowerCase().indexOf(phrase);
+        if (idx !== -1) {
+          if (idx > 0) runs.push({ text: remaining.slice(0, idx), bold: false });
+          runs.push({ text: remaining.slice(idx, idx + phrase.length), bold: true });
+          remaining = remaining.slice(idx + phrase.length);
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) { runs.push({ text: remaining, bold: false }); break; }
+    }
+    // Merge adjacent runs
+    const merged: { text: string; bold: boolean }[] = [];
+    for (const r of runs) {
+      const prev = merged[merged.length - 1];
+      if (prev && prev.bold === r.bold) { prev.text += r.text; }
+      else { merged.push({ ...r }); }
+    }
+    for (const run of merged) {
+      const words = run.text.split(/(\s+)/);
+      for (const w of words) {
+        if (w.length === 0) continue;
+        doc.save();
+        doc.font(run.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fSize);
+        const w2 = doc.widthOfString(w);
+        doc.restore();
+        if (lineX + w2 > rect.x + maxW && lineX > rect.x) {
+          cursorY += lineH;
+          lineX = rect.x;
+        }
+        lineX += w2;
+      }
+    }
+    cursorY += lineH; // body text for this entry
+    // Separator at body bottom, 8pt gap ONLY if another entry follows
+    if (sIdx < summaries.length - 1) {
+      cursorY += 8; // gap before next feature title
+    } else {
+      // Last entry: no post-separator gap; card height ends at separator + small bottom padding
+      cursorY += 4; // minimal bottom padding
+    }
+  });
+  // Card = title/header area (18pt from card top to first title) + measured content
+  return Math.max(30, cursorY - rect.y + 18);
+}
+
+function idxForShortestColumn(colHeights: number[]): number {
+  let minH = colHeights[0];
+  let minIdx = 0;
+  for (let i = 1; i < colHeights.length; i++) {
+    if (colHeights[i] < minH) { minH = colHeights[i]; minIdx = i; }
+  }
+  return minIdx;
 }
 
 function renderRightColumnCardShell(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, title: string, rect: PdfRect) {
@@ -1587,7 +1969,7 @@ function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character:
   renderRightColumnFeatureCard(ctx, assets, character, featureRect);
 }
 
-function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacter) {
+function renderFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   const cards = [
     ...character.frontPage.deck,
     ...character.frontPage.deckOverflow,
@@ -1603,14 +1985,14 @@ function renderFeatureDeck(ctx: PdfRenderContext, character: ResolvedPdfCharacte
     return;
   }
 
-  maskRect(ctx, { x: 14, y: 518, width: 568, height: 318 });
-  drawCenteredTextInRect(ctx, "FEATURES & TRAITS", { x: 28, y: 520, width: 530, height: 9 }, {
+  drawCenteredTextInRect(ctx, "FEATURES & TRAITS", { x: 10, y: 476, width: 575, height: 9 }, {
     font: "Helvetica-Bold",
     maxSize: 5.5,
     minSize: 4.3,
     color: "#222222",
   });
-  renderGroupedFeatureDeck(ctx, cards, { x: 31, y: 542, width: 532, height: 274 });
+  // Push boxes down ~one title-text height below title so they don't crowd the heading
+  renderGroupedFeatureDeck(ctx, assets, cards, { x: 10, y: 490, width: 575, height: 290 });
 }
 
 export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
@@ -1624,5 +2006,5 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderProficiencies(ctx, assets, character);
   renderRail(ctx, assets, character);
   renderCombatSpellcastingHub(ctx, assets, character);
-  renderFeatureDeck(ctx, character);
+  renderFeatureDeck(ctx, assets, character);
 }

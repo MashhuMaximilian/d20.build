@@ -14,7 +14,7 @@ export const FRONT_PAGE_REGIONS = {
   attacks: { x: 10, y: 392, width: 575, height: 112 },
   spellcasting: { x: 394, y: 144, width: 190, height: 45 },
   rail: { x: 394, y: 194, width: 190, height: 282 },
-  features: { x: 16, y: 520, width: 563, height: 300 },
+  features: { x: 10, y: 490, width: 575, height: 290 },
 } satisfies Record<string, PdfRect>;
 
 export function rectFromFractions(region: PdfRect, fractions: {
