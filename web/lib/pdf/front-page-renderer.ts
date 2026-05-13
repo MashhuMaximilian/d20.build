@@ -1423,7 +1423,8 @@ function computeFitConfig(
       const listRect = { x: 0, y: 0, width: listW, height: rect.height };
       const contentH = measureFeatureListHeightWithConfig(ctx, g.cards, listRect, config);
       const minCol = idxForShortestColumn(colHeights);
-      colHeights[minCol] += contentH + gap;
+      const groupHeight = contentH + config.bottomPadding;
+      colHeights[minCol] += (colHeights[minCol] > 0 ? gap : 0) + groupHeight;
     });
     const maxBottom = Math.max(...colHeights);
     if (maxBottom <= rect.height) break;
@@ -1507,9 +1508,8 @@ function measureFeatureListHeightWithConfig(
     if (sIdx < summaries.length - 1) {
       cursorY += cfg.featureGap;
     }
-    // bottomPadding handled by renderGroupedFeatureDeck (counted once in groupHeight)
   });
-  return Math.max(30, cursorY - rect.y + 18);
+  return Math.max(30, cursorY - rect.y + 10); // 10pt buffer from last card body to card border
 }
 
 /** Draw text with action-economy words bolded: bonus action, reaction, action. Returns { cursorY } for height measurement. */
