@@ -9,12 +9,12 @@ import {
   fitTextSize,
   insetRect,
   maskRect,
+  strokeCircle,
+  strokeRule,
   type PdfRect,
   type PdfRenderContext,
   splitColumns,
   splitRows,
-  strokeCircle,
-  strokeRule,
 } from "@/lib/pdf/drawing";
 import { FRONT_PAGE_REGIONS, PAGE_SIZE, rectFromFractions } from "@/lib/pdf/front-page-layout";
 
@@ -71,6 +71,30 @@ const SPELL_TEXT_GAP = 2.6;
 const SPELL_LEVEL_CIRCLE_GAP = 1.1;
 const SPELL_CIRCLE_GAP = 1.8;
 const SPELL_TEXT_LINE_GAP = 1.0;
+const SPELL_SUMMARY_MAX_CHARS = {
+  cantrip: { single: 40, pair: 24, many: 14 },
+  leveled: { single: 48, pair: 30, many: 18 },
+} as const;
+
+const DAMAGE_TYPE_ABBREV: Record<string, string> = {
+  piercing: "piercing",
+  slashing: "slashing",
+  bludgeoning: "bludgeoning",
+};
+
+const FEATURE_CARD_TYPOGRAPHY = {
+  title: { max: 5.5, min: 4.0 },
+  body: { max: 6.4, min: 3.6 },
+  meta: { max: 5.0, min: 2.7 },
+  charges: { max: 4.8, min: 3.0 },
+  titleRowHeight: 5.0,
+  metaRowHeight: 3.8,
+  bodyTopPad: 2.5,
+  separatorGap: 7,
+  circleRadius: 1.45,
+  circleGap: 1.55,
+  metaWidth: { max: 72, min: 44 },
+} as const;
 
 type StatBoxSpec = {
   key: string;
@@ -84,6 +108,13 @@ type FeatureSummary = {
   category: string;
   body: string;
   actionHint?: string;
+  rechargeHint?: string;
+  usageHint?: string;
+  chargeDisplay?: {
+    count?: number;
+    mode: "circles" | "number";
+    label: string;
+  };
   tags: string[];
 };
 
@@ -92,6 +123,13 @@ type DashedLineDocument = PdfRenderContext["doc"] & {
   undash: () => DashedLineDocument;
   lineCap: (cap: "butt" | "round" | "square") => DashedLineDocument;
   lineJoin: (join: "miter" | "round" | "bevel") => DashedLineDocument;
+};
+
+type TransformDocument = PdfRenderContext["doc"] & {
+  save: () => TransformDocument;
+  restore: () => TransformDocument;
+  translate: (x: number, y: number) => TransformDocument;
+  scale: (factor: number) => TransformDocument;
 };
 
 const TOP_STATS: StatBoxSpec[] = [
@@ -185,6 +223,12 @@ const RESOURCE_ONLY_SLOTS = [
   { x: 10, y: 4, width: 82, height: 42 },
   { x: 104, y: 4, width: 82, height: 42 },
 ] as const;
+
+const FRONT_PAGE_PRINT_SAFE_SCALE = 0.94;
+const FRONT_PAGE_PRINT_SAFE_OFFSET = {
+  x: (PAGE_SIZE.width * (1 - FRONT_PAGE_PRINT_SAFE_SCALE)) / 2,
+  y: (PAGE_SIZE.height * (1 - FRONT_PAGE_PRINT_SAFE_SCALE)) / 2,
+} as const;
 
 function cleanText(value: unknown, fallback = "") {
   if (typeof value !== "string") {
@@ -957,19 +1001,58 @@ function drawWeaponCell(
     return;
   }
 
-  const textRect = rectFromFractions(rect, { x: 0.06, y: 0.12, width: 0.88, height: 0.68 });
+  const textRect = {
+    x: rect.x + rect.width * 0.06,
+    y: rect.y + rect.height * 0.1,
+    width: rect.width * 0.88,
+    height: rect.height * 0.8,
+  };
   const textOptions = {
     font: options.bold === false ? "Helvetica" : "Helvetica-Bold",
     maxSize: options.maxSize ?? 5.2,
     minSize: options.minSize ?? 3.2,
     color: "#000000",
+    lineGap: 0.5,
   };
   if (options.align === "left") {
-    drawFittedText(ctx, cleanedValue, textRect, { ...textOptions, align: "left", lineGap: 0 });
+    drawFittedText(ctx, cleanedValue, textRect, { ...textOptions, align: "left" });
     return;
   }
 
   drawCenteredTextInRect(ctx, cleanedValue, textRect, textOptions);
+}
+
+function abbreviateDamageType(value: string): string {
+  return value; // use full names — no abbreviations
+}
+
+const WEAPON_PROP_CODE_TO_NAME: Record<string, string> = {
+  fin: "finesse",
+  vers: "versatile",
+  reach: "reach",
+  thr: "thrown",
+  "2h": "two-handed",
+  hvy: "heavy",
+  lt: "light",
+  load: "loading",
+  ammo: "ammunition",
+};
+
+function abbreviateWeaponProperties(value: string): string {
+  return value
+    .split(/[,;]\s*/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      // Strip " property" suffix and normalize code
+      const normalized = p.replace(/ property$/i, "").trim().toLowerCase();
+      const base = normalized.replace(/\s*\([^)]*\)\s*/g, "").trim(); // strip parenthetical like (1d10)
+      const match = base.match(/^(\w+)\s*(.*)$/);
+      const code = match ? match[1] : normalized;
+      const suffix = match && match[2] ? ` ${match[2]}` : "";
+      return (WEAPON_PROP_CODE_TO_NAME[code] ?? code) + suffix;
+    })
+    .join(", ");
 }
 
 function renderWeaponAttackRows(
@@ -1038,9 +1121,9 @@ function renderWeaponAttackRows(
       } else if (column.key === "damage") {
         drawWeaponCell(ctx, assets, cell, value, { maxSize: 4.9, minSize: 3.1 });
       } else if (column.key === "type") {
-        drawWeaponCell(ctx, assets, cell, value, { maxSize: 3.7, minSize: 2.4, bold: false, align: "left" });
+        drawWeaponCell(ctx, assets, cell, abbreviateDamageType(value), { maxSize: 3.7, minSize: 2.4, bold: false, align: "left" });
       } else {
-        drawWeaponCell(ctx, assets, cell, value, { maxSize: 3.6, minSize: 2.4, bold: false, align: "left" });
+        drawWeaponCell(ctx, assets, cell, abbreviateWeaponProperties(value), { maxSize: 2.8, minSize: 2.4, bold: false, align: "left" });
       }
     });
   });
@@ -1051,11 +1134,14 @@ function renderSpellTracker(
   assets: PdfSvgAssetBundle,
   rect: PdfRect,
   spellColumn: NonNullable<ResolvedPdfCharacter["frontPage"]["combatHub"]>["spellColumn"],
+  _spellCards: PdfPageCard[],
   targetBottomY: number,
 ) {
   if (!spellColumn) return;
 
   const { cantrips, slots, spellsByLevel } = spellColumn;
+  const standardSlots = slots.standardSlots ?? (slots.hasPactMagic ? [] : slots.slots);
+  const pactSlots = slots.pactSlots ?? (slots.hasPactMagic ? slots.slots : []);
   const contentPadding = 1;
   const contentRect = {
     x: rect.x + contentPadding,
@@ -1072,7 +1158,7 @@ function renderSpellTracker(
   });
 
   // --- Cantrips row (two-cell layout matching leveled spell rows) ---
-  const cantripNames = cantrips.map((s) => s.name).join(", ") || "—";
+  const cantripNames = formatSpellEntriesForFrontPage(cantrips, "cantrip");
   const cantripY = contentRect.y + 9;
   const leftCellW = SPELL_LEFT_CELL_W;
   // Left cell: "Cantrips" label at top, no circles
@@ -1097,18 +1183,41 @@ function renderSpellTracker(
     { font: "Helvetica", maxSize: 3.7, minSize: 3.7, align: "left", color: "#222222", lineBreak: false },
   );
 
-  // --- Spell slots and spell names by level ---
-  const slotsY = cantripY + 6.5;
-  const slotsAreaHeight = Math.max(1, Math.min(contentRect.height - (slotsY - contentRect.y), targetBottomY - slotsY));
+  const pactSummary = formatPactSlotSummary(pactSlots);
+  const pactLineHeight = pactSummary ? 4.4 : 0;
+  if (pactSummary) {
+    drawFittedText(ctx, pactSummary, {
+      x: contentRect.x,
+      y: cantripY + 5.8,
+      width: contentRect.width,
+      height: pactLineHeight,
+    }, {
+      font: "Helvetica-Bold",
+      maxSize: 3.1,
+      minSize: 2.5,
+      align: "right",
+      color: "#555555",
+      lineBreak: false,
+    });
+  }
 
-  if (slots.maxLevel > 0) {
+  // --- Spell slots and spell names by level ---
+  const slotsY = cantripY + 6.5 + pactLineHeight;
+  const slotsAreaHeight = Math.max(1, Math.min(contentRect.height - (slotsY - contentRect.y), targetBottomY - slotsY));
+  const highestSpellLevel = spellsByLevel.reduce((max, entry) => Math.max(max, entry.level), 0);
+  const maxTrackedLevel = Math.max(
+    highestSpellLevel,
+    standardSlots.length ? Math.max(...standardSlots.map((entry) => entry.level)) : 0,
+  );
+
+  if (maxTrackedLevel > 0) {
     // Three compact level groups: 1-3, 4-6, 7-9. Cantrips stay full-width above.
     const levelGroups = [
       [1, 2, 3],
       [4, 5, 6],
       [7, 8, 9],
     ]
-      .map((group) => group.filter((level) => level <= slots.maxLevel))
+      .map((group) => group.filter((level) => level <= maxTrackedLevel))
       .filter((group) => group.length > 0);
     const gap = 0.1;
     const groupWidth = (contentRect.width - gap * (levelGroups.length - 1)) / levelGroups.length;
@@ -1120,7 +1229,7 @@ function renderSpellTracker(
         width: groupWidth,
         height: slotsAreaHeight,
       };
-      renderSpellLevelGroup(ctx, assets, groupRect, levels, slots.slots, spellsByLevel);
+      renderSpellLevelGroup(ctx, assets, groupRect, levels, standardSlots, spellsByLevel);
     });
   }
 }
@@ -1131,7 +1240,7 @@ function renderSpellLevelGroup(
   rect: PdfRect,
   levels: number[],
   slotLevels: { level: number; slots: number }[],
-  spellsByLevel: { level: number; spells: { id: string; name: string; level: number; sourceLabel?: string }[] }[],
+  spellsByLevel: { level: number; spells: { id: string; name: string; level: number; sourceLabel?: string; page1DisplaySummary?: string }[] }[],
 ) {
   const rowGap = 0.35;
 
@@ -1150,7 +1259,7 @@ function renderSpellLevelGroup(
   const rowData = levels.map((level) => {
     const slotCount = slotLevels.find((s) => s.level === level)?.slots ?? 0;
     const spells = spellsByLevel.find((entry) => entry.level === level)?.spells ?? [];
-    const spellNames = spells.map((spell) => spell.name).join(", ") || "—";
+    const spellNames = formatSpellEntriesForFrontPage(spells, "leveled");
     ctx.doc.save();
     ctx.doc.font("Helvetica");
     ctx.doc.fontSize(3.7);
@@ -1300,7 +1409,7 @@ function renderCombatSpellcastingHub(ctx: PdfRenderContext, assets: PdfSvgAssetB
   const weaponRowRects = splitRows({ x: weaponRect.x, y: weaponRowAreaY, width: weaponRect.width, height: weaponRowAreaHeight }, 6, 1.0);
   const weaponSixthRow = weaponRowRects[5] ?? weaponRowRects[weaponRowRects.length - 1];
   const spellTargetBottomY = weaponSixthRow ? weaponSixthRow.y + weaponSixthRow.height : spellRect.y + spellRect.height;
-  renderSpellTracker(ctx, assets, spellRect, combatHub.spellColumn, spellTargetBottomY);
+  renderSpellTracker(ctx, assets, spellRect, combatHub.spellColumn, character.spellCards, spellTargetBottomY);
 }
 
 function cardCategory(card: PdfPageCard) {
@@ -1343,37 +1452,285 @@ function cardCategory(card: PdfPageCard) {
   return "Class";
 }
 
-function summarizeCard(card: PdfPageCard): FeatureSummary {
-  const parts = (card.summary || "").split(" | ");
-  let actionHint: string | undefined;
-  let body: string;
+function normalizeFeatureActionHint(value: string) {
+  const cleaned = cleanText(value);
+  if (!cleaned) {
+    return undefined;
+  }
+  // Keep full text for all action types; just capitalize consistently
+  return cleaned
+    .replace(/\bfree action\b/i, "Free Action")
+    .replace(/\bbonus action\b/i, "Bonus action")
+    .replace(/\blegendary action\b/i, "Legendary Action")
+    .replace(/\bfree object interaction\b/i, "Free Object Interaction")
+    .replace(/\bobject interaction\b/i, "Object Interaction");
+}
 
-  if (card.detail) {
-    // Full detail for body; no truncation
-    if (parts.length >= 2) actionHint = parts[0];
-    body = cleanText(card.detail);
-  } else if (parts.length >= 3) {
-    // Format: "Timing | Cost | Summary"
-    actionHint = parts[0];
-    const cost = parts[1];
-    const summary = parts.slice(2).join(" | ");
-    body = cleanText(cost ? `${summary} (${cost})` : summary);
-  } else if (parts.length === 2) {
-    // Format: "Timing | Summary"
-    actionHint = parts[0];
-    body = cleanText(parts[1]);
-  } else {
-    // Fallback: use summary as-is, no truncation
-    body = cleanText(card.summary || "");
+function parseFeatureActionHint(value: string, element?: { sheet?: { action?: string } }) {
+  // Priority 1: structured sheet action field
+  if (element?.sheet?.action) {
+    const cleaned = cleanText(element.sheet.action);
+    if (cleaned && /\b(action|reaction|object interaction)\b/i.test(cleaned)) {
+      return normalizeFeatureActionHint(cleaned);
+    }
+  }
+  // Priority 2: regex on value string
+  const cleaned = cleanText(value);
+  if (!cleaned || !/\b(action|reaction|object interaction)\b/i.test(cleaned)) {
+    return undefined;
+  }
+  return normalizeFeatureActionHint(cleaned);
+}
+
+function normalizeFeatureRechargeHint(value: string) {
+  const cleaned = cleanText(value);
+  if (!cleaned) {
+    return undefined;
+  }
+
+  const normalized = cleaned.toLowerCase();
+  if (normalized === "sr" || normalized === "short rest") {
+    return "Short Rest";
+  }
+  if (normalized === "lr" || normalized === "long rest") {
+    return "Long Rest";
+  }
+  if (normalized === "at will") {
+    return "At Will";
+  }
+  return cleaned;
+}
+
+/**
+ * Parse a usage string into recharge hint, charge display, or usage hint.
+ * Handles common class feature placeholders like {{bardic-inspiration:count}} by
+ * substituting the correct count based on character level.
+ */
+type FeatureUsageResult = {
+  rechargeHint?: string;
+  usageHint?: string;
+  chargeDisplay?: {
+    count?: number; // optional for "Unlimited" mode
+    mode: "circles" | "number";
+    label: string;
+  };
+};
+
+function parseFeatureUsageHint(value: string, level = 1): FeatureUsageResult {
+  const cleaned = cleanText(value);
+  if (!cleaned) {
+    return {};
+  }
+
+  // Resolve level-dependent class feature placeholders before regex matching.
+  // baseToken is the feature name, scaleToken is the sub-field (count, damage, etc.)
+  const baseTokenMatch = cleaned.match(/\{\{([^:}]+):(\w+)\}\}/);
+  let resolved = cleaned;
+
+  if (baseTokenMatch) {
+    const [, baseToken, scaleToken] = baseTokenMatch;
+
+    if (baseToken === "bardic-inspiration" && scaleToken === "count") {
+      resolved = resolved.replace(/\{\{bardic-inspiration:count\}\}/gi, String(Math.max(1, Math.floor((level + 1) / 2))));
+    }
+    if (baseToken === "barbarian rage" && scaleToken === "count") {
+      // Rage uses: 2 (1-2), 3 (3-5), 4 (6-8), 5 (9-12), 6 (13-19), unlimited (20)
+      if (level >= 20) {
+        resolved = resolved.replace(/\{\{barbarian rage:count\}\}/gi, "unlimited");
+      } else {
+        const rageUses = level >= 13 ? 6 : level >= 9 ? 5 : level >= 6 ? 4 : level >= 3 ? 3 : 2;
+        resolved = resolved.replace(/\{\{barbarian rage:count\}\}/gi, String(rageUses));
+      }
+    }
+    if (baseToken === "barbarian rage" && scaleToken === "damage") {
+      const rageDmg = level >= 16 ? 4 : level >= 9 ? 3 : 2;
+      resolved = resolved.replace(/\{\{barbarian rage:damage\}\}/gi, String(rageDmg));
+    }
+    if (baseToken === "channel divinity") {
+      // Cleric Channel Divinity: 1 (lvl 1-5), 2 (lvl 6-17), 3 (lvl 18+)
+      const cdCount = level >= 18 ? 3 : level >= 6 ? 2 : 1;
+      resolved = resolved.replace(/\{\{channel divinity:count\}\}/gi, String(cdCount));
+    }
+    if (baseToken === "divine sense") {
+      // Divine Sense: 4 + charisma modifier (min 1 at low levels, roughly 4-6 at low-mid)
+      const dsCount = Math.max(4, 4); // baseline 4 uses
+      resolved = resolved.replace(/\{\{divine sense:count\}\}/gi, String(dsCount));
+    }
+    if (baseToken === "lay on hands") {
+      // Lay on Hands: pool of 5 × paladin level (shown as pool, not count)
+      // Show as "pool" text since it's not a per-use count
+      resolved = resolved.replace(/\{\{lay on hands:hp pool\}\}/gi, "pool");
+    }
+    if (baseToken === "cleansing touch") {
+      // Cleansing Touch: charisma modifier uses (min 1)
+      const ctCount = Math.max(1, Math.floor((level - 1) / 4) + 1);
+      resolved = resolved.replace(/\{\{cleansing touch:count\}\}/gi, String(ctCount));
+    }
+    if (baseToken === "indomitable" && scaleToken === "usage") {
+      // Indomitable: 1 (lvl 9-13), 2 (lvl 14-19), 3 (lvl 20)
+      const indomUses = level >= 20 ? 3 : level >= 14 ? 2 : level >= 9 ? 1 : 0;
+      resolved = resolved.replace(/\{\{indomitable:usage\}\}/gi, String(indomUses));
+    }
+    if (baseToken === "war priest") {
+      // War Priest: 2 uses at level 2, scales
+      resolved = resolved.replace(/\{\{war priest:count\}\}/gi, "2");
+    }
+    if (baseToken === "wrath of the storm") {
+      // Wrath of the Storm: 2 uses (wisdom modifier, but base 2)
+      resolved = resolved.replace(/\{\{wrath of the storm:count\}\}/gi, "2");
+    }
+    if (baseToken === "warding flare") {
+      // Warding Flare: 2 uses (wisdom modifier, base 2)
+      resolved = resolved.replace(/\{\{warding flare:count\}\}/gi, "2");
+    }
+    if (baseToken === "flash of genius" && scaleToken === "usage") {
+      // Flash of Genius: intelligence modifier uses per long rest
+      const foUses = Math.max(1, Math.floor((level + 1) / 2));
+      resolved = resolved.replace(/\{\{flash of genius:usage\}\}/gi, String(foUses));
+    }
+  }
+
+  if (/^at will$/i.test(resolved)) {
+    return { rechargeHint: "At Will" };
+  }
+
+  if (/^unlimited$/i.test(resolved)) {
+    return {
+      chargeDisplay: {
+        mode: "number" as const,
+        label: "Unlimited",
+      },
+    };
+  }
+
+  if (/^pool$/i.test(resolved)) {
+    // Pool-based resource (e.g., Lay on Hands) — no per-rest count circles
+    return { rechargeHint: "Long Rest" };
+  }
+
+  const chargesWithRecharge = resolved.match(/^(\d+)\s*(?:uses?)?\s*\/\s*(.+)$/i);
+  if (chargesWithRecharge) {
+    const count = Number.parseInt(chargesWithRecharge[1], 10);
+    if (Number.isFinite(count)) {
+      return {
+        rechargeHint: normalizeFeatureRechargeHint(chargesWithRecharge[2]),
+        chargeDisplay: {
+          count,
+          mode: count < 7 ? "circles" as const : "number" as const,
+          label: `${count}`,
+        },
+      };
+    }
+  }
+
+  const chargesOnly = resolved.match(/^(\d+)\s*(?:uses?)?$/i);
+  if (chargesOnly) {
+    const count = Number.parseInt(chargesOnly[1], 10);
+    if (Number.isFinite(count)) {
+      return {
+        chargeDisplay: {
+          count,
+          mode: count < 7 ? "circles" as const : "number" as const,
+          label: `${count}`,
+        },
+      };
+    }
+  }
+
+  const rechargeOnly = normalizeFeatureRechargeHint(cleaned); // use original cleaned for recharge hints (no placeholder)
+  if (rechargeOnly && rechargeOnly !== cleaned) {
+    return { rechargeHint: rechargeOnly };
   }
 
   return {
-    title: cleanText(card.title, "Feature"),
-    category: cardCategory(card),
+    usageHint: cleaned,
+  };
+}
+
+/** Stub — parseFeatureUsageHint is now the full implementation */
+function parseFeatureUsageHintRaw(_value: string): FeatureUsageResult {
+  return {};
+}
+
+function summarizeCardParts(title: string, category: string, summary: string, detail: string | undefined, tags: string[], element?: { sheet?: { action?: string } }, level = 5) {
+  const parts = summary
+    .split(" | ")
+    .map((part) => cleanText(part))
+    .filter(Boolean);
+  let actionHint: string | undefined;
+  let rechargeHint: string | undefined;
+  let usageHint: string | undefined;
+  let chargeDisplay: FeatureSummary["chargeDisplay"];
+  let body = "";
+
+  if (parts.length >= 3) {
+    actionHint = parseFeatureActionHint(parts[0], element);
+    const parsedUsage = parseFeatureUsageHint(parts[1], level);
+    rechargeHint = parsedUsage.rechargeHint;
+    usageHint = parsedUsage.usageHint;
+    chargeDisplay = parsedUsage.chargeDisplay;
+    body = cleanText(parts.slice(2).join(" | "));
+  } else if (parts.length === 2) {
+    const parsedAction = parseFeatureActionHint(parts[0], element);
+    const parsedUsage = parseFeatureUsageHint(parts[0], level);
+    const hasUsageMeta = Boolean(parsedUsage.rechargeHint || parsedUsage.usageHint || parsedUsage.chargeDisplay);
+
+    if (parsedAction) {
+      actionHint = parsedAction;
+      const parsedSecondaryUsage = parseFeatureUsageHint(parts[1], level);
+      const hasSecondaryUsageMeta = Boolean(
+        parsedSecondaryUsage.rechargeHint || parsedSecondaryUsage.usageHint || parsedSecondaryUsage.chargeDisplay,
+      );
+      if (hasSecondaryUsageMeta) {
+        rechargeHint = parsedSecondaryUsage.rechargeHint;
+        usageHint = parsedSecondaryUsage.usageHint;
+        chargeDisplay = parsedSecondaryUsage.chargeDisplay;
+        body = cleanText(detail || summary || "");
+      } else {
+        body = cleanText(parts[1]);
+      }
+    } else if (hasUsageMeta) {
+      rechargeHint = parsedUsage.rechargeHint;
+      usageHint = parsedUsage.usageHint;
+      chargeDisplay = parsedUsage.chargeDisplay;
+      body = cleanText(parts[1]);
+    } else {
+      body = cleanText(parts.join(" | "));
+    }
+  } else if (parts.length === 1) {
+    body = cleanText(parts[0]);
+  }
+
+  if (!body) {
+    body = cleanText(detail || summary || "");
+  }
+
+  if (usageHint) {
+    body = cleanText(body ? `${body} (${usageHint})` : usageHint);
+  }
+
+  return {
+    title: cleanText(title, "Feature"),
+    category,
     body,
     actionHint,
-    tags: card.tags || [],
-  };
+    rechargeHint,
+    usageHint,
+    chargeDisplay,
+    tags,
+  } satisfies FeatureSummary;
+}
+
+function summarizeCard(card: PdfPageCard, level = 5): FeatureSummary {
+  return summarizeCardParts(
+    card.title,
+    cardCategory(card),
+    card.summary || "",
+    card.detail,
+    card.tags || [],
+    card.sourceAction ? { sheet: { action: card.sourceAction } } : undefined,
+    level,
+  );
 }
 
 /** Section-level layout config shared between measure and render passes */
@@ -1387,24 +1744,195 @@ interface FeatureLayoutConfig {
 }
 
 const DEFAULT_FEATURE_CONFIG: FeatureLayoutConfig = {
-  bodyMaxSize: 5.8,
-  bodyMinSize: 3.2,
+  bodyMaxSize: FEATURE_CARD_TYPOGRAPHY.body.max,
+  bodyMinSize: FEATURE_CARD_TYPOGRAPHY.body.min,
   lineGap: 1.2,
-  featureGap: 8,
+  featureGap: FEATURE_CARD_TYPOGRAPHY.separatorGap,
   bottomPadding: 10,
   compact: false,
 };
 
 const MIN_FEATURE_CONFIG: FeatureLayoutConfig = {
-  bodyMaxSize: 3.5,
-  bodyMinSize: 2.5,
+  bodyMaxSize: 4.2,
+  // Minimum body font size floor for print legibility.
+  // 4.0pt ensures text remains readable when printed at standard resolution;
+  // 3.0 was too small to render clearly on most consumer printers.
+  bodyMinSize: 4.0,
   lineGap: 0.8,
   featureGap: 5,
   bottomPadding: 8,
   compact: true,
 };
 
-/** Compute the effective config to use, running a fit pass to ensure all groups fit in rect.height */
+function summarizeCompactTraitCard(card: PdfRightColumnCompactTrait) {
+  return summarizeCardParts(card.title, "Trait", card.summary, undefined, []);
+}
+
+function getFeatureMetaWidth(width: number, summary: FeatureSummary) {
+  if (!summary.actionHint && !summary.rechargeHint && !summary.chargeDisplay) {
+    return 0;
+  }
+
+  // Estimate width: action hint (max 14 wide) + " / " + recharge hint + circles (3.5 each)
+  const actionWidth = summary.actionHint ? Math.min(18, width * 0.08) : 0;
+  const rechargeWidth = summary.rechargeHint ? Math.min(14, width * 0.06) : 0;
+  const circleWidth = summary.chargeDisplay?.count
+    ? Math.min(12, summary.chargeDisplay.count * 2.2 + 2)
+    : 0;
+  const sepWidth = summary.actionHint && (summary.rechargeHint || summary.chargeDisplay) ? 3 : 0;
+
+  return Math.max(
+    FEATURE_CARD_TYPOGRAPHY.metaWidth.min,
+    Math.min(FEATURE_CARD_TYPOGRAPHY.metaWidth.max, actionWidth + sepWidth + rechargeWidth + circleWidth),
+  );
+}
+
+function drawFeatureChargeDisplay(
+  ctx: PdfRenderContext,
+  rect: PdfRect,
+  chargeDisplay: NonNullable<FeatureSummary["chargeDisplay"]>,
+) {
+  if (chargeDisplay.mode === "number" || !chargeDisplay.count) {
+    drawFittedText(ctx, chargeDisplay.label, rect, {
+      font: "Helvetica-Bold",
+      maxSize: FEATURE_CARD_TYPOGRAPHY.charges.max,
+      minSize: FEATURE_CARD_TYPOGRAPHY.charges.min,
+      align: "right",
+      color: "#111111",
+      lineBreak: false,
+    });
+    return;
+  }
+
+  const circleDiameter = FEATURE_CARD_TYPOGRAPHY.circleRadius * 2;
+  const totalWidth =
+    chargeDisplay.count * circleDiameter +
+    Math.max(0, chargeDisplay.count - 1) * FEATURE_CARD_TYPOGRAPHY.circleGap;
+  let cursorX = rect.x + Math.max(0, rect.width - totalWidth);
+  const centerY = rect.y + rect.height / 2;
+
+  for (let index = 0; index < chargeDisplay.count; index += 1) {
+    strokeCircle(
+      ctx,
+      cursorX + FEATURE_CARD_TYPOGRAPHY.circleRadius,
+      centerY,
+      FEATURE_CARD_TYPOGRAPHY.circleRadius,
+      COLORS.stroke,
+      0.45,
+    );
+    cursorX += circleDiameter + FEATURE_CARD_TYPOGRAPHY.circleGap;
+  }
+}
+
+/**
+ * Draw meta block (action hint + recharge + circles) all on one line.
+ * Parts are ordered left-to-right: [action] [recharge] [circles].
+ * All text parts are aligned to the same baseline (rect.y + fontAscent).
+ * 1.5pt gap between each consecutive part.
+ * Returns the total row height (titleRowHeight + bodyTopPad).
+ */
+function drawFeatureMetaBlock(
+  ctx: PdfRenderContext,
+  summary: FeatureSummary,
+  rect: PdfRect,
+) {
+  if (!summary.actionHint && !summary.rechargeHint && !summary.chargeDisplay) {
+    return FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+  }
+
+  // Build parts in rendering order: action | recharge | circles
+  interface MetaPart {
+    label: string;
+    isCircles?: true;
+    count?: number;
+    width: number;
+  }
+  const parts: MetaPart[] = [];
+  const metaFSize = FEATURE_CARD_TYPOGRAPHY.meta.max;
+  // Font ascent (baseline offset) for Helvetica at this size — approximates cap-height alignment
+  const fontAscent = metaFSize * 0.72;
+
+  // Action hint (leftmost)
+  if (summary.actionHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(metaFSize);
+    const w = ctx.doc.widthOfString(summary.actionHint);
+    ctx.doc.restore();
+    parts.push({ label: summary.actionHint, width: w });
+  }
+  // Recharge hint (middle)
+  if (summary.rechargeHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica").fontSize(metaFSize);
+    const w = ctx.doc.widthOfString(summary.rechargeHint);
+    ctx.doc.restore();
+    parts.push({ label: summary.rechargeHint, width: w });
+  }
+  // Circles (rightmost)
+  if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+    const circleD = Math.min(4.5, rect.width * 0.07); // matches larger circles in drawFeatureMetaBlock
+    const circleGap = 1.2;
+    const totalCirclesWidth = summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap;
+    parts.push({ label: summary.chargeDisplay.label, isCircles: true, count: summary.chargeDisplay.count, width: totalCirclesWidth });
+  }
+
+  if (parts.length === 0) {
+    return FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+  }
+
+// Layout: space parts left-to-right across rect.width.
+  // All elements (title, meta text, circles) share the SAME visual center: rect.y + rect.height / 2.
+  // Title baseline = rect.y; title center = rect.y + titleRowHeight/2.
+  // Meta text: baseline = rect.y + rect.height/2 - metaCapHeight/2 (centers meta cap-height on row center).
+  // Circles: center = rect.y + rect.height/2 (centers circle on row center).
+  const partGap = 1.5;
+  let cursorX = rect.x; // left edge of meta area (caller positions this after title)
+  const rowCenter = rect.y + rect.height / 2;
+  const metaCapHeight = metaFSize * 0.72;
+  const circleCenterBaseline = rowCenter; // circles centered on row visual center
+  const metaTextBaseline = rowCenter - metaCapHeight / 2; // meta cap-height centered on row center
+
+  for (const part of parts) {
+    if (part.isCircles && part.count !== undefined) {
+      // Circles: center vertically on the row center
+      const circleD = Math.min(4.5, rect.width * 0.07); // larger circles for readability
+      const circleGap = 1.2;
+      for (let c = 0; c < part.count; c += 1) {
+        const cx = cursorX + c * (circleD + circleGap) + circleD / 2;
+        const cy = circleCenterBaseline;
+        strokeCircle(ctx, cx, cy, circleD / 2, "#888888", 0.45);
+      }
+      cursorX += part.width + partGap;
+    } else {
+      // Draw text part with cap-height centered on the row center
+      const isAction = part.label === summary.actionHint;
+      ctx.doc.save();
+      ctx.doc.font(isAction ? "Helvetica-Bold" : "Helvetica").fontSize(metaFSize).fillColor(isAction ? "#444444" : "#555555");
+      ctx.doc.text(part.label, cursorX, metaTextBaseline, { lineBreak: false });
+      ctx.doc.restore();
+      cursorX += part.width + partGap;
+    }
+  }
+
+  return FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+}
+
+function getAdaptiveFeatureColumnCount(cards: PdfPageCard[], width: number, level = 5) {
+  if (width < 180 || cards.length < 4) {
+    return 1;
+  }
+
+  const summaries = cards.map(summarizeCard);
+  const averageBodyLength =
+    summaries.reduce((total, summary) => total + summary.body.length, 0) / Math.max(1, summaries.length);
+  const shortBodies = summaries.filter((summary) => summary.body.length <= 120).length;
+  return averageBodyLength <= 80 && shortBodies >= Math.ceil(summaries.length * 0.65) ? 2 : 1;
+}
+
+/** Compute the effective config to use, running a fit pass to ensure all groups fit in rect.height.
+ *  After fitting, if there's spare vertical space, scale up bodyMaxSize for better readability.
+ *  Low-level chars with few features get larger text; high-level with many features get smaller.
+ */
 function computeFitConfig(
   ctx: PdfRenderContext,
   groups: ReturnType<typeof buildFeatureDeckGroups>,
@@ -1412,27 +1940,32 @@ function computeFitConfig(
   columnCount: number,
   gap: number,
   cellWidth: number,
+  level = 5,
 ): FeatureLayoutConfig {
   let config = { ...DEFAULT_FEATURE_CONFIG };
   // Max iterations: reduce lineGap, then bodyMaxSize
   for (let iter = 0; iter < 20; iter++) {
     const listW = cellWidth - 10;
-    // Simulate exact 2-column masonry placement (shortest-column-first)
     const colHeights = new Array(columnCount).fill(0);
     groups.forEach((g) => {
       const listRect = { x: 0, y: 0, width: listW, height: rect.height };
-      const contentH = measureFeatureListHeightWithConfig(ctx, g.cards, listRect, config);
+      const contentH = measureFeatureListHeightWithConfig(
+        ctx,
+        g.cards,
+        listRect,
+        config,
+        getAdaptiveFeatureColumnCount(g.cards, listRect.width, level),
+        level,
+      );
       const minCol = idxForShortestColumn(colHeights);
       const groupHeight = contentH + config.bottomPadding;
       colHeights[minCol] += (colHeights[minCol] > 0 ? gap : 0) + groupHeight;
     });
     const maxBottom = Math.max(...colHeights);
     if (maxBottom <= rect.height) break;
-    // First try reducing lineGap
     if (config.lineGap > MIN_FEATURE_CONFIG.lineGap + 0.1) {
       config = { ...config, lineGap: Math.max(MIN_FEATURE_CONFIG.lineGap, config.lineGap - 0.2) };
     } else if (config.bodyMaxSize > MIN_FEATURE_CONFIG.bodyMaxSize + 0.1) {
-      // Then reduce font size
       config = {
         ...config,
         bodyMaxSize: Math.max(MIN_FEATURE_CONFIG.bodyMaxSize, config.bodyMaxSize - 0.5),
@@ -1443,73 +1976,140 @@ function computeFitConfig(
       break;
     }
   }
+
+  // Post-fit: measure actual usage with the minimum config that fits.
+  // If there's spare vertical space, scale up bodyMaxSize for better readability.
+  const listW = cellWidth - 10;
+  const measuredHeights = groups.map((g) => {
+    const listRect = { x: 0, y: 0, width: listW, height: rect.height };
+    return measureFeatureListHeightWithConfig(
+      ctx,
+      g.cards,
+      listRect,
+      config,
+      getAdaptiveFeatureColumnCount(g.cards, listRect.width, level),
+      level,
+    );
+  });
+
+  const maxBottom = Math.max(...measuredHeights) + config.bottomPadding;
+  const usageRatio = maxBottom / rect.height;
+
+  // Scale up bodyMaxSize if there's breathing room (content uses < 85% of available height)
+  if (usageRatio < 0.85 && config.bodyMaxSize < 8.0) {
+    // How much headroom do we have?
+    const headroomRatio = 1 / Math.max(0.3, usageRatio); // e.g., 0.5 → 2x headroom
+    const scaledSize = Math.min(
+      8.0, // hard ceiling
+      Math.max(config.bodyMaxSize + 0.5, config.bodyMaxSize * Math.min(1.3, headroomRatio)),
+    );
+    const minSize = Math.max(MIN_FEATURE_CONFIG.bodyMinSize, scaledSize - 1.0);
+    config = { ...config, bodyMaxSize: scaledSize, bodyMinSize: minSize };
+  }
+
   return config;
 }
 
-/** Measure feature list height using a given config */
+/** Measure feature list height using a given config, with paired feature support. */
 function measureFeatureListHeightWithConfig(
   ctx: PdfRenderContext,
   cards: PdfPageCard[],
   rect: PdfRect,
   cfg: FeatureLayoutConfig,
+  columns = 1,
+  level = 5,
 ): number {
-  const summaries = cards.map(summarizeCard);
-  let cursorY = rect.y;
-  const maxW = rect.width;
+  const summaries = cards.map((card) => summarizeCard(card, level));
+  const columnRects = splitColumns(rect, columns, 12);
+  const cursors = columnRects.map(() => 0);
+  const maxW = columnRects[0]?.width ?? rect.width;
   const fSize = cfg.bodyMaxSize * 0.85;
   const lineH = fSize + cfg.lineGap;
-  const doc = ctx.doc;
 
-  summaries.forEach((summary, sIdx) => {
-    cursorY += 5.5; // title height
-    let lineX = rect.x;
-    const actionWords: [string][] = [
-      ["bonus action"], ["legendary action"], ["reaction"],
-      ["free object interaction"], ["object interaction"], ["action"],
-    ];
-    let remaining = summary.body;
-    const runs: { text: string; bold: boolean }[] = [];
-    while (remaining.length > 0) {
-      let matched = false;
-      for (const [phrase] of actionWords) {
-        const idx = remaining.toLowerCase().indexOf(phrase);
-        if (idx !== -1) {
-          if (idx > 0) runs.push({ text: remaining.slice(0, idx), bold: false });
-          runs.push({ text: remaining.slice(idx, idx + phrase.length), bold: true });
-          remaining = remaining.slice(idx + phrase.length);
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) { runs.push({ text: remaining, bold: false }); break; }
+  let idx = 0;
+  while (idx < summaries.length) {
+    const summary = summaries[idx];
+    const columnIndex = idxForShortestColumn(cursors);
+
+    // Check if this feature can be paired with the next one
+    const canPair = (
+      columns === 1 &&
+      idx + 1 < summaries.length &&
+      summary.body.length <= 200 &&
+      summaries[idx + 1].body.length <= 200
+    );
+
+    if (canPair) {
+      const nextSummary = summaries[idx + 1];
+      const colGap = 8;
+      const colWidth = (maxW - colGap) / 2;
+
+      // Measure height of both features (use max)
+      const h1 = measureSingleCardHeight(ctx, summary, colWidth, fSize, lineH, cfg);
+      const h2 = measureSingleCardHeight(ctx, nextSummary, colWidth, fSize, lineH, cfg);
+      const cardHeight = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad + Math.max(h1, h2);
+      cursors[columnIndex] += cardHeight + cfg.featureGap;
+      idx += 2;
+    } else {
+      const cardHeight = measureSingleCardHeight(ctx, summary, maxW, fSize, lineH, cfg);
+      cursors[columnIndex] += cardHeight + cfg.featureGap;
+      idx += 1;
     }
-    const merged: { text: string; bold: boolean }[] = [];
-    for (const r of runs) {
-      const prev = merged[merged.length - 1];
-      if (prev && prev.bold === r.bold) { prev.text += r.text; }
-      else { merged.push({ ...r }); }
-    }
-    for (const run of merged) {
-      const words = run.text.split(/(\s+)/);
-      for (const w of words) {
-        if (w.length === 0) continue;
-        doc.save();
-        doc.font(run.bold ? "Helvetica-Bold" : "Helvetica").fontSize(fSize);
-        const w2 = doc.widthOfString(w);
-        doc.restore();
-        if (lineX + w2 > rect.x + maxW && lineX > rect.x) {
-          cursorY += lineH;
-          lineX = rect.x;
-        }
-        lineX += w2;
-      }
-    }
-    cursorY += lineH;
-    if (sIdx < summaries.length - 1) {
-      cursorY += cfg.featureGap;
-    }
-  });
-  return Math.max(30, cursorY - rect.y + 10); // 10pt buffer from last card body to card border
+  }
+
+  return Math.max(30, Math.max(...cursors) - cfg.featureGap + 10);
+}
+
+/** Measure height of a single feature card. Returns total height used by header + body. */
+function measureSingleCardHeight(
+  ctx: PdfRenderContext,
+  summary: FeatureSummary,
+  width: number,
+  fSize: number,
+  lineH: number,
+  cfg: FeatureLayoutConfig,
+): number {
+  const titleFSize = FEATURE_CARD_TYPOGRAPHY.title.max;
+  const metaFSize = FEATURE_CARD_TYPOGRAPHY.meta.max;
+
+  ctx.doc.save();
+  ctx.doc.font("Helvetica-Bold").fontSize(titleFSize);
+  const renderedTitleWidth = ctx.doc.widthOfString(summary.title.toUpperCase());
+  ctx.doc.restore();
+
+  // Measure meta widths
+  let totalMetaWidth = 0;
+  if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+    const circleD = Math.min(2.2, width * 0.04);
+    const circleGap = 0.8;
+    totalMetaWidth += summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap + 2;
+  }
+  if (summary.rechargeHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.rechargeHint) + 2;
+    ctx.doc.restore();
+  }
+  if (summary.actionHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.actionHint) + 2;
+    ctx.doc.restore();
+  }
+
+  const gapAfterTitle = 4;
+  const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+  const singleRowFits = hasMeta && (renderedTitleWidth + gapAfterTitle + totalMetaWidth <= width);
+
+  const bodyCharsPerLine = Math.max(18, Math.floor(width / Math.max(2.2, fSize * 0.52)));
+  const bodyLines = Math.max(1, Math.ceil(summary.body.length / bodyCharsPerLine));
+  const bodyHeight = bodyLines * lineH;
+
+  if (singleRowFits) {
+    return FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad + bodyHeight;
+  } else {
+    return FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.metaRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad + bodyHeight;
+  }
 }
 
 /** Draw text with action-economy words bolded: bonus action, reaction, action. Returns { cursorY } for height measurement. */
@@ -1605,75 +2205,296 @@ function drawTextWithBoldActionWords(
   return { cursorY };
 }
 
-function renderFeatureList(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect, columns: number, compactOrConfig?: boolean | FeatureLayoutConfig) {
-  let cfg: FeatureLayoutConfig = DEFAULT_FEATURE_CONFIG;
-  let compact = false;
-  if (typeof compactOrConfig === "object" && compactOrConfig !== null) {
-    cfg = compactOrConfig as FeatureLayoutConfig;
-    compact = cfg.compact;
-  } else if (typeof compactOrConfig === "boolean") {
-    compact = compactOrConfig;
+/** Returns header height and body height for a paired feature card */
+function getPairedFeatureHeights(
+  ctx: PdfRenderContext,
+  summary: FeatureSummary,
+  width: number,
+  bodyMaxSize: number,
+  bodyMinSize: number,
+): { headerH: number; bodyH: number } {
+  const titleFSize = FEATURE_CARD_TYPOGRAPHY.title.max;
+  const metaFSize = FEATURE_CARD_TYPOGRAPHY.meta.max;
+  const fSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
+  const lineH = fSize + 1.2;
+
+  ctx.doc.save();
+  ctx.doc.font("Helvetica-Bold").fontSize(titleFSize);
+  const renderedTitleWidth = ctx.doc.widthOfString(summary.title.toUpperCase());
+  ctx.doc.restore();
+
+  let totalMetaWidth = 0;
+  if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+    const circleD = Math.min(4.5, width * 0.07); // matches larger circles in drawFeatureMetaBlock
+    const circleGap = 1.2;
+    totalMetaWidth += summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap + 2;
   }
-  const summaries = cards.map(summarizeCard);
-  const columnRects = splitColumns(rect, columns, 16);
-  const cursors = columnRects.map((column) => ({ ...column, y: column.y }));
+  if (summary.rechargeHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.rechargeHint) + 2;
+    ctx.doc.restore();
+  }
+  if (summary.actionHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.actionHint) + 2;
+    ctx.doc.restore();
+  }
 
-  summaries.forEach((summary, i) => {
-    const isLast = i === summaries.length - 1;
-    const column = cursors.sort((left, right) => left.y - right.y)[0];
-    const estimatedBodyLines = Math.ceil(summary.body.length / 55);
-    const estimatedEntryH = Math.max(14, 6 + estimatedBodyLines * 6);
+  const gapAfterTitle = 4;
+  const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+  const singleRowFits = hasMeta && (renderedTitleWidth + gapAfterTitle + totalMetaWidth <= width);
 
-    const actionHintWidth = summary.actionHint ? 48 : 0;
-    const titleWidth = column.width - actionHintWidth - 2;
-    const bodyMaxSize = cfg.bodyMaxSize;
-    const bodyMinSize = cfg.bodyMinSize;
-    const actionMaxSize = cfg.bodyMaxSize * 0.7;
+  const bodyCharsPerLine = Math.max(18, Math.floor(width / Math.max(2.2, fSize * 0.52)));
+  const bodyLines = Math.max(1, Math.ceil(summary.body.length / bodyCharsPerLine));
 
-    drawFittedText(ctx, summary.title.toUpperCase(), { x: column.x, y: column.y, width: titleWidth, height: 5 }, {
-      font: "Helvetica-Bold",
-      maxSize: 4.8,
-      minSize: 3.5,
-      color: "#000000",
+  if (singleRowFits) {
+    const headerH = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+    return { headerH, bodyH: bodyLines * lineH };
+  } else {
+    const headerH = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.metaRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+    return { headerH, bodyH: bodyLines * lineH };
+  }
+}
+
+/** Draw a paired feature card. Returns the y-coordinate where the body text ends. */
+function drawPairedFeatureFull(
+  ctx: PdfRenderContext,
+  summary: FeatureSummary,
+  x: number,
+  y: number,
+  width: number,
+  bodyMaxSize: number,
+  bodyMinSize: number,
+  cfg: FeatureLayoutConfig,
+): number {
+  const titleFSize = FEATURE_CARD_TYPOGRAPHY.title.max;
+  const metaFSize = FEATURE_CARD_TYPOGRAPHY.meta.max;
+
+  ctx.doc.save();
+  ctx.doc.font("Helvetica-Bold").fontSize(titleFSize);
+  const renderedTitleWidth = ctx.doc.widthOfString(summary.title.toUpperCase());
+  ctx.doc.restore();
+
+  let totalMetaWidth = 0;
+  if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+    const circleD = Math.min(4.5, width * 0.07);
+    const circleGap = 1.2;
+    totalMetaWidth += summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap + 2;
+  }
+  if (summary.rechargeHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.rechargeHint) + 2;
+    ctx.doc.restore();
+  }
+  if (summary.actionHint) {
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(metaFSize);
+    totalMetaWidth += ctx.doc.widthOfString(summary.actionHint) + 2;
+    ctx.doc.restore();
+  }
+
+  const gapAfterTitle = 4;
+  const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+  const singleRowFits = hasMeta && (renderedTitleWidth + gapAfterTitle + totalMetaWidth <= width);
+
+  let bodyTopOffset: number;
+  if (singleRowFits) {
+    bodyTopOffset = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(titleFSize).fillColor("#000000");
+    ctx.doc.text(summary.title.toUpperCase(), x, y, { lineBreak: false });
+    ctx.doc.restore();
+
+    const metaStartX = x + renderedTitleWidth + gapAfterTitle;
+    const metaAvailableWidth = Math.max(4, width - renderedTitleWidth - gapAfterTitle);
+    drawFeatureMetaBlock(ctx, summary, {
+      x: metaStartX, y, width: metaAvailableWidth, height: FEATURE_CARD_TYPOGRAPHY.titleRowHeight,
     });
-    if (summary.actionHint) {
-      drawFittedText(ctx, summary.actionHint, { x: column.x + titleWidth + 2, y: column.y, width: actionHintWidth, height: 5 }, {
-        font: "Helvetica-Oblique",
-        maxSize: actionMaxSize,
-        minSize: 2.8,
-        align: "right",
-        color: "#444444",
+  } else {
+    // Two-row: title, then meta row, then body — body always starts at titleRowHeight + bodyTopPad from y
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(titleFSize).fillColor("#000000");
+    ctx.doc.text(summary.title.toUpperCase(), x, y, { lineBreak: false });
+    ctx.doc.restore();
+
+    if (hasMeta) {
+      const metaRowY = y + FEATURE_CARD_TYPOGRAPHY.titleRowHeight;
+      drawFeatureMetaBlock(ctx, summary, {
+        x, y: metaRowY, width, height: FEATURE_CARD_TYPOGRAPHY.metaRowHeight,
       });
     }
+    bodyTopOffset = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+  }
 
-    // Draw body text with action-economy words bolded, use actual column height for available space
-    const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
-      x: column.x,
-      y: column.y + 5.5,
-      width: column.width,
-      height: column.height - 5.5,
-      fontSize: bodyMaxSize,
-      minFontSize: bodyMinSize,
-      color: "#111111",
-      lineGap: cfg.lineGap,
-    });
-    const fSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
-    const computedLineH = fSize + cfg.lineGap;
-    const bodyHeight = bodyResult.cursorY - (column.y + 5.5) + computedLineH;
-    const separatorY = column.y + 5.5 + bodyHeight;
-    // Separator: #bdbdbd, tight against body bottom
-    ctx.doc.save();
-    ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
-      .moveTo(column.x, separatorY)
-      .lineTo(column.x + column.width, separatorY)
-      .stroke();
-    ctx.doc.restore();
-    // Last entry: no post-separator gap (card hugs the last separator)
-    // Intermediate entries: 8pt gap before next feature title
-    if (!isLast) {
-      column.y = separatorY + cfg.featureGap;
-    }
+  // Draw body text — use rect.y + rect.height as absolute bottom boundary
+  const bodyY = y + bodyTopOffset;
+  const computedFSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
+  const computedLineH = computedFSize + cfg.lineGap;
+  const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+    x, y: bodyY, width, height: 9999,
+    fontSize: bodyMaxSize, minFontSize: bodyMinSize, color: "#111111", lineGap: cfg.lineGap,
   });
+  // Return the actual bottom of drawn text + one line breathing room
+  return bodyResult.cursorY - bodyY + computedLineH > 0 ? bodyResult.cursorY + computedLineH : bodyY;
+}
+
+function renderFeatureList(ctx: PdfRenderContext, cards: PdfPageCard[], rect: PdfRect, columns: number, compactOrConfig?: boolean | FeatureLayoutConfig, level?: number) {
+  let cfg: FeatureLayoutConfig = DEFAULT_FEATURE_CONFIG;
+  if (typeof compactOrConfig === "object" && compactOrConfig !== null) {
+    cfg = compactOrConfig as FeatureLayoutConfig;
+  }
+  const summaries = cards.map((card) => summarizeCard(card, level));
+  const columnRects = splitColumns(rect, columns, columns > 1 ? 12 : 16);
+  // Use column.height from rect (full available height), not cursor.y (modified per feature)
+  const fullColumnHeight = columnRects[0].height;
+  const cursors = columnRects.map((column) => ({ ...column, y: column.y }));
+
+  // Scan ahead: pair up consecutive short features (<=200 chars each) for side-by-side layout.
+  // Only in single-column mode with 3+ cards remaining (need at least 2 to pair).
+  let i = 0;
+  while (i < summaries.length) {
+    const summary = summaries[i];
+    const isLast = (i === summaries.length - 1);
+    const columnIndex = idxForShortestColumn(cursors.map((entry) => entry.y));
+    const column = cursors[columnIndex];
+    const bodyMaxSize = cfg.bodyMaxSize;
+    const bodyMinSize = cfg.bodyMinSize;
+
+    // Check if we can pair this feature with the next one
+    const canPair = (
+      columns === 1 &&
+      !isLast &&
+      summary.body.length <= 200 &&
+      summaries[i + 1].body.length <= 200
+    );
+
+    if (canPair) {
+      // Draw two features side-by-side in the same row
+      const nextSummary = summaries[i + 1];
+      const colGap = 8;
+      const colWidth = (column.width - colGap) / 2;
+
+      // Draw both features, get actual rendered bottom y for each
+      const end1 = drawPairedFeatureFull(ctx, summary, column.x, column.y, colWidth, bodyMaxSize, bodyMinSize, cfg);
+      const end2 = drawPairedFeatureFull(ctx, nextSummary, column.x + colWidth + colGap, column.y, colWidth, bodyMaxSize, bodyMinSize, cfg);
+
+      // Separator at max of both actual bottoms
+      const separatorY = Math.max(end1, end2);
+      ctx.doc.save();
+      ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+        .moveTo(column.x, separatorY).lineTo(column.x + column.width, separatorY).stroke();
+      ctx.doc.restore();
+      column.y = separatorY + (cfg.featureGap);
+
+      i += 2; // skip both paired cards
+    } else {
+      // Draw single feature card
+      const titleFSize = FEATURE_CARD_TYPOGRAPHY.title.max;
+      const metaFSize = FEATURE_CARD_TYPOGRAPHY.meta.max;
+
+      ctx.doc.save();
+      ctx.doc.font("Helvetica-Bold").fontSize(titleFSize);
+      const renderedTitleWidth = ctx.doc.widthOfString(summary.title.toUpperCase());
+      ctx.doc.restore();
+
+      // Measure meta widths
+      let totalMetaWidth = 0;
+      if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+        const circleD = Math.min(4.5, column.width * 0.07); // matches larger circles in drawFeatureMetaBlock
+        const circleGap = 1.2;
+        totalMetaWidth += summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap + 2;
+      }
+      if (summary.rechargeHint) {
+        ctx.doc.save();
+        ctx.doc.font("Helvetica").fontSize(metaFSize);
+        totalMetaWidth += ctx.doc.widthOfString(summary.rechargeHint) + 2;
+        ctx.doc.restore();
+      }
+      if (summary.actionHint) {
+        ctx.doc.save();
+        ctx.doc.font("Helvetica-Bold").fontSize(metaFSize);
+        totalMetaWidth += ctx.doc.widthOfString(summary.actionHint) + 2;
+        ctx.doc.restore();
+      }
+
+      const gapAfterTitle = 4;
+      const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+      const singleRowFits = hasMeta && (renderedTitleWidth + gapAfterTitle + totalMetaWidth <= column.width);
+
+      if (singleRowFits) {
+        // Single-row: title left, meta right after. Always use fixed offset so body starts below header.
+        // The meta text is drawn above rect.y (aligned to title cap-height) but body always starts below header row.
+        const bodyTopOffset = FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+        ctx.doc.save();
+        ctx.doc.font("Helvetica-Bold").fontSize(titleFSize).fillColor("#000000");
+        ctx.doc.text(summary.title.toUpperCase(), column.x, column.y, { lineBreak: false });
+        ctx.doc.restore();
+
+        const metaStartX = column.x + renderedTitleWidth + gapAfterTitle;
+        const metaAvailableWidth = Math.max(4, column.width - renderedTitleWidth - gapAfterTitle);
+        drawFeatureMetaBlock(ctx, summary, {
+          x: metaStartX, y: column.y, width: metaAvailableWidth, height: FEATURE_CARD_TYPOGRAPHY.titleRowHeight,
+        });
+
+        const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+          x: column.x, y: column.y + bodyTopOffset, width: column.width,
+          height: Math.max(6, (rect.y + rect.height) - (column.y + bodyTopOffset) - (isLast ? 2 : 0)),
+          fontSize: bodyMaxSize, minFontSize: bodyMinSize, color: "#111111", lineGap: cfg.lineGap,
+        });
+        const computedFSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
+        const computedLineH = computedFSize + cfg.lineGap;
+        // Add 1 line of breathing room below body so text never clips at the divider
+        const bodyStartY = column.y + bodyTopOffset;
+        const bodyHeight = bodyResult.cursorY - bodyStartY + computedLineH;
+        const separatorY = bodyStartY + bodyHeight;
+        ctx.doc.save();
+        ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+          .moveTo(column.x, separatorY).lineTo(column.x + column.width, separatorY).stroke();
+        ctx.doc.restore();
+        column.y = separatorY + (isLast ? 0 : cfg.featureGap);
+      } else {
+        // Two-row: title full width, meta below (if meta exists)
+        ctx.doc.save();
+        ctx.doc.font("Helvetica-Bold").fontSize(titleFSize).fillColor("#000000");
+        ctx.doc.text(summary.title.toUpperCase(), column.x, column.y, { lineBreak: false });
+        ctx.doc.restore();
+
+        const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+        if (hasMeta) {
+          const metaRowY = column.y + FEATURE_CARD_TYPOGRAPHY.titleRowHeight;
+          drawFeatureMetaBlock(ctx, summary, {
+            x: column.x, y: metaRowY, width: column.width, height: FEATURE_CARD_TYPOGRAPHY.metaRowHeight,
+          });
+          // Move column.y past meta row — body will start at titleRowHeight + bodyTopPad from original y
+          column.y = metaRowY + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+        } else {
+          // No meta — body starts at titleRowHeight + bodyTopPad from original y
+          column.y += FEATURE_CARD_TYPOGRAPHY.titleRowHeight + FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+        }
+
+        const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+          x: column.x, y: column.y, width: column.width,
+          height: Math.max(6, (rect.y + rect.height) - column.y - (isLast ? 2 : 0)),
+          fontSize: bodyMaxSize, minFontSize: bodyMinSize, color: "#111111", lineGap: cfg.lineGap,
+        });
+        const computedFSize = Math.max(bodyMinSize, bodyMaxSize * 0.85);
+        const computedLineH = computedFSize + cfg.lineGap;
+        // Add 1 line of breathing room below body so text never clips at the divider
+        const bodyStartY = column.y;
+        const bodyHeight = bodyResult.cursorY - bodyStartY + computedLineH;
+        const separatorY = bodyStartY + bodyHeight;
+        ctx.doc.save();
+        ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+          .moveTo(column.x, separatorY).lineTo(column.x + column.width, separatorY).stroke();
+        ctx.doc.restore();
+        column.y = separatorY + (isLast ? 0 : cfg.featureGap);
+      }
+      i += 1;
+    }
+  }
 }
 
 type FeatureGroupSection = {
@@ -1714,33 +2535,46 @@ function buildFeatureDeckGroups(cards: PdfPageCard[]) {
   return [...groups.values()].filter((group) => group.cards.length);
 }
 
+function getFeatureGroupDisplayTitle(group: FeatureGroupSection) {
+  return group.title.replace(" FEATURES", "").trim();
+}
+
 function estimateFeatureListHeight(cards: PdfPageCard[]) {
   return cards
     .map(summarizeCard)
     .reduce((total, summary) => total + Math.max(16, Math.min(48, 8 + Math.ceil(summary.body.length / 55) * 6)) + 8, 0);
 }
 
-function renderGroupedFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, cards: PdfPageCard[], rect: PdfRect) {
+function renderGroupedFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, cards: PdfPageCard[], rect: PdfRect, level = 5) {
   const groups = buildFeatureDeckGroups(cards);
-  const numGroups = Math.min(groups.length, 4);
+  if (!groups.length) {
+    return;
+  }
   const gap = 7;
-  const columnCount = Math.min(2, numGroups);
+  const columnCount = Math.min(2, groups.length);
   const totalGapWidth = (columnCount - 1) * gap;
   const cellWidth = Math.floor((rect.width - totalGapWidth) / columnCount);
 
   // Fit pass: compute config that makes all groups fit in rect.height
-  const fitCfg = computeFitConfig(ctx, groups.slice(0, numGroups), rect, columnCount, gap, cellWidth);
+  const fitCfg = computeFitConfig(ctx, groups, rect, columnCount, gap, cellWidth, level);
 
   // Measure using the fit config
-  const measuredHeights = groups.slice(0, numGroups).map((g) => {
+  const measuredHeights = groups.map((g) => {
     const listRect = { x: 0, y: 0, width: cellWidth - 10, height: rect.height };
-    return measureFeatureListHeightWithConfig(ctx, g.cards, listRect, fitCfg);
+    return measureFeatureListHeightWithConfig(
+      ctx,
+      g.cards,
+      listRect,
+      fitCfg,
+      getAdaptiveFeatureColumnCount(g.cards, listRect.width, level),
+      level,
+    );
   });
 
   // Masonry/column-flow: 2-column grid, place each group in shortest column
   const colHeights = new Array(columnCount).fill(rect.y);
 
-  groups.slice(0, numGroups).forEach((group, gIdx) => {
+  groups.forEach((group, gIdx) => {
     const col = idxForShortestColumn(colHeights);
     const groupHeight = measuredHeights[gIdx] + fitCfg.bottomPadding;
     const groupY = colHeights[col];
@@ -1756,7 +2590,7 @@ function renderGroupedFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBund
     drawSvg(ctx, assets.generalContainer, groupRect);
 
     const titleY = groupRect.y + 12;
-    const displayTitle = group.title.replace(" FEATURES", "").replace(" FEATS", " FEATS").trim();
+    const displayTitle = getFeatureGroupDisplayTitle(group);
     drawFittedText(ctx, displayTitle.toUpperCase(), { x: groupRect.x + 5, y: titleY, width: groupRect.width - 10, height: 5 }, {
       font: "Helvetica-Bold",
       maxSize: 3.8,
@@ -1768,9 +2602,9 @@ function renderGroupedFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBund
       x: groupRect.x + 5,
       y: groupRect.y + 18,
       width: groupRect.width - 10,
-      height: groupRect.height - fitCfg.bottomPadding - 6,
+      height: groupRect.height - fitCfg.bottomPadding - 15,
     };
-    renderFeatureList(ctx, group.cards, listRect, 1, fitCfg);
+    renderFeatureList(ctx, group.cards, listRect, getAdaptiveFeatureColumnCount(group.cards, listRect.width), fitCfg, level);
   });
 }
 
@@ -1897,37 +2731,114 @@ function renderCompactTraitLines(
 ) {
   let nextY = cursorY;
   if (cards.length) {
-    drawFittedText(ctx, `${title} Traits`, { x: content.x, y: nextY, width: content.width, height: 5 }, {
+    drawFittedText(ctx, `${title} Traits`, { x: content.x, y: nextY, width: content.width, height: 6 }, {
       font: "Helvetica-Bold",
-      maxSize: 3.8,
-      minSize: 2.9,
+      maxSize: FEATURE_CARD_TYPOGRAPHY.title.max,
+      minSize: FEATURE_CARD_TYPOGRAPHY.title.min,
       color: "#333333",
     });
-    strokeRule(ctx, content.x, nextY + 5.4, content.width, "#777777");
-    nextY += 7.2;
+    strokeRule(ctx, content.x, nextY + 6.2, content.width, "#bdbdbd");
+    nextY += 8.4;
   }
 
   cards.forEach((card, index) => {
-    const entryHeight = 14.2;
-    if (nextY + entryHeight > content.y + content.height) {
-      return;
+    const summary = summarizeCompactTraitCard(card);
+    const titleFSize = FEATURE_CARD_TYPOGRAPHY.title.max; // 5.5pt — same as Features section
+    const bodyFontSize = FEATURE_CARD_TYPOGRAPHY.body.max;
+    const bodyMinSize = FEATURE_CARD_TYPOGRAPHY.body.min;
+    const bodyLineGap = 0.35;
+
+    // Title width: leave room for meta on same row
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(titleFSize);
+    const titleW = ctx.doc.widthOfString(summary.title.toUpperCase());
+    ctx.doc.restore();
+
+    let metaStartX = content.x + titleW + 4;
+    let metaW = 0;
+    let totalMetaWidth = 0;
+    if (summary.actionHint) {
+      ctx.doc.save();
+      ctx.doc.font("Helvetica-Bold").fontSize(FEATURE_CARD_TYPOGRAPHY.meta.max);
+      totalMetaWidth += ctx.doc.widthOfString(summary.actionHint) + 2;
+      ctx.doc.restore();
     }
-    drawFittedText(ctx, card.title, { x: content.x, y: nextY, width: content.width, height: 4.4 }, {
-      font: "Helvetica-Bold",
-      maxSize: 3.85,
-      minSize: 2.9,
-      color: "#000000",
-    });
-    drawFittedText(ctx, card.summary, { x: content.x, y: nextY + 4.6, width: content.width, height: 7.4 }, {
-      font: "Helvetica",
-      maxSize: 3.35,
-      minSize: 2.55,
-      color: "#111111",
-      lineGap: 0,
-    });
-    nextY += entryHeight;
-    if (index < cards.length - 1 && nextY + 1.2 < content.y + content.height) {
-      drawHeaderUnderline(ctx, { x: content.x, y: nextY - 2.3, width: content.width, height: 1.8 }, "#999999", 0.22);
+    if (summary.rechargeHint) {
+      ctx.doc.save();
+      ctx.doc.font("Helvetica").fontSize(FEATURE_CARD_TYPOGRAPHY.meta.max);
+      totalMetaWidth += ctx.doc.widthOfString(summary.rechargeHint) + 2;
+      ctx.doc.restore();
+    }
+    if (summary.chargeDisplay && summary.chargeDisplay.count !== undefined) {
+      const circleD = Math.min(4.5, content.width * 0.07);
+      const circleGap = 1.2;
+      totalMetaWidth += summary.chargeDisplay.count * circleD + (summary.chargeDisplay.count - 1) * circleGap + 2;
+    }
+    const hasMeta = Boolean(summary.actionHint || summary.rechargeHint || summary.chargeDisplay);
+    const allFits = hasMeta && (titleW + 4 + totalMetaWidth <= content.width);
+
+    const titleRowHeight = FEATURE_CARD_TYPOGRAPHY.titleRowHeight;
+    const bodyTopPad = FEATURE_CARD_TYPOGRAPHY.bodyTopPad;
+
+    if (nextY + titleRowHeight > content.y + content.height) return;
+
+    // Draw title — hardcoded 5.5pt, baseline at nextY (same as Features section)
+    ctx.doc.save();
+    ctx.doc.font("Helvetica-Bold").fontSize(titleFSize).fillColor("#000000");
+    ctx.doc.text(summary.title.toUpperCase(), content.x, nextY, { lineBreak: false });
+    ctx.doc.restore();
+
+    if (allFits) {
+      // Single-row: meta to the right of title, body below header
+      if (hasMeta) {
+        drawFeatureMetaBlock(ctx, summary, {
+          x: metaStartX, y: nextY, width: Math.max(4, content.width - titleW - 4), height: titleRowHeight,
+        });
+      }
+      const bodyY = nextY + titleRowHeight + bodyTopPad;
+      const maxBodyH = (content.y + content.height) - bodyY - (index < cards.length - 1 ? 2 : 0);
+      const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+        x: content.x, y: bodyY, width: content.width, height: Math.max(4, maxBodyH),
+        fontSize: bodyFontSize, minFontSize: bodyMinSize, color: "#111111", lineGap: bodyLineGap,
+      });
+      const computedFSize = Math.max(bodyMinSize, bodyFontSize * 0.85);
+      const computedLineH = computedFSize + bodyLineGap;
+      const bodyStartY = bodyY;
+      const bodyH = bodyResult.cursorY - bodyStartY + computedLineH;
+      const entryEnd = bodyStartY + bodyH;
+      if (index < cards.length - 1) {
+        ctx.doc.save();
+        ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+          .moveTo(content.x, entryEnd).lineTo(content.x + content.width, entryEnd).stroke();
+        ctx.doc.restore();
+      }
+      nextY = entryEnd + (index < cards.length - 1 ? 3 : 0);
+    } else {
+      // Two-row: title full width, meta below (if any), body below meta
+      if (hasMeta) {
+        drawFeatureMetaBlock(ctx, summary, {
+          x: content.x, y: nextY + titleRowHeight, width: content.width,
+          height: FEATURE_CARD_TYPOGRAPHY.metaRowHeight,
+        });
+      }
+      const bodyY = nextY + titleRowHeight + bodyTopPad;
+      const maxBodyH = (content.y + content.height) - bodyY - (index < cards.length - 1 ? 2 : 0);
+      const bodyResult = drawTextWithBoldActionWords(ctx, summary.body, {
+        x: content.x, y: bodyY, width: content.width, height: Math.max(4, maxBodyH),
+        fontSize: bodyFontSize, minFontSize: bodyMinSize, color: "#111111", lineGap: bodyLineGap,
+      });
+      const computedFSize = Math.max(bodyMinSize, bodyFontSize * 0.85);
+      const computedLineH = computedFSize + bodyLineGap;
+      const bodyStartY = bodyY;
+      const bodyH = bodyResult.cursorY - bodyStartY + computedLineH;
+      const entryEnd = bodyStartY + bodyH;
+      if (index < cards.length - 1) {
+        ctx.doc.save();
+        ctx.doc.strokeColor("#bdbdbd").lineWidth(0.5)
+          .moveTo(content.x, entryEnd).lineTo(content.x + content.width, entryEnd).stroke();
+        ctx.doc.restore();
+      }
+      nextY = entryEnd + (index < cards.length - 1 ? 3 : 0);
     }
   });
 
@@ -1937,12 +2848,13 @@ function renderCompactTraitLines(
 function renderRightColumnFeatureCard(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter, rect: PdfRect) {
   const { racialCards, subracialCards } = character.frontPage.rightColumn;
   const content = renderRightColumnCardShell(ctx, assets, "Racial & Subracial Features", rect);
-  let cursorY = content.y + 11.2;
-  cursorY = renderCompactTraitLines(ctx, "Racial", racialCards, content, cursorY);
+  const paddedContent = insetRect(content, 2.5, 1.5);
+  let cursorY = paddedContent.y + 11.8;
+  cursorY = renderCompactTraitLines(ctx, "Racial", racialCards, paddedContent, cursorY);
   if (racialCards.length && subracialCards.length) {
-    cursorY += 1.8;
+    cursorY += 2.4;
   }
-  renderCompactTraitLines(ctx, "Subracial", subracialCards, content, cursorY);
+  renderCompactTraitLines(ctx, "Subracial", subracialCards, paddedContent, cursorY);
 }
 
 function renderRail(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
@@ -1992,11 +2904,64 @@ function renderFeatureDeck(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, cha
     color: "#222222",
   });
   // Push boxes down ~one title-text height below title so they don't crowd the heading
-  renderGroupedFeatureDeck(ctx, assets, cards, { x: 10, y: 490, width: 575, height: 290 });
+  renderGroupedFeatureDeck(ctx, assets, cards, { x: 10, y: 490, width: 575, height: 290 }, character.level);
+}
+
+function compactSpellSummary(summary: string, maxChars: number) {
+  const cleaned = cleanText(summary).replace(/\s+/g, " ").trim();
+  if (!cleaned) {
+    return "";
+  }
+  if (cleaned.length <= maxChars) {
+    return cleaned;
+  }
+  return `${cleaned.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
+}
+
+function formatPactSlotSummary(pactSlots: { level: number; slots: number }[]) {
+  if (!pactSlots.length) {
+    return "";
+  }
+
+  const primary = pactSlots[pactSlots.length - 1];
+  const slotLabel = primary.slots === 1 ? "slot" : "slots";
+  return `PACT MAGIC: ${primary.slots} ${slotLabel} at L${primary.level}`;
+}
+
+function formatSpellEntriesForFrontPage(
+  spells: Array<{ name: string; level: number; sourceLabel?: string; page1DisplaySummary?: string }>,
+  mode: keyof typeof SPELL_SUMMARY_MAX_CHARS,
+) {
+  if (!spells.length) {
+    return "—";
+  }
+
+  const summaryBudget =
+    spells.length === 1
+      ? SPELL_SUMMARY_MAX_CHARS[mode].single
+      : spells.length === 2
+        ? SPELL_SUMMARY_MAX_CHARS[mode].pair
+        : SPELL_SUMMARY_MAX_CHARS[mode].many;
+
+  return spells
+    .map((spell) => {
+      const summary = spell.page1DisplaySummary;
+      if (!summary) {
+        return spell.name;
+      }
+      return `${spell.name} — ${compactSpellSummary(summary, summaryBudget)}`;
+    })
+    .join("; ");
 }
 
 export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle, character: ResolvedPdfCharacter) {
   ctx.doc.addPage({ size: [PAGE_SIZE.width, PAGE_SIZE.height], margin: 0 });
+
+  const doc = ctx.doc as TransformDocument;
+  doc.save();
+  doc
+    .translate(FRONT_PAGE_PRINT_SAFE_OFFSET.x, FRONT_PAGE_PRINT_SAFE_OFFSET.y)
+    .scale(FRONT_PAGE_PRINT_SAFE_SCALE);
 
   renderHeader(ctx, assets, character);
   renderStatStrip(ctx, assets, character, true);
@@ -2007,4 +2972,6 @@ export function renderFrontPage(ctx: PdfRenderContext, assets: PdfSvgAssetBundle
   renderRail(ctx, assets, character);
   renderCombatSpellcastingHub(ctx, assets, character);
   renderFeatureDeck(ctx, assets, character);
+
+  doc.restore();
 }

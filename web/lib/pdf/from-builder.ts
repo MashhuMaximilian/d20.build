@@ -9,10 +9,9 @@ import type {
   AbilityKey,
   CharacterDraft,
   CharacterManualGrant,
-  CharacterInventoryItem,
 } from "@/lib/characters/types";
 import { ABILITY_KEYS, ABILITY_LABELS, getTotalCharacterLevel } from "@/lib/characters/types";
-import { normalizeInventoryWeaponItem, resolveInventoryArmorClass } from "@/lib/equipment/inventory";
+import { resolveInventoryArmorClass, resolveInventoryWeaponAttackRows } from "@/lib/equipment/inventory";
 import { getImprovementBonuses } from "@/lib/progression/improvements";
 import {
   deriveSpellcastingGroups,
@@ -40,6 +39,7 @@ import {
   type ResolvedPdfCharacter,
 } from "@/lib/pdf";
 import type {
+  PdfPage1SpellSummary,
   PdfSpellListEntry,
   PdfSpellSlots,
   PdfSpellSlotLevel,
@@ -696,6 +696,494 @@ function getPlaySurfaceSummary(element: BuiltInElement) {
   return [rule.timing, rule.cost, rule.summary].filter(Boolean).join(" | ");
 }
 
+function getClassLevelByName(args: BuilderPdfSourceArgs) {
+  const levels = new Map<string, number>();
+  args.draft.classEntries.forEach((entry, index) => {
+    const className = resolveClassName(args.classRecordsByEntry[index], entry);
+    const normalized = className.toLowerCase().replace(/[^a-z0-9]+/g, "");
+    if (normalized) {
+      levels.set(normalized, (levels.get(normalized) ?? 0) + entry.level);
+    }
+  });
+  return levels;
+}
+
+type SheetResolvedValue =
+  | { kind: "number"; value: number }
+  | { kind: "text"; value: string };
+
+type SheetResolverContext = {
+  acValue: number;
+  classLevels: Map<string, number>;
+  hpValue: number;
+  proficiencyBonus: number;
+  selectedElementIds: Set<string>;
+  speedValue: number;
+  statRulesByKey: Map<string, Array<Extract<BuiltInRule, { kind: "stat" }>>>;
+};
+
+function normalizeSheetLookupKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeSheetRequirementId(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^id_/, "");
+}
+
+function doesSheetRequirementMatchId(requiredId: string, actualId: string) {
+  const normalizedRequired = normalizeSheetRequirementId(requiredId);
+  const normalizedActual = normalizeSheetRequirementId(actualId);
+  return normalizedActual === normalizedRequired || normalizedActual.endsWith(normalizedRequired);
+}
+
+function getSheetElements(args: BuilderPdfSourceArgs, scopeElement?: BuiltInElement) {
+  if (!scopeElement || args.selectedElements.some((element) => element.id === scopeElement.id)) {
+    return args.selectedElements;
+  }
+
+  return [...args.selectedElements, scopeElement];
+}
+
+function isSheetRuleRequirementSatisfied(
+  requirements: string | undefined,
+  selectedElementIds: Set<string>,
+) {
+  if (!requirements) {
+    return true;
+  }
+
+  const requiredIds = requirements.match(/ID_[A-Z0-9_]+/g) ?? [];
+  if (!requiredIds.length) {
+    return true;
+  }
+
+  return requiredIds.every((requiredId) =>
+    [...selectedElementIds].some((actualId) => doesSheetRequirementMatchId(requiredId, actualId)),
+  );
+}
+
+function collectApplicableSheetStatRules(args: BuilderPdfSourceArgs, scopeElement?: BuiltInElement) {
+  const elements = getSheetElements(args, scopeElement);
+  const selectedElementIds = new Set(elements.map((element) => element.id));
+  const statRulesByKey = new Map<string, Array<Extract<BuiltInRule, { kind: "stat" }>>>();
+
+  elements.forEach((element) => {
+    const sheetLevel = getSheetLevelForElement(element, args);
+    element.rules.forEach((rule) => {
+      if (rule.kind !== "stat") {
+        return;
+      }
+      if (rule.level && rule.level > sheetLevel) {
+        return;
+      }
+      if (!isSheetRuleRequirementSatisfied(rule.requirements, selectedElementIds)) {
+        return;
+      }
+
+      const key = normalizeSheetLookupKey(rule.name);
+      const existing = statRulesByKey.get(key) ?? [];
+      existing.push(rule);
+      statRulesByKey.set(key, existing);
+    });
+  });
+
+  return {
+    selectedElementIds,
+    statRulesByKey,
+  };
+}
+
+function resolveSheetLevelExpression(
+  value: string,
+  context: SheetResolverContext,
+  draftLevel: number,
+) {
+  const [levelToken, classToken, scaleToken, roundingToken] = value.split(":");
+  if (levelToken !== "level") {
+    return null;
+  }
+
+  const baseLevel = classToken
+    ? context.classLevels.get(classToken.replace(/[^a-z0-9]+/g, "")) ?? 0
+    : draftLevel;
+
+  if (scaleToken === "half") {
+    const rounded =
+      roundingToken === "up"
+        ? Math.ceil(baseLevel / 2)
+        : Math.floor(baseLevel / 2);
+    return { kind: "number", value: rounded } satisfies SheetResolvedValue;
+  }
+
+  return { kind: "number", value: baseLevel } satisfies SheetResolvedValue;
+}
+
+function resolveSheetScaledNumber(
+  baseValue: number,
+  scaleToken: string | undefined,
+  roundingToken: string | undefined,
+) {
+  if (scaleToken !== "half") {
+    return baseValue;
+  }
+
+  return roundingToken === "up"
+    ? Math.ceil(baseValue / 2)
+    : Math.floor(baseValue / 2);
+}
+
+function formatResolvedSheetValue(value: SheetResolvedValue) {
+  return value.kind === "number" ? `${value.value}` : value.value;
+}
+
+function resolveSheetExpression(
+  expression: string,
+  args: BuilderPdfSourceArgs,
+  context: SheetResolverContext,
+  visiting: Set<string>,
+): SheetResolvedValue | null {
+  const key = normalizeSheetLookupKey(expression);
+  if (!key) {
+    return null;
+  }
+
+  const numericLiteral = Number.parseInt(key, 10);
+  if (/^-?\d+$/.test(key) && Number.isFinite(numericLiteral)) {
+    return { kind: "number", value: numericLiteral };
+  }
+
+  const levelValue = resolveSheetLevelExpression(key, context, args.draft.level);
+  if (levelValue) {
+    return levelValue;
+  }
+
+  if (key === "proficiency") {
+    return { kind: "number", value: context.proficiencyBonus };
+  }
+
+  const [baseToken, scaleToken, roundingToken] = key.split(":");
+  if (baseToken === "proficiency") {
+    return {
+      kind: "number",
+      value: resolveSheetScaledNumber(context.proficiencyBonus, scaleToken, roundingToken),
+    };
+  }
+
+  if (key === "speed") {
+    return { kind: "number", value: context.speedValue };
+  }
+
+  if (key === "hp") {
+    return { kind: "number", value: context.hpValue };
+  }
+
+  if (key === "ac") {
+    return { kind: "number", value: context.acValue };
+  }
+
+  if (key === "sorcery-points") {
+    return { kind: "number", value: context.classLevels.get("sorcerer") ?? 0 };
+  }
+
+  if (baseToken === "bardic-inspiration") {
+    const bardLevel = context.classLevels.get("bard") ?? 0;
+    const count = Math.max(1, Math.floor((bardLevel + 1) / 2));
+    if (scaleToken === "count") {
+      return { kind: "number", value: count };
+    }
+    if (scaleToken === "dice") {
+      return { kind: "number", value: bardLevel >= 15 ? 12 : bardLevel >= 9 ? 10 : 8 };
+    }
+    return null;
+  }
+
+  if (baseToken === "barbarian rage") {
+    const barbarianLevel = context.classLevels.get("barbarian") ?? 0;
+    if (scaleToken === "count") {
+      // Rage uses: 2 (lvl 1-2), 3 (lvl 3-5), 4 (lvl 6-8), 5 (lvl 9-12), 6 (lvl 13-19), unlimited (lvl 20)
+      if (barbarianLevel >= 20) {
+        return { kind: "text", value: "Unlimited" };
+      }
+      const rageUses = barbarianLevel >= 13 ? 6 : barbarianLevel >= 9 ? 5 : barbarianLevel >= 6 ? 4 : barbarianLevel >= 3 ? 3 : 2;
+      return { kind: "number", value: rageUses };
+    }
+    if (scaleToken === "damage") {
+      const damageBonus = barbarianLevel >= 16 ? 4 : barbarianLevel >= 9 ? 3 : 2;
+      return { kind: "number", value: damageBonus };
+    }
+    return null;
+  }
+
+  if (key === "defensive duelist:ac") {
+    return { kind: "number", value: context.proficiencyBonus };
+  }
+
+  if (key === "durable:hd:bonus") {
+    return { kind: "number", value: Math.max(2, getAbilityModifier(args.effectiveAbilities.constitution) * 2) };
+  }
+
+  if (key === "inspiring leader:hp:temp") {
+    return {
+      kind: "number",
+      value: args.draft.level + getAbilityModifier(args.effectiveAbilities.charisma),
+    };
+  }
+
+  if (key === "linguist:dc") {
+    return {
+      kind: "number",
+      value: args.effectiveAbilities.intelligence + context.proficiencyBonus,
+    };
+  }
+
+  if (key === "martial adept:dice:amount") {
+    return { kind: "number", value: 1 };
+  }
+
+  if (key === "martial adept:dice:size") {
+    return { kind: "number", value: 6 };
+  }
+
+  if (key === "martial adept:dc") {
+    return {
+      kind: "number",
+      value: 8 + context.proficiencyBonus + Math.max(
+        getAbilityModifier(args.effectiveAbilities.strength),
+        getAbilityModifier(args.effectiveAbilities.dexterity),
+      ),
+    };
+  }
+
+  if (key === "tough:hp") {
+    return { kind: "number", value: args.draft.level * 2 };
+  }
+
+  if (key.startsWith("-")) {
+    const negatedValue = resolveSheetExpression(key.slice(1), args, context, visiting);
+    return negatedValue?.kind === "number"
+      ? { kind: "number", value: -negatedValue.value }
+      : null;
+  }
+
+  const spellcastingDcMatch = key.match(/^spellcasting:dc:([a-z]+)$/i);
+  if (spellcastingDcMatch && ABILITY_KEYS.includes(spellcastingDcMatch[1] as AbilityKey)) {
+    const ability = spellcastingDcMatch[1] as AbilityKey;
+    return {
+      kind: "number",
+      value: 8 + context.proficiencyBonus + getAbilityModifier(args.effectiveAbilities[ability]),
+    };
+  }
+
+  const abilityMatch = key.match(/^(strength|dexterity|constitution|intelligence|wisdom|charisma)(?::(score|modifier))?$/i);
+  if (abilityMatch) {
+    const ability = abilityMatch[1].toLowerCase() as AbilityKey;
+    const mode = abilityMatch[2]?.toLowerCase() ?? "score";
+    const score = Number.isFinite(args.effectiveAbilities[ability]) ? args.effectiveAbilities[ability] : 10;
+    return {
+      kind: "number",
+      value: mode === "modifier" ? getAbilityModifier(score) : score,
+    };
+  }
+
+  return resolveSheetStatKey(key, args, context, visiting);
+}
+
+function resolveSheetStatKey(
+  key: string,
+  args: BuilderPdfSourceArgs,
+  context: SheetResolverContext,
+  visiting: Set<string>,
+): SheetResolvedValue | null {
+  if (visiting.has(key)) {
+    return null;
+  }
+
+  const rules = context.statRulesByKey.get(key);
+  if (!rules?.length) {
+    return null;
+  }
+
+  visiting.add(key);
+  const ruleMode = rules.some((rule) => rule.bonus === "base")
+    ? "level-gated"
+    : rules.some((rule) => Boolean(rule.bonus))
+      ? "best-of"
+      : "additive";
+
+  try {
+    if (ruleMode !== "additive") {
+      const highestLevel = rules.reduce((max, rule) => Math.max(max, rule.level ?? 0), 0);
+      const matchingRules = rules.filter((rule) => (rule.level ?? 0) === highestLevel);
+      const resolvedValues = matchingRules
+        .map((rule) => resolveSheetExpression(rule.value, args, context, visiting))
+        .filter((value): value is SheetResolvedValue => Boolean(value));
+
+      if (!resolvedValues.length) {
+        return null;
+      }
+
+      if (resolvedValues.every((value) => value.kind === "number")) {
+        return {
+          kind: "number",
+          value: Math.max(...resolvedValues.map((value) => value.value)),
+        };
+      }
+
+      const textValue = resolvedValues.find((value) => value.kind === "text");
+      return textValue ?? null;
+    }
+
+    const resolvedValues = rules
+      .map((rule) => resolveSheetExpression(rule.value, args, context, visiting))
+      .filter((value): value is SheetResolvedValue => Boolean(value));
+
+    if (!resolvedValues.length) {
+      return null;
+    }
+
+    if (resolvedValues.every((value) => value.kind === "number")) {
+      return {
+        kind: "number",
+        value: resolvedValues.reduce((sum, value) => sum + value.value, 0),
+      };
+    }
+
+    const textValues = uniqueStrings(
+      resolvedValues
+        .filter((value): value is Extract<SheetResolvedValue, { kind: "text" }> => value.kind === "text")
+        .map((value) => value.value),
+    );
+    return textValues.length === 1 ? { kind: "text", value: textValues[0] } : null;
+  } finally {
+    visiting.delete(key);
+  }
+}
+
+function buildSheetResolverContext(args: BuilderPdfSourceArgs, scopeElement?: BuiltInElement): SheetResolverContext {
+  const proficiencyBonus = getProficiencyBonus(args.draft.level);
+  const acData = deriveArmorClass({
+    draft: args.draft,
+    effectiveAbilities: args.effectiveAbilities,
+  });
+  const hpData = deriveHitPointSummary({
+    draft: args.draft,
+    classRecordsByEntry: args.classRecordsByEntry,
+    effectiveAbilities: args.effectiveAbilities,
+    selectedElements: args.selectedElements,
+  });
+  const speedData = deriveWalkingSpeed({
+    selectedRace: args.selectedRace,
+    selectedSubrace: args.selectedSubrace,
+    selectedElements: args.selectedElements,
+  });
+  const { selectedElementIds, statRulesByKey } = collectApplicableSheetStatRules(args, scopeElement);
+
+  return {
+    acValue: acData.value,
+    classLevels: getClassLevelByName(args),
+    hpValue: Number.parseInt(hpData.value, 10) || 0,
+    proficiencyBonus,
+    selectedElementIds,
+    speedValue: speedData.total,
+    statRulesByKey,
+  };
+}
+
+function fillSheetPlaceholders(
+  value: string,
+  args: BuilderPdfSourceArgs,
+  context: SheetResolverContext,
+) {
+  return value.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_match, rawKey: string) => {
+    const resolvedValue = resolveSheetExpression(rawKey, args, context, new Set<string>());
+    if (!resolvedValue) {
+      console.warn(`[pdf] Unresolved placeholder: {{${rawKey}}}`);
+      return "—";
+    }
+
+    return formatResolvedSheetValue(resolvedValue);
+  });
+}
+
+function getSheetLevelForElement(element: BuiltInElement, args: BuilderPdfSourceArgs) {
+  let classScopedLevel = 0;
+
+  args.draft.classEntries.forEach((entry, index) => {
+    const record = args.classRecordsByEntry[index];
+    if (!record || entry.level <= 0) {
+      return;
+    }
+
+    const selectedSubclass =
+      record.subclassSteps
+        .flatMap((step) => step.options)
+        .find((option) => option.archetype.id === entry.subclassId) ?? null;
+    const belongsToClass =
+      record.class.id === element.id ||
+      record.features.some((feature) => feature.id === element.id) ||
+      selectedSubclass?.archetype.id === element.id ||
+      selectedSubclass?.features.some((feature) => feature.id === element.id);
+
+    if (belongsToClass) {
+      classScopedLevel = Math.max(classScopedLevel, entry.level);
+    }
+  });
+
+  return classScopedLevel || args.draft.level;
+}
+
+/**
+ * Reads the sheet-tag gameplay text from an Aurora element.
+ * Priority:
+ *  1. element.sheet.descriptions[0] (sheet tag text)
+ *  2. element.description first paragraph (strip HTML tags)
+ *  3. element.setters.find(s => s.name === "short")?.value
+ *  4. "—" if nothing found
+ */
+function getElementSheetText(element: BuiltInElement): string {
+  // Priority 1: sheet tag text
+  if (element.sheet?.descriptions?.[0]?.text) {
+    return element.sheet.descriptions[0].text;
+  }
+
+  // Priority 2: element.description first paragraph (strip HTML tags)
+  if (element.description) {
+    const firstParagraph = element.description.split(/\n\n|\r\n\r\n/)[0] ?? element.description;
+    const stripped = firstParagraph.replace(/<[^>]+>/g, "").trim();
+    if (stripped) {
+      return stripped;
+    }
+  }
+
+  // Priority 3: short setter
+  const shortSetter = element.setters.find((s) => s.name === "short");
+  if (shortSetter?.value) {
+    return shortSetter.value;
+  }
+
+  // Priority 4: fallback
+  return "—";
+}
+
+function getSheetSummary(element: BuiltInElement, args: BuilderPdfSourceArgs) {
+  if (!element.sheet || element.sheet.display === false) {
+    return undefined;
+  }
+
+  const context = buildSheetResolverContext(args, element);
+  const text = fillSheetPlaceholders(getElementSheetText(element), args, context);
+  const usage = fillSheetPlaceholders(element.sheet.usage ?? "", args, context);
+
+  return [element.sheet.action, usage, text].filter(Boolean).join(" | ") || undefined;
+}
+
+function getFrontPageSummary(element: BuiltInElement, args: BuilderPdfSourceArgs) {
+  return getSheetSummary(element, args) ?? getPlaySurfaceSummary(element);
+}
+
 function getPassiveNoteTags(element: BuiltInElement) {
   return uniqueStrings(getPassivePdfNoteTagsFromText(element.name, `${element.descriptionHtml ?? ""} ${element.description ?? ""}`));
 }
@@ -939,23 +1427,12 @@ function buildSkillRows(args: BuilderPdfSourceArgs) {
 }
 
 function buildAttackRows(args: BuilderPdfSourceArgs) {
-  const weaponRows = args.draft.inventoryItems
-      .map(normalizeInventoryWeaponItem)
-      .filter((item): item is CharacterInventoryItem => Boolean(item.equipped && item.category === "weapon"))
-      .map((item) => {
-        const hit = item.attackBonus?.trim() || "—";
-        const damage = item.damage || item.baseDamage || "—";
-        const type = item.family || item.itemType || item.category || "";
-        const properties = [item.slot, item.rarity, item.notes].filter(Boolean).join(" · ");
-        return {
-          id: `attack-${item.id}`,
-          name: item.baseItemName || item.name,
-          hit,
-          damage,
-          type,
-          properties: properties || undefined,
-        };
-      });
+  const groupedProficiencies = groupProficiencies(getSelectedProficiencyFacts(args));
+  const weaponRows = resolveInventoryWeaponAttackRows(args.draft.inventoryItems, {
+    abilities: args.effectiveAbilities,
+    proficiencyBonus: getProficiencyBonus(args.draft.level),
+    weaponProficiencies: uniqueStrings(groupedProficiencies.weapons.map((fact) => fact.label)),
+  });
 
   const featureActionRows = uniqueById(
     args.selectedElements.flatMap((element) => {
@@ -1147,47 +1624,47 @@ function buildFeatureCards(args: BuilderPdfSourceArgs) {
 
   const cards = [
     ...racialTraits.map((element) =>
-      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "race"),
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)), "race"),
     ),
     ...subracialTraits.map((element) =>
-      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "subrace"),
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)), "subrace"),
     ),
     ...unscopedTraits.map((element) =>
-      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait" }), getPassiveNoteTags(element)), "race"),
+      withPdfGroupTag(withPdfTags(toPdfCardFromElement(element, { kind: "trait", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)), "race"),
     ),
     ...classFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "class",
       ),
     ),
     ...subclassFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "subclass",
       ),
     ),
     ...backgroundFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "additional",
       ),
     ),
     ...featFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "feat",
       ),
     ),
     ...manualFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "additional",
       ),
     ),
     ...progressionFeatures.map((element) =>
       withPdfGroupTag(
-        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getPlaySurfaceSummary(element) }), getPassiveNoteTags(element)),
+        withPdfTags(toPdfCardFromElement(element, { kind: "feature", summary: getFrontPageSummary(element, args) }), getPassiveNoteTags(element)),
         "other",
       ),
     ),
@@ -1222,113 +1699,248 @@ function buildSpellCards(args: BuilderPdfSourceArgs) {
     selectedIds
       .map((id) => spellsById.get(id))
       .filter((spell): spell is BuiltInElement => Boolean(spell))
-      .map((spell) => toPdfCardFromElement(spell, { kind: "spell" })),
+      .map((spell) => toPdfCardFromElement(spell, { kind: "spell", summary: getFrontPageSummary(spell, args) })),
   );
 }
 
-function buildSpellSlots(args: BuilderPdfSourceArgs): PdfSpellSlots | undefined {
-  // Check if any class is a spellcaster
-  const casterGroups = args.spellGroups.filter((g) => g.spellcastingAbility);
-  if (!casterGroups.length) {
-    return undefined;
-  }
+const FULL_CASTER_SLOT_TABLE: Record<number, number[]> = {
+  1: [2],
+  2: [3],
+  3: [4, 2],
+  4: [4, 3],
+  5: [4, 3, 2],
+  6: [4, 3, 3],
+  7: [4, 3, 3, 1],
+  8: [4, 3, 3, 2],
+  9: [4, 3, 3, 3, 1],
+  10: [4, 3, 3, 3, 2],
+  11: [4, 3, 3, 3, 2, 1],
+  12: [4, 3, 3, 3, 2, 1],
+  13: [4, 3, 3, 3, 2, 1, 1],
+  14: [4, 3, 3, 3, 2, 1, 1],
+  15: [4, 3, 3, 3, 2, 1, 1, 1],
+  16: [4, 3, 3, 3, 2, 1, 1, 1],
+  17: [4, 3, 3, 3, 2, 1, 1, 1, 1],
+  18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
+  19: [4, 3, 3, 3, 3, 2, 1, 1, 1],
+  20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
+};
 
-  // Determine caster type from the primary spellcaster class
-  const primaryGroup = casterGroups[0];
-  const ownerLabel = primaryGroup.ownerLabel.toLowerCase();
+const WARLOCK_PACT_SLOT_TABLE: Record<number, { slotLevel: number; slots: number }> = {
+  1: { slotLevel: 1, slots: 1 },
+  2: { slotLevel: 1, slots: 2 },
+  3: { slotLevel: 2, slots: 2 },
+  4: { slotLevel: 2, slots: 2 },
+  5: { slotLevel: 3, slots: 2 },
+  6: { slotLevel: 3, slots: 2 },
+  7: { slotLevel: 4, slots: 2 },
+  8: { slotLevel: 4, slots: 2 },
+  9: { slotLevel: 5, slots: 2 },
+  10: { slotLevel: 5, slots: 2 },
+  11: { slotLevel: 5, slots: 3 },
+  12: { slotLevel: 5, slots: 3 },
+  13: { slotLevel: 5, slots: 3 },
+  14: { slotLevel: 5, slots: 3 },
+  15: { slotLevel: 5, slots: 3 },
+  16: { slotLevel: 5, slots: 3 },
+  17: { slotLevel: 5, slots: 4 },
+  18: { slotLevel: 5, slots: 4 },
+  19: { slotLevel: 5, slots: 4 },
+  20: { slotLevel: 5, slots: 4 },
+};
 
-  const isFullCaster = /bard|cleric|druid|sorcerer|wizard/.test(ownerLabel);
-  const isHalfCaster = /artificer|paladin|ranger/.test(ownerLabel);
-  const isWarlock = /warlock/.test(ownerLabel);
+type SpellcastingClassEntry = {
+  entry: CharacterDraft["classEntries"][number];
+  level: number;
+  normalizedClassName: string;
+  record: BuiltInClassRecord;
+};
 
-  // Calculate total caster level across all spellcasting classes
-  let totalCasterLevel = 0;
-  args.classRecordsByEntry.forEach((record, index) => {
+function normalizeClassNameForSpellcasting(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function isFullCasterClassName(value: string) {
+  return /^(bard|cleric|druid|sorcerer|wizard)$/.test(value);
+}
+
+function isHalfCasterClassName(value: string) {
+  return /^(artificer|paladin|ranger)$/.test(value);
+}
+
+function isWarlockClassName(value: string) {
+  return value === "warlock";
+}
+
+function getSpellcastingClassEntries(args: BuilderPdfSourceArgs) {
+  return args.classRecordsByEntry.flatMap((record, index): SpellcastingClassEntry[] => {
     const entry = args.draft.classEntries[index];
-    if (!record || !entry?.classId) return;
-
-    const className = record.class.name.toLowerCase();
-    const entryLevel = entry.level ?? 0;
-
-    // Only count levels from classes that contribute to spell slots
-    if (/bard|cleric|druid|sorcerer|wizard/.test(className)) {
-      totalCasterLevel += entryLevel;
-    } else if (/artificer|paladin|ranger/.test(className)) {
-      totalCasterLevel += entryLevel;
-    } else if (/warlock/.test(className)) {
-      // Warlock uses Pact Magic separately, but we still track it
-      totalCasterLevel += entryLevel;
+    if (!record || !entry?.classId || entry.level <= 0) {
+      return [];
     }
+
+    return [{
+      entry,
+      level: entry.level,
+      normalizedClassName: normalizeClassNameForSpellcasting(record.class.name),
+      record,
+    }];
   });
+}
 
-  if (totalCasterLevel === 0) {
-    return undefined;
-  }
-
-  // For warlocks, use their pact slot level
-  const effectiveLevel = isWarlock ? Math.min(totalCasterLevel, 20) : Math.min(totalCasterLevel, 20);
-
-  // Get slot counts from explicit rules, or use fallback tables
-  let slotEntries: { slotLevel: number; count: number }[] = [];
-
-  // Try to get slots from the primary caster's rules
-  const primaryRecord = args.classRecordsByEntry.find(
-    (r) => r?.class.name.toLowerCase() === primaryGroup.ownerLabel.toLowerCase(),
-  );
-  if (primaryRecord) {
-    const primaryEntry = args.draft.classEntries.find((e) => e?.classId === primaryRecord.class.id);
-    if (primaryEntry) {
-      slotEntries = getSpellSlotSummary(primaryRecord.class.rules, primaryEntry.level ?? 1);
-    }
-  }
-
-  // If no explicit slots, use fallback tables
-  if (!slotEntries.length) {
-    if (isWarlock) {
-      // Warlock Pact Magic: simplified table
-      const pactLevel = Math.min(Math.ceil(effectiveLevel / 2), 5);
-      const pactSlots = effectiveLevel >= 11 ? 3 : effectiveLevel >= 5 ? 2 : 1;
-      if (pactLevel > 0) {
-        slotEntries = [{ slotLevel: pactLevel, count: pactSlots }];
-      }
-    } else if (isHalfCaster) {
-      // Half caster: PALADIN/RANGER table from review-sheet-step.tsx
-      const HALF_CASTER_SLOT_TABLE: Record<number, number[]> = {
-        1: [], 2: [2], 3: [3], 4: [3], 5: [4, 2], 6: [4, 2], 7: [4, 3], 8: [4, 3], 9: [4, 3, 2],
-        10: [4, 3, 2], 11: [4, 3, 3], 12: [4, 3, 3], 13: [4, 3, 3, 1], 14: [4, 3, 3, 1], 15: [4, 3, 3, 2],
-        16: [4, 3, 3, 2], 17: [4, 3, 3, 3, 1], 18: [4, 3, 3, 3, 1], 19: [4, 3, 3, 3, 2], 20: [4, 3, 3, 3, 2],
-      };
-      const slots = HALF_CASTER_SLOT_TABLE[effectiveLevel] ?? [];
-      slotEntries = slots.map((count, i) => ({ slotLevel: i + 1, count }));
-    } else {
-      // Full caster table from review-sheet-step.tsx
-      const FULL_CASTER_SLOT_TABLE: Record<number, number[]> = {
-        1: [2], 2: [3], 3: [4, 2], 4: [4, 3], 5: [4, 3, 2], 6: [4, 3, 3], 7: [4, 3, 3, 1], 8: [4, 3, 3, 2],
-        9: [4, 3, 3, 3, 1], 10: [4, 3, 3, 3, 2], 11: [4, 3, 3, 3, 2, 1], 12: [4, 3, 3, 3, 2, 1],
-        13: [4, 3, 3, 3, 2, 1, 1], 14: [4, 3, 3, 3, 2, 1, 1], 15: [4, 3, 3, 3, 2, 1, 1, 1],
-        16: [4, 3, 3, 3, 2, 1, 1, 1], 17: [4, 3, 3, 3, 2, 1, 1, 1, 1], 18: [4, 3, 3, 3, 3, 1, 1, 1, 1],
-        19: [4, 3, 3, 3, 3, 2, 1, 1, 1], 20: [4, 3, 3, 3, 3, 2, 2, 1, 1],
-      };
-      const slots = FULL_CASTER_SLOT_TABLE[effectiveLevel] ?? [];
-      slotEntries = slots.map((count, i) => ({ slotLevel: i + 1, count }));
-    }
-  }
-
-  const maxLevel = slotEntries.length > 0 ? Math.max(...slotEntries.map((e) => e.slotLevel)) : 0;
-
-  const slots: PdfSpellSlotLevel[] = slotEntries.map(({ slotLevel, count }) => ({
+function toPdfSpellSlotLevels(slotEntries: Array<{ slotLevel: number; count: number }>) {
+  return slotEntries.map(({ slotLevel, count }) => ({
     level: slotLevel,
     slots: count,
   }));
+}
+
+function getFullCasterSlotsForLevel(level: number) {
+  const slotCounts = FULL_CASTER_SLOT_TABLE[Math.max(0, Math.min(level, 20))] ?? [];
+  return slotCounts.map((count, index) => ({ slotLevel: index + 1, count }));
+}
+
+function getWarlockPactSlotsForLevel(level: number) {
+  const pactSlots = WARLOCK_PACT_SLOT_TABLE[Math.max(0, Math.min(level, 20))];
+  return pactSlots ? [{ slotLevel: pactSlots.slotLevel, count: pactSlots.slots }] : [];
+}
+
+function getStandardCasterContribution(className: string, level: number) {
+  if (isFullCasterClassName(className)) {
+    return level;
+  }
+
+  if (className === "artificer") {
+    return Math.ceil(level / 2);
+  }
+
+  if (className === "paladin" || className === "ranger") {
+    return Math.floor(level / 2);
+  }
+
+  return 0;
+}
+
+function buildSpellSlots(args: BuilderPdfSourceArgs): PdfSpellSlots | undefined {
+  const casterGroups = args.spellGroups.filter((group) => group.spellcastingAbility);
+  const classEntries = getSpellcastingClassEntries(args);
+  const standardCasterEntries = classEntries.filter((entry) =>
+    isFullCasterClassName(entry.normalizedClassName) || isHalfCasterClassName(entry.normalizedClassName),
+  );
+  const warlockEntry = classEntries.find((entry) => isWarlockClassName(entry.normalizedClassName)) ?? null;
+
+  if (!casterGroups.length && !standardCasterEntries.length && !warlockEntry) {
+    return undefined;
+  }
+
+  const standardCasterLevel = standardCasterEntries.reduce(
+    (total, entry) => total + getStandardCasterContribution(entry.normalizedClassName, entry.level),
+    0,
+  );
+  const hasStandardSpellcasting = standardCasterLevel > 0;
+  const hasPactMagic = Boolean(warlockEntry);
+
+  let standardSlotEntries: Array<{ slotLevel: number; count: number }> = [];
+  let pactSlotEntries: Array<{ slotLevel: number; count: number }> = [];
+
+  if (standardCasterEntries.length === 1) {
+    const [primaryCaster] = standardCasterEntries;
+    const explicitSlots = getSpellSlotSummary(primaryCaster.record.class.rules, primaryCaster.level);
+    standardSlotEntries = explicitSlots.length ? explicitSlots : getFullCasterSlotsForLevel(primaryCaster.level);
+  } else if (hasStandardSpellcasting) {
+    standardSlotEntries = getFullCasterSlotsForLevel(standardCasterLevel);
+  }
+
+  if (warlockEntry) {
+    const explicitSlots = getSpellSlotSummary(warlockEntry.record.class.rules, warlockEntry.level);
+    pactSlotEntries = explicitSlots.length ? explicitSlots : getWarlockPactSlotsForLevel(warlockEntry.level);
+  }
+
+  if (!standardSlotEntries.length && !pactSlotEntries.length) {
+    return undefined;
+  }
+
+  const displaySlotEntries = standardSlotEntries.length ? standardSlotEntries : pactSlotEntries;
+  const maxLevel = displaySlotEntries.length > 0 ? Math.max(...displaySlotEntries.map((entry) => entry.slotLevel)) : 0;
+  const slots: PdfSpellSlotLevel[] = toPdfSpellSlotLevels(displaySlotEntries);
 
   return {
     maxLevel,
     slots,
-    isFullCaster,
-    isHalfCaster,
-    isWarlock,
-    hasPactMagic: isWarlock,
+    standardSlots: standardSlotEntries.length ? toPdfSpellSlotLevels(standardSlotEntries) : undefined,
+    pactSlots: pactSlotEntries.length ? toPdfSpellSlotLevels(pactSlotEntries) : undefined,
+    isFullCaster:
+      standardCasterEntries.length > 0 &&
+      standardCasterEntries.every((entry) => isFullCasterClassName(entry.normalizedClassName)),
+    isHalfCaster:
+      standardCasterEntries.length > 0 &&
+      standardCasterEntries.every((entry) => isHalfCasterClassName(entry.normalizedClassName)),
+    isWarlock: hasPactMagic,
+    hasPactMagic,
   };
+}
+
+function getSpellSourceLabel(group: SpellSelectionGroup) {
+  if (group.ownerType === "race") {
+    return "Racial";
+  }
+  if (group.ownerType === "subrace") {
+    return "Subracial";
+  }
+  return group.ownerLabel;
+}
+
+function getSpellPreparationState(group: SpellSelectionGroup): PdfPage1SpellSummary["preparationState"] {
+  if (group.kind === "prepared") {
+    return "prepared";
+  }
+  if (group.kind === "known" || group.kind === "cantrip") {
+    return "known";
+  }
+  if (group.kind === "spellbook") {
+    return "spellbook";
+  }
+  if (group.ownerType === "race" || group.ownerType === "subrace") {
+    return "innate";
+  }
+  return "always-prepared";
+}
+
+function getSpellSlotMode(group: SpellSelectionGroup): PdfPage1SpellSummary["slotMode"] {
+  if (group.ownerType === "race" || group.ownerType === "subrace") {
+    return "innate";
+  }
+  if (normalizeClassNameForSpellcasting(group.ownerLabel) === "warlock") {
+    return "pact";
+  }
+  return "standard";
+}
+
+function addSpellSummary(
+  summariesBySpellId: Map<string, PdfPage1SpellSummary[]>,
+  spellId: string,
+  summary: PdfPage1SpellSummary,
+) {
+  const existing = summariesBySpellId.get(spellId) ?? [];
+  const key = `${summary.sourceId}:${summary.preparationState}:${summary.slotMode}`;
+  if (existing.some((entry) => `${entry.sourceId}:${entry.preparationState}:${entry.slotMode}` === key)) {
+    return;
+  }
+  existing.push(summary);
+  summariesBySpellId.set(spellId, existing);
+}
+
+function extractCompactSpellSummary(value: string | undefined) {
+  const parts = (value ?? "")
+    .split(" | ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const selected = (parts[parts.length - 1] ?? value ?? "").replace(/\s+/g, " ").trim();
+  if (!selected) {
+    return undefined;
+  }
+  const firstSentence = (selected.split(/(?<=[.!?])\s+/)[0] ?? selected).trim();
+  return firstSentence || undefined;
 }
 
 function buildSpellList(args: BuilderPdfSourceArgs): PdfSpellListEntry[] {
@@ -1337,22 +1949,45 @@ function buildSpellList(args: BuilderPdfSourceArgs): PdfSpellListEntry[] {
     ...args.selectedSpellIds,
     ...args.manualGrantsByKind.spell.map((grant) => grant.refId).filter((id): id is string => Boolean(id)),
   ]);
+  const spellSummariesById = new Map<string, PdfPage1SpellSummary[]>();
 
-  // Build source label map from spell groups
-  const spellSourceMap = new Map<string, string>();
   args.spellGroups.forEach((group) => {
-    const sourceLabel = group.ownerType === "race" ? "Racial" : group.ownerType === "subrace" ? "Subracial" : group.ownerLabel;
+    const sourceLabel = getSpellSourceLabel(group);
+    const summaryBase: Omit<PdfPage1SpellSummary, "sourceId"> = {
+      ownerLabel: group.ownerLabel,
+      ownerType: group.ownerType,
+      preparationState: getSpellPreparationState(group),
+      slotMode: getSpellSlotMode(group),
+      sourceLabel,
+      spellcastingAbility: group.spellcastingAbility,
+    };
+
+    const selectedGroupSpellIds = args.draft.spellSelections[group.id] ?? [];
+    selectedGroupSpellIds.forEach((id) => {
+      addSpellSummary(spellSummariesById, id, {
+        ...summaryBase,
+        sourceId: group.id,
+      });
+    });
+
     group.grantedSpellIds.forEach((id) => {
-      if (!spellSourceMap.has(id)) {
-        spellSourceMap.set(id, sourceLabel);
-      }
+      addSpellSummary(spellSummariesById, id, {
+        ...summaryBase,
+        sourceId: `${group.id}:granted`,
+      });
     });
   });
 
-  // Also track source from manual grants
   args.manualGrantsByKind.spell.forEach((grant) => {
     if (grant.refId) {
-      spellSourceMap.set(grant.refId, grant.name || "Additional");
+      addSpellSummary(spellSummariesById, grant.refId, {
+        ownerLabel: grant.name || "Manual / DM grant",
+        ownerType: "manual",
+        preparationState: "always-prepared",
+        slotMode: "standard",
+        sourceId: grant.refId,
+        sourceLabel: grant.name || "Additional",
+      });
     }
   });
 
@@ -1361,12 +1996,18 @@ function buildSpellList(args: BuilderPdfSourceArgs): PdfSpellListEntry[] {
     .filter((spell): spell is BuiltInElement => Boolean(spell))
     .map((spell) => {
       const spellLevel = getSpellLevel(spell);
-      const sourceLabel = spellSourceMap.get(spell.id) ?? spell.source?.replace(/\([^)]*\)\s*$/, "").trim() ?? undefined;
+      const page1Summaries = spellSummariesById.get(spell.id) ?? [];
+      const primarySummary = page1Summaries[0];
+      const sourceLabel = primarySummary?.sourceLabel ?? spell.source?.replace(/\([^)]*\)\s*$/, "").trim() ?? undefined;
+      const page1DisplaySummary = extractCompactSpellSummary(getFrontPageSummary(spell, args));
       return {
         id: spell.id,
         name: spell.name,
         level: spellLevel,
         sourceLabel,
+        page1DisplaySummary,
+        page1Summary: primarySummary,
+        page1Summaries,
       };
     });
 }
