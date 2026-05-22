@@ -29,6 +29,7 @@ export type PdfPageCard = {
   summary: string;
   detail?: string;
   sourceLabel?: string;
+  sourceAction?: string;
   tags: string[];
   priority: number;
   pageHint?: PdfPageKind | "front-rail";
@@ -110,9 +111,21 @@ export type PdfSpellSlotLevel = {
   slots: number; // number of slots at this level
 };
 
+export type PdfPage1SpellSummary = {
+  ownerLabel: string;
+  ownerType: "class" | "subclass" | "race" | "subrace" | "feat" | "other" | "manual";
+  preparationState: "prepared" | "known" | "spellbook" | "always-prepared" | "innate";
+  slotMode: "standard" | "pact" | "innate";
+  sourceId: string;
+  sourceLabel: string;
+  spellcastingAbility?: string;
+};
+
 export type PdfSpellSlots = {
   maxLevel: number; // highest spell level the character can cast (derived from character level for full casters)
   slots: PdfSpellSlotLevel[]; // slot counts per level (excludes cantrips — they have unlimited)
+  standardSlots?: PdfSpellSlotLevel[];
+  pactSlots?: PdfSpellSlotLevel[];
   isFullCaster: boolean;
   isHalfCaster: boolean;
   isWarlock: boolean;
@@ -124,6 +137,9 @@ export type PdfSpellListEntry = {
   name: string;
   level: number; // 0 = cantrip
   sourceLabel?: string;
+  page1DisplaySummary?: string;
+  page1Summary?: PdfPage1SpellSummary;
+  page1Summaries?: PdfPage1SpellSummary[];
 };
 
 export type PdfSpellListByLevel = {

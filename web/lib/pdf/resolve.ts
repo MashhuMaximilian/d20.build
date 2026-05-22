@@ -260,7 +260,7 @@ function resolveCardKind(element: BuiltInElement): PdfCardKind {
 
 export function toPdfCardFromElement(
   element: BuiltInElement,
-  overrides?: Partial<Pick<PdfPageCard, "kind" | "contentKind" | "pageHint" | "priority" | "sourceLabel" | "summary" | "detail" | "tags" | "widthHint">>,
+  overrides?: Partial<Pick<PdfPageCard, "kind" | "contentKind" | "pageHint" | "priority" | "sourceLabel" | "summary" | "detail" | "tags" | "widthHint" | "sourceAction">>,
 ) {
   const detail = overrides?.detail ?? element.descriptionHtml ?? element.description;
   const kind = overrides?.kind ?? resolveCardKind(element);
@@ -275,6 +275,7 @@ export function toPdfCardFromElement(
     summary: overrides?.summary ?? sentencePreview(detail),
     detail,
     sourceLabel: overrides?.sourceLabel ?? element.source,
+    sourceAction: overrides?.sourceAction ?? element.sheet?.action,
     tags: normalizeTags([element.type, ...(element.supports ?? [])]),
     priority: overrides?.priority ?? getCardPriority(kind, contentKind, pageHint),
     pageHint,
