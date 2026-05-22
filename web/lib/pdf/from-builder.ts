@@ -961,6 +961,63 @@ function resolveSheetExpression(
     return { kind: "number", value: args.draft.level * 2 };
   }
 
+  // P2: Blood Hunter Blood Maledict — PB uses per Short Rest
+  if (baseToken === "blood maledict") {
+    if (scaleToken === "usage") {
+      return { kind: "number", value: context.proficiencyBonus };
+    }
+  }
+
+  // P2: Artificer Flash of Genius — PB uses per Long Rest
+  if (key === "flash of genius:usage") {
+    return { kind: "number", value: context.proficiencyBonus };
+  }
+
+  // P2: Magus Esoteric Eye — Int mod uses per Long Rest
+  if (key === "esoteric eye:usage") {
+    const intMod = getAbilityModifier(args.effectiveAbilities.intelligence);
+    return { kind: "number", value: Math.max(1, intMod) };
+  }
+
+  // P2: Swordmage AASM features
+  if (baseToken === "aasm") {
+    const intMod = getAbilityModifier(args.effectiveAbilities.intelligence);
+    if (scaleToken === "spell strike:usage") {
+      return { kind: "number", value: Math.max(1, intMod) };
+    }
+    if (scaleToken === "magic sense:usage") {
+      return { kind: "number", value: Math.max(1, intMod) };
+    }
+    if (scaleToken === "arcane beacon:usage") {
+      return { kind: "number", value: Math.max(1, intMod) };
+    }
+  }
+
+  // P2: Grave Warden Touch of Death — Con mod uses per Long Rest
+  if (key === "touch of death") {
+    const conMod = getAbilityModifier(args.effectiveAbilities.constitution);
+    return { kind: "number", value: Math.max(1, conMod) };
+  }
+
+  // P2: Grave Warden Touch of Death (explicit stat)
+  if (key === "touch of death:uses") {
+    const conMod = getAbilityModifier(args.effectiveAbilities.constitution);
+    return { kind: "number", value: Math.max(1, conMod) };
+  }
+
+  // P2: Warlock Agonizing Blast — adds Cha mod to Eldritch Blast damage
+  if (key === "agonizing blast:damage") {
+    const chaMod = getAbilityModifier(args.effectiveAbilities.charisma);
+    return { kind: "number", value: Math.max(0, chaMod) };
+  }
+
+  // P2: Warlock Hexblade Curse uses (PB per LR)
+  if (baseToken === "hexblades curse") {
+    if (scaleToken === "uses") {
+      return { kind: "number", value: context.proficiencyBonus };
+    }
+  }
+
   if (key.startsWith("-")) {
     const negatedValue = resolveSheetExpression(key.slice(1), args, context, visiting);
     return negatedValue?.kind === "number"
@@ -1317,7 +1374,7 @@ function getClassResources(args: BuilderPdfSourceArgs) {
     }
 
     if (/druid/i.test(className) && featureNames.has("wild shape")) {
-      pushResource("Wild Shape", "2 uses", "SR");
+      pushResource("Wild Shape", `${Math.max(2, Math.floor(entry.level / 2))} uses`, "SR");
     }
 
     if (/druid/i.test(className) && featureNames.has("starry form")) {
@@ -1326,10 +1383,6 @@ function getClassResources(args: BuilderPdfSourceArgs) {
 
     if (/monk/i.test(className) && featureNames.has("ki")) {
       pushResource("Ki Points", `${entry.level}`);
-    }
-
-    if (/sorcerer/i.test(className) && (featureNames.has("font of magic") || featureNames.has("sorcery points"))) {
-      pushResource("Sorcery Points", `${entry.level}`);
     }
 
     if (/paladin/i.test(className) && featureNames.has("lay on hands")) {
@@ -1354,6 +1407,28 @@ function getClassResources(args: BuilderPdfSourceArgs) {
 
     if (/wizard/i.test(className) && featureNames.has("arcane recovery")) {
       pushResource("Arcane Recovery", "1 use", "LR");
+    }
+
+    if (/warlock/i.test(className) && featureNames.has("pact magic")) {
+      const slotLevel = entry.level >= 18 ? 5 : entry.level >= 15 ? 4 : entry.level >= 9 ? 3 : entry.level >= 5 ? 2 : 1;
+      pushResource("Pact Magic", `${slotLevel}th level`, "LR");
+    }
+
+    if (/artificer/i.test(className) && featureNames.has("infuse item")) {
+      pushResource("Infusions", `${entry.level}`, "LR");
+    }
+
+    if (/sorcerer/i.test(className) && (featureNames.has("font of magic") || featureNames.has("sorcery points"))) {
+      pushResource("Sorcery Points", `${entry.level}`, "LR");
+    }
+
+    if (/blood.?hunter/i.test(className) && featureNames.has("blood curses")) {
+      const pb = Math.ceil(args.draft.level / 4) + 1;
+      pushResource("Blood Curses", `${pb} uses`, "LR");
+    }
+
+    if (/weaveshaper/i.test(className) && featureNames.has("weave strings")) {
+      pushResource("Weave Strings", `${3 + entry.level} strings`, "SR");
     }
   }
 
