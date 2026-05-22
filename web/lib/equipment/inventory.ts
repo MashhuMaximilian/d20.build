@@ -1,3 +1,4 @@
+import { getBuiltInSrdItems } from "@/lib/builtins/items";
 import type { AbilityKey, CharacterCurrency, CharacterInventoryItem } from "@/lib/characters/types";
 import type { StartingEquipmentPlan } from "@/lib/equipment/starting-equipment";
 
@@ -62,6 +63,35 @@ export type BaseWeaponOption = {
   group: "axes" | "bows" | "crossbows" | "daggers" | "hammers" | "polearms" | "swords" | "weapons";
 };
 
+type WeaponAttackKind = "melee" | "ranged";
+
+type LocalWeaponMetadata = {
+  attackKind?: WeaponAttackKind;
+  damageDice?: string;
+  damageType?: string;
+  propertyCodes: string[];
+  range?: string;
+  versatileDamage?: string;
+  weaponBase?: string;
+  keywords: string[];
+  descriptionText: string;
+};
+
+export type ResolvedInventoryWeaponAttackRow = {
+  id: string;
+  name: string;
+  hit: string;
+  damage: string;
+  type?: string;
+  properties?: string;
+};
+
+export type InventoryWeaponAttackContext = {
+  abilities?: Partial<Record<AbilityKey, number>>;
+  proficiencyBonus?: number;
+  weaponProficiencies?: string[];
+};
+
 export type BaseArmorRule = {
   id: string;
   name: string;
@@ -123,6 +153,45 @@ export const BASE_ARMOR_RULES: BaseArmorRule[] = [
   { id: "plate", name: "Plate Armor", match: /\bplate armor\b|\bplate\b/i, baseAc: 18, dexMode: "none", armorType: "heavy", strengthRequirement: 15 },
 ];
 
+const DAMAGE_TYPE_KEYWORDS = new Set([
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder",
+]);
+
+const WEAPON_PROPERTY_DISPLAY_ORDER = ["amm", "fin", "heavy", "light", "load", "reach", "2h", "vers"] as const;
+
+const WEAPON_PROPERTY_TAG_MAP: Record<string, string> = {
+  ID_INTERNAL_WEAPON_PROPERTY_AMMUNITION: "amm",
+  ID_INTERNAL_WEAPON_PROPERTY_FINESSE: "fin",
+  ID_INTERNAL_WEAPON_PROPERTY_HEAVY: "heavy",
+  ID_INTERNAL_WEAPON_PROPERTY_LIGHT: "light",
+  ID_INTERNAL_WEAPON_PROPERTY_LOADING: "load",
+  ID_INTERNAL_WEAPON_PROPERTY_REACH: "reach",
+  ID_INTERNAL_WEAPON_PROPERTY_THROWN: "thrown",
+  ID_INTERNAL_WEAPON_PROPERTY_TWOHANDED: "2h",
+  ID_INTERNAL_WEAPON_PROPERTY_VERSATILE: "vers",
+};
+
+const BUILT_IN_WEAPON_METADATA_BY_NAME = new Map(
+  getBuiltInSrdItems()
+    .filter((item) => {
+      const category = `${item.category ?? ""} ${item.subtype ?? ""}`.toLowerCase();
+      return item.type === "Weapon" || /\bweapon\b/.test(category);
+    })
+    .map((item) => [normalizeWeaponLookupText(item.name), toLocalWeaponMetadata(item)]),
+);
+
 type InventoryEffectContext = {
   abilities?: Partial<Record<AbilityKey, number>>;
   attunementLimit?: number;
@@ -176,6 +245,67 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function toLocalWeaponMetadata(item: ReturnType<typeof getBuiltInSrdItems>[number]): LocalWeaponMetadata {
+  const propertyCodes = new Set(
+    item.supports
+      .map((support) => WEAPON_PROPERTY_TAG_MAP[support])
+      .filter((code): code is string => Boolean(code)),
+  );
+  const setters = new Map(item.setters.map((setter) => [setter.name, setter]));
+  const damageSetter = setters.get("damage");
+  const rangeSetter = setters.get("range");
+  const versatileSetter = setters.get("versatile");
+  const keywords = (setters.get("keywords")?.value ?? "")
+    .split(/[,;]+/)
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  const descriptionText = stripMarkup(`${item.descriptionHtml ?? ""} ${item.description}`);
+  const rangedBySupport = item.supports.some((support) => support.includes("WEAPON_CATEGORY") && support.includes("RANGED"));
+  const rangedByDescription = /\branged weapon\b/i.test(descriptionText);
+  const inferredRange = rangeSetter?.value?.trim() || parseRangeFromText(descriptionText);
+
+  if (versatileSetter?.value?.trim()) {
+    propertyCodes.add("vers");
+  }
+
+  if (/\bfinesse property\b/i.test(descriptionText)) {
+    propertyCodes.add("fin");
+  }
+  if (/\bthrown property\b/i.test(descriptionText)) {
+    propertyCodes.add("thrown");
+  }
+  if (/\btwo-handed property\b/i.test(descriptionText)) {
+    propertyCodes.add("2h");
+  }
+  if (/\breach property\b/i.test(descriptionText)) {
+    propertyCodes.add("reach");
+  }
+  if (/\bloading property\b/i.test(descriptionText)) {
+    propertyCodes.add("load");
+  }
+  if (/\blight property\b/i.test(descriptionText)) {
+    propertyCodes.add("light");
+  }
+  if (/\bheavy property\b/i.test(descriptionText)) {
+    propertyCodes.add("heavy");
+  }
+  if (/\bammunition property\b/i.test(descriptionText)) {
+    propertyCodes.add("amm");
+  }
+
+  return {
+    attackKind: rangedBySupport || rangedByDescription ? "ranged" : "melee",
+    damageDice: damageSetter?.value?.trim() || undefined,
+    damageType: normalizeDamageType(damageSetter?.type) || findDamageTypeFromKeywords(keywords) || findDamageTypeFromText(descriptionText),
+    propertyCodes: [...propertyCodes],
+    range: inferredRange || undefined,
+    versatileDamage: versatileSetter?.value?.trim() || undefined,
+    weaponBase: setters.get("weapon")?.value?.trim() || undefined,
+    keywords,
+    descriptionText,
+  };
 }
 
 function parseQuantityAndCurrency(raw: string): ParsedItem {
@@ -238,6 +368,21 @@ export function inferItemEnhancementBonus(item: Pick<CharacterInventoryItem, "na
   return parseNumericBonus(item.attackBonus) || parseNumericBonus(item.name.match(/,\s*\+(\d+)/)?.[0]);
 }
 
+/**
+ * Detects if a magic weapon explicitly states that its damage is not reduced by a low Strength score.
+ * Per PHB/DMG p.141, some magic weapons state "this weapon's damage is not reduced by a low Strength."
+ */
+export function doesWeaponBypassStrPenalty(item: CharacterInventoryItem): boolean {
+  const text = `${item.name} ${item.detailHtml ?? ""} ${item.notes ?? ""} ${item.family ?? ""}`.toLowerCase();
+  // Check for explicit DMG language about STR penalty bypass
+  return (
+    /\b(damage|weapon's damage)\b.*\b(is|isn't|is not|doesn't|does not)\b.*\breduced\b.*\b(strength|str)\b/i.test(text) ||
+    /\b(strength|str)\b.*\b(penalty|modifier)\b.*\b(not|doesn't|does not)\b/i.test(text) ||
+    /\bdoesn't use your\b.*\b(strength|str)\b/i.test(text) ||
+    /\bdoes not use\b.*\b(strength|str)\b/i.test(text)
+  );
+}
+
 function isWeaponLike(item: CharacterInventoryItem) {
   return (
     item.category === "weapon" ||
@@ -256,9 +401,60 @@ function normalizeWeaponLookupText(value: string) {
     .trim();
 }
 
+function normalizeDamageType(value?: string) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized && DAMAGE_TYPE_KEYWORDS.has(normalized) ? normalized : "";
+}
+
+function findDamageTypeFromKeywords(keywords: string[]) {
+  return keywords.find((keyword) => DAMAGE_TYPE_KEYWORDS.has(keyword)) ?? "";
+}
+
+function findDamageTypeFromText(text: string) {
+  const insteadMatch = text.match(/\bdeals\s+([a-z]+)\s+damage\s+instead of\b/i)?.[1];
+  if (insteadMatch && DAMAGE_TYPE_KEYWORDS.has(insteadMatch.toLowerCase())) {
+    return insteadMatch.toLowerCase();
+  }
+
+  const plainMatch = text.match(/\bdeals\s+([a-z]+)\s+damage\b/i)?.[1];
+  if (plainMatch && DAMAGE_TYPE_KEYWORDS.has(plainMatch.toLowerCase())) {
+    return plainMatch.toLowerCase();
+  }
+
+  return "";
+}
+
+function parseRangeFromText(text: string) {
+  const match = text.match(/\bnormal range of (\d+) feet and a long range of (\d+) feet\b/i);
+  if (!match) {
+    return "";
+  }
+  return `${match[1]}/${match[2]}`;
+}
+
+function parseDamageDice(value?: string) {
+  return value?.match(/\d+d\d+/i)?.[0] ?? "";
+}
+
+function getBuiltInWeaponMetadata(value?: string) {
+  if (!value) {
+    return null;
+  }
+  return BUILT_IN_WEAPON_METADATA_BY_NAME.get(normalizeWeaponLookupText(value)) ?? null;
+}
+
 function getExactBaseWeaponOption(item: CharacterInventoryItem) {
   if (!isWeaponLike(item)) {
     return null;
+  }
+
+  const builtInMetadata = getBuiltInWeaponMetadata(item.name);
+  const builtInWeaponBase = builtInMetadata?.weaponBase;
+  if (builtInWeaponBase) {
+    const exactBase = BASE_WEAPON_OPTIONS.find((option) => normalizeWeaponLookupText(option.name) === normalizeWeaponLookupText(builtInWeaponBase));
+    if (exactBase) {
+      return exactBase;
+    }
   }
 
   const haystack = normalizeWeaponLookupText([item.name, item.baseItemName ?? ""].filter(Boolean).join(" "));
@@ -278,12 +474,28 @@ export function normalizeInventoryWeaponItem(item: CharacterInventoryItem) {
     return item;
   }
 
+  const builtInMetadata = getBuiltInWeaponMetadata(item.name);
   const exactBaseWeapon = item.baseItemId
     ? BASE_WEAPON_OPTIONS.find((option) => option.id === item.baseItemId) ?? null
     : getExactBaseWeaponOption(item);
+  const builtInDamageType = builtInMetadata?.damageType || "";
+  const builtInDamageDice = builtInMetadata?.damageDice || "";
+  const resolvedDamageDice = parseDamageDice(item.damage) || parseDamageDice(item.baseDamage) || builtInDamageDice || exactBaseWeapon?.damage.match(/\d+d\d+/i)?.[0] || "";
+  const resolvedDamageType =
+    normalizeDamageType(item.damage?.match(/\b([a-z]+)\b$/i)?.[1]) ||
+    normalizeDamageType(item.baseDamage?.match(/\b([a-z]+)\b$/i)?.[1]) ||
+    builtInDamageType ||
+    normalizeDamageType(exactBaseWeapon?.damage.split(/\s+/).slice(1).join(" "));
+  const resolvedDamage = resolvedDamageDice
+    ? `${resolvedDamageDice}${resolvedDamageType ? ` ${resolvedDamageType}` : ""}`.trim()
+    : item.damage || item.baseDamage || "";
 
   if (!exactBaseWeapon) {
-    return item;
+    return {
+      ...item,
+      baseDamage: item.baseDamage || resolvedDamage || undefined,
+      damage: item.damage || resolvedDamage || undefined,
+    };
   }
 
   return {
@@ -291,7 +503,7 @@ export function normalizeInventoryWeaponItem(item: CharacterInventoryItem) {
     baseItemId: item.baseItemId || exactBaseWeapon.id,
     baseItemName: item.baseItemName || exactBaseWeapon.name,
     baseDamage: item.baseDamage || exactBaseWeapon.damage,
-    damage: item.damage || exactBaseWeapon.damage,
+    damage: item.damage || resolvedDamage || exactBaseWeapon.damage,
   };
 }
 
@@ -429,6 +641,269 @@ export function getWeaponProficiencyTierForText(value: string) {
   }
 
   return "";
+}
+
+function normalizeProficiencyLookup(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+const IRREGULAR_WEAPON_PROFICIENCY_SINGULARS: Record<string, string> = {
+  axes: "axe",
+  knives: "knife",
+  staves: "staff",
+  weapons: "weapon",
+};
+
+function singularizeWeaponProficiencyWord(word: string) {
+  if (IRREGULAR_WEAPON_PROFICIENCY_SINGULARS[word]) {
+    return IRREGULAR_WEAPON_PROFICIENCY_SINGULARS[word];
+  }
+
+  if (word.endsWith("ies") && word.length > 3) {
+    return `${word.slice(0, -3)}y`;
+  }
+
+  if (word.endsWith("es") && /(ches|shes|sses|xes|zes)$/.test(word)) {
+    return word.slice(0, -2);
+  }
+
+  if (word.endsWith("s") && !word.endsWith("ss")) {
+    return word.slice(0, -1);
+  }
+
+  return word;
+}
+
+function canonicalizeWeaponProficiencyLookup(value: string) {
+  return normalizeProficiencyLookup(value)
+    .split(" ")
+    .filter(Boolean)
+    .map(singularizeWeaponProficiencyWord)
+    .join(" ");
+}
+
+function buildWeaponProficiencyLookup(values: string[]) {
+  const lookup = new Set<string>();
+
+  values.forEach((value) => {
+    const normalized = normalizeProficiencyLookup(value);
+    if (normalized) {
+      lookup.add(normalized);
+    }
+
+    const canonical = canonicalizeWeaponProficiencyLookup(value);
+    if (canonical) {
+      lookup.add(canonical);
+    }
+  });
+
+  return lookup;
+}
+
+function hasWeaponProficiencyLabel(proficiencies: Set<string>, value: string) {
+  const normalized = normalizeProficiencyLookup(value);
+  return Boolean(normalized) && (proficiencies.has(normalized) || proficiencies.has(canonicalizeWeaponProficiencyLookup(value)));
+}
+
+function getBaseWeaponMetadata(option: BaseWeaponOption) {
+  return getBuiltInWeaponMetadata(option.name);
+}
+
+function getResolvedWeaponMetadata(item: CharacterInventoryItem) {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
+  const exactMetadata = getBuiltInWeaponMetadata(normalizedItem.name);
+  const baseOption = normalizedItem.baseItemId
+    ? BASE_WEAPON_OPTIONS.find((option) => option.id === normalizedItem.baseItemId) ?? null
+    : getExactBaseWeaponOption(normalizedItem);
+  const baseMetadata = baseOption ? getBaseWeaponMetadata(baseOption) : getBuiltInWeaponMetadata(normalizedItem.baseItemName);
+  const propertyCodes = new Set<string>([
+    ...(baseMetadata?.propertyCodes ?? []),
+    ...(exactMetadata?.propertyCodes ?? []),
+  ]);
+  const explicitDamageType =
+    normalizeDamageType(normalizedItem.damage?.match(/\b([a-z]+)\b$/i)?.[1]) ||
+    normalizeDamageType(normalizedItem.baseDamage?.match(/\b([a-z]+)\b$/i)?.[1]);
+  const exactDamageType =
+    exactMetadata?.damageType ||
+    findDamageTypeFromKeywords(exactMetadata?.keywords ?? []) ||
+    findDamageTypeFromText(exactMetadata?.descriptionText ?? "");
+  const damageType =
+    explicitDamageType ||
+    exactDamageType ||
+    baseMetadata?.damageType ||
+    normalizeDamageType(baseOption?.damage.split(/\s+/).slice(1).join(" "));
+  const damageDice =
+    parseDamageDice(normalizedItem.damage) ||
+    parseDamageDice(normalizedItem.baseDamage) ||
+    exactMetadata?.damageDice ||
+    baseMetadata?.damageDice ||
+    parseDamageDice(baseOption?.damage);
+  const range = exactMetadata?.range || baseMetadata?.range || "";
+  const versatileDamage = exactMetadata?.versatileDamage || baseMetadata?.versatileDamage || "";
+  const attackKind = exactMetadata?.attackKind || baseMetadata?.attackKind || (propertyCodes.has("amm") ? "ranged" : "melee");
+
+  return {
+    item: normalizedItem,
+    attackKind,
+    damageDice,
+    damageType,
+    propertyCodes,
+    range,
+    versatileDamage,
+    baseOption,
+  };
+}
+
+function chooseWeaponAttackAbility(
+  attackKind: WeaponAttackKind,
+  propertyCodes: Set<string>,
+  abilities?: Partial<Record<AbilityKey, number>>,
+) {
+  const strengthModifier = getAbilityModifier(abilities?.strength);
+  const dexterityModifier = getAbilityModifier(abilities?.dexterity);
+
+  if (propertyCodes.has("fin")) {
+    if (dexterityModifier >= strengthModifier) {
+      return { ability: "dexterity" as const, modifier: dexterityModifier };
+    }
+
+    return { ability: "strength" as const, modifier: strengthModifier };
+  }
+
+  if (attackKind === "ranged") {
+    return { ability: "dexterity" as const, modifier: dexterityModifier };
+  }
+
+  return { ability: "strength" as const, modifier: strengthModifier };
+}
+
+function formatSignedNumber(value: number) {
+  return value >= 0 ? `+${value}` : `${value}`;
+}
+
+function formatDamageSummary(damageDice: string, modifier: number) {
+  if (!damageDice) {
+    return "—";
+  }
+  if (modifier === 0) {
+    return damageDice;
+  }
+  return `${damageDice}${formatSignedNumber(modifier)}`;
+}
+
+function formatWeaponProperties(
+  attackKind: WeaponAttackKind,
+  propertyCodes: Set<string>,
+  range: string,
+  versatileDamage: string,
+) {
+  const parts = WEAPON_PROPERTY_DISPLAY_ORDER
+    .filter((code) => propertyCodes.has(code))
+    .map((code) => (code === "vers" && versatileDamage ? `vers (${versatileDamage})` : code));
+
+  if (propertyCodes.has("thrown")) {
+    parts.push(range ? `thrown ${range}` : "thrown");
+  } else if (attackKind === "ranged" && range) {
+    parts.push(`range ${range}`);
+  }
+
+  return parts.join(", ");
+}
+
+function isWeaponProficient(
+  item: CharacterInventoryItem,
+  baseOption: BaseWeaponOption | null,
+  proficiencies: Set<string>,
+) {
+  const exactNames = [item.name, item.baseItemName, baseOption?.name, item.baseItemId, baseOption?.id]
+    .filter((name): name is string => Boolean(name))
+    .flatMap((name) => [normalizeProficiencyLookup(name), canonicalizeWeaponProficiencyLookup(name)])
+    .filter(Boolean);
+  if (exactNames.some((name) => proficiencies.has(name))) {
+    return true;
+  }
+
+  const tier = getWeaponProficiencyTierForText([
+    item.baseItemId,
+    item.baseItemName,
+    baseOption?.id,
+    baseOption?.name,
+    item.name,
+  ]
+    .filter(Boolean)
+    .join(" "));
+  if (tier === "simple" && hasWeaponProficiencyLabel(proficiencies, "simple weapons")) {
+    return true;
+  }
+  if (tier === "martial" && hasWeaponProficiencyLabel(proficiencies, "martial weapons")) {
+    return true;
+  }
+
+  return false;
+}
+
+function resolveInventoryWeaponAttackRowWithProficiencies(
+  item: CharacterInventoryItem,
+  context: InventoryWeaponAttackContext,
+  proficiencies: Set<string>,
+): ResolvedInventoryWeaponAttackRow | null {
+  const normalizedItem = normalizeInventoryWeaponItem(item);
+  if (!isWeaponLike(normalizedItem)) {
+    return null;
+  }
+
+  const metadata = getResolvedWeaponMetadata(normalizedItem);
+  const proficiencyBonus = Number.isFinite(context.proficiencyBonus) ? Math.floor(context.proficiencyBonus ?? 0) : 0;
+  const attackAbility = chooseWeaponAttackAbility(metadata.attackKind, metadata.propertyCodes, context.abilities);
+  const enhancementBonus =
+    metadata.item.attunable && !metadata.item.attuned
+      ? 0
+      : inferItemEnhancementBonus(metadata.item);
+  const proficient = isWeaponProficient(metadata.item, metadata.baseOption, proficiencies);
+
+  const bypassStrPenalty = doesWeaponBypassStrPenalty(metadata.item);
+  const hitBonus = attackAbility.modifier + enhancementBonus + (proficient ? proficiencyBonus : 0);
+  const damageAbilityComponent =
+    bypassStrPenalty && attackAbility.ability === "strength" && attackAbility.modifier < 0
+      ? 0
+      : attackAbility.modifier;
+  const damageBonus = damageAbilityComponent + enhancementBonus;
+
+  const properties = formatWeaponProperties(
+    metadata.attackKind,
+    metadata.propertyCodes,
+    metadata.range,
+    metadata.versatileDamage,
+  );
+
+  return {
+    id: `attack-${normalizedItem.id}`,
+    name: normalizedItem.name,
+    hit: formatSignedNumber(hitBonus),
+    damage: formatDamageSummary(metadata.damageDice, damageBonus),
+    type: metadata.damageType || undefined,
+    properties: properties || undefined,
+  };
+}
+
+export function resolveInventoryWeaponAttackRow(
+  item: CharacterInventoryItem,
+  context: InventoryWeaponAttackContext = {},
+): ResolvedInventoryWeaponAttackRow | null {
+  const proficiencies = buildWeaponProficiencyLookup(context.weaponProficiencies ?? []);
+  return resolveInventoryWeaponAttackRowWithProficiencies(item, context, proficiencies);
+}
+
+export function resolveInventoryWeaponAttackRows(
+  items: CharacterInventoryItem[],
+  context: InventoryWeaponAttackContext = {},
+): ResolvedInventoryWeaponAttackRow[] {
+  const proficiencies = buildWeaponProficiencyLookup(context.weaponProficiencies ?? []);
+
+  return items
+    .filter((item) => item.equipped && isWeaponLike(item))
+    .map((item) => resolveInventoryWeaponAttackRowWithProficiencies(item, context, proficiencies))
+    .filter((row): row is ResolvedInventoryWeaponAttackRow => Boolean(row));
 }
 
 function getWeaponProficiencyRequirement(item: CharacterInventoryItem) {

@@ -1,4 +1,5 @@
 import { BUILT_IN_SRD_RACE_ELEMENTS } from "@/lib/builtins/srd-races";
+import { attachBuiltInSheet } from "@/lib/builtins/sheets";
 import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 
 export type BuiltInRaceRecord = {
@@ -16,7 +17,7 @@ export type BuiltInRaceRecord = {
 
 function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
   return elements.map((element): BuiltInElement => ({
-    ...element,
+    ...attachBuiltInSheet(element),
     catalogOrigin: "built-in" as const,
   }));
 }

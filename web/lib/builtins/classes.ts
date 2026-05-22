@@ -1,4 +1,5 @@
 import { BUILT_IN_SRD_CLASS_ELEMENTS } from "@/lib/builtins/srd-classes";
+import { attachBuiltInSheet } from "@/lib/builtins/sheets";
 import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 
 export type BuiltInSubclassOption = {
@@ -24,7 +25,7 @@ export type BuiltInClassRecord = {
 
 function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
   return elements.map((element): BuiltInElement => ({
-    ...element,
+    ...attachBuiltInSheet(element),
     catalogOrigin: "built-in" as const,
   }));
 }

@@ -8,6 +8,7 @@ import type {
   BuiltInElement,
   BuiltInElementType,
   BuiltInRule,
+  BuiltInSheet,
   BuiltInSetter,
 } from "@/lib/builtins/types";
 import {
@@ -183,6 +184,47 @@ function toBuiltInSetter(setter: unknown): BuiltInSetter | null {
   };
 }
 
+function extractImportedSheet(element: ImportedElement) {
+  const directSheet = (element as ImportedElement & { sheet?: unknown }).sheet;
+  if (directSheet !== undefined) {
+    return directSheet;
+  }
+
+  return (element.raw_element as { sheet?: unknown } | null)?.sheet;
+}
+
+function toBuiltInSheet(value: unknown): BuiltInSheet | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return {
+    display: typeof candidate.display === "boolean" ? candidate.display : undefined,
+    action: typeof candidate.action === "string" ? candidate.action : undefined,
+    usage: typeof candidate.usage === "string" ? candidate.usage : undefined,
+    alt: typeof candidate.alt === "string" ? candidate.alt : undefined,
+    descriptions: Array.isArray(candidate.descriptions)
+      ? candidate.descriptions.flatMap((description) => {
+          if (!description || typeof description !== "object") {
+            return [];
+          }
+          const entry = description as Record<string, unknown>;
+          if (typeof entry.text !== "string") {
+            return [];
+          }
+          return [{
+            text: entry.text,
+            html: typeof entry.html === "string" ? entry.html : undefined,
+            level: typeof entry.level === "number" ? entry.level : undefined,
+            usage: typeof entry.usage === "string" ? entry.usage : undefined,
+            alt: typeof entry.alt === "string" ? entry.alt : undefined,
+          }];
+        })
+      : [],
+  };
+}
+
 function toBuiltInMulticlass(value: unknown) {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -254,6 +296,7 @@ function toBuiltInElement(element: ImportedElement): BuiltInElement | null {
           .map((setter) => toBuiltInSetter(setter))
           .filter((setter): setter is BuiltInSetter => Boolean(setter))
       : [],
+    sheet: toBuiltInSheet(extractImportedSheet(element)),
     multiclass: toBuiltInMulticlass(element.multiclass),
     spellcasting: toBuiltInSpellcasting(element.spellcasting),
   };

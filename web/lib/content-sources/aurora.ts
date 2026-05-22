@@ -48,6 +48,22 @@ type ParsedSetter = {
   alt?: string;
 };
 
+type ParsedSheetDescription = {
+  text: string;
+  html?: string;
+  level?: number;
+  usage?: string;
+  alt?: string;
+};
+
+type ParsedSheet = {
+  display?: boolean;
+  action?: string;
+  usage?: string;
+  alt?: string;
+  descriptions: ParsedSheetDescription[];
+};
+
 export type ParsedAuroraElement = {
   elementId: string;
   elementType: string;
@@ -61,6 +77,7 @@ export type ParsedAuroraElement = {
   descriptionText: string | null;
   prerequisite: string | null;
   requirements: string | null;
+  sheet: ParsedSheet | null;
   multiclass: Record<string, unknown> | null;
   spellcasting: Record<string, unknown> | null;
   rawElement: Record<string, unknown>;
@@ -139,6 +156,42 @@ function parseSetters(elementBlock: string): ParsedSetter[] {
       alt: attributes.alt,
     };
   });
+}
+
+function parseSheet(elementBlock: string): ParsedSheet | null {
+  const match = elementBlock.match(/<sheet\s*([^>]*)\/>|<sheet\s*([^>]*)>([\s\S]*?)<\/sheet>/i);
+  if (!match) {
+    return null;
+  }
+
+  const attributes = parseAttributes(match[1] || match[2] || "");
+  const body = match[3] || "";
+  const descriptions = [...body.matchAll(/<description\s*([^>]*)>([\s\S]*?)<\/description>/gi)]
+    .map((descriptionMatch): ParsedSheetDescription | null => {
+      const descriptionAttributes = parseAttributes(descriptionMatch[1] || "");
+      const html = descriptionMatch[2].trim();
+      const text = stripTags(html);
+      if (!text) {
+        return null;
+      }
+
+      return {
+        text,
+        html,
+        level: descriptionAttributes.level ? Number(descriptionAttributes.level) : undefined,
+        usage: descriptionAttributes.usage,
+        alt: descriptionAttributes.alt,
+      };
+    })
+    .filter((entry): entry is ParsedSheetDescription => Boolean(entry));
+
+  return {
+    display: attributes.display === "false" ? false : attributes.display === "true" ? true : undefined,
+    action: attributes.action,
+    usage: attributes.usage,
+    alt: attributes.alt,
+    descriptions,
+  };
 }
 
 function parseRules(elementBlock: string): ParsedRule[] {
@@ -275,6 +328,7 @@ export function parseAuroraElements(sourceUrl: string, xml: string): ParsedAuror
     const descriptionText = descriptionHtml ? stripTags(descriptionHtml) : null;
     const prerequisite = stripTags(getTagContent(body, "prerequisite")) || null;
     const requirements = stripTags(getTagContent(body, "requirements")) || null;
+    const sheet = parseSheet(body);
 
     if (!attributes.id || !attributes.type || !attributes.name) {
       continue;
@@ -293,6 +347,7 @@ export function parseAuroraElements(sourceUrl: string, xml: string): ParsedAuror
       descriptionText,
       prerequisite,
       requirements,
+      sheet,
       multiclass: parseMulticlass(body),
       spellcasting: parseSpellcasting(body),
       rawElement: {
@@ -302,6 +357,7 @@ export function parseAuroraElements(sourceUrl: string, xml: string): ParsedAuror
         supports: parseSupports(body),
         setters: parseSetters(body),
         rules: parseRules(body),
+        sheet,
       },
     });
   }

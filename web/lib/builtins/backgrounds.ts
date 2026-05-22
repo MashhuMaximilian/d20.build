@@ -1,4 +1,5 @@
 import { BUILT_IN_SRD_BACKGROUND_ELEMENTS } from "@/lib/builtins/srd-backgrounds";
+import { attachBuiltInSheet } from "@/lib/builtins/sheets";
 import type { BuiltInElement, BuiltInRule } from "@/lib/builtins/types";
 
 export type BuiltInBackgroundRecord = {
@@ -24,7 +25,7 @@ function isNarrativeBackstorySelect(rule: BuiltInRule) {
 
 function markBuiltIn(elements: readonly BuiltInElement[]): BuiltInElement[] {
   return elements.map((element): BuiltInElement => ({
-    ...element,
+    ...attachBuiltInSheet(element),
     catalogOrigin: "built-in" as const,
     rules: element.rules.map((rule) =>
       rule.kind === "select" && rule.type !== "List"

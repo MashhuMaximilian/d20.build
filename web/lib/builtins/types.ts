@@ -69,6 +69,22 @@ export type BuiltInSetter = {
   alt?: string;
 };
 
+export type BuiltInSheetDescription = {
+  text: string;
+  html?: string;
+  level?: number;
+  usage?: string;
+  alt?: string;
+};
+
+export type BuiltInSheet = {
+  display?: boolean;
+  action?: string;
+  usage?: string;
+  alt?: string;
+  descriptions: BuiltInSheetDescription[];
+};
+
 export type BuiltInMulticlass = {
   requirements?: string;
   requirementsDescription?: string;
@@ -97,6 +113,7 @@ export type BuiltInElement = {
   requirements?: string;
   rules: BuiltInRule[];
   setters: BuiltInSetter[];
+  sheet?: BuiltInSheet;
   multiclass?: BuiltInMulticlass;
   spellcasting?: BuiltInSpellcasting;
 };
